@@ -1,0 +1,34 @@
+# Config file for automatic testing at travis-ci.org
+
+language: python
+python: 2.7
+
+before_install:
+  - sudo apt-get update -qq
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+      wget http://repo.continuum.io/miniconda/Miniconda-3.4.2-Linux-x86_64.sh -O miniconda.sh;
+    fi
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION pip pyodbc
+  # Useful for debugging any issues with conda
+  - conda info -a
+
+install:
+  - pip install docopt querycsv coverage nose nose-cov mock flake8
+  - python setup.py install
+
+script:
+  - nosetests --with-coverage --cov forklift --cov-config .coveragerc --logging-level=INFO
+  - flake8
+after_success:
+    # Report coverage results to codecov.io
+    - pip install codecov
+    - codecov
+notifications:
+    email:
+        on_success: change
+        on_failure: change

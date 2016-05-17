@@ -1,7 +1,7 @@
 import unittest
 import os
 import arcpy
-import core
+from forklift import core
 
 currentFolder = os.path.dirname(os.path.abspath(__file__))
 checkForChangesGDB = os.path.join(currentFolder, 'data', 'checkForChanges.gdb')
@@ -15,7 +15,7 @@ def run_check_for_changes(fc1, fc2):
     return core.checkForChanges(f1, f2, False)
 
 
-class UpdateTest(unittest.TestCase):
+class CoreTests(unittest.TestCase):
     def test_checkForChanges(self):
 
         self.assertFalse(run_check_for_changes('ZipCodes', 'ZipCodes_same'))
@@ -23,7 +23,7 @@ class UpdateTest(unittest.TestCase):
         self.assertTrue(run_check_for_changes('ZipCodes', 'ZipCodes_attMod'))
         self.assertTrue(run_check_for_changes('ZipCodes', 'ZipCodes_newFeature'))
 
-    def test_checkForChangesNullDateFields(self):
+    def test_check_for_changes_null_date_fields(self):
         self.assertTrue(run_check_for_changes('NullDates', 'NullDates2'))
 
     def test_filter_shape_fields(self):

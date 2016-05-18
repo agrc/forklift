@@ -6,33 +6,29 @@ core.py
 Tools for updating a filegeodatabase from an SDE database
 '''
 
-from os.path import join
 import arcpy
+import logging
+import settings
 from datetime import datetime
-from numpy.testing import assert_almost_equal
 from itertools import izip
+from numpy.testing import assert_almost_equal
+from os.path import join
 
 changes = []
+log = logging.getLogger(settings.LOGGER)
 
 
-def update_fgdb_from_sde(fgdb, sde, logger=None):
+def update_fgdb_from_sde(fgdb, sde):
     global changes
     '''
     fgdb: file geodatabase
     sde: sde geodatabase connection
-    logger: agrc.logging.Logger (optional)
     returns: String[] - the list of errors
 
     Loops through the file geodatabase feature classes and looks for
     matches in the SDE database. If there is a match, it does a schema check
     and then updates the data.
     '''
-
-    def log(msg):
-        if logger:
-            logger.logMsg(msg)
-        else:
-            print msg
 
     def update_data(is_table):
         try:
@@ -46,24 +42,24 @@ def update_fgdb_from_sde(fgdb, sde, logger=None):
 
             try:
                 arcpy.Append_management(layer, f, 'TEST')
-                log('schema test passed')
+                log.info('schema test passed')
                 passed = True
             except arcpy.ExecuteError as e:
                 if '000466' in e.message:
-                    log(e.message)
+                    log.error(e)
                     msg = 'schema change detected'
                     msg += '\n\n{0}'.format(_get_field_differences(sdeFC, f))
                     errors.append('{}: {}'.format(f, msg))
-                    log(msg)
+                    log.error(msg)
                     passed = False
                     return passed
                 else:
                     raise e
             arcpy.Delete_management(layer)
 
-            log('checking for changes...')
+            log.info('checking for changes...')
             if check_for_changes(f, sdeFC, is_table) and passed:
-                log('updating data...')
+                log.info('updating data...')
                 arcpy.TruncateTable_management(f)
 
                 # edit session required for data that participates in relationships
@@ -89,13 +85,11 @@ def update_fgdb_from_sde(fgdb, sde, logger=None):
 
                 changes.append(f.upper())
             else:
-                log('no changes found')
+                log.info('no changes found')
         except:
             errors.append('Error updating: {}'.format(f))
-            if logger:
-                logger.logError()
 
-    log('** Updating {} from {}'.format(fgdb, sde))
+    log.info('Updating %s from %s', fgdb, sde)
     errors = []
 
     # loop through local feature classes
@@ -105,7 +99,7 @@ def update_fgdb_from_sde(fgdb, sde, logger=None):
     i = 0
     for f in fcs:
         i = i + 1
-        log('{} of {} | {}'.format(i, totalFcs, f))
+        log.info('%d of %d | %s', i, totalFcs, f)
 
         found = False
 
@@ -130,8 +124,8 @@ def update_fgdb_from_sde(fgdb, sde, logger=None):
                         break
         if not found:
             msg = 'no match found in sde'
-            errors.append("{}: {}".format(f, msg))
-            log(msg)
+            errors.append('{}: {}'.format(f, msg))
+            log.warning(msg)
             continue
 
         update_data(arcpy.Describe(join(fgdb, f)).datasetType == 'Table')
@@ -179,7 +173,7 @@ def _get_field_differences(ds1, ds2):
     ds1Flds = getFields(ds1)
     ds2Flds = getFields(ds2)
 
-    return "{} Fields: \n{}\n{} Fields: \n{}".format(ds1, ds1Flds, ds2, ds2Flds)
+    return '{} Fields: \n{}\n{} Fields: \n{}'.format(ds1, ds1Flds, ds2, ds2Flds)
 
 
 def check_for_changes(f, sde, is_table):

@@ -42,3 +42,4 @@ htmlcov
 secrets.py
 
 *.lock
+tests/data/UPDATE_TESTS.bak

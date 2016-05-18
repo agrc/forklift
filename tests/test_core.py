@@ -1,6 +1,14 @@
-import unittest
-import os
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+'''
+test_core.py
+-----------------------------------------
+Tests for the core.py module
+'''
+
 import arcpy
+import os
+import unittest
 from forklift import core
 
 currentFolder = os.path.dirname(os.path.abspath(__file__))

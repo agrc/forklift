@@ -12,6 +12,7 @@ Arguments:
   <path>       an optional path to pass in so you can run a certain directory
 forklift 🚜
 '''
+
 import logging.config
 import sys
 from docopt import docopt

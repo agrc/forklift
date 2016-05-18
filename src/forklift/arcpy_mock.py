@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 '''
-arcpy_mock
+arcpy_mock.py
 ----------------------------------
 mock arcpy for testing on travis
 '''

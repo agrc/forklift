@@ -51,13 +51,13 @@ class CoreTests(unittest.TestCase):
     def test_no_updates(self):
         arcpy.Copy_management(self.check_for_changes_gdb2, self.test_gdb)
 
-        changes = self.patient.update_fgdb_from_sde(self.test_gdb, self.update_tests_sde)[1]
+        changes = self.patient.update_fgdb_from_sde(self.test_gdb, self.update_tests_sde)
 
         self.assertEquals(len(changes), 0)
 
     def test_update_tables(self):
         arcpy.Copy_management(self.check_for_changes_gdb, self.test_gdb)
 
-        changes = self.patient.update_fgdb_from_sde(self.test_gdb, self.update_tests_sde)[1]
+        changes = self.patient.update_fgdb_from_sde(self.test_gdb, self.update_tests_sde)
 
         self.assertEquals(changes[0], 'PROVIDERS')

@@ -7,6 +7,8 @@ Tools for updating a filegeodatabase from an SDE database
 '''
 
 import arcpy
+import logging
+import settings
 from datetime import datetime
 from itertools import izip
 from numpy.testing import assert_almost_equal
@@ -15,25 +17,20 @@ from os.path import join
 
 class Core(object):
 
-    changes = []
+    def __init__(self):
+        self.log = logging.getLogger(settings.LOGGER)
+        self.changes = []
 
-    def update_fgdb_from_sde(self, fgdb, sde, logger=None):
+    def update_fgdb_from_sde(self, fgdb, sde):
         '''
         fgdb: file geodatabase
         sde: sde geodatabase connection
-        logger: agrc.logging.Logger (optional)
         returns: String[] - the list of errors
 
         Loops through the file geodatabase feature classes and looks for
         matches in the SDE database. If there is a match, it does a schema check
         and then updates the data.
         '''
-
-        def log(msg):
-            if logger:
-                logger.logMsg(msg)
-            else:
-                print msg
 
         def update_data(is_table):
             try:
@@ -47,27 +44,28 @@ class Core(object):
 
                 try:
                     arcpy.Append_management(layer, f, 'TEST')
-                    log('schema test passed')
                     passed = True
+                    self.log.info('schema test passed')
                 except arcpy.ExecuteError as e:
                     if '000466' in e.message:
-                        log(e.message)
-                        msg = 'schema change detected'
-                        msg += '\n\n{0}'.format(self._get_field_differences(sdeFC, f))
-                        errors.append('{}: {}'.format(f, msg))
-                        log(msg)
-                        passed = False
-                        return passed
+                        self.log.error(e)
+                        self.log.error('schema change detected for %s: %s', f, self._get_field_differences(sdeFC, f))
+
+                        return False
                     else:
+                        passed = False
                         raise e
+
                 arcpy.Delete_management(layer)
 
-                log('checking for changes...')
+                self.log.info('checking for changes...')
                 if self.check_for_changes(f, sdeFC, is_table) and passed:
-                    log('updating data...')
+                    self.log.info('updating data...')
+                    self.log.debug('trucating data for %s', f)
                     arcpy.TruncateTable_management(f)
 
                     # edit session required for data that participates in relationships
+                    self.log.debug('starting edit session...')
                     editSession = arcpy.da.Editor(fgdb)
                     editSession.startEditing(False, False)
                     editSession.startOperation()
@@ -83,21 +81,20 @@ class Core(object):
                         arcpy.da.SearchCursor(sdeFC, fields, sql_clause=(None, 'ORDER BY OBJECTID'),
                                               spatial_reference=outputSR) as cursor:
                         for row in cursor:
+                            self.log.debug('working on row %s', row[0])
                             icursor.insertRow(row)
 
                     editSession.stopOperation()
                     editSession.stopEditing(True)
+                    self.log.debug('edit session stopped')
 
                     self.changes.append(f.upper())
                 else:
-                    log('no changes found')
-            except:
-                errors.append('Error updating: {}'.format(f))
-                if logger:
-                    logger.logError()
+                    self.log.info('no changes found')
+            except Exception as e:
+                self.log.error(e)
 
-        log('** Updating {} from {}'.format(fgdb, sde))
-        errors = []
+        self.log.info('Updating %s from %s', fgdb, sde)
 
         # loop through local feature classes
         arcpy.env.workspace = fgdb
@@ -106,7 +103,7 @@ class Core(object):
         i = 0
         for f in fcs:
             i = i + 1
-            log('{} of {} | {}'.format(i, totalFcs, f))
+            self.log.info('%s of %s | %s', i, totalFcs, f)
 
             found = False
 
@@ -130,14 +127,12 @@ class Core(object):
                             found = True
                             break
             if not found:
-                msg = 'no match found in sde'
-                errors.append("{}: {}".format(f, msg))
-                log(msg)
+                self.log.error('no match found in sde for %s', f)
                 continue
 
             update_data(arcpy.Describe(join(fgdb, f)).datasetType == 'Table')
 
-        return (errors, self.changes)
+        return (self.changes)
 
     def was_modified_today(self, fcname):
         '''
@@ -147,6 +142,7 @@ class Core(object):
 
         Checks to see if fcname within the fgdb was updated today.
         '''
+
         return fcname.upper() in self.changes
 
     def _filter_fields(self, lst):

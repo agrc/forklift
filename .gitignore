@@ -30,7 +30,6 @@ pip-log.txt
 nosetests.xml
 htmlcov
 .noseids
-tests/scratch/*
 
 .DS_Store
 *~

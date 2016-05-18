@@ -12,7 +12,6 @@ Arguments:
   <path>       an optional path to pass in so you can run a certain directory
 forklift 🚜
 '''
-
 import logging.config
 import sys
 from docopt import docopt
@@ -42,17 +41,30 @@ def _setup_logging():
             }
         },
         'handlers': {
-            'detailed_handler': {
+            'detailed_console_handler': {
                 'level': 'DEBUG',
                 'class': 'logging.StreamHandler',
                 'formatter': 'detailed_formatter',
                 'stream': 'ext://sys.stdout'
+            },
+            'detailed_file_handler': {
+                'level': 'DEBUG',
+                'class': 'logging.handlers.TimedRotatingFileHandler',
+                'filename': 'forklift.log',
+                'when': 'D',
+                'interval': '1',
+                'backupCount': '7',
+                'formatter': 'detailed_formatter'
             }
         },
         'loggers': {
-            '': {
-                'handlers': ['detailed_handler'],
+            'console': {
+                'handlers': ['detailed_console_handler'],
                 'level': 'DEBUG',
+            },
+            'file': {
+                'handlers': ['detailed_file_handler'],
+                'level': 'INFO'
             }
         }
     })

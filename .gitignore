@@ -30,6 +30,7 @@ pip-log.txt
 nosetests.xml
 htmlcov
 .noseids
+tests/scratch/*
 
 .DS_Store
 *~
@@ -42,3 +43,4 @@ htmlcov
 secrets.py
 
 *.lock
+tests/data/UPDATE_TESTS.bak

@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 '''
 Usage:
-  forklift config --init
   forklift list (--plugins | --config) [path]
+  forklift config --init
   forklift config --add <path>
   forklift config --validate
   forklift update
@@ -30,13 +30,12 @@ from docopt import docopt
 
 
 def main():
-    arguments = docopt(__doc__, version='1.0.0', options_first=True)
+    args = docopt(__doc__, version='1.0.0')
     _setup_logging()
 
-    if arguments['update']:
-        pass
-    elif arguments['update-specific']:
-        pass
+    if args['config'] and args['--init']:
+        file_created = lift.init()
+        print('forklift - {}'.format(file_created))
 
 
 def _setup_logging():

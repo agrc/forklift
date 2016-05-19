@@ -32,35 +32,17 @@ class Core(object):
         Updates f with data from sdeFC.
         '''
 
-        is_table = arcpy.Describe(join(fgdb, f)).datasetType == 'Table'
+        arcpy.env.workspace = fgdb
+        is_table = arcpy.Describe(f).datasetType == 'Table'
 
         try:
-            # validate that there was not a schema change
-            arcpy.env.workspace = fgdb
-            layer = sdeFC + '_Layer'
-            if not is_table:
-                arcpy.MakeFeatureLayer_management(sdeFC, layer, '1 = 2')
-            else:
-                arcpy.MakeTableView_management(sdeFC, layer, '1 = 2')
-
-            try:
-                arcpy.Append_management(layer, f, 'TEST')
-                passed = True
-                self.log.info('schema test passed')
-            except arcpy.ExecuteError as e:
-                if '000466' in e.message:
-                    self.log.error(e)
-                    self.log.error('schema change detected for %s: %s', f, self._get_field_differences(sdeFC, f))
-
-                    return False
-                else:
-                    passed = False
-                    raise e
-
-            arcpy.Delete_management(layer)
+            self.log.info('checking for schema changes...')
+            if not self.check_schema(f, sdeFC):
+                # skip updating if the schemas do not match
+                return False
 
             self.log.info('checking for changes...')
-            if self.check_for_changes(f, sdeFC, is_table) and passed:
+            if self.check_for_changes(f, sdeFC, is_table):
                 self.log.info('updating data...')
                 self.log.debug('trucating data for %s', f)
                 arcpy.TruncateTable_management(f)
@@ -82,7 +64,6 @@ class Core(object):
                     arcpy.da.SearchCursor(sdeFC, fields, sql_clause=(None, 'ORDER BY OBJECTID'),
                                           spatial_reference=outputSR) as cursor:
                     for row in cursor:
-                        self.log.debug('working on row %s', row[0])
                         icursor.insertRow(row)
 
                 editSession.stopOperation()
@@ -98,6 +79,56 @@ class Core(object):
             self.log.error(e)
 
             return False
+
+    def check_schema(self, source_dataset, destination_dataset):
+        '''
+        source_dataset: String
+        destination_dataset: String
+
+        returns: Boolean - True if the schemas match
+        '''
+
+        def get_fields(dataset):
+            field_dict = {}
+            for field in arcpy.ListFields(dataset):
+                if not self._is_naughty_field(field.name):
+                    field_dict[field.name.upper()] = field
+            return field_dict
+
+        missing_fields = []
+        mismatching_fields = []
+        source_fields = get_fields(source_dataset)
+        destination_fields = get_fields(destination_dataset)
+
+        for field_key in destination_fields.keys():
+            # make sure that all fields from destination are in source
+            # not sure that we care if there are fields in source that are not in destination
+            destination_fld = destination_fields[field_key]
+            if field_key not in source_fields.keys():
+                missing_fields.append(destination_fld.name)
+            else:
+                source_fld = source_fields[field_key]
+                if source_fld.type != destination_fld.type:
+                    mismatching_fields.append(
+                        '{}: source type of {} does not match destination type of {}'
+                        .format(source_fld.name,
+                                source_fld.type,
+                                destination_fld.type))
+                elif source_fld.type == 'String' and source_fld.length != destination_fld.length:
+                    mismatching_fields.append(
+                        '{}: source length of {} does not match destination length of {}'
+                        .format(source_fld.name,
+                                source_fld.length,
+                                destination_fld.length))
+
+        if len(missing_fields) > 0:
+            self.log.error('Missing fields in %s: %s', source_dataset, ', '.join(missing_fields))
+            return False
+        elif len(mismatching_fields) > 0:
+            self.log.error('Mismatching fields in %s: %s', source_dataset, ', '.join(mismatching_fields))
+            return False
+        else:
+            return True
 
     def update_fgdb_from_sde(self, fgdb, sde):
         '''
@@ -167,29 +198,17 @@ class Core(object):
 
         returns: String[]
 
-        Filters out fields that mess up the schema check.
+        Filters out fields that mess up the update logic.
         '''
 
         newFields = []
         for fld in lst:
-            if 'SHAPE' not in fld.upper() and fld.upper() not in ['GLOBAL_ID', 'GLOBALID']:
+            if not self._is_naughty_field(fld):
                 newFields.append(fld)
         return newFields
 
-    def _get_field_differences(self, ds1, ds2):
-        def getFields(ds):
-            flds = arcpy.ListFields(ds)
-            returnFlds = []
-            for f in flds:
-                returnFlds.append(f.name)
-
-            returnFlds.sort()
-            return returnFlds
-
-        ds1Flds = getFields(ds1)
-        ds2Flds = getFields(ds2)
-
-        return "{} Fields: \n{}\n{} Fields: \n{}".format(ds1, ds1Flds, ds2, ds2Flds)
+    def _is_naughty_field(self, fld):
+        return 'SHAPE' in fld.upper() or fld.upper() in ['GLOBAL_ID', 'GLOBALID']
 
     def check_for_changes(self, f, sde, is_table):
         '''

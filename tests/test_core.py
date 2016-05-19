@@ -54,13 +54,24 @@ class CoreTests(unittest.TestCase):
         self.assertEquals(self.patient._filter_fields(['shape', 'test', 'Shape_length', 'Global_ID']), ['test'])
 
     def test_schema_changes(self):
-        arcpy.Copy_management(self.check_for_changes_gdb2, self.test_gdb)
+        arcpy.Copy_management(self.check_for_changes_gdb, self.test_gdb)
 
-        result = self.patient.update_dataset(self.test_gdb,
-                                             'ZipCodes',
-                                             path.join(self.check_for_changes_gdb, 'FieldLength'))
-
+        result = self.patient.check_schema(path.join(self.test_gdb, 'ZipCodes'),
+                                           path.join(self.check_for_changes_gdb, 'FieldLength'))
         self.assertEquals(result, False)
+
+        result = self.patient.check_schema(path.join(self.test_gdb, 'ZipCodes'),
+                                           path.join(self.check_for_changes_gdb, 'ZipCodes'))
+        self.assertEquals(result, True)
+
+    def test_schema_changes_ignore_length_for_all_except_text(self):
+        self.check_for_local_sde()
+
+        # only worry about length on text fields
+        result = self.patient.check_schema(path.join(self.update_tests_sde,
+                                                     r'UPDATE_TESTS.DBO.Hello\UPDATE_TESTS.DBO.DNROilGasWells'),
+                                           path.join(self.check_for_changes_gdb, 'DNROilGasWells'))
+        self.assertEquals(result, True)
 
     def test_no_updates(self):
         self.check_for_local_sde()
@@ -70,10 +81,21 @@ class CoreTests(unittest.TestCase):
 
         self.assertEquals(len(changes), 0)
 
-    def test_update_tables(self):
+    def test_updates(self):
         self.check_for_local_sde()
         arcpy.Copy_management(self.check_for_changes_gdb, self.test_gdb)
 
         changes = self.patient.update_fgdb_from_sde(self.test_gdb, self.update_tests_sde)
 
-        self.assertEquals(changes[0], 'PROVIDERS')
+        self.assertEquals(changes[1], 'PROVIDERS')  # table
+        self.assertEquals(changes[0], 'DNROILGASWELLS')  # within dataset
+
+    def test_check_schema_match(self):
+        self.assertEquals(self.patient.check_schema(path.join(self.check_for_changes_gdb, 'FieldLength'),
+                                                    path.join(self.check_for_changes_gdb, 'FieldLength2')), False)
+
+        self.assertEquals(self.patient.check_schema(path.join(self.check_for_changes_gdb, 'FieldType'),
+                                                    path.join(self.check_for_changes_gdb, 'FieldType2')), False)
+
+        self.assertEquals(self.patient.check_schema(path.join(self.check_for_changes_gdb, 'ZipCodes'),
+                                                    path.join(self.check_for_changes_gdb2, 'ZipCodes')), True)

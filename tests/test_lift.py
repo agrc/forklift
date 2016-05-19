@@ -10,10 +10,12 @@ import unittest
 from forklift import lift
 from json import loads
 from os import remove
-from os.path import exists
+from os.path import abspath, dirname, join, exists
 
 
 class TestLift(unittest.TestCase):
+
+    test_data_folder = join(dirname(abspath(__file__)), 'data', 'list_plugins')
 
     def setUp(self):
         if exists('config.json'):
@@ -30,3 +32,6 @@ class TestLift(unittest.TestCase):
 
         with open(path) as config:
             self.assertEquals(['c:\\scheduled'], loads(config.read()))
+
+    def test_list_plugins(self):
+        plugins = lift.list_plugins(paths=[self.test_data_folder])

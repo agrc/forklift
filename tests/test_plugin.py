@@ -24,6 +24,7 @@ class NoExecutePlugin(ScheduledUpdateBase):
 
 
 class TestPlugin(unittest.TestCase):
+
     def setUp(self):
         self.patient = Plugin()
 

@@ -36,6 +36,9 @@ def main():
     if args['config'] and args['--init']:
         file_created = lift.init()
         print('forklift - {}'.format(file_created))
+    elif args['list'] and args['--plugins']:
+        plugins = lift.list_plugins()
+        lift.display_plugins(plugins)
 
 
 def _setup_logging():

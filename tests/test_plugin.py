@@ -8,7 +8,6 @@ A module that contains tests for the plugin module.
 
 import unittest
 from forklift.plugin import ScheduledUpdateBase
-from nose.tools import raises
 
 
 class Plugin(ScheduledUpdateBase):

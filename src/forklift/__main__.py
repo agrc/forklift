@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 '''
 Usage:
-  forklift init
+  forklift config --init
   forklift list (--plugins | --config) [path]
   forklift config --add <path>
   forklift config --validate
@@ -13,15 +13,17 @@ Arguments:
 
 forklift 🚜
 
-init: creates the config file.
-list: outputs the list of plugins from the config or the config paths. specify a path to get a list of plugins
-      in that location.
-config add: adds a path to the config. checks for duplicates and accessibility.
-config validate: validates all config paths are reachable.
-update: the main entry for running all of plugins found in the config paths.
-update-specific: run a specific plugin.
+Examples:
+    list: outputs the list of plugins from the config or the config paths. specify a path to get a list of plugins
+        in that location.
+    config init: creates the config file.
+    config add: adds a path to the config. checks for duplicates and accessibility.
+    config validate: validates all config paths are reachable.
+    update: the main entry for running all of plugins found in the config paths.
+    update-specific: run a specific plugin.
 '''
 
+import lift
 import logging.config
 import sys
 from docopt import docopt
@@ -62,8 +64,8 @@ def _setup_logging():
                 'class': 'logging.handlers.TimedRotatingFileHandler',
                 'filename': 'forklift.log',
                 'when': 'D',
-                'interval': '1',
-                'backupCount': '7',
+                'interval': 1,
+                'backupCount': 7,
                 'formatter': 'detailed_formatter'
             }
         },

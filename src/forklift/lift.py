@@ -16,7 +16,7 @@ log = logging.getLogger(settings.LOGGER)
 
 def init():
     if exists('config.json'):
-        return 'forklift - config file already created.'
+        return 'config file already created.'
 
     default_plugin_locations = ['c:\\scheduled']
 
@@ -24,7 +24,7 @@ def init():
     with open('config.json', 'w') as json_data_file:
         data = dumps(default_plugin_locations)
 
-        log.debug('writing %s to %s', data, abspath(json_data_file))
+        log.debug('writing %s to %s', data, abspath(json_data_file.name))
         json_data_file.write(data)
 
-        return abspath(json_data_file)
+        return abspath(json_data_file.name)

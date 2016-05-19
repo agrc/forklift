@@ -29,12 +29,11 @@ class ScheduledUpdateBase(object):
         #: the table names for all dependent data for an application
         self.dependencies = []
 
-    def nightly(self):
+    def execute(self):
         '''This method will be called by forklift if the `expires_in_hours` value has expired.
-        This is the only method that needs to be implemented and will otherwise throw a `NotImplementedError`.
         '''
 
-        raise NotImplementedError('Implement nightly in your child plugin.')
+        pass
 
     def get_dependent_layers(self):
         '''returns an array of layers affected by the plugin. This is a self documenting way to know what layers an

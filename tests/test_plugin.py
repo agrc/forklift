@@ -15,11 +15,11 @@ class Plugin(ScheduledUpdateBase):
     '''a test class for how plugins should work
     '''
 
-    def nightly(self):
-        pass
+    def execute(self):
+        return True
 
 
-class BadPlugin(ScheduledUpdateBase):
+class NoExecutePlugin(ScheduledUpdateBase):
     '''a test class for how plugins should work
     '''
 
@@ -28,16 +28,15 @@ class TestPlugin(unittest.TestCase):
     def setUp(self):
         self.patient = Plugin()
 
-    @raises(NotImplementedError)
-    def test_no_nightly_raises_exception(self):
-        self.patient = BadPlugin()
+    def test_no_execute_no_problem(self):
+        self.patient = NoExecutePlugin()
 
-        self.patient.nightly()
+        self.patient.execute()
 
-    def test_with_nightly(self):
+    def test_with_execute(self):
         self.patient = Plugin()
 
-        self.patient.nightly()
+        self.assertTrue(self.patient.execute())
 
     def test_defaults(self):
         self.assertEquals(self.patient.get_dependent_layers(), [])

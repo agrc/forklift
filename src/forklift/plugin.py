@@ -18,12 +18,14 @@ class ScheduledUpdateBase(object):
         self.log = logging.getLogger(settings.LOGGER)
         #: the duration in hours that marks a plugin as dirty
         self.expires_in_hours = 24
+        #: the parent path to where the source data is
+        self.source_directory = 'C:\\MapData\\'
         #: the path to where the data in dependencies resides
-        self.source_location = 'C:\\MapData\\SGID10.sde'
+        self.source_location = 'SGID10.sde'
         #: the parent path to where the output will be created
         self.output_directory = 'C:\\MapData\\'
         #: the file geodatabase where data will be inserted
-        self.gdb_name = 'SGID10.gdb'
+        self.output_gdb_name = 'SGID10.gdb'
         #: the table names for all dependent data for an application
         self.dependencies = []
 
@@ -44,19 +46,19 @@ class ScheduledUpdateBase(object):
         return self.dependencies
 
     def get_source_location(self):
-        '''returns `self.ouput_directory + self.location source` which is the parent path to the data in
+        '''returns `self.source_directory` + `self.location_source` which is the parent path to the data in
         `self.dependencies`.
 
         Default: `C:\\MapData\\SGID10.sde`
         '''
 
-        return self.source_location
+        return join(self.source_directory, self.source_location)
 
     def get_destination_location(self):
-        '''returns `self.output_directory` + `self.gdb_name` which is where the data from `self.dependencies` will be
+        '''returns `self.output_directory` + `self.output_gdb_name` which is where the data from `self.dependencies` will be
         placed.
 
         Default: `C:\\MapData\\SGID10.gdb`
         '''
 
-        return join(self.output_directory, self.gdb_name)
+        return join(self.output_directory, self.output_gdb_name)

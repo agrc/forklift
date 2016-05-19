@@ -3,7 +3,7 @@
 '''
 plugin.py
 
-A module the contains the plugin class that should be inherited from when building plugins
+A module that contains the plugin class that should be inherited from when building plugins
 '''
 
 import logging

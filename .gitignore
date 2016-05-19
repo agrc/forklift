@@ -44,3 +44,4 @@ secrets.py
 *.lock
 tests/data/UPDATE_TESTS.bak
 src/forklift.log*
+src/config.json

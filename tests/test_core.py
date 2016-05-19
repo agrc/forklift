@@ -10,6 +10,7 @@ import arcpy
 import unittest
 from forklift.core import Core
 from os import path
+from nose import SkipTest
 
 
 class CoreTests(unittest.TestCase):
@@ -30,6 +31,10 @@ class CoreTests(unittest.TestCase):
         if arcpy.Exists(self.test_gdb):
             arcpy.Delete_management(self.test_gdb)
 
+    def check_for_local_sde(self):
+        if not arcpy.Exists(path.join(self.update_tests_sde, 'ZipCodes')):
+            raise SkipTest('No test SDE dectected, skipping test')
+
     def run_check_for_changes(self, fc1, fc2):
         f1 = path.join(self.check_for_changes_gdb, fc1)
         f2 = path.join(self.check_for_changes_gdb, fc2)
@@ -48,7 +53,17 @@ class CoreTests(unittest.TestCase):
     def test_filter_shape_fields(self):
         self.assertEquals(self.patient._filter_fields(['shape', 'test', 'Shape_length', 'Global_ID']), ['test'])
 
+    def test_schema_changes(self):
+        arcpy.Copy_management(self.check_for_changes_gdb2, self.test_gdb)
+
+        result = self.patient.update_dataset(self.test_gdb,
+                                             'ZipCodes',
+                                             path.join(self.check_for_changes_gdb, 'FieldLength'))
+
+        self.assertEquals(result, False)
+
     def test_no_updates(self):
+        self.check_for_local_sde()
         arcpy.Copy_management(self.check_for_changes_gdb2, self.test_gdb)
 
         changes = self.patient.update_fgdb_from_sde(self.test_gdb, self.update_tests_sde)
@@ -56,6 +71,7 @@ class CoreTests(unittest.TestCase):
         self.assertEquals(len(changes), 0)
 
     def test_update_tables(self):
+        self.check_for_local_sde()
         arcpy.Copy_management(self.check_for_changes_gdb, self.test_gdb)
 
         changes = self.patient.update_fgdb_from_sde(self.test_gdb, self.update_tests_sde)

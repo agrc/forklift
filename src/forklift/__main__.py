@@ -2,15 +2,24 @@
 # -*- coding: utf-8 -*-
 '''
 Usage:
+  forklift init
+  forklift list (--plugins | --config) [path]
+  forklift config --add <path>
+  forklift config --validate
   forklift update
-  forklift update-specific
-Options:
-  --config     the path to some cfg or text file or something where we keep paths to places where there are update plugins.
-               defaults to some relative or static path.
-  --plugin     the name of the plugin used to filter execution. maybe a partial match or glob or exact match?
+  forklift update-specific <path>
 Arguments:
-  <path>       an optional path to pass in so you can run a certain directory
+  <path>   a file path
+
 forklift 🚜
+
+init: creates the config file.
+list: outputs the list of plugins from the config or the config paths. specify a path to get a list of plugins
+      in that location.
+config add: adds a path to the config. checks for duplicates and accessibility.
+config validate: validates all config paths are reachable.
+update: the main entry for running all of plugins found in the config paths.
+update-specific: run a specific plugin.
 '''
 
 import logging.config
@@ -19,7 +28,7 @@ from docopt import docopt
 
 
 def main():
-    arguments = docopt(__doc__, version='1.0.0')
+    arguments = docopt(__doc__, version='1.0.0', options_first=True)
     _setup_logging()
 
     if arguments['update']:

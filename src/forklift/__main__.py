@@ -1,31 +1,63 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 '''
-Usage:
-  forklift update
-  forklift update-specific
-Options:
-  --config     the path to some cfg or text file or something where we keep paths to places where there are update plugins.
-               defaults to some relative or static path.
-  --plugin     the name of the plugin used to filter execution. maybe a partial match or glob or exact match?
-Arguments:
-  <path>       an optional path to pass in so you can run a certain directory
 forklift 🚜
+
+Usage:
+    forklift config --init
+    forklift config --add <folder-path>
+    forklift config --remove <folder-path>
+    forklift config --list
+    forklift list [<folder-path>]
+    forklift update [<file-path>]
+Arguments:
+    folder-path     a path to a folder
+    file-path       a path to a file
+Examples:
+    config --init:                  creates the config file.
+    config --add path/to/folder:    adds a path to the config. Checks for duplicates.
+    config --remove path/to/folder: removes a path from the config.
+    config --list:                  outputs the list of plugin folder paths in your config file.
+    config --validate:              validates all config paths are reachable.
+    list:                           outputs the list of plugins from the config.
+    list path/to/folder:            outputs the list of plugins for the passed in path.
+    update:                         the main entry for running all of plugins found in the config paths.
+    update path/to/file:            run a specific plugin.
 '''
 
+import lift
 import logging.config
 import sys
 from docopt import docopt
 
 
 def main():
-    arguments = docopt(__doc__, version='1.0.0')
+    args = docopt(__doc__, version='1.0.0')
     _setup_logging()
 
-    if arguments['update']:
-        pass
-    elif arguments['update-specific']:
-        pass
+    if args['config']:
+        if args['--init']:
+            file_created = lift.init()
+            print('config file created: {}'.format(file_created))
+        if args['--add'] and args['<folder-path>']:
+            lift.add_plugin_folder(args['<folder-path>'])
+            print('{} added to config file'.format(args['<folder-path>']))
+        if args['--remove'] and args['<folder-path>']:
+            lift.remove_plugin_folder(args['<folder-path>'])
+            print('{} removed from config file'.format(args['<folder-path>']))
+        if args['--list']:
+            lift.validate_config_paths()
+    elif args['list']:
+        if args['<folder-path>']:
+            plugins = lift.list_plugins(args['<path>'])
+        else:
+            plugins = lift.list_plugins()
+
+        if len(plugins) == 0:
+            print('No plugins found!')
+        else:
+            for plug in plugins:
+                print(': '.join(plug))
 
 
 def _setup_logging():
@@ -53,8 +85,8 @@ def _setup_logging():
                 'class': 'logging.handlers.TimedRotatingFileHandler',
                 'filename': 'forklift.log',
                 'when': 'D',
-                'interval': '1',
-                'backupCount': '7',
+                'interval': 1,
+                'backupCount': 7,
                 'formatter': 'detailed_formatter'
             }
         },

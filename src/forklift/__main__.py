@@ -7,7 +7,6 @@ Usage:
     forklift config --init
     forklift config --add <folder-path>
     forklift config --remove <folder-path>
-    forklift config --validate
     forklift config --list
     forklift list [<folder-path>]
     forklift update [<file-path>]
@@ -47,8 +46,6 @@ def main():
             lift.remove_plugin_folder(args['<folder-path>'])
             print('{} removed from config file'.format(args['<folder-path>']))
         if args['--list']:
-            print('\n'.join(lift.get_config_paths()))
-        if args['--validate']:
             lift.validate_config_paths()
     elif args['list']:
         if args['<folder-path>']:

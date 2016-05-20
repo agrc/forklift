@@ -13,21 +13,20 @@ from os.path import join
 
 class ScheduledUpdateBase(object):
 
-    def __init__(self):
-        #: the logging module to keep track of the plugin
-        self.log = logging.getLogger(settings.LOGGER)
-        #: the duration in hours that marks a plugin as dirty
-        self.expires_in_hours = 24
-        #: the parent path to where the source data is
-        self.source_directory = 'C:\\MapData\\'
-        #: the path to where the data in dependencies resides
-        self.source_location = 'SGID10.sde'
-        #: the parent path to where the output will be created
-        self.output_directory = 'C:\\MapData\\'
-        #: the file geodatabase where data will be inserted
-        self.output_gdb_name = 'SGID10.gdb'
-        #: the table names for all dependent data for an application
-        self.dependencies = []
+    #: the duration in hours that marks a plugin as dirty
+    expires_in_hours = 24
+    #: the table names for all dependent data for an application
+    dependencies = []
+    #: the logging module to keep track of the plugin
+    log = logging.getLogger(settings.LOGGER)
+    #: the parent path to where the source data is
+    source_directory = 'C:\\MapData\\'
+    #: the path to where the data in dependencies resides
+    source_location = 'SGID10.sde'
+    #: the parent path to where the output will be created
+    output_directory = 'C:\\MapData\\'
+    #: the file geodatabase where data will be inserted
+    output_gdb_name = 'SGID10.gdb'
 
     def execute(self):
         '''This method will be called by forklift if the `expires_in_hours` value has expired.

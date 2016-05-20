@@ -10,12 +10,11 @@ from forklift.plugin import ScheduledUpdateBase
 
 
 class PluginOne(ScheduledUpdateBase):
-
-    def __init__(self, arg):
-        pass
+    expires_in_hours = 1
 
 
 class PluginTwo(ScheduledUpdateBase):
+    expires_in_hours = 2
 
-    def __init__(self, arg):
-        pass
+    def execute(self):
+        print('overridden')

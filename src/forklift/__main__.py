@@ -45,10 +45,17 @@ def main():
             print('\n'.join(lift.get_config_paths()))
         if args['--validate']:
             lift.validate_config_paths()
-    elif args['list'] and args['--plugins']:
-        plugins = lift.list_plugins(args['<path>'])
-        for plug in plugins:
-            print(': '.join(plug))
+    elif args['list']:
+        if args['<folder-path>']:
+            plugins = lift.list_plugins(args['<path>'])
+        else:
+            plugins = lift.list_plugins()
+
+        if len(plugins) == 0:
+            print('No plugins found!')
+        else:
+            for plug in plugins:
+                print(': '.join(plug))
 
 
 def _setup_logging():

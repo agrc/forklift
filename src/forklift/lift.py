@@ -28,14 +28,14 @@ def init():
 
 
 def add_plugin_folder(path):
-    paths = _get_config_paths()
+    paths = get_config_paths()
     paths.append(path)
     return _set_config_paths(paths)
 
 
 def list_plugins(paths=None):
     if paths is None:
-        paths = _get_config_paths()
+        paths = get_config_paths()
 
     return _get_plugins_in_location(paths)
 
@@ -53,7 +53,7 @@ def _set_config_paths(paths):
         return abspath(json_data_file.name)
 
 
-def _get_config_paths():
+def get_config_paths():
     if not exists('config.json'):
         raise Exception('config file not found.')
 

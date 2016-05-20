@@ -34,12 +34,15 @@ def main():
     args = docopt(__doc__, version='1.0.0')
     _setup_logging()
 
-    if args['config'] and args['--init']:
-        file_created = lift.init()
-        print('config file created: {}'.format(file_created))
-    elif args['config'] and args['--add'] and args['<folder-path>']:
-        lift.add_plugin_folder(args['<folder-path>'])
-        print('{} added to config file'.format(args['<folder-path>']))
+    if args['config']:
+        if args['--init']:
+            file_created = lift.init()
+            print('config file created: {}'.format(file_created))
+        if args['--add'] and args['<folder-path>']:
+            lift.add_plugin_folder(args['<folder-path>'])
+            print('{} added to config file'.format(args['<folder-path>']))
+        if args['--list']:
+            print('\n'.join(lift.get_config_paths()))
     elif args['list'] and args['--plugins']:
         plugins = lift.list_plugins(args['<path>'])
         for plug in plugins:

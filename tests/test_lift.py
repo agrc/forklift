@@ -39,3 +39,14 @@ class TestLift(unittest.TestCase):
         self.assertEquals(len(plugins), 3)
         self.assertEquals(plugins[0][0], join(self.test_data_folder, 'multiple_plugins.py'))
         self.assertEquals(plugins[0][1], 'PluginOne')
+
+    def test_set_config_paths_requires_list(self):
+        self.assertRaises(Exception, lift._set_config_paths, 'hello')
+
+    def test_add_plugin_folder(self):
+        path = lift.init()
+
+        lift.add_plugin_folder('another/folder')
+
+        with open(path) as config:
+            self.assertEquals(['c:\\scheduled', 'another/folder'], loads(config.read()))

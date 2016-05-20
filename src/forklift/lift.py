@@ -24,13 +24,13 @@ def init():
     default_plugin_locations = ['c:\\scheduled']
 
     log.debug('creating config.json file.')
-    with open('config.json', 'w') as json_data_file:
-        data = dumps(default_plugin_locations)
+    return _set_config_paths(default_plugin_locations)
 
-        log.debug('writing %s to %s', data, abspath(json_data_file.name))
-        json_data_file.write(data)
 
-        return abspath(json_data_file.name)
+def add_plugin_folder(path):
+    paths = _get_config_paths()
+    paths.append(path)
+    return _set_config_paths(paths)
 
 
 def list_plugins(paths=None):
@@ -38,6 +38,19 @@ def list_plugins(paths=None):
         paths = _get_config_paths()
 
     return _get_plugins_in_location(paths)
+
+
+def _set_config_paths(paths):
+    if type(paths) != list:
+        raise Exception('config file data must be a list.')
+
+    with open('config.json', 'w') as json_data_file:
+        data = dumps(paths)
+
+        log.debug('writing %s to %s', data, abspath(json_data_file.name))
+        json_data_file.write(data)
+
+        return abspath(json_data_file.name)
 
 
 def _get_config_paths():
@@ -66,8 +79,3 @@ def _get_plugins_in_location(paths):
                     # member was likely not a class
                     pass
     return plugins
-
-
-def display_plugins(plugins):
-    for plug in plugins:
-        print(': '.join(plug))

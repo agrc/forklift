@@ -1,26 +1,27 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 '''
-Usage:
-  forklift list (--plugins | --config) [path]
-  forklift config --init
-  forklift config --add <path>
-  forklift config --validate
-  forklift update
-  forklift update-specific <path>
-Arguments:
-  <path>   a file path
-
 forklift 🚜
 
+Usage:
+    forklift config --init
+    forklift config --add <folder-path>
+    forklift config --validate
+    forklift config --list
+    forklift list [<folder-path>]
+    forklift update [<file-path>]
+Arguments:
+    folder-path     a path to a folder
+    file-path       a path to a file
 Examples:
-    list: outputs the list of plugins from the config or the config paths. specify a path to get a list of plugins
-        in that location.
-    config init: creates the config file.
-    config add: adds a path to the config. checks for duplicates and accessibility.
-    config validate: validates all config paths are reachable.
-    update: the main entry for running all of plugins found in the config paths.
-    update-specific: run a specific plugin.
+    config --init:                  creates the config file.
+    config --add path/to/folder:    adds a path to the config. checks for duplicates and accessibility.
+    config --list:                  outputs the list of plugin folder paths in your config file.
+    config --validate:              validates all config paths are reachable.
+    list:                           outputs the list of plugins from the config.
+    list path/to/folder:            outputs the list of plugins for the passed in path.
+    update:                         the main entry for running all of plugins found in the config paths.
+    update path/to/file:            run a specific plugin.
 '''
 
 import lift
@@ -35,10 +36,14 @@ def main():
 
     if args['config'] and args['--init']:
         file_created = lift.init()
-        print('forklift - {}'.format(file_created))
+        print('config file created: {}'.format(file_created))
+    elif args['config'] and args['--add'] and args['<folder-path>']:
+        lift.add_plugin_folder(args['<folder-path>'])
+        print('{} added to config file'.format(args['<folder-path>']))
     elif args['list'] and args['--plugins']:
-        plugins = lift.list_plugins()
-        lift.display_plugins(plugins)
+        plugins = lift.list_plugins(args['<path>'])
+        for plug in plugins:
+            print(': '.join(plug))
 
 
 def _setup_logging():

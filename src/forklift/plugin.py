@@ -9,16 +9,6 @@ A module that contains the plugin class that should be inherited from when build
 import logging
 import settings
 from os.path import join
-import venusian
-
-
-def update(pattern, **extra):
-    def deco(func):
-        def callback(scanner, name, obj):
-            scanner.register(pattern, obj, extra)
-        venusian.attach(func, callback)
-        return func
-    return deco
 
 
 class ScheduledUpdateBase(object):

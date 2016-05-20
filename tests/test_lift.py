@@ -7,20 +7,10 @@ A module that contains tests for the lift.py module
 '''
 
 import unittest
-import venusian
 from forklift import lift
 from json import loads
 from os import remove
 from os.path import abspath, dirname, join, exists
-
-
-class Registry(object):
-
-    def __init__(self):
-        self.registered = []
-
-    def add(self, name, ob):
-        self.registered.append((name, ob))
 
 
 class TestLift(unittest.TestCase):
@@ -44,8 +34,8 @@ class TestLift(unittest.TestCase):
             self.assertEquals(['c:\\scheduled'], loads(config.read()))
 
     def test_list_plugins(self):
-        # plugins = lift.list_plugins(paths=[self.test_data_folder])
-        registry = Registry()
+        plugins = lift.list_plugins(paths=[self.test_data_folder])
 
-        scanner = venusian.Scanner(registry=registry)
-        scanner.scan()
+        self.assertEquals(len(plugins), 3)
+        self.assertEquals(plugins[0][0], join(self.test_data_folder, 'multiple_plugins.py'))
+        self.assertEquals(plugins[0][1], 'PluginOne')

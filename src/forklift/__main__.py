@@ -10,9 +10,11 @@ Usage:
     forklift config --list
     forklift list [<folder-path>]
     forklift update [<file-path>]
+
 Arguments:
     folder-path     a path to a folder
     file-path       a path to a file
+
 Examples:
     config --init:                  creates the config file.
     config --add path/to/folder:    adds a path to the config. Checks for duplicates.
@@ -58,6 +60,11 @@ def main():
         else:
             for plug in plugins:
                 print(': '.join(plug))
+    elif args['update']:
+        if args['<file-path>']:
+            lift.update(args['<file-path>'])
+        else:
+            lift.update()
 
 
 def _setup_logging():

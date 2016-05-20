@@ -52,7 +52,7 @@ def list_plugins(paths=None):
     if paths is None:
         paths = get_config_paths()
 
-    return _get_plugins_in_location(paths)
+    return _get_plugins_in_folders(paths)
 
 
 def _set_config_paths(paths):
@@ -89,19 +89,41 @@ def validate_config_paths():
         print('{}: {}'.format(path, valid))
 
 
-def _get_plugins_in_location(paths):
+def _get_plugins_in_folders(paths):
     plugins = []
     for path in paths:
         sys.path.append(path)
         for py_file in glob(join(path, '*.py')):
-            name = splitext(basename(py_file))[0]
-            mod = __import__(name)
-            for member in dir(mod):
-                try:
-                    potential_class = getattr(mod, member)
-                    if issubclass(potential_class, ScheduledUpdateBase) and potential_class != ScheduledUpdateBase:
-                        plugins.append((py_file, member))
-                except:
-                    # member was likely not a class
-                    pass
+            plugins.extend(_get_plugins_in_file(py_file))
     return plugins
+
+
+def _get_plugins_in_file(file_path):
+    plugins = []
+    name = splitext(basename(file_path))[0]
+    mod = __import__(name)
+    for member in dir(mod):
+        try:
+            potential_class = getattr(mod, member)
+            if issubclass(potential_class, ScheduledUpdateBase) and potential_class != ScheduledUpdateBase:
+                plugins.append((file_path, member))
+        except:
+            #: member was likely not a class
+            pass
+
+    return plugins
+
+
+def update(file_path=None):
+    if file_path is not None:
+        plugin_infos = _get_plugins_in_file(file_path)
+    else:
+        plugin_infos = list_plugins()
+
+    for info in plugin_infos:
+        PluginClass = getattr(__import__(splitext(basename(info[0]))[0]), info[1])
+        plugin = PluginClass()
+
+        #: not sure what needs to be done here want to do here
+        print plugin.expires_in_hours
+        plugin.execute()

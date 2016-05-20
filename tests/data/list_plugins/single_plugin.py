@@ -10,6 +10,4 @@ from forklift.plugin import ScheduledUpdateBase
 
 
 class SinglePlugin(ScheduledUpdateBase):
-
-    def __init__(self, arg):
-        pass
+    dependencies = ['a', 'b']

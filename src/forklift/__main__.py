@@ -43,6 +43,8 @@ def main():
             print('{} added to config file'.format(args['<folder-path>']))
         if args['--list']:
             print('\n'.join(lift.get_config_paths()))
+        if args['--validate']:
+            lift.validate_config_paths()
     elif args['list'] and args['--plugins']:
         plugins = lift.list_plugins(args['<path>'])
         for plug in plugins:

@@ -63,6 +63,17 @@ def get_config_paths():
         return config
 
 
+def validate_config_paths():
+    paths = get_config_paths()
+
+    for path in paths:
+        if exists(path):
+            valid = 'valid'
+        else:
+            valid = 'invalid!'
+        print('{}: {}'.format(path, valid))
+
+
 def _get_plugins_in_location(paths):
     plugins = []
     for path in paths:

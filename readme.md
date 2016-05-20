@@ -12,3 +12,5 @@ A CLI tool for managing a plethora of scheduled task python scripts.
 
 ### Tests
 `tox`
+
+Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) will automatically be skipped if it is not found on your system.

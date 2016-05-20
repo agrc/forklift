@@ -29,7 +29,22 @@ def init():
 
 def add_plugin_folder(path):
     paths = get_config_paths()
+
+    if path in paths:
+        raise Exception('{} is already in the config paths list!')
+
     paths.append(path)
+
+    return _set_config_paths(paths)
+
+
+def remove_plugin_folder(path):
+    paths = get_config_paths()
+    try:
+        paths.remove(path)
+    except ValueError:
+        raise Exception('{} is not in the config paths list!')
+
     return _set_config_paths(paths)
 
 

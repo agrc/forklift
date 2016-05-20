@@ -6,6 +6,7 @@ forklift 🚜
 Usage:
     forklift config --init
     forklift config --add <folder-path>
+    forklift config --remove <folder-path>
     forklift config --validate
     forklift config --list
     forklift list [<folder-path>]
@@ -15,7 +16,8 @@ Arguments:
     file-path       a path to a file
 Examples:
     config --init:                  creates the config file.
-    config --add path/to/folder:    adds a path to the config. checks for duplicates and accessibility.
+    config --add path/to/folder:    adds a path to the config. Checks for duplicates.
+    config --remove path/to/folder: removes a path from the config.
     config --list:                  outputs the list of plugin folder paths in your config file.
     config --validate:              validates all config paths are reachable.
     list:                           outputs the list of plugins from the config.
@@ -41,6 +43,9 @@ def main():
         if args['--add'] and args['<folder-path>']:
             lift.add_plugin_folder(args['<folder-path>'])
             print('{} added to config file'.format(args['<folder-path>']))
+        if args['--remove'] and args['<folder-path>']:
+            lift.remove_plugin_folder(args['<folder-path>'])
+            print('{} removed from config file'.format(args['<folder-path>']))
         if args['--list']:
             print('\n'.join(lift.get_config_paths()))
         if args['--validate']:

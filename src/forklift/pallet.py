@@ -36,7 +36,7 @@ class Pallet(object):
 
         return self.crates
 
-    def add_crates(self, crate_infos, defaults=None):
+    def add_crates(self, crate_infos, defaults={}):
         crate_param_names = ['source_name', 'source', 'destination', 'destination_name']
         for info in crate_infos:
             params = defaults.copy()

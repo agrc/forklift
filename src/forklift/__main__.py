@@ -2,30 +2,40 @@
 # -*- coding: utf-8 -*-
 '''
 Usage:
+  forklift list (--plugins | --config) [path]
+  forklift config --init
+  forklift config --add <path>
+  forklift config --validate
   forklift update
-  forklift update-specific
-Options:
-  --config     the path to some cfg or text file or something where we keep paths to places where there are update plugins.
-               defaults to some relative or static path.
-  --plugin     the name of the plugin used to filter execution. maybe a partial match or glob or exact match?
+  forklift update-specific <path>
 Arguments:
-  <path>       an optional path to pass in so you can run a certain directory
+  <path>   a file path
+
 forklift 🚜
+
+Examples:
+    list: outputs the list of plugins from the config or the config paths. specify a path to get a list of plugins
+        in that location.
+    config init: creates the config file.
+    config add: adds a path to the config. checks for duplicates and accessibility.
+    config validate: validates all config paths are reachable.
+    update: the main entry for running all of plugins found in the config paths.
+    update-specific: run a specific plugin.
 '''
 
+import lift
 import logging.config
 import sys
 from docopt import docopt
 
 
 def main():
-    arguments = docopt(__doc__, version='1.0.0')
+    args = docopt(__doc__, version='1.0.0')
     _setup_logging()
 
-    if arguments['update']:
-        pass
-    elif arguments['update-specific']:
-        pass
+    if args['config'] and args['--init']:
+        file_created = lift.init()
+        print('forklift - {}'.format(file_created))
 
 
 def _setup_logging():
@@ -53,8 +63,8 @@ def _setup_logging():
                 'class': 'logging.handlers.TimedRotatingFileHandler',
                 'filename': 'forklift.log',
                 'when': 'D',
-                'interval': '1',
-                'backupCount': '7',
+                'interval': 1,
+                'backupCount': 7,
                 'formatter': 'detailed_formatter'
             }
         },

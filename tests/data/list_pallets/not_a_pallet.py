@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # * coding: utf8 *
 '''
-not_a_plugin.py
+not_a_pallet.py
 
-For tests to make sure that they skip non-plugin files
+For tests to make sure that they skip non-pallet files
 '''
 
 

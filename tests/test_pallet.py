@@ -23,7 +23,7 @@ class NoExecutePallet(Pallet):
     '''
 
 
-class Testpallet(unittest.TestCase):
+class TestPallet(unittest.TestCase):
 
     def setUp(self):
         self.patient = Pallet()
@@ -38,33 +38,27 @@ class Testpallet(unittest.TestCase):
 
         self.assertTrue(self.patient.execute())
 
-    def test_defaults(self):
-        self.assertEquals(self.patient.get_dependent_layers(), [])
-        self.assertEquals(self.patient.get_source_location(), 'C:\\MapData\\SGID10.sde')
-        self.assertEquals(self.patient.get_destination_location(), 'C:\\MapData\\SGID10.gdb')
-
     def test_can_use_logging(self):
         self.patient.log.info('this works')
 
-    def test_overrides_class_variables(self):
-        class OnePallet(Pallet):
-            def __init__(self):
-                super(OnePallet, self).__init__()
-                self.dependencies = ['a', 'b']
+    def test_add_crates(self):
+        source = 'C:\\MapData\\UDNR.sde'
+        dest = 'C:\\MapData\\UDNR.gdb'
+        self.patient.add_crates(['fc1',
+                                 ('fc3', 'source'),
+                                 ('fc4', 'source', 'destination', 'fc4_new')],
+                                {'source': source,
+                                 'destination': dest})
 
-        class AnotherPallet(Pallet):
-            def __init__(self):
-                super(AnotherPallet, self).__init__()
-                self.dependencies = ['c', 'd']
+        self.assertEquals(len(self.crates), 3)
 
-        class EmptyPallet(Pallet):
-            pass
+        #: single source_name with defaults
+        self.assertEquals(self.crates[0].source_name, 'fc1')
+        self.assertEquals(self.crates[0].source, source)
+        self.assertEquals(self.crates[0].source, dest)
+        self.assertEquals(self.crates[0].destination_name, 'fc1')
 
-        one = OnePallet()
-        another = AnotherPallet()
-        empty = EmptyPallet()
-        one.dependencies = ['a', 'b']
+        self.assertEquals(self.crates[1].source, 'source')
+        self.assertEquals(self.crates[1].source, dest)
 
-        self.assertEquals(one.dependencies, ['a', 'b'])
-        self.assertEquals(another.dependencies, ['c', 'd'])
-        self.assertEquals(empty.dependencies, [])
+        self.assertEquals(self.crates[2].destination_name, 'fc4_new')

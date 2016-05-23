@@ -6,31 +6,26 @@ multiple_pallets.py
 A module that contains pallets to be used in test_lift.py tests
 '''
 
-from forklift.pallet import Pallet
+from forklift.models import Pallet
 
 
 class PalletOne(Pallet):
 
     def __init__(self):
         super(PalletOne, self).__init__()
-        self.expires_in_hours = 1
-
-        self.set_default_source_location()
 
         self.add_crates(['fc1',
                          'fc2',
                          ('fc3', 'source', 'destination'),
                          ('fc4', 'source', 'destination', 'fc4_new')],
-                        {'source': 'C:\\MapData\\UDNR.sde',
-                         'destination': 'C:\\MapData\\UDNR.gdb'})
+                        {'source_workspace': 'C:\\MapData\\UDNR.sde',
+                         'destination_workspace': 'C:\\MapData\\UDNR.gdb'})
 
 
 class PalletTwo(Pallet):
 
     def __init__(self):
-        super(PalletTwo, self).__init()
-        self.expires_in_hours = 2
-        self.dependencies = ['c', 'd']
+        super(PalletTwo, self).__init__()
 
-    def execute(self):
+    def ship(self):
         print('execute: overridden')

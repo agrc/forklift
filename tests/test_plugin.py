@@ -45,3 +45,21 @@ class TestPlugin(unittest.TestCase):
 
     def test_can_use_logging(self):
         self.patient.log.info('this works')
+
+    def test_overrides_class_variables(self):
+        class OnePlugin(ScheduledUpdateBase):
+            dependencies = ['a', 'b']
+
+        class AnotherPlugin(ScheduledUpdateBase):
+            dependencies = ['c', 'd']
+
+        class EmptyPlugin(ScheduledUpdateBase):
+            pass
+
+        one = OnePlugin()
+        another = AnotherPlugin()
+        empty = EmptyPlugin()
+
+        self.assertEquals(one.dependencies, ['a', 'z'])
+        self.assertEquals(another.dependencies, ['c', 'd'])
+        self.assertEquals(empty.dependencies, [])

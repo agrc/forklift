@@ -31,7 +31,6 @@ class ScheduledUpdateBase(object):
     def execute(self):
         '''This method will be called by forklift if the `expires_in_hours` value has expired.
         '''
-
         pass
 
     def get_dependent_layers(self):

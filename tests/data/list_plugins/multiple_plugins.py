@@ -15,6 +15,7 @@ class PluginOne(ScheduledUpdateBase):
 
 class PluginTwo(ScheduledUpdateBase):
     expires_in_hours = 2
+    dependencies = ['c', 'd']
 
     def execute(self):
-        print('overridden')
+        print('execute: overridden')

@@ -125,5 +125,6 @@ def update(file_path=None):
         plugin = PluginClass()
 
         #: not sure what needs to be done here want to do here
-        print plugin.expires_in_hours
+        print('expires_in_hours: {}'.format(plugin.expires_in_hours))
+        print('dependencies: {}'.format(plugin.dependencies))
         plugin.execute()

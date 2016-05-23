@@ -38,16 +38,19 @@ def main():
 
     if args['config']:
         if args['--init']:
-            file_created = lift.init()
-            print('config file created: {}'.format(file_created))
+            message = lift.init()
+            print('config file created: {}'.format(message))
+
         if args['--add'] and args['<folder-path>']:
-            lift.add_pallet_folder(args['<folder-path>'])
-            print('{} added to config file'.format(args['<folder-path>']))
+            message = lift.add_config_folder(args['<folder-path>'])
+            print(message)
+
         if args['--remove'] and args['<folder-path>']:
-            lift.remove_pallet_folder(args['<folder-path>'])
-            print('{} removed from config file'.format(args['<folder-path>']))
+            message = lift.remove_pallet_folder(args['<folder-path>'])
+            print('{} removed from config file'.format(message))
+
         if args['--list']:
-            lift.validate_config_path()
+            lift.list_config_folders()
     elif args['list']:
         if args['<folder-path>']:
             pallets = lift.list_pallets(args['<path>'])

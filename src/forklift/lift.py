@@ -25,49 +25,58 @@ def init():
 
     log.debug('creating config.json file.')
 
-    return _set_config_paths(default_pallet_locations)
+    return _set_config_folders(default_pallet_locations)
 
 
-def add_pallet_folder(path):
-    paths = get_config_paths()
+def add_config_folder(folder):
+    folders = get_config_folders()
 
-    if path in paths:
-        return '{} is already in the config paths list!'.format(path)
+    if folder in folders:
+        return '{} is already in the config folders list!'.format(folder)
 
     try:
-        valid_config_path(path=path, raises=True):
+        _validate_config_folder(folder, raises=True)
     except Exception as e:
         return e.message
 
-    paths.append(path)
+    folders.append(folder)
 
-    return _set_config_paths(paths)
+    _set_config_folders(folders)
+
+    return 'added {}'.format(folder)
 
 
-def remove_pallet_folder(path):
-    paths = get_config_paths()
+def remove_pallet_folder(folder):
+    folders = get_config_folders()
 
     try:
-        paths.remove(path)
+        folders.remove(folder)
     except ValueError:
-        return '{} is not in the config paths list!'.format(path)
+        return '{} is not in the config folders list!'.format(folder)
 
-    return _set_config_paths(paths)
-
-
-def list_pallets(paths=None):
-    if paths is None:
-        paths = get_config_paths()
-
-    return _get_pallets_in_folders(paths)
+    return _set_config_folders(folders)
 
 
-def _set_config_paths(paths):
-    if type(paths) != list:
+def list_pallets(folders=None):
+    if folders is None:
+        folders = get_config_folders()
+
+    return _get_pallets_in_folders(folders)
+
+
+def list_config_folders():
+    folders = get_config_folders()
+
+    for folder in folders:
+        yield _validate_config_folder(folder)
+
+
+def _set_config_folders(folders):
+    if type(folders) != list:
         raise Exception('config file data must be a list.')
 
     with open('config.json', 'w') as json_data_file:
-        data = dumps(paths)
+        data = dumps(folders)
 
         log.debug('writing %s to %s', data, abspath(json_data_file.name))
         json_data_file.write(data)
@@ -75,7 +84,7 @@ def _set_config_paths(paths):
         return abspath(json_data_file.name)
 
 
-def get_config_paths():
+def get_config_folders():
     if not exists('config.json'):
         raise Exception('config file not found.')
 
@@ -85,43 +94,39 @@ def get_config_paths():
         return config
 
 
-def validate_config_paths(path=None, raises=False):
-    if path is None:
-        paths = get_config_paths()
+def _validate_config_folder(folder, raises=False):
+    if exists(folder):
+        valid = 'valid'
+    else:
+        valid = 'invalid!'
+        if raises:
+            raise Exception('{}: {}'.format(folder, valid))
 
-    for path in paths:
-        if exists(path):
-            valid = 'valid'
-        else:
-            valid = 'invalid!'
-            if raises:
-                throw Exception('{}: {}'.format(path, valid))
-
-        print('{}: {}'.format(path, valid))
+    print('{}: {}'.format(folder, valid))
 
 
-def _get_pallets_in_folders(paths):
+def _get_pallets_in_folders(folders):
     pallets = []
 
-    for path in paths:
-        sys.path.append(path)
+    for folder in folders:
+        sys.path.append(folder)
 
-        for py_file in glob(join(path, '*.py')):
+        for py_file in glob(join(folder, '*.py')):
             pallets.extend(_get_pallets_in_file(py_file))
 
     return pallets
 
 
-def _get_pallets_in_file(file_path):
+def _get_pallets_in_file(file_folder):
     pallets = []
-    name = splitext(basename(file_path))[0]
+    name = splitext(basename(file_folder))[0]
     mod = __import__(name)
 
     for member in dir(mod):
         try:
             potential_class = getattr(mod, member)
             if issubclass(potential_class, Pallet) and potential_class != Pallet:
-                pallets.append((file_path, member))
+                pallets.append((file_folder, member))
         except:
             #: member was likely not a class
             pass

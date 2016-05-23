@@ -44,21 +44,34 @@ class TestPallet(unittest.TestCase):
     def test_add_crates(self):
         source = 'C:\\MapData\\UDNR.sde'
         dest = 'C:\\MapData\\UDNR.gdb'
-        self.patient.add_crates(['fc1',
-                                 ('fc3', 'source'),
-                                 ('fc4', 'source', 'destination', 'fc4_new')],
-                                {'source': source,
-                                 'destination': dest})
+        self.patient.add_crates(
+            ['fc1', ('fc3', 'source'), ('fc4', 'source', 'destination', 'fc4_new')], {'source': source,
+                                                                                      'destination': dest})
 
-        self.assertEquals(len(self.crates), 3)
+        self.assertEquals(len(self.patient.crates), 3)
 
         #: single source_name with defaults
-        self.assertEquals(self.crates[0].source_name, 'fc1')
-        self.assertEquals(self.crates[0].source, source)
-        self.assertEquals(self.crates[0].source, dest)
-        self.assertEquals(self.crates[0].destination_name, 'fc1')
+        self.assertEquals(self.patient.crates[0].source_name, 'fc1')
+        self.assertEquals(self.patient.crates[0].source, source)
+        self.assertEquals(self.patient.crates[0].destination, dest)
+        self.assertEquals(self.patient.crates[0].destination_name, 'fc1')
 
-        self.assertEquals(self.crates[1].source, 'source')
-        self.assertEquals(self.crates[1].source, dest)
+        self.assertEquals(self.patient.crates[1].source, 'source')
+        self.assertEquals(self.patient.crates[1].destination, dest)
 
-        self.assertEquals(self.crates[2].destination_name, 'fc4_new')
+        self.assertEquals(self.patient.crates[2].destination_name, 'fc4_new')
+
+    def test_add_crates_empty_defaults(self):
+        self.patient.add_crates([('fc1', 'source1', 'destination1'), ('fc2', 'source2', 'destination2', 'fc2_new')])
+
+        self.assertEquals(len(self.patient.crates), 2)
+
+        #: single source_name with defaults
+        self.assertEquals(self.patient.crates[0].source_name, 'fc1')
+        self.assertEquals(self.patient.crates[0].source, 'source1')
+        self.assertEquals(self.patient.crates[0].destination, 'destination1')
+        self.assertEquals(self.patient.crates[0].destination_name, 'fc1')
+
+        self.assertEquals(self.patient.crates[1].source, 'source2')
+        self.assertEquals(self.patient.crates[1].destination, 'destination2')
+        self.assertEquals(self.patient.crates[1].destination_name, 'fc2_new')

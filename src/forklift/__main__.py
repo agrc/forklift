@@ -26,7 +26,7 @@ Examples:
     lift path/to/file              run a specific pallet.
 '''
 
-import lift
+import cli
 import logging.config
 import sys
 from docopt import docopt
@@ -38,24 +38,24 @@ def main():
 
     if args['config']:
         if args['--init']:
-            message = lift.init()
+            message = cli.init()
             print('config file created: {}'.format(message))
 
         if args['--add'] and args['<folder-path>']:
-            message = lift.add_config_folder(args['<folder-path>'])
+            message = cli.add_config_folder(args['<folder-path>'])
             print(message)
 
         if args['--remove'] and args['<folder-path>']:
-            message = lift.remove_pallet_folder(args['<folder-path>'])
+            message = cli.remove_pallet_folder(args['<folder-path>'])
             print('{} removed from config file'.format(message))
 
         if args['--list']:
-            lift.list_config_folders()
+            cli.list_config_folders()
     elif args['list']:
         if args['<folder-path>']:
-            pallets = lift.list_pallets(args['<path>'])
+            pallets = cli.list_pallets(args['<path>'])
         else:
-            pallets = lift.list_pallets()
+            pallets = cli.list_pallets()
 
         if len(pallets) == 0:
             print('No pallets found!')
@@ -64,9 +64,9 @@ def main():
                 print(': '.join(plug))
     elif args['update']:
         if args['<file-path>']:
-            lift.lift(args['<file-path>'])
+            cli.lift(args['<file-path>'])
         else:
-            lift.lift()
+            cli.lift()
 
 
 def _setup_logging():

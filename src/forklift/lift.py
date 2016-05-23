@@ -9,7 +9,7 @@ A module that contains the implementation of the cli commands
 import logging
 import settings
 import sys
-from plugin import ScheduledUpdateBase
+from pallet import Pallet
 from glob import glob
 from json import dumps, loads
 from os.path import abspath, exists, join, splitext, basename
@@ -21,13 +21,13 @@ def init():
     if exists('config.json'):
         return 'config file already created.'
 
-    default_plugin_locations = ['c:\\scheduled']
+    default_pallet_locations = ['c:\\scheduled']
 
     log.debug('creating config.json file.')
-    return _set_config_paths(default_plugin_locations)
+    return _set_config_paths(default_pallet_locations)
 
 
-def add_plugin_folder(path):
+def add_pallet_folder(path):
     paths = get_config_paths()
 
     if path in paths:
@@ -38,7 +38,7 @@ def add_plugin_folder(path):
     return _set_config_paths(paths)
 
 
-def remove_plugin_folder(path):
+def remove_pallet_folder(path):
     paths = get_config_paths()
     try:
         paths.remove(path)
@@ -48,11 +48,11 @@ def remove_plugin_folder(path):
     return _set_config_paths(paths)
 
 
-def list_plugins(paths=None):
+def list_pallets(paths=None):
     if paths is None:
         paths = get_config_paths()
 
-    return _get_plugins_in_folders(paths)
+    return _get_pallets_in_folders(paths)
 
 
 def _set_config_paths(paths):
@@ -89,42 +89,42 @@ def validate_config_paths():
         print('{}: {}'.format(path, valid))
 
 
-def _get_plugins_in_folders(paths):
-    plugins = []
+def _get_pallets_in_folders(paths):
+    pallets = []
     for path in paths:
         sys.path.append(path)
         for py_file in glob(join(path, '*.py')):
-            plugins.extend(_get_plugins_in_file(py_file))
-    return plugins
+            pallets.extend(_get_pallets_in_file(py_file))
+    return pallets
 
 
-def _get_plugins_in_file(file_path):
-    plugins = []
+def _get_pallets_in_file(file_path):
+    pallets = []
     name = splitext(basename(file_path))[0]
     mod = __import__(name)
     for member in dir(mod):
         try:
             potential_class = getattr(mod, member)
-            if issubclass(potential_class, ScheduledUpdateBase) and potential_class != ScheduledUpdateBase:
-                plugins.append((file_path, member))
+            if issubclass(potential_class, Pallet) and potential_class != Pallet:
+                pallets.append((file_path, member))
         except:
             #: member was likely not a class
             pass
 
-    return plugins
+    return pallets
 
 
 def update(file_path=None):
     if file_path is not None:
-        plugin_infos = _get_plugins_in_file(file_path)
+        pallet_infos = _get_pallets_in_file(file_path)
     else:
-        plugin_infos = list_plugins()
+        pallet_infos = list_pallets()
 
-    for info in plugin_infos:
-        PluginClass = getattr(__import__(splitext(basename(info[0]))[0]), info[1])
-        plugin = PluginClass()
+    for info in pallet_infos:
+        palletClass = getattr(__import__(splitext(basename(info[0]))[0]), info[1])
+        pallet = palletClass()
 
         #: not sure what needs to be done here want to do here
-        print('expires_in_hours: {}'.format(plugin.expires_in_hours))
-        print('dependencies: {}'.format(plugin.dependencies))
-        plugin.execute()
+        print('expires_in_hours: {}'.format(pallet.expires_in_hours))
+        print('dependencies: {}'.format(pallet.dependencies))
+        pallet.execute()

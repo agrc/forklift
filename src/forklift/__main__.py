@@ -19,12 +19,12 @@ Examples:
     config --init:                  creates the config file.
     config --add path/to/folder:    adds a path to the config. Checks for duplicates.
     config --remove path/to/folder: removes a path from the config.
-    config --list:                  outputs the list of plugin folder paths in your config file.
+    config --list:                  outputs the list of pallet folder paths in your config file.
     config --validate:              validates all config paths are reachable.
-    list:                           outputs the list of plugins from the config.
-    list path/to/folder:            outputs the list of plugins for the passed in path.
-    update:                         the main entry for running all of plugins found in the config paths.
-    update path/to/file:            run a specific plugin.
+    list:                           outputs the list of pallets from the config.
+    list path/to/folder:            outputs the list of pallets for the passed in path.
+    update:                         the main entry for running all of pallets found in the config paths.
+    update path/to/file:            run a specific pallet.
 '''
 
 import lift
@@ -42,23 +42,23 @@ def main():
             file_created = lift.init()
             print('config file created: {}'.format(file_created))
         if args['--add'] and args['<folder-path>']:
-            lift.add_plugin_folder(args['<folder-path>'])
+            lift.add_pallet_folder(args['<folder-path>'])
             print('{} added to config file'.format(args['<folder-path>']))
         if args['--remove'] and args['<folder-path>']:
-            lift.remove_plugin_folder(args['<folder-path>'])
+            lift.remove_pallet_folder(args['<folder-path>'])
             print('{} removed from config file'.format(args['<folder-path>']))
         if args['--list']:
             lift.validate_config_paths()
     elif args['list']:
         if args['<folder-path>']:
-            plugins = lift.list_plugins(args['<path>'])
+            pallets = lift.list_pallets(args['<path>'])
         else:
-            plugins = lift.list_plugins()
+            pallets = lift.list_pallets()
 
-        if len(plugins) == 0:
-            print('No plugins found!')
+        if len(pallets) == 0:
+            print('No pallets found!')
         else:
-            for plug in plugins:
+            for plug in pallets:
                 print(': '.join(plug))
     elif args['update']:
         if args['<file-path>']:

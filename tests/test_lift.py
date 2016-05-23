@@ -33,44 +33,44 @@ class TestLift(unittest.TestCase):
         with open(path) as config:
             self.assertEquals(['c:\\scheduled'], loads(config.read()))
 
-    def test_list_plugins(self):
-        test_plugins_folder = join(self.test_data_folder, 'list_plugins')
-        plugins = lift.list_plugins(paths=[test_plugins_folder])
+    def test_list_pallets(self):
+        test_pallets_folder = join(self.test_data_folder, 'list_pallets')
+        pallets = lift.list_pallets(paths=[test_pallets_folder])
 
-        self.assertEquals(len(plugins), 3)
-        self.assertEquals(plugins[0][0], join(test_plugins_folder, 'multiple_plugins.py'))
-        self.assertEquals(plugins[0][1], 'PluginOne')
+        self.assertEquals(len(pallets), 3)
+        self.assertEquals(pallets[0][0], join(test_pallets_folder, 'multiple_pallets.py'))
+        self.assertEquals(pallets[0][1], 'PalletOne')
 
     def test_set_config_paths_requires_list(self):
         self.assertRaises(Exception, lift._set_config_paths, 'hello')
 
-    def test_add_plugin_folder(self):
+    def test_add_pallet_folder(self):
         path = lift.init()
 
-        lift.add_plugin_folder('another/folder')
+        lift.add_pallet_folder('another/folder')
 
         with open(path) as config:
             self.assertEquals(['c:\\scheduled', 'another/folder'], loads(config.read()))
 
-    def test_add_plugin_folder_checks_for_duplicates(self):
+    def test_add_pallet_folder_checks_for_duplicates(self):
         lift.init()
 
-        lift.add_plugin_folder('another/folder')
-        self.assertRaises(Exception, lift.add_plugin_folder, 'another/folder')
+        lift.add_pallet_folder('another/folder')
+        self.assertRaises(Exception, lift.add_pallet_folder, 'another/folder')
 
-    def test_remove_plugin_folder(self):
+    def test_remove_pallet_folder(self):
         path = lift.init()
         test_config_path = join(self.test_data_folder, 'remove_test_config.json')
 
         with open(path, 'w') as json_data_file, open(test_config_path) as test_config_file:
             json_data_file.write(test_config_file.read())
 
-        lift.remove_plugin_folder('path/one')
+        lift.remove_pallet_folder('path/one')
 
         with open(path) as test_config_file:
             self.assertEquals(['path/two'], loads(test_config_file.read()))
 
-    def test_remove_plugin_folder_checks_for_existing(self):
+    def test_remove_pallet_folder_checks_for_existing(self):
         lift.init()
 
-        self.assertRaises(Exception, lift.remove_plugin_folder, 'blah')
+        self.assertRaises(Exception, lift.remove_pallet_folder, 'blah')

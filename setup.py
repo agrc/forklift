@@ -67,8 +67,7 @@ setup(
     keywords=[
     ],
     install_requires=[
-        'docopt==0.6.2',
-        'venusian==1.0'
+        'docopt==0.6.2'
     ],
     dependency_links=[
     ],

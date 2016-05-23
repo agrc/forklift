@@ -15,6 +15,15 @@ class PalletOne(Pallet):
         super(PalletOne, self).__init__()
         self.expires_in_hours = 1
 
+        self.set_default_source_location()
+
+        self.add_crates(['fc1',
+                         'fc2',
+                         ('fc3', 'source', 'destination'),
+                         ('fc4', 'source', 'destination', 'fc4_new')],
+                        {'source': 'C:\\MapData\\UDNR.sde',
+                         'destination': 'C:\\MapData\\UDNR.gdb'})
+
 
 class PalletTwo(Pallet):
 

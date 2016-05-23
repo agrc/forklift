@@ -24,6 +24,7 @@ def init():
     default_pallet_locations = ['c:\\scheduled']
 
     log.debug('creating config.json file.')
+
     return _set_config_paths(default_pallet_locations)
 
 
@@ -31,7 +32,12 @@ def add_pallet_folder(path):
     paths = get_config_paths()
 
     if path in paths:
-        raise Exception('{} is already in the config paths list!')
+        return '{} is already in the config paths list!'.format(path)
+
+    try:
+        valid_config_path(path=path, raises=True):
+    except Exception as e:
+        return e.message
 
     paths.append(path)
 
@@ -40,10 +46,11 @@ def add_pallet_folder(path):
 
 def remove_pallet_folder(path):
     paths = get_config_paths()
+
     try:
         paths.remove(path)
     except ValueError:
-        raise Exception('{} is not in the config paths list!')
+        return '{} is not in the config paths list!'.format(path)
 
     return _set_config_paths(paths)
 
@@ -78,23 +85,30 @@ def get_config_paths():
         return config
 
 
-def validate_config_paths():
-    paths = get_config_paths()
+def validate_config_paths(path=None, raises=False):
+    if path is None:
+        paths = get_config_paths()
 
     for path in paths:
         if exists(path):
             valid = 'valid'
         else:
             valid = 'invalid!'
+            if raises:
+                throw Exception('{}: {}'.format(path, valid))
+
         print('{}: {}'.format(path, valid))
 
 
 def _get_pallets_in_folders(paths):
     pallets = []
+
     for path in paths:
         sys.path.append(path)
+
         for py_file in glob(join(path, '*.py')):
             pallets.extend(_get_pallets_in_file(py_file))
+
     return pallets
 
 
@@ -102,6 +116,7 @@ def _get_pallets_in_file(file_path):
     pallets = []
     name = splitext(basename(file_path))[0]
     mod = __import__(name)
+
     for member in dir(mod):
         try:
             potential_class = getattr(mod, member)
@@ -114,7 +129,7 @@ def _get_pallets_in_file(file_path):
     return pallets
 
 
-def update(file_path=None):
+def lift(file_path=None):
     if file_path is not None:
         pallet_infos = _get_pallets_in_file(file_path)
     else:
@@ -124,7 +139,4 @@ def update(file_path=None):
         palletClass = getattr(__import__(splitext(basename(info[0]))[0]), info[1])
         pallet = palletClass()
 
-        #: not sure what needs to be done here want to do here
-        print('expires_in_hours: {}'.format(pallet.expires_in_hours))
-        print('dependencies: {}'.format(pallet.dependencies))
-        pallet.execute()
+        pallet.process()

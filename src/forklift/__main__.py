@@ -9,22 +9,21 @@ Usage:
     forklift config --remove <folder-path>
     forklift config --list
     forklift list [<folder-path>]
-    forklift update [<file-path>]
+    forklift lift [<file-path>]
 
 Arguments:
     folder-path     a path to a folder
     file-path       a path to a file
 
 Examples:
-    config --init:                  creates the config file.
-    config --add path/to/folder:    adds a path to the config. Checks for duplicates.
-    config --remove path/to/folder: removes a path from the config.
-    config --list:                  outputs the list of pallet folder paths in your config file.
-    config --validate:              validates all config paths are reachable.
-    list:                           outputs the list of pallets from the config.
-    list path/to/folder:            outputs the list of pallets for the passed in path.
-    update:                         the main entry for running all of pallets found in the config paths.
-    update path/to/file:            run a specific pallet.
+    config --init                  creates the config file.
+    config --add path/to/folder    adds a path to the config. Checks for duplicates.
+    config --remove path/to/folder removes a path from the config.
+    config --list                  outputs the list of pallet folder paths in your config file.
+    list                           outputs the list of pallets from the config.
+    list path/to/folder            outputs the list of pallets for the passed in path.
+    lift                           the main entry for running all of pallets found in the config paths.
+    lift path/to/file              run a specific pallet.
 '''
 
 import lift
@@ -48,7 +47,7 @@ def main():
             lift.remove_pallet_folder(args['<folder-path>'])
             print('{} removed from config file'.format(args['<folder-path>']))
         if args['--list']:
-            lift.validate_config_paths()
+            lift.validate_config_path()
     elif args['list']:
         if args['<folder-path>']:
             pallets = lift.list_pallets(args['<path>'])
@@ -62,9 +61,9 @@ def main():
                 print(': '.join(plug))
     elif args['update']:
         if args['<file-path>']:
-            lift.update(args['<file-path>'])
+            lift.lift(args['<file-path>'])
         else:
-            lift.update()
+            lift.lift()
 
 
 def _setup_logging():

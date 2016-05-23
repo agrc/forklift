@@ -38,11 +38,18 @@ class Pallet(object):
 
     def add_crates(self, crate_infos, defaults={}):
         crate_param_names = ['source_name', 'source', 'destination', 'destination_name']
+
         for info in crate_infos:
             params = defaults.copy()
-            for i, val in enumerate(info):
-                params[crate_param_names[i]] = val
-            self.crates.append(Crate(*params))
+
+            #: info can be a table name here instead of a tuple
+            if isinstance(info, basestring):
+                params['source_name'] = info
+            else:
+                for i, val in enumerate(info):
+                    params[crate_param_names[i]] = val
+
+            self.crates.append(Crate(**params))
 
     def add_crate(self, crate_info):
         self.add_crates([crate_info])

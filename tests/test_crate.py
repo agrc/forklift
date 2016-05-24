@@ -21,3 +21,5 @@ class TestCrate(unittest.TestCase):
     def test_destination_name_defaults_to_source(self):
         crate = Crate('sourceName', 'source', 'destination')
         self.assertEquals(crate.destination_name, crate.source_name)
+
+    def test_

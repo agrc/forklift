@@ -29,7 +29,12 @@ class Pallet(object):
     def process(self):
         '''This method will be called by forklift if any of the crates data is modified
         '''
-        pass
+        return NotImplemented
+
+    def ship(self):
+        '''this method fires whether the crates have any updates or not
+        '''
+        return NotImplemented
 
     def get_crates(self):
         '''returns an array of crates affected by the pallet. This is a self documenting way to know what layers an
@@ -58,10 +63,49 @@ class Pallet(object):
     def add_crate(self, crate_info):
         self.add_crates([crate_info])
 
+    def validate_crate(self, crate):
+        '''override to provide your own validation to determine whether the data within
+        a create is ready to be updated
+
+        this method should return a boolean indicating if the crate is ready for an update
+
+        if this method is not overriden then the default validate within core is used
+        '''
+        return NotImplemented
+
+    def is_ready_to_ship(self):
+        '''checks to see if there are any schema changes or errors within the crates
+        associated with this pallet
+
+        returns: Boolean
+        Returns True of there are no crates defined
+        '''
+        #: TODO
+        return True
+
+    def requires_processing(self):
+        '''checks to see if any of the crates were updated
+
+        returns: Boolean
+        Returns False if there are no crates defined
+        '''
+        #: TODO
+        return True
+
+    def get_report(self):
+        '''returns a message about the result of each crate in the plugin'''
+        pass
+
 
 class Crate(object):
     '''A module that defines a source and destination dataset that is a dependency of a pallet
     '''
+
+    #: possible results
+    UPDATED = 'updated'
+    SCHEMA_CHANGED = 'schema change detected'
+    NO_CHANGES = 'no changes'
+    ERROR_DURING_UPDATE = 'error during update'
 
     def __init__(self, source_name, source, destination, destination_name=None):
         #: the name of the source data table
@@ -74,3 +118,12 @@ class Crate(object):
         self.destination_name = destination_name or source_name
         #: the unique name of the crate
         self.name = '{}::{}'.format(destination, destination_name)
+        #: the result of the core.update method being called on this crate
+        self.result = ''
+
+    def set_result(self, value):
+        self.result = value
+        return value
+
+    def get_result(self):
+        return self.result

@@ -17,7 +17,7 @@ def process_crates(pallets):
             if crate.name in processed_crates:
                 crate.set_result(process_crates[crate.name])
             else:
-                process_crates[crate.name] = crate.set_result(core.update(crate, pallet.crate_validation))
+                process_crates[crate.name] = crate.set_result(core.update(crate, pallet.validate_crate))
                 #: core returns updated, schema change, no update needed or error during update
 
 
@@ -25,8 +25,8 @@ def process_pallets(pallets):
     reports = []
     for pallet in pallets:
         if pallet.is_ready_for_ship():  #: checks for schema changes or errors
-            if pallet.needs_postprocessing():  #: checks for data that was updated
-                pallet.post_process()
+            if pallet.requires_processing():  #: checks for data that was updated
+                pallet.process()
             pallet.ship()
 
         reports.append(pallet.get_report())

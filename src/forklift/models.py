@@ -73,4 +73,4 @@ class Crate(object):
         #: the name of the output data table
         self.destination_name = destination_name or source_name
         #: the unique name of the crate
-        self.name = '{}::{}'.format(source, source_name)
+        self.name = '{}::{}'.format(destination, destination_name)

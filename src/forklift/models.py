@@ -9,6 +9,7 @@ A module that contains the model classes for forklift
 
 import logging
 import settings
+from os.path import join
 
 
 class Pallet(object):
@@ -101,27 +102,34 @@ class Crate(object):
     '''A module that defines a source and destination dataset that is a dependency of a pallet
     '''
 
-    #: possible results
+    #: possible results returned from core.update_crate
+    CREATED = 'Created table successfully.'
     UPDATED = 'Data updated successfully.'
-    SCHEMA_CHANGED = 'Schema change detected.'
+    INVALID_DATA = 'Data is invalid. {}'
     NO_CHANGES = 'No changes found.'
     UNHANDLED_EXCEPTION = 'Unhandled exception during update.'
+    UNINITIALIZED = 'This crate was never processed.'
 
-    def __init__(self, source_name, source, destination, destination_name=None):
+    def __init__(self, source_name, source_workspace, destination_workspace, destination_name=None):
         #: the name of the source data table
         self.source_name = source_name
         #: the name of the source database
-        self.source = source
+        self.source_workspace = source_workspace
         #: the name of the destination database
-        self.destination = destination
+        self.destination_workspace = destination_workspace
         #: the name of the output data table
         self.destination_name = destination_name or source_name
-        #: the unique name of the crate
-        self.name = '{}::{}'.format(destination, destination_name)
         #: the result of the core.update method being called on this crate
-        self.result = ''
+        self.result = self.UNINITIALIZED
+
+        self.source = join(source_workspace, source_name)
+        self.destination = join(destination_workspace, self.destination_name)
 
     def set_result(self, value):
         self.result = value
 
         return value
+
+
+class ValidationException(Exception):
+    pass

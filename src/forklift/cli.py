@@ -9,7 +9,7 @@ A module that contains the implementation of the cli commands
 import logging
 import settings
 import sys
-from pallet import Pallet
+from models import Pallet
 from glob import glob
 from json import dumps, loads
 from os.path import abspath, exists, join, splitext, basename
@@ -142,6 +142,6 @@ def lift(file_path=None):
 
     for info in pallet_infos:
         PalletClass = getattr(__import__(splitext(basename(info[0]))[0]), info[1])
-        pallet = PalletClass('{}::{}'.format(basename(info[0], info[1]))
+        pallet = PalletClass('{}::{}'.format(basename(info[0], info[1])))
 
         pallet.process()

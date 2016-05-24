@@ -6,12 +6,12 @@ multiple_pallets.py
 A module that contains pallets to be used in test_lift.py tests
 '''
 
-from forklift.pallet import Pallet
+from forklift.models import Pallet
 
 
 class PalletOne(Pallet):
 
-    def __init__(self):
+    def __init__(self, name):
         super(PalletOne, self).__init__()
         self.expires_in_hours = 1
 
@@ -27,7 +27,7 @@ class PalletOne(Pallet):
 
 class PalletTwo(Pallet):
 
-    def __init__(self):
+    def __init__(self, name):
         super(PalletTwo, self).__init()
         self.expires_in_hours = 2
         self.dependencies = ['c', 'd']

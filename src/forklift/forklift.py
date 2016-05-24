@@ -9,7 +9,7 @@ A module that contains methods to handle pallets
 import core
 
 
-def process(self, pallets):
+def process(pallets):
     processed_crates = {}
 
     def dirty(crates):

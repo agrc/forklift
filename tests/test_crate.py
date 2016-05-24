@@ -7,7 +7,7 @@ A module for testing crate.py
 '''
 
 import unittest
-from forklift.crate import Crate
+from forklift.models import Crate
 
 
 class TestCrate(unittest.TestCase):

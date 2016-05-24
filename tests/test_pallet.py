@@ -7,7 +7,7 @@ A module that contains tests for the pallet module.
 '''
 
 import unittest
-from forklift.pallet import Pallet
+from forklift.models import Pallet
 
 
 class Pallet(Pallet):
@@ -26,15 +26,15 @@ class NoExecutePallet(Pallet):
 class TestPallet(unittest.TestCase):
 
     def setUp(self):
-        self.patient = Pallet()
+        self.patient = Pallet('a_pallet')
 
     def test_no_execute_no_problem(self):
-        self.patient = NoExecutePallet()
+        self.patient = NoExecutePallet('blah')
 
         self.patient.execute()
 
     def test_with_execute(self):
-        self.patient = Pallet()
+        self.patient = Pallet('hello')
 
         self.assertTrue(self.patient.execute())
 

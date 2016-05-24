@@ -1,26 +1,30 @@
 #!/usr/bin/env python
 # * coding: utf8 *
 '''
-pallet.py
+models.py
 
-A module that contains the base class that should be inherited from when building new pallet classes.
-
-Pallets are plugins for the forklift main process. They define a list of crates and
-any post processing that needs to happen.
+A module that contains the model classes for forklift
 '''
+
 
 import logging
 import settings
-from crate import Crate
 
 
 class Pallet(object):
+    '''A module that contains the base class that should be inherited from when building new pallet classes.
 
-    def __init__(self):
-        #: the table names for all dependent data for an application
-        self.crates = []
+    Pallets are plugins for the forklift main process. They define a list of crates and
+    any post processing that needs to happen.
+    '''
+
+    def __init__(self, name):
         #: the logging module to keep track of the pallet
         self.log = logging.getLogger(settings.LOGGER)
+        #: the name of the pallet
+        self.name = name
+        #: the table names for all dependent data for an application
+        self.crates = []
 
     def process(self):
         '''This method will be called by forklift if any of the crates data is modified
@@ -53,3 +57,20 @@ class Pallet(object):
 
     def add_crate(self, crate_info):
         self.add_crates([crate_info])
+
+
+class Crate(object):
+    '''A module that defines a source and destination dataset that is a dependency of a pallet
+    '''
+
+    def __init__(self, source_name, source, destination, destination_name=None):
+        #: the name of the source data table
+        self.source_name = source_name
+        #: the name of the source database
+        self.source = source
+        #: the name of the destination database
+        self.destination = destination
+        #: the name of the output data table
+        self.destination_name = destination_name or source_name
+        #: the unique name of the crate
+        self.name = '{}::{}'.format(source, source_name)

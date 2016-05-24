@@ -114,7 +114,7 @@ class TestPallet(unittest.TestCase):
         no_changes.result = Crate.NO_CHANGES
 
         schema_change = Crate(None, None, None, None)
-        schema_change.result = Crate.SCHEMA_CHANGED
+        schema_change.result = Crate.INVALID_DATA
 
         self.patient._crates = [updated, no_changes, schema_change]
 
@@ -142,7 +142,7 @@ class TestPallet(unittest.TestCase):
         no_changes.result = Crate.NO_CHANGES
 
         schema_change = Crate(None, None, None, None)
-        schema_change.result = Crate.SCHEMA_CHANGED
+        schema_change.result = Crate.INVALID_DATA
 
         unhandled_exception = Crate(None, None, None, None)
         unhandled_exception.result = Crate.UNHANDLED_EXCEPTION
@@ -186,7 +186,7 @@ class TestPallet(unittest.TestCase):
         updated.result = Crate.UPDATED
 
         schema_change = Crate(None, None, None, None)
-        schema_change.result = Crate.SCHEMA_CHANGED
+        schema_change.result = Crate.INVALID_DATA
 
         self.patient._crates = [schema_change, updated, updated]
 

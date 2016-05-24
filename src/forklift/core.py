@@ -12,7 +12,8 @@ import settings
 from datetime import datetime
 from itertools import izip
 from numpy.testing import assert_almost_equal
-from models import Crate, ValidationException
+from models import Crate
+from exceptions import ValidationException
 
 
 log = logging.getLogger(settings.LOGGER)
@@ -40,14 +41,14 @@ def update(crate, validate_crate):
 
         #: check for custom validation logic, otherwise do a default schema check
         try:
-            custom = validate_crate(crate)
-            if custom == NotImplemented:
+            has_custom = validate_crate(crate)
+            if has_custom == NotImplemented:
                 _check_schema(crate)
         except ValidationException as e:
             return Crate.INVALID_DATA.format(e.message)
 
         if _check_for_changes(crate):
-            #: TODO
+            _move_data(crate)
             return Crate.UPDATED
         else:
             return Crate.NO_CHANGES
@@ -55,54 +56,42 @@ def update(crate, validate_crate):
         return Crate.ERROR.format(e.message)
 
 
+def _create_destination_data(crate):
+    #: TODO
+    pass
 
-    arcpy.env.workspace = crate.destination
+
+def _move_data(crate):
+    arcpy.env.workspace = crate.destination_workspace
     is_table = arcpy.Describe(crate.destination).datasetType == 'Table'
+    f = crate.destination_name
 
-    try:
-        log.info('checking for schema changes...')
-        if not check_schema(f, sdeFC):
-            # skip updating if the schemas do not match
-            return False
+    log.info('updating data...')
+    log.debug('trucating data for %s', f)
+    arcpy.TruncateTable_management(f)
 
-        log.info('checking for changes...')
-        if check_for_changes(f, sdeFC, is_table):
-            log.info('updating data...')
-            log.debug('trucating data for %s', f)
-            arcpy.TruncateTable_management(f)
+    # edit session required for data that participates in relationships
+    log.debug('starting edit session...')
+    editSession = arcpy.da.Editor(crate.destination)
+    editSession.startEditing(False, False)
+    editSession.startOperation()
 
-            # edit session required for data that participates in relationships
-            log.debug('starting edit session...')
-            editSession = arcpy.da.Editor(crate.destination)
-            editSession.startEditing(False, False)
-            editSession.startOperation()
+    fields = [fld.name for fld in arcpy.ListFields(f)]
+    fields = _filter_fields(fields)
+    if not is_table:
+        fields.append('SHAPE@')
+        outputSR = arcpy.Describe(f).spatialReference
+    else:
+        outputSR = None
+    with arcpy.da.InsertCursor(f, fields) as icursor, \
+        arcpy.da.SearchCursor(crate.source, fields, sql_clause=(None, 'ORDER BY OBJECTID'),
+                              spatial_reference=outputSR) as cursor:
+        for row in cursor:
+            icursor.insertRow(row)
 
-            fields = [fld.name for fld in arcpy.ListFields(f)]
-            fields = _filter_fields(fields)
-            if not is_table:
-                fields.append('SHAPE@')
-                outputSR = arcpy.Describe(f).spatialReference
-            else:
-                outputSR = None
-            with arcpy.da.InsertCursor(f, fields) as icursor, \
-                arcpy.da.SearchCursor(sdeFC, fields, sql_clause=(None, 'ORDER BY OBJECTID'),
-                                      spatial_reference=outputSR) as cursor:
-                for row in cursor:
-                    icursor.insertRow(row)
-
-            editSession.stopOperation()
-            editSession.stopEditing(True)
-            log.debug('edit session stopped')
-
-            changes.append(f.upper())
-        else:
-            log.info('no changes found')
-
-        return True
-    except Exception as e:
-        log.error(e)
-
-        return False
+    editSession.stopOperation()
+    editSession.stopEditing(True)
+    log.debug('edit session stopped')
 
 
 def _check_schema(source_dataset, destination_dataset):

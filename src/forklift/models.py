@@ -129,7 +129,3 @@ class Crate(object):
         self.result = value
 
         return value
-
-
-class ValidationException(Exception):
-    pass

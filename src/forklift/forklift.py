@@ -9,27 +9,26 @@ A module that contains methods to handle pallets
 import core
 
 
-def process(pallets):
+def process_crates(pallets):
     processed_crates = {}
-
-    def dirty(crates):
-        for crate in crates:
-            if crate['dirty']:
-                return True
-
-        return False
 
     for pallet in pallets:
         for crate in pallet.crates:
             if crate.name in processed_crates:
-                pass
+                crate.set_result(process_crates[crate.name])
             else:
-                #: possibly rename to has_changes and accept a crate?
-                if not core.check_for_changes(crate):
-                    processed_crates.setdefault(pallet.name, []).append({'crate': crate.name, 'dirty': False})
-                else:
-                    core.update_dataset(crate)
-                    processed_crates.setdefault(pallet.name, []).append({'crate': crate.name, 'dirty': True})
+                process_crates[crate.name] = crate.set_result(core.update(crate, pallet.crate_validation))
+                #: core returns updated, schema change, no update needed or error during update
 
-        if dirty(processed_crates[pallet.name]):
-            pallet.process()
+
+def process_pallets(pallets):
+    reports = []
+    for pallet in pallets:
+        if pallet.is_ready_for_ship():  #: checks for schema changes or errors
+            if pallet.needs_postprocessing():  #: checks for data that was updated
+                pallet.post_process()
+            pallet.ship()
+
+        reports.append(pallet.get_report())
+
+    return reports

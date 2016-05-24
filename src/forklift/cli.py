@@ -141,7 +141,7 @@ def lift(file_path=None):
         pallet_infos = list_pallets()
 
     for info in pallet_infos:
-        palletClass = getattr(__import__(splitext(basename(info[0]))[0]), info[1])
-        pallet = palletClass()
+        PalletClass = getattr(__import__(splitext(basename(info[0]))[0]), info[1])
+        pallet = PalletClass('{}::{}'.format(basename(info[0], info[1]))
 
         pallet.process()

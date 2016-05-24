@@ -24,7 +24,7 @@ class Pallet(object):
         #: the name of the pallet
         self.name = name
         #: the table names for all dependent data for an application
-        self.crates = []
+        self._crates = []
 
     def process(self):
         '''This method will be called by forklift if any of the crates data is modified
@@ -43,7 +43,7 @@ class Pallet(object):
         set `self.crates` in your child pallet.
         '''
 
-        return self.crates
+        return self._crates
 
     def add_crates(self, crate_infos, defaults={}):
         crate_param_names = ['source_name', 'source', 'destination', 'destination_name']
@@ -58,7 +58,7 @@ class Pallet(object):
                 for i, val in enumerate(info):
                     params[crate_param_names[i]] = val
 
-            self.crates.append(Crate(**params))
+            self._crates.append(Crate(**params))
 
     def add_crate(self, crate_info):
         self.add_crates([crate_info])
@@ -78,7 +78,7 @@ class Pallet(object):
         associated with this pallet
 
         returns: Boolean
-        Returns True of there are no crates defined
+        Returns True if there are no crates defined
         '''
         #: TODO
         return True
@@ -123,7 +123,5 @@ class Crate(object):
 
     def set_result(self, value):
         self.result = value
-        return value
 
-    def get_result(self):
-        return self.result
+        return value

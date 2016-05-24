@@ -102,10 +102,10 @@ class Crate(object):
     '''
 
     #: possible results
-    UPDATED = 'updated'
-    SCHEMA_CHANGED = 'schema change detected'
-    NO_CHANGES = 'no changes'
-    ERROR_DURING_UPDATE = 'error during update'
+    UPDATED = 'Data updated successfully.'
+    SCHEMA_CHANGED = 'Schema change detected.'
+    NO_CHANGES = 'No changes found.'
+    UNHANDLED_EXCEPTION = 'Unhandled exception during update.'
 
     def __init__(self, source_name, source, destination, destination_name=None):
         #: the name of the source data table

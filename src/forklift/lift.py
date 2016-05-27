@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # * coding: utf8 *
 '''
-forklift.py
+lift.py
 
 A module that contains methods to handle pallets
 '''

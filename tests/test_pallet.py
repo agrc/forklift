@@ -26,15 +26,15 @@ class NoExecutePallet(Pallet):
 class TestPallet(unittest.TestCase):
 
     def setUp(self):
-        self.patient = Pallet('a_pallet')
+        self.patient = Pallet()
 
     def test_no_execute_no_problem(self):
-        self.patient = NoExecutePallet('blah')
+        self.patient = NoExecutePallet()
 
         self.patient.execute()
 
     def test_with_execute(self):
-        self.patient = Pallet('hello')
+        self.patient = Pallet()
 
         self.assertTrue(self.patient.execute())
 

@@ -8,7 +8,7 @@ Usage:
     forklift config --add <folder-path>
     forklift config --remove <folder-path>
     forklift config --list
-    forklift list [<folder-path>]
+    forklift list-pallets [<folder-path>]
     forklift lift [<file-path>]
 
 Arguments:
@@ -20,8 +20,8 @@ Examples:
     config --add path/to/folder    adds a path to the config. Checks for duplicates.
     config --remove path/to/folder removes a path from the config.
     config --list                  outputs the list of pallet folder paths in your config file.
-    list                           outputs the list of pallets from the config.
-    list path/to/folder            outputs the list of pallets for the passed in path.
+    list-pallets                           outputs the list of pallets from the config.
+    list-pallets path/to/folder            outputs the list of pallets for the passed in path.
     lift                           the main entry for running all of pallets found in the config paths.
     lift path/to/file              run a specific pallet.
 '''
@@ -46,12 +46,13 @@ def main():
             print(message)
 
         if args['--remove'] and args['<folder-path>']:
-            message = cli.remove_pallet_folder(args['<folder-path>'])
-            print('{} removed from config file'.format(message))
+            message = cli.remove_config_folder(args['<folder-path>'])
+            print(message)
 
         if args['--list']:
-            cli.list_config_folders()
-    elif args['list']:
+            for folder in cli.list_config_folders():
+                print(folder)
+    elif args['list-pallets']:
         if args['<folder-path>']:
             pallets = cli.list_pallets(args['<path>'])
         else:
@@ -62,11 +63,11 @@ def main():
         else:
             for plug in pallets:
                 print(': '.join(plug))
-    elif args['update']:
+    elif args['lift']:
         if args['<file-path>']:
-            cli.lift(args['<file-path>'])
+            cli.start_lift(args['<file-path>'])
         else:
-            cli.lift()
+            cli.start_lift()
 
 
 def _setup_logging():

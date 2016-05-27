@@ -9,10 +9,11 @@ A module that contains the implementation of the cli commands
 import logging
 import settings
 import sys
-from models import Pallet
 from glob import glob
 from json import dumps, loads
-from os.path import abspath, exists, join, splitext, basename
+from os.path import abspath, exists, join, splitext, basename, dirname
+from models import Pallet
+import lift
 
 log = logging.getLogger(settings.LOGGER)
 
@@ -46,7 +47,7 @@ def add_config_folder(folder):
     return 'added {}'.format(folder)
 
 
-def remove_pallet_folder(folder):
+def remove_config_folder(folder):
     folders = get_config_folders()
 
     try:
@@ -54,7 +55,9 @@ def remove_pallet_folder(folder):
     except ValueError:
         return '{} is not in the config folders list!'.format(folder)
 
-    return _set_config_folders(folders)
+    _set_config_folders(folders)
+
+    return 'removed {}'.format(folder)
 
 
 def list_pallets(folders=None):
@@ -67,8 +70,11 @@ def list_pallets(folders=None):
 def list_config_folders():
     folders = get_config_folders()
 
+    validate_results = []
     for folder in folders:
-        yield _validate_config_folder(folder)
+        validate_results.append(_validate_config_folder(folder))
+
+    return validate_results
 
 
 def _set_config_folders(folders):
@@ -102,31 +108,34 @@ def _validate_config_folder(folder, raises=False):
         if raises:
             raise Exception('{}: {}'.format(folder, valid))
 
-    print('{}: {}'.format(folder, valid))
+    return('{}: {}'.format(folder, valid))
 
 
 def _get_pallets_in_folders(folders):
     pallets = []
 
     for folder in folders:
-        sys.path.append(folder)
-
         for py_file in glob(join(folder, '*.py')):
             pallets.extend(_get_pallets_in_file(py_file))
 
     return pallets
 
 
-def _get_pallets_in_file(file_folder):
+def _get_pallets_in_file(file_path):
     pallets = []
-    name = splitext(basename(file_folder))[0]
+    name = splitext(basename(file_path))[0]
+    folder = dirname(file_path)
+
+    if folder not in sys.path:
+        sys.path.append(folder)
+
     mod = __import__(name)
 
     for member in dir(mod):
         try:
             potential_class = getattr(mod, member)
             if issubclass(potential_class, Pallet) and potential_class != Pallet:
-                pallets.append((file_folder, member))
+                pallets.append((file_path, member))
         except:
             #: member was likely not a class
             pass
@@ -134,14 +143,19 @@ def _get_pallets_in_file(file_folder):
     return pallets
 
 
-def lift(file_path=None):
+def start_lift(file_path=None):
     if file_path is not None:
         pallet_infos = _get_pallets_in_file(file_path)
     else:
         pallet_infos = list_pallets()
 
+    pallets = []
     for info in pallet_infos:
-        PalletClass = getattr(__import__(splitext(basename(info[0]))[0]), info[1])
-        pallet = PalletClass('{}::{}'.format(basename(info[0], info[1])))
+        module_name = splitext(basename(info[0]))[0]
+        class_name = info[1]
+        PalletClass = getattr(__import__(module_name), class_name)
+        pallets.append(PalletClass())
 
-        pallet.process()
+    lift.process_crates_for(pallets)
+
+    print(lift.process_pallets(pallets))

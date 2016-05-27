@@ -47,7 +47,7 @@ class Pallet(object):
         return self._crates
 
     def add_crates(self, crate_infos, defaults={}):
-        crate_param_names = ['source_name', 'source', 'destination', 'destination_name']
+        crate_param_names = ['source_name', 'source_workspace', 'destination_workspace', 'destination_name']
 
         for info in crate_infos:
             params = defaults.copy()
@@ -81,7 +81,10 @@ class Pallet(object):
         returns: Boolean
         Returns True if there are no crates defined
         '''
-        #: TODO
+        for crate in self._crates:
+            if crate.result in [Crate.INVALID_DATA, Crate.UNHANDLED_EXCEPTION]:
+                return False
+
         return True
 
     def requires_processing(self):
@@ -90,8 +93,15 @@ class Pallet(object):
         returns: Boolean
         Returns False if there are no crates defined
         '''
-        #: TODO
-        return True
+
+        has_updated = False
+        for crate in self._crates:
+            if crate.result in [Crate.INVALID_DATA, Crate.UNHANDLED_EXCEPTION]:
+                return False
+            if not has_updated:
+                has_updated = crate.result == Crate.UPDATED
+
+        return has_updated
 
     def get_report(self):
         '''returns a message about the result of each crate in the plugin'''
@@ -105,7 +115,7 @@ class Crate(object):
     #: possible results returned from core.update_crate
     CREATED = 'Created table successfully.'
     UPDATED = 'Data updated successfully.'
-    INVALID_DATA = 'Data is invalid. {}'
+    INVALID_DATA = 'Data is invalid.'
     NO_CHANGES = 'No changes found.'
     UNHANDLED_EXCEPTION = 'Unhandled exception during update.'
     UNINITIALIZED = 'This crate was never processed.'

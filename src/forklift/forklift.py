@@ -6,18 +6,16 @@ forklift.py
 A module that contains methods to handle pallets
 '''
 
-import core
 
-
-def process_crates(pallets):
+def process_crates_for(pallets, update_def):
     processed_crates = {}
 
     for pallet in pallets:
         for crate in pallet.crates:
             if crate.name in processed_crates:
-                crate.set_result(process_crates[crate.name])
+                crate.set_result(processed_crates[crate.name])
             else:
-                process_crates[crate.name] = crate.set_result(core.update(crate, pallet.validate_crate))
+                processed_crates[crate.name] = crate.set_result(update_def(crate, pallet.validate_crate))
                 #: core returns updated, schema change, no update needed or error during update
 
 

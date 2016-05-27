@@ -33,7 +33,6 @@ def update(crate, validate_crate):
     '''
 
     try:
-        #: TODO: check if destination exists and create it if necessary
         if not arcpy.Exists(crate.destination):
             _create_destination_data(crate)
 
@@ -45,7 +44,7 @@ def update(crate, validate_crate):
             if has_custom == NotImplemented:
                 _check_schema(crate)
         except ValidationException as e:
-            return Crate.INVALID_DATA.format(e.message)
+            return (Crate.INVALID_DATA, e.message)
 
         if _check_for_changes(crate):
             _move_data(crate)
@@ -53,37 +52,59 @@ def update(crate, validate_crate):
         else:
             return Crate.NO_CHANGES
     except Exception as e:
-        return Crate.ERROR.format(e.message)
+        return (Crate.UNHANDLED_EXCEPTION, e.message)
 
 
 def _create_destination_data(crate):
-    #: TODO
-    pass
+    if _is_table(crate):
+        arcpy.CopyRows_management(crate.source, crate.destination)
+    else:
+        arcpy.env.outputCoordinateSystem = crate.destination_coordinate_system
+        arcpy.env.geographicTransformations = crate.geographic_transformation
+
+        arcpy.CopyFeatures_management(crate.source, crate.destination)
+
+        #: prevent the stepping on of toes in any other scripts
+        arcpy.env.outputCoordinateSystem = None
+        arcpy.env.geographicTransformations = None
+
+
+def _is_table(crate):
+    '''
+    crate: Crate
+
+    returns True if the crate defines a table
+    '''
+
+    return arcpy.Describe(crate.source).datasetType == 'Table'
 
 
 def _move_data(crate):
-    arcpy.env.workspace = crate.destination_workspace
-    is_table = arcpy.Describe(crate.destination).datasetType == 'Table'
-    f = crate.destination_name
+    '''
+    crate: Crate
+
+    move data from source to destination as defined by the crate
+    '''
+    is_table = _is_table(crate)
 
     log.info('updating data...')
-    log.debug('trucating data for %s', f)
-    arcpy.TruncateTable_management(f)
+    log.debug('trucating data for %s', crate.destination_name)
+    arcpy.TruncateTable_management(crate.destination)
 
     # edit session required for data that participates in relationships
     log.debug('starting edit session...')
-    editSession = arcpy.da.Editor(crate.destination)
+    editSession = arcpy.da.Editor(crate.destination_workspace)
     editSession.startEditing(False, False)
     editSession.startOperation()
 
-    fields = [fld.name for fld in arcpy.ListFields(f)]
+    fields = [fld.name for fld in arcpy.ListFields(crate.destination)]
     fields = _filter_fields(fields)
     if not is_table:
         fields.append('SHAPE@')
-        outputSR = arcpy.Describe(f).spatialReference
+        outputSR = arcpy.Describe(crate.destination).spatialReference
     else:
         outputSR = None
-    with arcpy.da.InsertCursor(f, fields) as icursor, \
+    with arcpy.da.InsertCursor(crate.destination, fields) as icursor, \
         arcpy.da.SearchCursor(crate.source, fields, sql_clause=(None, 'ORDER BY OBJECTID'),
                               spatial_reference=outputSR) as cursor:
         for row in cursor:
@@ -165,8 +186,9 @@ def _is_naughty_field(fld):
     return 'SHAPE' in fld.upper() or fld.upper() in ['GLOBAL_ID', 'GLOBALID']
 
 
-def _check_for_changes(f, sde, is_table):
+def _check_for_changes(crate):
     '''
+    crate: Crate
     f: String
         The name of the fgdb feature class
     sde: String
@@ -176,20 +198,21 @@ def _check_for_changes(f, sde, is_table):
     returns: Boolean
         False if there are no changes
     '''
+    is_table = _is_table(crate)
 
     # try simple feature count first
-    fCount = int(arcpy.GetCount_management(f).getOutput(0))
-    sdeCount = int(arcpy.GetCount_management(sde).getOutput(0))
+    fCount = int(arcpy.GetCount_management(crate.destination).getOutput(0))
+    sdeCount = int(arcpy.GetCount_management(crate.source).getOutput(0))
     if fCount != sdeCount:
         return True
 
-    fields = [fld.name for fld in arcpy.ListFields(f)]
+    fields = [fld.name for fld in arcpy.ListFields(crate.destination)]
 
     # filter out shape fields
     if not is_table:
         fields = _filter_fields(fields)
 
-        d = arcpy.Describe(f)
+        d = arcpy.Describe(crate.destination)
         shapeType = d.shapeType
         if shapeType == 'Polygon':
             shapeToken = 'SHAPE@AREA'
@@ -215,19 +238,20 @@ def _check_for_changes(f, sde, is_table):
                 return shapeValue
 
         # support for reprojecting
-        outputSR = arcpy.Describe(f).spatialReference
+        outputSR = arcpy.Describe(crate.destination).spatialReference
     else:
         outputSR = None
 
     # compare each feature based on sorting by OBJECTID
-    with arcpy.da.SearchCursor(f, fields, sql_clause=(None, 'ORDER BY OBJECTID')) as fCursor, \
-            arcpy.da.SearchCursor(sde, fields, sql_clause=(None, 'ORDER BY OBJECTID'),
+    with arcpy.da.SearchCursor(crate.destination, fields, sql_clause=(None, 'ORDER BY OBJECTID')) as fCursor, \
+            arcpy.da.SearchCursor(crate.source, fields, sql_clause=(None, 'ORDER BY OBJECTID'),
                                   spatial_reference=outputSR) as sdeCursor:
         for fRow, sdeRow in izip(fCursor, sdeCursor):
             if fRow != sdeRow:
                 # check shapes first
                 if fRow[-1] != sdeRow[-1] and not is_table:
                     if shapeType not in ['Polygon', 'Polyline', 'Point']:
+                        #: for complex types always return true for now
                         return True
                     fShape = parse_shape(fRow[-1])
                     sdeShape = parse_shape(sdeRow[-1])

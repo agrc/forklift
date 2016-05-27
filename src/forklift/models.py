@@ -118,7 +118,13 @@ class Crate(object):
     UNHANDLED_EXCEPTION = 'Unhandled exception during update.'
     UNINITIALIZED = 'This crate was never processed.'
 
-    def __init__(self, source_name, source_workspace, destination_workspace, destination_name=None):
+    def __init__(self,
+                 source_name,
+                 source_workspace,
+                 destination_workspace,
+                 destination_name=None,
+                 destination_coordinate_system=None,
+                 geographic_transformation=None):
         #: the name of the source data table
         self.source_name = source_name
         #: the name of the source database
@@ -129,6 +135,10 @@ class Crate(object):
         self.destination_name = destination_name or source_name
         #: the result of the core.update method being called on this crate
         self.result = self.UNINITIALIZED
+        #: optional definition of destination coordinate system to support reprojecting
+        self.destination_coordinate_system = destination_coordinate_system
+        #: optional geographic transformation to support reprojecting
+        self.geographic_transformation = geographic_transformation
 
         self.source = join(source_workspace, source_name)
         self.destination = join(destination_workspace, self.destination_name)

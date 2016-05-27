@@ -13,4 +13,3 @@ class SinglePallet(Pallet):
 
     def __init__(self):
         super(SinglePallet, self).__init__()
-        self.dependencies = ['a', 'b']

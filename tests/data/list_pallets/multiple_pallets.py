@@ -13,7 +13,6 @@ class PalletOne(Pallet):
 
     def __init__(self):
         super(PalletOne, self).__init__()
-        self.expires_in_hours = 1
 
         self.add_crates(['fc1',
                          'fc2',
@@ -27,7 +26,6 @@ class PalletTwo(Pallet):
 
     def __init__(self):
         super(PalletTwo, self).__init__()
-        self.expires_in_hours = 2
 
     def ship(self):
         print('execute: overridden')

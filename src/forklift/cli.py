@@ -14,6 +14,7 @@ from json import dumps, loads
 from os.path import abspath, exists, join, splitext, basename, dirname
 from models import Pallet
 import lift
+import core
 
 log = logging.getLogger(settings.LOGGER)
 
@@ -156,6 +157,6 @@ def start_lift(file_path=None):
         PalletClass = getattr(__import__(module_name), class_name)
         pallets.append(PalletClass())
 
-    lift.process_crates_for(pallets)
+    lift.process_crates_for(pallets, core.update)
 
     print(lift.process_pallets(pallets))

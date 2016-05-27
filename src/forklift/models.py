@@ -103,7 +103,7 @@ class Pallet(object):
 
     def get_report(self):
         '''returns a message about the result of each crate in the plugin'''
-        pass
+        return ['{}: {}'.format(c.destination, c.result) for c in self.get_crates()]
 
 
 class Crate(object):

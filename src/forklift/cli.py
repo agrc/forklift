@@ -6,15 +6,17 @@ lift.py
 A module that contains the implementation of the cli commands
 '''
 
+import core
+import lift
 import logging
+import seat
 import settings
 import sys
 from glob import glob
 from json import dumps, loads
-from os.path import abspath, exists, join, splitext, basename, dirname
 from models import Pallet
-import lift
-import core
+from os.path import abspath, exists, join, splitext, basename, dirname
+from time import clock
 
 log = logging.getLogger(settings.LOGGER)
 
@@ -31,7 +33,7 @@ def init():
 
 
 def add_config_folder(folder):
-    folders = get_config_folders()
+    folders = _get_config_folders()
 
     if folder in folders:
         return '{} is already in the config folders list!'.format(folder)
@@ -49,7 +51,7 @@ def add_config_folder(folder):
 
 
 def remove_config_folder(folder):
-    folders = get_config_folders()
+    folders = _get_config_folders()
 
     try:
         folders.remove(folder)
@@ -63,19 +65,41 @@ def remove_config_folder(folder):
 
 def list_pallets(folders=None):
     if folders is None:
-        folders = get_config_folders()
+        folders = _get_config_folders()
 
     return _get_pallets_in_folders(folders)
 
 
 def list_config_folders():
-    folders = get_config_folders()
+    folders = _get_config_folders()
 
     validate_results = []
     for folder in folders:
         validate_results.append(_validate_config_folder(folder))
 
     return validate_results
+
+
+def start_lift(file_path=None):
+    start_seconds = clock()
+
+    if file_path is not None:
+        pallet_infos = _get_pallets_in_file(file_path)
+    else:
+        pallet_infos = list_pallets()
+
+    pallets = []
+    for info in pallet_infos:
+        module_name = splitext(basename(info[0]))[0]
+        class_name = info[1]
+        PalletClass = getattr(__import__(module_name), class_name)
+        pallets.append(PalletClass())
+
+    lift.process_crates_for(pallets, core.update)
+
+    log.info('elapsed time: %s', seat.format_time(clock() - start_seconds))
+
+    print(lift.process_pallets(pallets))
 
 
 def _set_config_folders(folders):
@@ -91,7 +115,7 @@ def _set_config_folders(folders):
         return abspath(json_data_file.name)
 
 
-def get_config_folders():
+def _get_config_folders():
     if not exists('config.json'):
         raise Exception('config file not found.')
 
@@ -142,21 +166,3 @@ def _get_pallets_in_file(file_path):
             pass
 
     return pallets
-
-
-def start_lift(file_path=None):
-    if file_path is not None:
-        pallet_infos = _get_pallets_in_file(file_path)
-    else:
-        pallet_infos = list_pallets()
-
-    pallets = []
-    for info in pallet_infos:
-        module_name = splitext(basename(info[0]))[0]
-        class_name = info[1]
-        PalletClass = getattr(__import__(module_name), class_name)
-        pallets.append(PalletClass())
-
-    lift.process_crates_for(pallets, core.update)
-
-    print(lift.process_pallets(pallets))

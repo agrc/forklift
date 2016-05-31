@@ -52,7 +52,7 @@ class TestCli(unittest.TestCase):
 
         result = cli.list_config_folders()
 
-        self.assertEquals(result, ['blah: invalid!', 'blah2: invalid!'])
+        self.assertEquals(result, ['blah: [Folder not found]', 'blah2: [Folder not found]'])
 
     def get_config_folders(self):
         folders = ['blah', 'blah2']
@@ -89,7 +89,7 @@ class TestCli(unittest.TestCase):
 
         result = cli.add_config_folder('bad folder')
 
-        self.assertIn('invalid!', result)
+        self.assertIn('[Folder not found]', result)
 
     def test_add_config_folder_checks_for_duplicates(self):
         path = cli.init()

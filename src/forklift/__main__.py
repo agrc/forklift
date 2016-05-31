@@ -54,7 +54,7 @@ def main():
                 print(folder)
     elif args['list-pallets']:
         if args['<folder-path>']:
-            pallets = cli.list_pallets(args['<path>'])
+            pallets = cli.list_pallets(args['<folder-path>'])
         else:
             pallets = cli.list_pallets()
 

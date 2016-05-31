@@ -36,10 +36,8 @@ class TestCli(unittest.TestCase):
         with open(path) as config:
             self.assertEquals(['c:\\scheduled'], loads(config.read()))
 
-    def test_init_returns_if_existing_config_file(self):
-        cli._set_config_folders(['blah'])
-
-        self.assertEquals(cli.init(), 'config file already created.')
+    def test_init_returns_path_for_existing_config_file(self):
+        self.assertEquals(cli.init(), cli.init())
 
     def test_list_pallets(self):
         test_pallets_folder = join(test_data_folder, 'list_pallets')

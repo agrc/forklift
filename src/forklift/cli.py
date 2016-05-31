@@ -21,7 +21,7 @@ log = logging.getLogger(settings.LOGGER)
 
 def init():
     if exists('config.json'):
-        return 'config file already created.'
+        return abspath('config.json')
 
     default_pallet_locations = ['c:\\scheduled']
 

@@ -45,7 +45,7 @@ def add_config_folder(folder):
 
     _set_config_folders(folders)
 
-    return 'added {}'.format(folder)
+    return '{} added'.format(folder)
 
 
 def remove_config_folder(folder):
@@ -58,7 +58,7 @@ def remove_config_folder(folder):
 
     _set_config_folders(folders)
 
-    return 'removed {}'.format(folder)
+    return '{} removed'.format(folder)
 
 
 def list_pallets(folders=None):
@@ -103,13 +103,13 @@ def get_config_folders():
 
 def _validate_config_folder(folder, raises=False):
     if exists(folder):
-        valid = 'valid'
+        message = '[Valid]'
     else:
-        valid = 'invalid!'
+        message = '[Folder not found]'
         if raises:
-            raise Exception('{}: {}'.format(folder, valid))
+            raise Exception('{}: {}'.format(folder, message))
 
-    return('{}: {}'.format(folder, valid))
+    return('{}: {}'.format(folder, message))
 
 
 def _get_pallets_in_folders(folders):

@@ -44,9 +44,8 @@ def update(crate, validate_crate):
             if has_custom == NotImplemented:
                 _check_schema(crate)
         except ValidationException as e:
-            log.warn('validation error: %s has_custom: %s for %r',
+            log.warn('validation error: %s for %r',
                      e.message,
-                     has_custom == NotImplemented,
                      crate,
                      exc_info=True)
             return (Crate.INVALID_DATA, e.message)

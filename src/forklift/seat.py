@@ -20,5 +20,4 @@ def format_time(seconds):
     if seconds < 90 * minute:
         return '{} minutes'.format(round(seconds / minute, 2))
 
-    else:
-        return '{} hours'.format(round(seconds / hour, 2))
+    return '{} hours'.format(round(seconds / hour, 2))

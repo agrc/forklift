@@ -9,9 +9,10 @@ A module that contains tests for the cli.py module
 import unittest
 from forklift import cli
 from json import loads
+from mock import patch
+from nose.tools import raises
 from os import remove
 from os.path import abspath, dirname, join, exists
-from mock import patch
 
 
 test_data_folder = join(dirname(abspath(__file__)), 'data')
@@ -54,15 +55,16 @@ class TestCli(unittest.TestCase):
 
         self.assertEquals(result, ['blah: [Folder not found]', 'blah2: [Folder not found]'])
 
-    def get_config_folders(self):
+    def test_get_config_folders(self):
         folders = ['blah', 'blah2']
         cli.init()
         cli._set_config_folders(folders)
 
-        self.assertEquals(cli.get_config_folders, folders)
+        self.assertEquals(cli._get_config_folders(), folders)
 
-    def get_config_folders_checks_for_existing_config_file(self):
-        self.assertRaises(Exception('config file not found.'), cli.get_config_folders)
+    @raises(Exception)
+    def test_get_config_folders_checks_for_existing_config_file(self):
+        cli._get_config_folders()
 
     def test_list_pallets_from_config(self):
         cli.init()

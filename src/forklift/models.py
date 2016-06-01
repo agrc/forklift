@@ -9,7 +9,11 @@ A module that contains the model classes for forklift
 
 import logging
 import settings
+from pprint import PrettyPrinter
 from os.path import join
+
+
+pprinter = PrettyPrinter()
 
 
 class Pallet(object):
@@ -106,8 +110,8 @@ class Pallet(object):
         return ['{}: {}'.format(c.destination, c.result) for c in self.get_crates()]
 
     def __repr__(self):
-        return str({
-            'crates': str(self._crates),
+        return pprinter.pformat({
+            'crates': self._crates,
             'is_ready_to_ship': self.is_ready_to_ship(),
             'requires_processing': self.requires_processing()
         })
@@ -156,7 +160,7 @@ class Crate(object):
         return value
 
     def __repr__(self):
-        return str({
+        return pprinter.pformat({
             'source': self.source,
             'destination': self.destination,
             'result': self.result,

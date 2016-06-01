@@ -1,0 +1,26 @@
+<html>
+<head>
+    <title>Report Template Tests</title>
+    <script src='//cdnjs.cloudflare.com/ajax/libs/mustache.js/2.2.1/mustache.js'></script>
+    <script src="//ajax.googleapis.com/ajax/libs/dojo/1.10.4/dojo/dojo.js"></script>
+</head>
+<body>
+    <h1>Report Template Tests</h1>
+
+    <script type='text/javascript'>
+        require([
+            'dojo/dom-construct',
+
+            'dojo/text!./data/report.json',
+            'dojo/text!../src/forklift/report.html'
+        ], function (
+            domConstruct,
+
+            testJson,
+            reportTemplate
+        ) {
+            domConstruct.place(Mustache.render(reportTemplate, JSON.parse(testJson)), document.body);
+        });
+    </script>
+</body>
+</html>

@@ -22,24 +22,24 @@ class TestLift(unittest.TestCase):
         crate2 = Crate('', '', 'b', '')
         pallet = Pallet()
         pallet._crates = [crate1, crate2]
-        update_def = Mock(return_value=Crate.UPDATED)
+        update_def = Mock(return_value=(Crate.UPDATED, 'message'))
         lift.process_crates_for([pallet], update_def)
 
         self.assertEquals(update_def.call_count, 2)
-        self.assertEquals(crate1.result, Crate.UPDATED)
-        self.assertEquals(crate2.result, Crate.UPDATED)
+        self.assertEquals(crate1.result[0], Crate.UPDATED)
+        self.assertEquals(crate2.result[0], Crate.UPDATED)
 
     def test_process_crate_doesnt_call_update_def_on_duplicate_crates(self):
         crate1 = Crate('', '', 'a', '')
         crate2 = Crate('', '', 'a', '')
         pallet = Pallet()
         pallet._crates = [crate1, crate2]
-        update_def = Mock(return_value=Crate.UPDATED)
+        update_def = Mock(return_value=(Crate.UPDATED, 'message'))
         lift.process_crates_for([pallet], update_def)
 
         self.assertEquals(update_def.call_count, 1)
-        self.assertEquals(crate1.result, Crate.UPDATED)
-        self.assertEquals(crate2.result, Crate.UPDATED)
+        self.assertEquals(crate1.result[0], Crate.UPDATED)
+        self.assertEquals(crate2.result[0], Crate.UPDATED)
 
     def test_process_pallets_all_ready_to_ship(self):
         ready_pallet = self.PalletMock()

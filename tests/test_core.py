@@ -49,7 +49,7 @@ class CoreTests(unittest.TestCase):
 
         crate = Crate('badname', 'nofolder', '')
 
-        self.assertEquals(core.update(crate, lambda x: True), Crate.CREATED)
+        self.assertEquals(core.update(crate, lambda x: True)[0], Crate.CREATED)
         core._create_destination_data.assert_called_once()
 
     @patch('arcpy.Exists')
@@ -80,7 +80,7 @@ class CoreTests(unittest.TestCase):
 
         crate = Crate('', '', '')
 
-        self.assertEquals(core.update(crate, lambda c: True), Crate.UPDATED)
+        self.assertEquals(core.update(crate, lambda c: True)[0], Crate.UPDATED)
 
     @patch('arcpy.Exists')
     def test_update_no_changes(self, arcpy_exists):
@@ -89,7 +89,7 @@ class CoreTests(unittest.TestCase):
 
         crate = Crate('', '', '')
 
-        self.assertEquals(core.update(crate, lambda c: True), Crate.NO_CHANGES)
+        self.assertEquals(core.update(crate, lambda c: True)[0], Crate.NO_CHANGES)
 
     @patch('arcpy.Exists')
     def test_update_error(self, arcpy_exists):

@@ -36,7 +36,7 @@ def update(crate, validate_crate):
             log.debug('%s does not exist. creating', crate.destination)
             _create_destination_data(crate)
 
-            return Crate.CREATED
+            return (Crate.CREATED, None)
 
         #: check for custom validation logic, otherwise do a default schema check
         try:
@@ -53,9 +53,9 @@ def update(crate, validate_crate):
         if _has_changes(crate):
             _move_data(crate)
 
-            return Crate.UPDATED
+            return (Crate.UPDATED, None)
         else:
-            return Crate.NO_CHANGES
+            return (Crate.NO_CHANGES, None)
     except Exception as e:
         log.error('unhandled exception: %s for %r', e.message, crate, exc_info=True)
         return (Crate.UNHANDLED_EXCEPTION, e.message)

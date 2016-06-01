@@ -157,7 +157,15 @@ class Crate(object):
         self.destination = join(destination_workspace, self.destination_name)
 
     def set_result(self, value):
-        self.result = value
+        '''Sets the result of processing a crate.
+
+        Returns the value of what was set'''
+        acceptable_results = [self.CREATED, self.UPDATED, self.INVALID_DATA, self.NO_CHANGES, self.UNHANDLED_EXCEPTION, self.UNINITIALIZED]
+
+        if value[0] in acceptable_results:
+            self.result = value
+        else:
+            self.result = value = ('unknown result', value)
 
         return value
 

@@ -79,6 +79,7 @@ def list_config_folders():
 
 
 def start_lift(file_path=None):
+    log.info('starting forklift')
     start_seconds = clock()
 
     if file_path is not None:
@@ -97,7 +98,9 @@ def start_lift(file_path=None):
 
     log.info('elapsed time: %s', seat.format_time(clock() - start_seconds))
 
-    print(lift.process_pallets(pallets))
+    for msg in lift.process_pallets(pallets):
+        log.info(msg)
+        print(msg)
 
 
 def _set_config_folders(folders):

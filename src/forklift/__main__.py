@@ -20,8 +20,8 @@ Examples:
     config --add path/to/folder    adds a path to the config. Checks for duplicates.
     config --remove path/to/folder removes a path from the config.
     config --list                  outputs the list of pallet folder paths in your config file.
-    list-pallets                           outputs the list of pallets from the config.
-    list-pallets path/to/folder            outputs the list of pallets for the passed in path.
+    list-pallets                   outputs the list of pallets from the config.
+    list-pallets path/to/folder    outputs the list of pallets for the passed in path.
     lift                           the main entry for running all of pallets found in the config paths.
     lift path/to/file              run a specific pallet.
 '''
@@ -103,11 +103,11 @@ def _setup_logging():
         'loggers': {
             'console': {
                 'handlers': ['detailed_console_handler'],
-                'level': 'DEBUG',
+                'level': 'INFO',
             },
             'file': {
                 'handlers': ['detailed_file_handler'],
-                'level': 'INFO'
+                'level': 'DEBUG'
             }
         }
     })

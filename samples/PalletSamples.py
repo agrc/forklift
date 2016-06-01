@@ -18,8 +18,8 @@ class StringCratePallet(Pallet):
         destination_workspace = env.scratchGDB
         source_workspace = 'Database Connections\\agrc@sgid10.sde'
 
-        self.add_crates(['BOUNDARIES.Counties'], {'source_workspace': source_workspace,
-                                                  'destination_workspace': destination_workspace})
+        self.add_crates(['Counties'], {'source_workspace': source_workspace,
+                                       'destination_workspace': destination_workspace})
 
 
 class ExplicitCratePallet(Pallet):

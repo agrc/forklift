@@ -11,10 +11,10 @@ import unittest
 from forklift import core
 from forklift.models import Crate
 from forklift.exceptions import ValidationException
+from itertools import chain
 from os import path
 from nose import SkipTest
 from mock import Mock, patch
-
 
 current_folder = path.dirname(path.abspath(__file__))
 check_for_changes_gdb = path.join(current_folder, 'data', 'checkForChanges.gdb')
@@ -115,20 +115,15 @@ class CoreTests(unittest.TestCase):
         self.assertTrue(self.run_has_changes('NullDates', 'NullDates2'))
 
     def test_filter_shape_fields(self):
-        self.assertEquals(
-            core._filter_fields(['shape', 'test', 'Shape_length', 'Global_ID']), ['test'])
+        self.assertEquals(core._filter_fields(['shape', 'test', 'Shape_length', 'Global_ID']), ['test'])
 
     def test_schema_changes(self):
         arcpy.Copy_management(check_for_changes_gdb, test_gdb)
 
-        result = core._check_schema(
-            path.join(test_gdb, 'ZipCodes'),
-            path.join(check_for_changes_gdb, 'FieldLength'))
+        result = core._check_schema(path.join(test_gdb, 'ZipCodes'), path.join(check_for_changes_gdb, 'FieldLength'))
         self.assertEquals(result, False)
 
-        result = core._check_schema(
-            path.join(test_gdb, 'ZipCodes'),
-            path.join(check_for_changes_gdb, 'ZipCodes'))
+        result = core._check_schema(path.join(test_gdb, 'ZipCodes'), path.join(check_for_changes_gdb, 'ZipCodes'))
         self.assertEquals(result, True)
 
     def test_check_schema_ignore_length_for_all_except_text(self):
@@ -161,18 +156,16 @@ class CoreTests(unittest.TestCase):
     def test_check_schema_match(self):
         self.assertEquals(
             core._check_schema(
-                path.join(check_for_changes_gdb, 'FieldLength'),
-                path.join(check_for_changes_gdb, 'FieldLength2')), False)
+                path.join(check_for_changes_gdb, 'FieldLength'), path.join(check_for_changes_gdb, 'FieldLength2')),
+            False)
 
         self.assertEquals(
             core._check_schema(
-                path.join(check_for_changes_gdb, 'FieldType'),
-                path.join(check_for_changes_gdb, 'FieldType2')), False)
+                path.join(check_for_changes_gdb, 'FieldType'), path.join(check_for_changes_gdb, 'FieldType2')), False)
 
         self.assertEquals(
             core._check_schema(
-                path.join(check_for_changes_gdb, 'ZipCodes'),
-                path.join(check_for_changes_gdb2, 'ZipCodes')), True)
+                path.join(check_for_changes_gdb, 'ZipCodes'), path.join(check_for_changes_gdb2, 'ZipCodes')), True)
 
     def test_create_destination_data_feature_class(self):
         arcpy.CreateFileGDB_management(path.join(current_folder, 'data'), 'test.gdb')
@@ -200,3 +193,60 @@ class CoreTests(unittest.TestCase):
         core._create_destination_data(fc_crate)
         self.assertTrue(arcpy.Exists(fc_crate.destination))
         self.assertEquals(arcpy.Describe(fc_crate.destination).spatialReference.name, spatial_reference.name)
+
+    @patch('arcpy.da.Walk')
+    def test_try_to_find_data_source_by_name_returns_and_updates_feature_name(self, walk):
+        walk.return_value = chain([(None, None, ['db.owner.Counties'])])
+
+        crate = Crate(source_name='Counties',
+                      source_workspace='Database Connections\\something.sde',
+                      destination_workspace='c:\\temp\\something.gdb',
+                      destination_name='Counties')
+
+        result = core._try_to_find_data_source_by_name(crate)
+        ok = result[0]
+        name = result[1]
+
+        self.assertTrue(ok)
+        self.assertEqual(name, 'db.owner.Counties')
+        self.assertEqual(crate.source_name, name)
+        self.assertEqual(crate.destination_name, 'Counties')
+        self.assertEqual(crate.source, path.join(crate.source_workspace, crate.source_name))
+
+    def test_try_to_find_data_source_by_name_returns_None_if_not_sde(self):
+        crate = Crate(source_name='something.shp',
+                      source_workspace='c:\\temp',
+                      destination_workspace='c:\\something.gdb',
+                      destination_name='Counties')
+
+        self.assertIsNone(core._try_to_find_data_source_by_name(crate)[0])
+
+    @patch('arcpy.da.Walk')
+    def test_try_to_find_data_source_by_name_returns_False_if_duplicate(self, walk):
+        walk.return_value = chain([(None, None, ['db.owner.Counties', 'db.owner2.Counties'])])
+
+        crate = Crate(source_name='duplicate',
+                      source_workspace='Database Connections\\something.sde',
+                      destination_workspace='c:\\something.gdb',
+                      destination_name='Counties')
+
+        self.assertFalse(core._try_to_find_data_source_by_name(crate)[0])
+
+    @patch('arcpy.da.Walk')
+    def test_try_to_find_data_source_by_name_filters_common_duplicates(self, walk):
+        walk.return_value = chain([(None, None, ['db.owner.Counties', 'db.owner.duplicateCounties'])])
+
+        crate = Crate(source_name='Counties',
+                      source_workspace='Database Connections\\something.sde',
+                      destination_workspace='c:\\something.gdb',
+                      destination_name='Counties')
+
+        result = core._try_to_find_data_source_by_name(crate)
+        ok = result[0]
+        name = result[1]
+
+        self.assertTrue(ok)
+        self.assertEqual(name, 'db.owner.Counties')
+        self.assertEqual(crate.source_name, name)
+        self.assertEqual(crate.destination_name, 'Counties')
+        self.assertEqual(crate.source, path.join(crate.source_workspace, crate.source_name))

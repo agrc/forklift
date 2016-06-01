@@ -32,6 +32,9 @@ def update(crate, validate_crate):
     '''
 
     try:
+        if not arcpy.Exists(crate.source):
+            _try_to_find_data_source_by_name(crate)
+
         if not arcpy.Exists(crate.destination):
             log.debug('%s does not exist. creating', crate.destination)
             _create_destination_data(crate)
@@ -81,7 +84,6 @@ def _is_table(crate):
 
     returns True if the crate defines a table
     '''
-
     return arcpy.Describe(crate.source).datasetType == 'Table'
 
 
@@ -288,3 +290,37 @@ def _has_changes(crate):
                     return True
 
     return False
+
+
+def _try_to_find_data_source_by_name(crate):
+    '''Given a crate, try to find the source name in the source workspace.
+    if it is found, update the crate name so subsequent uses do not fail.
+
+    returns a tuple (bool, message) describing the outcome'''
+    if '.sde' not in crate.source.lower():
+        return (None, 'Can\'t find data outside of sde')
+
+    def filter_filenames(workspace, name):
+        names = []
+        walk = arcpy.da.Walk(workspace, followlinks=True)
+
+        for dirpath, dirnames, filenames in walk:
+            names = filenames
+
+        #: could get a value like db.owner.***name and db.owner.name so filter on name
+        return [fc for fc in names if fc.split('.')[2] == crate.source_name]
+
+    names = filter_filenames(crate.source_workspace, crate.source_name)
+
+    if names is None or len(names) < 1:
+        return (False, 'No source data found for {}'.format(crate.source))
+
+    if len(names) == 1:
+        #: replace name with db.owner.name
+        new_name = names[0]
+        crate.set_source_name(new_name)
+
+        return (True, new_name)
+
+    if len(names) > 1:
+        return (False, 'Duplcate names: {}'.format(','.join(names)))

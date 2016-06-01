@@ -44,7 +44,7 @@ def update(crate, validate_crate):
             if has_custom == NotImplemented:
                 _check_schema(crate.source, crate.destination)
         except ValidationException as e:
-            log.warn('validation error: %s for %r',
+            log.warn('validation error: %s for crate %r',
                      e.message,
                      crate,
                      exc_info=True)
@@ -57,7 +57,7 @@ def update(crate, validate_crate):
         else:
             return (Crate.NO_CHANGES, None)
     except Exception as e:
-        log.error('unhandled exception: %s for %r', e.message, crate, exc_info=True)
+        log.error('unhandled exception: %s for crate %r', e.message, crate, exc_info=True)
         return (Crate.UNHANDLED_EXCEPTION, e.message)
 
 

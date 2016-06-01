@@ -13,7 +13,7 @@ from pprint import PrettyPrinter
 from os.path import join
 
 
-pprinter = PrettyPrinter()
+pprinter = PrettyPrinter(indent=4, width=40)
 
 
 class Pallet(object):
@@ -114,7 +114,7 @@ class Pallet(object):
         '''Override for better logging. Use with %r
         '''
         return pprinter.pformat({
-            'crates': self._crates,
+            'crate_count': len(self._crates),
             'is_ready_to_ship': self.is_ready_to_ship(),
             'requires_processing': self.requires_processing()
         })
@@ -160,6 +160,7 @@ class Crate(object):
 
     def set_result(self, value):
         '''Sets the result of processing a crate.
+        value: (String, String)
 
         Returns the value of what was set'''
         acceptable_results = [self.CREATED, self.UPDATED, self.INVALID_DATA, self.NO_CHANGES, self.UNHANDLED_EXCEPTION, self.UNINITIALIZED]

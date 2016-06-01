@@ -42,6 +42,11 @@ def process_crates_for(pallets, update_def):
 
 
 def process_pallets(pallets):
+    '''pallets: [Pallet]
+
+    Loop over all pallets, check if data has changed and determine whether to call process.
+    Finally, determine whether to call ship.
+    '''
     reports = []
 
     log.info('processing and shipping pallets...')
@@ -55,6 +60,7 @@ def process_pallets(pallets):
                 try:
                     pallet.process()
                 except Exception as e:
+                    pallet.success = (False, e.message)
                     log.error('error proccessing pallet: %s for pallet: %r', e.message, pallet, exc_info=True)
 
                 log.debug('processed pallet %s', seat.format_time(clock() - start_seconds))
@@ -66,6 +72,7 @@ def process_pallets(pallets):
                 pallet.ship()
                 log.debug('shipped pallet %s', seat.format_time(clock() - start_seconds))
             except Exception as e:
+                pallet.success = (False, e.message)
                 log.error('error shipping pallet: %s for pallet: %r', e.message, pallet, exc_info=True)
 
         reports.append(pallet.get_report())

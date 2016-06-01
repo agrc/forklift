@@ -87,3 +87,19 @@ class TestLift(unittest.TestCase):
         result = lift.process_pallets([reports_pallet, reports_pallet])
 
         self.assertEquals(result, ['hello', 'hello'])
+
+    def test_process_pallets_handles_process_exception(self):
+        pallet = self.PalletMock()
+        pallet.process.side_effect = Exception('process error')
+
+        lift.process_pallets([pallet])
+
+        self.assertEquals(pallet.success, (False, 'process error'))
+
+    def test_process_pallets_handles_ship_exception(self):
+        pallet = self.PalletMock()
+        pallet.ship.side_effect = Exception('ship error')
+
+        lift.process_pallets([pallet])
+
+        self.assertEquals(pallet.success, (False, 'ship error'))

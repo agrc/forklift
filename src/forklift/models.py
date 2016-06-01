@@ -28,6 +28,8 @@ class Pallet(object):
         self.log = logging.getLogger(settings.LOGGER)
         #: the table names for all dependent data for an application
         self._crates = []
+        #: the status of the pallet (successful: Bool, message: string)
+        self.success = (True, None)
 
     def process(self):
         '''This method will be called by forklift if any of the crates data is modified

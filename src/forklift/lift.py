@@ -23,7 +23,7 @@ def process_crates_for(pallets, update_def):
     '''
     processed_crates = {}
 
-    log.info('processing crates for all pallets.')
+    log.info('processing crates for %d pallets.', len(pallets))
 
     for pallet in pallets:
         log.debug('processing pallet %r', pallet)

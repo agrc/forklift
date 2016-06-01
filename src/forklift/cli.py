@@ -27,8 +27,6 @@ def init():
 
     default_pallet_locations = ['c:\\scheduled']
 
-    log.debug('creating config.json file.')
-
     return _set_config_folders(default_pallet_locations)
 
 
@@ -108,8 +106,6 @@ def _set_config_folders(folders):
 
     with open('config.json', 'w') as json_data_file:
         data = dumps(folders)
-
-        log.debug('writing %s to %s', data, abspath(json_data_file.name))
         json_data_file.write(data)
 
         return abspath(json_data_file.name)

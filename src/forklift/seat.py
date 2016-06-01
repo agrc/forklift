@@ -15,7 +15,7 @@ def format_time(seconds):
         return '{} ms'.format(int(seconds * 1000))
 
     if seconds < 90:
-        return '{} seconds'.format(seconds)
+        return '{} seconds'.format(round(seconds, 2))
 
     if seconds < 90 * minute:
         return '{} minutes'.format(round(seconds / minute, 2))

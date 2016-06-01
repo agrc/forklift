@@ -15,8 +15,8 @@ class TestSeat(unittest.TestCase):
         self.assertEquals(seat.format_time(5.5), '5500 ms')
 
     def test_format_time_seconds(self):
-        self.assertEquals(seat.format_time(80), '80 seconds')
-        self.assertEquals(seat.format_time(50), '50 seconds')
+        self.assertEquals(seat.format_time(80), '80.0 seconds')
+        self.assertEquals(seat.format_time(50), '50.0 seconds')
 
     def test_format_time_minutes(self):
         self.assertEquals(seat.format_time(91), '1.52 minutes')

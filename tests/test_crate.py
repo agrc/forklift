@@ -8,6 +8,7 @@ A module for testing crate.py
 
 import unittest
 from forklift.models import Crate
+from os.path import join
 
 
 class TestCrate(unittest.TestCase):
@@ -33,3 +34,19 @@ class TestCrate(unittest.TestCase):
 
         self.assertEquals(crate.set_result(('wat?', 'some crazy message'))[0], 'unknown result')
         self.assertEquals(crate.result[0], 'unknown result')
+
+    def test_set_source_name_updates_source(self):
+        crate = Crate('foo', 'bar', 'baz', 'goo')
+
+        crate.set_source_name('oof')
+
+        self.assertEquals(crate.source_name, 'oof')
+        self.assertEquals(crate.source, join('bar', 'oof'))
+
+    def test_set_source_name_updates_source_if_not_none(self):
+        crate = Crate('foo', 'bar', 'baz', 'goo')
+
+        crate.set_source_name(None)
+
+        self.assertEquals(crate.source_name, 'foo')
+        self.assertEquals(crate.source, join('bar', 'foo'))

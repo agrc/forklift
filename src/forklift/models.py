@@ -158,6 +158,15 @@ class Crate(object):
         #: the full path to the destination data
         self.destination = join(destination_workspace, self.destination_name)
 
+    def set_source_name(self, value):
+        '''Sets the source_name and updates the source property
+        '''
+        if value is None:
+            return
+
+        self.source_name = value
+        self.source = join(self.source_workspace, value)
+
     def set_result(self, value):
         '''Sets the result of processing a crate.
         value: (String, String)

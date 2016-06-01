@@ -10,33 +10,10 @@ import unittest
 from forklift.models import Pallet, Crate
 
 
-class Pallet(Pallet):
-    '''a test class for how pallets should work
-    '''
-
-    def execute(self):
-        return True
-
-
-class NoExecutePallet(Pallet):
-    '''a test class for how pallets should work
-    '''
-
-
 class TestPallet(unittest.TestCase):
 
     def setUp(self):
         self.patient = Pallet()
-
-    def test_no_execute_no_problem(self):
-        self.patient = NoExecutePallet()
-
-        self.patient.execute()
-
-    def test_with_execute(self):
-        self.patient = Pallet()
-
-        self.assertTrue(self.patient.execute())
 
     def test_can_use_logging(self):
         self.patient.log.info('this works')

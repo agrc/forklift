@@ -28,4 +28,4 @@ class PalletTwo(Pallet):
         super(PalletTwo, self).__init__()
 
     def ship(self):
-        print('execute: overridden')
+        pass

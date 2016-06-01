@@ -42,7 +42,7 @@ def update(crate, validate_crate):
         try:
             has_custom = validate_crate(crate)
             if has_custom == NotImplemented:
-                _check_schema(crate)
+                _check_schema(crate.source, crate.destination)
         except ValidationException as e:
             log.warn('validation error: %s for %r',
                      e.message,

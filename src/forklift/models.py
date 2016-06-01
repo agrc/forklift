@@ -105,6 +105,13 @@ class Pallet(object):
         '''returns a message about the result of each crate in the plugin'''
         return ['{}: {}'.format(c.destination, c.result) for c in self.get_crates()]
 
+    def __repr__(self):
+        return str({
+            'crates': str(self._crates),
+            'is_ready_to_ship': self.is_ready_to_ship(),
+            'requires_processing': self.requires_processing()
+        })
+
 
 class Crate(object):
     '''A module that defines a source and destination dataset that is a dependency of a pallet
@@ -147,3 +154,16 @@ class Crate(object):
         self.result = value
 
         return value
+
+    def __repr__(self):
+        return str({
+            'source': self.source,
+            'destination': self.destination,
+            'result': self.result,
+            'source_name': self.source_name,
+            'source_workspace': self.source_workspace,
+            'destination_name': self.destination_name,
+            'destination_workspace': self.destination_workspace,
+            'destination_coordinate_system': self.destination_coordinate_system,
+            'geographic_transformation': self.geographic_transformation
+        })

@@ -12,12 +12,12 @@ def format_time(seconds):
     hour = 60.00 * minute
 
     if seconds < 30:
-        return '{} ms'.format(int(round(seconds * 1000, 0)))
+        return '{} ms'.format(int(seconds * 1000))
 
-    elif seconds < 90:
+    if seconds < 90:
         return '{} seconds'.format(seconds)
 
-    elif seconds < 90 * minute:
+    if seconds < 90 * minute:
         return '{} minutes'.format(round(seconds / minute, 2))
 
     else:

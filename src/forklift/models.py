@@ -32,25 +32,27 @@ class Pallet(object):
         self.success = (True, None)
 
     def process(self):
-        '''This method will be called by forklift if any of the crates data is modified
+        '''Invoked if any crates have data updates.
         '''
         return NotImplemented
 
     def ship(self):
-        '''this method fires whether the crates have any updates or not
+        '''Invoked whether the crates have updates or not.
         '''
         return NotImplemented
 
     def get_crates(self):
-        '''returns an array of crates affected by the pallet. This is a self documenting way to know what layers an
-        application is using.
-
-        set `self.crates` in your child pallet.
-        '''
-
+        '''Returns an array of crates affected by the pallet. This is a self documenting way to know what data an
+        application is using.'''
         return self._crates
 
     def add_crates(self, crate_infos, defaults={}):
+        '''crate_infos: [String | (source_name, source workspace, destintion workspace, destination name)]
+        defaults: optional dictionary {source_workspace: '', destination_workspace: ''} unless only a string is provided
+
+        Given an array of strings or tuples, this method will expand strings into source_name which then expects
+        defaults to have vaules and tuples will be converted to a dictionary with the order of the crate_param_names
+        list. This adds a new Crate to the _crates list.'''
         crate_param_names = ['source_name', 'source_workspace', 'destination_workspace', 'destination_name']
 
         for info in crate_infos:
@@ -66,25 +68,23 @@ class Pallet(object):
             self._crates.append(Crate(**params))
 
     def add_crate(self, crate_info):
+        '''crate_info: (source_name, source workspace, destintion workspace, destination name)
+        '''
         self.add_crates([crate_info])
 
     def validate_crate(self, crate):
-        '''override to provide your own validation to determine whether the data within
-        a create is ready to be updated
+        '''Override to provide your own validation to determine whether the data within
+        a create is ready to be updated.
 
-        this method should return a boolean indicating if the crate is ready for an update
-
-        if this method is not overriden then the default validate within core is used
-        '''
+        This method should return a Boolean indicating if the crate is ready for an update.
+        If this method is not overriden the default validate method within core is used.'''
         return NotImplemented
 
     def is_ready_to_ship(self):
-        '''checks to see if there are any schema changes or errors within the crates
-        associated with this pallet
+        '''Returns True if there are not any schema changes or errors within the crates
+        associated with the pallet. Returns True if there are no crates defined.
 
-        returns: Boolean
-        Returns True if there are no crates defined
-        '''
+        returns: Boolean'''
         for crate in self._crates:
             if crate.result in [Crate.INVALID_DATA, Crate.UNHANDLED_EXCEPTION]:
                 return False
@@ -92,13 +92,11 @@ class Pallet(object):
         return True
 
     def requires_processing(self):
-        '''checks to see if any of the crates were updated
+        '''Returns True if any crates were updated. Returns False if there are no crates defined.
 
-        returns: Boolean
-        Returns False if there are no crates defined
-        '''
-
+        returns: Boolean'''
         has_updated = False
+
         for crate in self._crates:
             if crate.result in [Crate.INVALID_DATA, Crate.UNHANDLED_EXCEPTION]:
                 return False
@@ -108,10 +106,13 @@ class Pallet(object):
         return has_updated
 
     def get_report(self):
-        '''returns a message about the result of each crate in the plugin'''
+        '''Returns a message about the result of each crate in the pallet.
+        '''
         return ['{}: {}'.format(c.destination, c.result) for c in self.get_crates()]
 
     def __repr__(self):
+        '''Override for better logging. Use with %r
+        '''
         return pprinter.pformat({
             'crates': self._crates,
             'is_ready_to_ship': self.is_ready_to_ship(),
@@ -120,7 +121,7 @@ class Pallet(object):
 
 
 class Crate(object):
-    '''A module that defines a source and destination dataset that is a dependency of a pallet
+    '''A module that defines a source and destination dataset that is a dependency of a pallet.
     '''
 
     #: possible results returned from core.update_crate
@@ -152,8 +153,9 @@ class Crate(object):
         self.destination_coordinate_system = destination_coordinate_system
         #: optional geographic transformation to support reprojecting
         self.geographic_transformation = geographic_transformation
-
+        #: the full path to the source data
         self.source = join(source_workspace, source_name)
+        #: the full path to the destination data
         self.destination = join(destination_workspace, self.destination_name)
 
     def set_result(self, value):
@@ -170,6 +172,8 @@ class Crate(object):
         return value
 
     def __repr__(self):
+        '''Override for better logging. Use with %r
+        '''
         return pprinter.pformat({
             'source': self.source,
             'destination': self.destination,

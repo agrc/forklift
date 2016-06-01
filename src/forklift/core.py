@@ -15,7 +15,6 @@ from numpy.testing import assert_almost_equal
 from models import Crate
 from exceptions import ValidationException
 
-
 log = logging.getLogger(settings.LOGGER)
 
 
@@ -45,6 +44,11 @@ def update(crate, validate_crate):
             if has_custom == NotImplemented:
                 _check_schema(crate)
         except ValidationException as e:
+            log.warn('validation error: %s has_custom: %s for %r',
+                     e.message,
+                     has_custom == NotImplemented,
+                     crate,
+                     exc_info=True)
             return (Crate.INVALID_DATA, e.message)
 
         if _has_changes(crate):
@@ -54,6 +58,7 @@ def update(crate, validate_crate):
         else:
             return Crate.NO_CHANGES
     except Exception as e:
+        log.error('unhandled exception: %s for %r', e.message, crate, exc_info=True)
         return (Crate.UNHANDLED_EXCEPTION, e.message)
 
 
@@ -89,31 +94,33 @@ def _move_data(crate):
     '''
     is_table = _is_table(crate)
 
-    log.info('updating data...')
+    log.info('moving data...')
     log.debug('trucating data for %s', crate.destination_name)
     arcpy.TruncateTable_management(crate.destination)
 
     # edit session required for data that participates in relationships
     log.debug('starting edit session...')
-    editSession = arcpy.da.Editor(crate.destination_workspace)
-    editSession.startEditing(False, False)
-    editSession.startOperation()
+    edit_session = arcpy.da.Editor(crate.destination_workspace)
+    edit_session.startEditing(False, False)
+    edit_session.startOperation()
 
     fields = [fld.name for fld in arcpy.ListFields(crate.destination)]
     fields = _filter_fields(fields)
-    if not is_table:
-        fields.append('SHAPE@')
-        outputSR = arcpy.Describe(crate.destination).spatialReference
+
+    if is_table:
+        output_sr = None
     else:
-        outputSR = None
+        fields.append('SHAPE@')
+        output_sr = arcpy.Describe(crate.destination).spatialReference
+
     with arcpy.da.InsertCursor(crate.destination, fields) as icursor, \
         arcpy.da.SearchCursor(crate.source, fields, sql_clause=(None, 'ORDER BY OBJECTID'),
-                              spatial_reference=outputSR) as cursor:
+                              spatial_reference=output_sr) as cursor:
         for row in cursor:
             icursor.insertRow(row)
 
-    editSession.stopOperation()
-    editSession.stopEditing(True)
+    edit_session.stopOperation()
+    edit_session.stopEditing(True)
     log.debug('edit session stopped')
 
 
@@ -127,9 +134,11 @@ def _check_schema(source_dataset, destination_dataset):
 
     def get_fields(dataset):
         field_dict = {}
+
         for field in arcpy.ListFields(dataset):
             if not _is_naughty_field(field.name):
                 field_dict[field.name.upper()] = field
+
         return field_dict
 
     missing_fields = []
@@ -146,23 +155,19 @@ def _check_schema(source_dataset, destination_dataset):
         else:
             source_fld = source_fields[field_key]
             if source_fld.type != destination_fld.type:
-                mismatching_fields.append(
-                    '{}: source type of {} does not match destination type of {}'
-                    .format(source_fld.name,
-                            source_fld.type,
-                            destination_fld.type))
+                mismatching_fields.append('{}: source type of {} does not match destination type of {}'
+                                          .format(source_fld.name, source_fld.type, destination_fld.type))
             elif source_fld.type == 'String' and source_fld.length != destination_fld.length:
-                mismatching_fields.append(
-                    '{}: source length of {} does not match destination length of {}'
-                    .format(source_fld.name,
-                            source_fld.length,
-                            destination_fld.length))
+                mismatching_fields.append('{}: source length of {} does not match destination length of {}'
+                                          .format(source_fld.name, source_fld.length, destination_fld.length))
 
     if len(missing_fields) > 0:
-        log.error('Missing fields in %s: %s', source_dataset, ', '.join(missing_fields))
+        log.warn('Missing fields in %s: %s', source_dataset, ', '.join(missing_fields))
+
         return False
     elif len(mismatching_fields) > 0:
-        log.error('Mismatching fields in %s: %s', source_dataset, ', '.join(mismatching_fields))
+        log.warn('Mismatching fields in %s: %s', source_dataset, ', '.join(mismatching_fields))
+
         return False
     else:
         return True
@@ -177,11 +182,12 @@ def _filter_fields(lst):
     Filters out fields that mess up the update logic.
     '''
 
-    newFields = []
+    new_fields = []
     for fld in lst:
         if not _is_naughty_field(fld):
-            newFields.append(fld)
-    return newFields
+            new_fields.append(fld)
+
+    return new_fields
 
 
 def _is_naughty_field(fld):
@@ -203,81 +209,83 @@ def _has_changes(crate):
     is_table = _is_table(crate)
 
     # try simple feature count first
-    fCount = int(arcpy.GetCount_management(crate.destination).getOutput(0))
-    sdeCount = int(arcpy.GetCount_management(crate.source).getOutput(0))
-    if fCount != sdeCount:
+    destination_feature_count = int(arcpy.GetCount_management(crate.destination).getOutput(0))
+    source_feature_count = int(arcpy.GetCount_management(crate.source).getOutput(0))
+
+    log.debug('destination feature count: %s source feature count: %s', destination_feature_count, source_feature_count)
+    if destination_feature_count != source_feature_count:
         return True
 
     fields = [fld.name for fld in arcpy.ListFields(crate.destination)]
 
     # filter out shape fields
-    if not is_table:
+    if is_table:
+        output_sr = None
+    else:
         fields = _filter_fields(fields)
+        shape_type = arcpy.Describe(crate.destination).shapeType
 
-        d = arcpy.Describe(crate.destination)
-        shapeType = d.shapeType
-        if shapeType == 'Polygon':
-            shapeToken = 'SHAPE@AREA'
-        elif shapeType == 'Polyline':
-            shapeToken = 'SHAPE@LENGTH'
-        elif shapeType == 'Point':
-            shapeToken = 'SHAPE@XY'
+        if shape_type == 'Polygon':
+            shape_token = 'SHAPE@AREA'
+        elif shape_type == 'Polyline':
+            shape_token = 'SHAPE@LENGTH'
+        elif shape_type == 'Point':
+            shape_token = 'SHAPE@XY'
         else:
-            shapeToken = 'SHAPE@JSON'
-        fields.append(shapeToken)
+            shape_token = 'SHAPE@JSON'
 
-        def parse_shape(shapeValue):
-            if shapeValue is None:
+        fields.append(shape_token)
+
+        def parse_shape(shape_value):
+            if shape_value is None:
                 return 0
-            elif shapeType in ['Polygon', 'Polyline']:
-                return shapeValue
-            elif shapeType == 'Point':
-                if shapeValue[0] is not None and shapeValue[1] is not None:
-                    return shapeValue[0] + shapeValue[1]
+            elif shape_type in ['Polygon', 'Polyline']:
+                return shape_value
+            elif shape_type == 'Point':
+                if shape_value[0] is not None and shape_value[1] is not None:
+                    return shape_value[0] + shape_value[1]
                 else:
                     return 0
             else:
-                return shapeValue
+                return shape_value
 
         # support for reprojecting
-        outputSR = arcpy.Describe(crate.destination).spatialReference
-    else:
-        outputSR = None
+        output_sr = arcpy.Describe(crate.destination).spatialReference
 
     # compare each feature based on sorting by OBJECTID
-    with arcpy.da.SearchCursor(crate.destination, fields, sql_clause=(None, 'ORDER BY OBJECTID')) as fCursor, \
+    with arcpy.da.SearchCursor(crate.destination, fields, sql_clause=(None, 'ORDER BY OBJECTID')) as f_cursor, \
             arcpy.da.SearchCursor(crate.source, fields, sql_clause=(None, 'ORDER BY OBJECTID'),
-                                  spatial_reference=outputSR) as sdeCursor:
-        for fRow, sdeRow in izip(fCursor, sdeCursor):
-            if fRow != sdeRow:
+                                  spatial_reference=output_sr) as sde_cursor:
+        for destination_row, source_row in izip(f_cursor, sde_cursor):
+            if destination_row != source_row:
                 # check shapes first
-                if fRow[-1] != sdeRow[-1] and not is_table:
-                    if shapeType not in ['Polygon', 'Polyline', 'Point']:
+                if destination_row[-1] != source_row[-1] and not is_table:
+                    if shape_type not in ['Polygon', 'Polyline', 'Point']:
                         #: for complex types always return true for now
                         return True
-                    fShape = parse_shape(fRow[-1])
-                    sdeShape = parse_shape(sdeRow[-1])
+                    destination_shape = parse_shape(destination_row[-1])
+                    source_shape = parse_shape(source_row[-1])
                     try:
-                        assert_almost_equal(fShape, sdeShape, -1)
+                        assert_almost_equal(destination_shape, source_shape, -1)
                         # trim off shapes
-                        fRow = list(fRow[:-1])
-                        sdeRow = list(sdeRow[:-1])
+                        destination_row = list(destination_row[:-1])
+                        source_row = list(source_row[:-1])
                     except AssertionError:
                         return True
 
                 # trim microseconds since they can be off by one between file and sde databases
-                for i in range(len(fRow)):
-                    if type(fRow[i]) is datetime:
-                        fRow = list(fRow)
-                        sdeRow = list(sdeRow)
-                        fRow[i] = fRow[i].replace(microsecond=0)
+                for i in range(len(destination_row)):
+                    if type(destination_row[i]) is datetime:
+                        destination_row = list(destination_row)
+                        source_row = list(source_row)
+                        destination_row[i] = destination_row[i].replace(microsecond=0)
                         try:
-                            sdeRow[i] = sdeRow[i].replace(microsecond=0)
+                            source_row[i] = source_row[i].replace(microsecond=0)
                         except:
                             pass
 
                 # compare all values except OBJECTID
-                if fRow[1:] != sdeRow[1:]:
+                if destination_row[1:] != source_row[1:]:
                     return True
 
     return False

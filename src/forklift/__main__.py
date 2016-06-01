@@ -39,7 +39,7 @@ def main():
     if args['config']:
         if args['--init']:
             message = cli.init()
-            print('config file created: {}'.format(message))
+            print('config file: {}'.format(message))
 
         if args['--add'] and args['<folder-path>']:
             message = cli.add_config_folder(args['<folder-path>'])
@@ -54,7 +54,7 @@ def main():
                 print(folder)
     elif args['list-pallets']:
         if args['<folder-path>']:
-            pallets = cli.list_pallets(args['<path>'])
+            pallets = cli.list_pallets([args['<folder-path>']])
         else:
             pallets = cli.list_pallets()
 

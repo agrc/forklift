@@ -36,10 +36,8 @@ class TestCli(unittest.TestCase):
         with open(path) as config:
             self.assertEquals(['c:\\scheduled'], loads(config.read()))
 
-    def test_init_returns_if_existing_config_file(self):
-        cli._set_config_folders(['blah'])
-
-        self.assertEquals(cli.init(), 'config file already created.')
+    def test_init_returns_path_for_existing_config_file(self):
+        self.assertEquals(cli.init(), cli.init())
 
     def test_list_pallets(self):
         test_pallets_folder = join(test_data_folder, 'list_pallets')
@@ -54,7 +52,7 @@ class TestCli(unittest.TestCase):
 
         result = cli.list_config_folders()
 
-        self.assertEquals(result, ['blah: invalid!', 'blah2: invalid!'])
+        self.assertEquals(result, ['blah: [Folder not found]', 'blah2: [Folder not found]'])
 
     def get_config_folders(self):
         folders = ['blah', 'blah2']
@@ -91,7 +89,7 @@ class TestCli(unittest.TestCase):
 
         result = cli.add_config_folder('bad folder')
 
-        self.assertIn('invalid!', result)
+        self.assertIn('[Folder not found]', result)
 
     def test_add_config_folder_checks_for_duplicates(self):
         path = cli.init()

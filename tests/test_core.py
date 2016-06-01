@@ -41,8 +41,8 @@ class CoreTests(unittest.TestCase):
         if not arcpy.Exists(path.join(update_tests_sde, 'ZipCodes')):
             raise SkipTest('No test SDE dectected, skipping test')
 
-    def run_check_for_changes(self, fc1, fc2):
-        return core._check_for_changes(Crate(fc1, check_for_changes_gdb, check_for_changes_gdb, fc2))
+    def run_has_changes(self, fc1, fc2):
+        return core._has_changes(Crate(fc1, check_for_changes_gdb, check_for_changes_gdb, fc2))
 
     def test_update_no_existing_destination(self):
         core._create_destination_data = Mock()
@@ -75,7 +75,7 @@ class CoreTests(unittest.TestCase):
     @patch('arcpy.Exists')
     def test_update_successfully_updated(self, arcpy_exists):
         arcpy_exists.return_value = True
-        core._check_for_changes = Mock(return_value=True)
+        core._has_changes = Mock(return_value=True)
         core._move_data = Mock()
 
         crate = Crate('', '', '')
@@ -85,7 +85,7 @@ class CoreTests(unittest.TestCase):
     @patch('arcpy.Exists')
     def test_update_no_changes(self, arcpy_exists):
         arcpy_exists.return_value = True
-        core._check_for_changes = Mock(return_value=False)
+        core._has_changes = Mock(return_value=False)
 
         crate = Crate('', '', '')
 
@@ -94,25 +94,25 @@ class CoreTests(unittest.TestCase):
     @patch('arcpy.Exists')
     def test_update_error(self, arcpy_exists):
         arcpy_exists.return_value = True
-        core._check_for_changes = Mock(side_effect=Exception('error'))
+        core._has_changes = Mock(side_effect=Exception('error'))
 
         crate = Crate('', '', '')
 
         self.assertEquals(core.update(crate, lambda c: True), (Crate.UNHANDLED_EXCEPTION, 'error'))
 
-    def test_check_for_changes(self):
-        self.assertFalse(self.run_check_for_changes('ZipCodes', 'ZipCodes_same'))
-        self.assertTrue(self.run_check_for_changes('ZipCodes', 'ZipCodes_geoMod'))
-        self.assertTrue(self.run_check_for_changes('ZipCodes', 'ZipCodes_attMod'))
-        self.assertTrue(self.run_check_for_changes('ZipCodes', 'ZipCodes_newFeature'))
-        self.assertFalse(self.run_check_for_changes('DNROilGasWells', 'DNROilGasWells'))
-        self.assertFalse(self.run_check_for_changes('Line', 'Line'))
-        self.assertFalse(self.run_check_for_changes('NullShape', 'NullShape'))
-        self.assertFalse(self.run_check_for_changes('Providers', 'Providers'))
-        self.assertTrue(self.run_check_for_changes('NullDates', 'NullDates2'))
+    def test_has_changes(self):
+        self.assertFalse(self.run_has_changes('ZipCodes', 'ZipCodes_same'))
+        self.assertTrue(self.run_has_changes('ZipCodes', 'ZipCodes_geoMod'))
+        self.assertTrue(self.run_has_changes('ZipCodes', 'ZipCodes_attMod'))
+        self.assertTrue(self.run_has_changes('ZipCodes', 'ZipCodes_newFeature'))
+        self.assertFalse(self.run_has_changes('DNROilGasWells', 'DNROilGasWells'))
+        self.assertFalse(self.run_has_changes('Line', 'Line'))
+        self.assertFalse(self.run_has_changes('NullShape', 'NullShape'))
+        self.assertFalse(self.run_has_changes('Providers', 'Providers'))
+        self.assertTrue(self.run_has_changes('NullDates', 'NullDates2'))
 
-    def test_check_for_changes_null_date_fields(self):
-        self.assertTrue(self.run_check_for_changes('NullDates', 'NullDates2'))
+    def test_has_changes_null_date_fields(self):
+        self.assertTrue(self.run_has_changes('NullDates', 'NullDates2'))
 
     def test_filter_shape_fields(self):
         self.assertEquals(

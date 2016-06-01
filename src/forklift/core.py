@@ -34,6 +34,7 @@ def update(crate, validate_crate):
 
     try:
         if not arcpy.Exists(crate.destination):
+            log.debug('%s does not exist. creating', crate.destination)
             _create_destination_data(crate)
 
             return Crate.CREATED
@@ -46,8 +47,9 @@ def update(crate, validate_crate):
         except ValidationException as e:
             return (Crate.INVALID_DATA, e.message)
 
-        if _check_for_changes(crate):
+        if _has_changes(crate):
             _move_data(crate)
+
             return Crate.UPDATED
         else:
             return Crate.NO_CHANGES
@@ -186,7 +188,7 @@ def _is_naughty_field(fld):
     return 'SHAPE' in fld.upper() or fld.upper() in ['GLOBAL_ID', 'GLOBALID']
 
 
-def _check_for_changes(crate):
+def _has_changes(crate):
     '''
     crate: Crate
     f: String

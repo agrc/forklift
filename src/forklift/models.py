@@ -47,12 +47,27 @@ class Pallet(object):
         return self._crates
 
     def add_crates(self, crate_infos, defaults={}):
-        '''crate_infos: [String | (source_name, source workspace, destintion workspace, destination name)]
-        defaults: optional dictionary {source_workspace: '', destination_workspace: ''} unless only a string is provided
+        '''crate_infos: [String | (source_name,
+                                   source workspace,
+                                   destintion workspace: optional if set with defaults,
+                                   destination name: optional will default to source_name)]
+        defaults: optional dictionary {source_workspace: '', destination_workspace: ''}
 
-        Given an array of strings or tuples, this method will expand strings into source_name which then expects
-        defaults to have vaules and tuples will be converted to a dictionary with the order of the crate_param_names
-        list. This adds a new Crate to the _crates list.'''
+        Given an array of strings or tuples this method will create and add a `Crate` to the `_crates` list.
+
+        If a `crate_infos` index is a string, a `Crate` is created with the value as `source_name` and `destination_name`.
+        It is expected for `defaults` to contain `source_workspace` and `destination_workspace` vaules.
+
+        If a `crate_infos` index is a tuple, the values are zipped with the `crate_param_names` list.
+
+        If a tuple has 1 value, the value will be set to `source_name` and `destination_name`.
+        The `defaults` need to contain `source_workspace` and `destination_workspace` vaules.
+        If a tuple has 2 values, the first value is set to `source_name` and `destination_name`. The second value sets
+        the `source_workspace` and `defaults` needs to contain `destination_workspace`. `source_workspace` is overriden.
+        If a tuple has 3 values, the first value is set to `source_name` and `destination_name`. The second value sets
+        the `source_workspace`. The third value sets `destination_workspace`. `defaults` is unused.
+        If a tuple has 4 values, the first value is set to `source_name`. The second value sets `source_workspace`.
+        The third value sets `destination_workspace`. The fourth value sets `destination_name`. `defaults` is unused.'''
         crate_param_names = ['source_name', 'source_workspace', 'destination_workspace', 'destination_name']
 
         for info in crate_infos:

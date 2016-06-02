@@ -14,7 +14,6 @@ from nose.tools import raises
 from os import remove
 from os.path import abspath, dirname, join, exists
 
-
 test_data_folder = join(dirname(abspath(__file__)), 'data')
 test_pallets_folder = join(test_data_folder, 'list_pallets')
 
@@ -35,7 +34,7 @@ class TestCli(unittest.TestCase):
         self.assertTrue(exists(path))
 
         with open(path) as config:
-            self.assertEquals(['c:\\scheduled'], loads(config.read()))
+            self.assertEquals(['c:\\scheduled'], loads(config.read())['paths'])
 
     def test_init_returns_path_for_existing_config_file(self):
         self.assertEquals(cli.init(), cli.init())
@@ -84,7 +83,7 @@ class TestCli(unittest.TestCase):
         cli.add_config_folder(abspath('tests\data'))
 
         with open(path) as config:
-            self.assertEquals(['c:\\scheduled', abspath('tests\data')], loads(config.read()))
+            self.assertEquals(['c:\\scheduled', abspath('tests\data')], loads(config.read())['paths'])
 
     def test_add_config_folder_invalid(self):
         cli.init()
@@ -100,7 +99,7 @@ class TestCli(unittest.TestCase):
         cli.add_config_folder(abspath('tests\data'))
 
         with open(path) as config:
-            self.assertEquals(['c:\\scheduled', abspath('tests\data')], loads(config.read()))
+            self.assertEquals(['c:\\scheduled', abspath('tests\data')], loads(config.read())['paths'])
 
     def test_remove_config_folder(self):
         path = cli.init()
@@ -112,12 +111,24 @@ class TestCli(unittest.TestCase):
         cli.remove_config_folder('path/one')
 
         with open(path) as test_config_file:
-            self.assertEquals(['path/two'], loads(test_config_file.read()))
+            self.assertEquals(['path/two'], loads(test_config_file.read())['paths'])
 
     def test_remove_config_folder_checks_for_existing(self):
         cli.init()
 
         self.assertEquals('{} is not in the config folders list!'.format('blah'), cli.remove_config_folder('blah'))
+
+    def test_create_default_config(self):
+        config_path = cli._create_default_config(['default'])
+        with open('config.json', 'r') as config_json:
+            config = loads(config_json.read())
+
+        self.assertEquals(config, {
+            'paths': ['default'],
+            'logLevel': 'INFO',
+            'logger': 'file',
+            'notify': ['stdavis@utah.gov', 'sgourley@utah.gov']
+        })
 
 
 @patch('forklift.lift.process_crates_for')

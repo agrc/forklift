@@ -1,1 +1,3 @@
-["path/one", "path/two"]
+{
+    "paths": ["path/one", "path/two"]
+}

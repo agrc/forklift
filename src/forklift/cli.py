@@ -107,21 +107,45 @@ def _set_config_folders(folders):
     if type(folders) != list:
         raise Exception('config file data must be a list.')
 
-    with open('config.json', 'w') as json_data_file:
-        data = dumps(folders)
-        json_data_file.write(data)
+    #: write default config if the file does not exist
+    if not exists('config.json'):
+        return _create_default_config(folders)
 
-        return abspath(json_data_file.name)
+    with open('config.json', 'r') as json_config_file:
+        config = loads(json_config_file.read())
+
+        if 'paths' not in config:
+            return _create_default_config(folders)
+
+    with open('config.json', 'w') as json_config_file:
+        config['paths'] = folders
+        json_config_file.write(dumps(config))
+
+        return abspath(json_config_file.name)
+
+
+def _create_default_config(folders):
+    with open('config.json', 'w') as json_config_file:
+        data = {
+            'paths': folders,
+            'logLevel': 'INFO',
+            'logger': 'file',
+            'notify': ['stdavis@utah.gov', 'sgourley@utah.gov']
+        }
+
+        json_config_file.write(dumps(data))
+
+        return abspath(json_config_file.name)
 
 
 def _get_config_folders():
     if not exists('config.json'):
         raise Exception('config file not found.')
 
-    with open('config.json', 'r') as json_data_file:
-        config = loads(json_data_file.read())
+    with open('config.json', 'r') as json_config_file:
+        config = loads(json_config_file.read())
 
-        return config
+        return config['paths']
 
 
 def _validate_config_folder(folder, raises=False):
@@ -132,7 +156,7 @@ def _validate_config_folder(folder, raises=False):
         if raises:
             raise Exception('{}: {}'.format(folder, message))
 
-    return('{}: {}'.format(folder, message))
+    return ('{}: {}'.format(folder, message))
 
 
 def _get_pallets_in_folders(folders):

@@ -8,10 +8,9 @@ A module that contains methods to handle pallets
 
 import logging
 import seat
-import settings
 from time import clock
 
-log = logging.getLogger(settings.LOGGER)
+log = logging.getLogger('forklift')
 
 
 def process_crates_for(pallets, update_def):

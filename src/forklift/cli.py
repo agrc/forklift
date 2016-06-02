@@ -10,7 +10,6 @@ import core
 import lift
 import logging
 import seat
-import settings
 import sys
 from glob import glob
 from json import dumps, loads
@@ -18,7 +17,7 @@ from models import Pallet
 from os.path import abspath, exists, join, splitext, basename, dirname
 from time import clock
 
-log = logging.getLogger(settings.LOGGER)
+log = logging.getLogger('forklift')
 
 
 def init():

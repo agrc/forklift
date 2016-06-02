@@ -8,14 +8,13 @@ Tools for updating the data associated with a models.Crate
 
 import arcpy
 import logging
-import settings
 from datetime import datetime
 from itertools import izip
 from numpy.testing import assert_almost_equal
 from models import Crate
 from exceptions import ValidationException
 
-log = logging.getLogger(settings.LOGGER)
+log = logging.getLogger('forklift')
 
 
 def update(crate, validate_crate):

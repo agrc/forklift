@@ -71,46 +71,28 @@ def main():
 
 
 def _setup_logging():
-    logging.config.dictConfig({
-        'version': 1,
-        'disable_existing_loggers': False,
-        'formatters': {
-            'detailed_formatter': {
-                'format': '%(levelname).4s %(asctime)s %(module)s:%(lineno)-4s %(message)s',
-                'datefmt': '%m-%d %H:%M:%S'
-            },
-            'plain_formatter': {
-                'format': '%(message)s'
-            }
-        },
-        'handlers': {
-            'detailed_console_handler': {
-                'level': 'DEBUG',
-                'class': 'logging.StreamHandler',
-                'formatter': 'detailed_formatter',
-                'stream': 'ext://sys.stdout'
-            },
-            'detailed_file_handler': {
-                'level': 'DEBUG',
-                'class': 'logging.handlers.TimedRotatingFileHandler',
-                'filename': 'forklift.log',
-                'when': 'D',
-                'interval': 1,
-                'backupCount': 7,
-                'formatter': 'detailed_formatter'
-            }
-        },
-        'loggers': {
-            'console': {
-                'handlers': ['detailed_console_handler'],
-                'level': 'INFO',
-            },
-            'file': {
-                'handlers': ['detailed_file_handler'],
-                'level': 'DEBUG'
-            }
-        }
-    })
+    log = logging.getLogger('forklift')
+
+    log.logThreads = 0
+    log.logProcesses = 0
+
+    logger = cli.get_config_prop('logger')
+    log_level = cli.get_config_prop('logLevel')
+
+    if logger == 'file':
+        handler = logging.handlers.TimedRotatingFileHandler('forklift.log', when='D', interval=1, backupCount=7)
+        handler.setFormatter(detailed_formatter)
+        handler.setLevel(log_level)
+    elif logger == 'console':
+        handler = logging.StreamHandler(stream=sys.stdout)
+        handler.setFormatter(detailed_formatter)
+        handler.setLevel(log_level)
+    else:
+        handler = logging.NullHandler()
+
+    log.addHandler(handler)
+    log.setLevel(log_level)
+
 
 if __name__ == '__main__':
     sys.exit(main())

@@ -8,7 +8,6 @@ A module that contains the model classes for forklift
 
 
 import logging
-import settings
 from pprint import PrettyPrinter
 from os.path import join
 
@@ -25,7 +24,7 @@ class Pallet(object):
 
     def __init__(self):
         #: the logging module to keep track of the pallet
-        self.log = logging.getLogger(settings.LOGGER)
+        self.log = logging.getLogger('forklift')
         #: the table names for all dependent data for an application
         self._crates = []
         #: the status of the pallet (successful: Bool, message: string)

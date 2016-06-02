@@ -18,33 +18,23 @@ from os.path import abspath, exists, join, splitext, basename, dirname
 from time import clock
 
 log = logging.getLogger('forklift')
+default_pallet_locations = ['c:\\scheduled']
 
 
 def init():
     if exists('config.json'):
         return abspath('config.json')
 
-    default_pallet_locations = ['c:\\scheduled']
-
-    return _set_config_folders(default_pallet_locations)
+    return _create_default_config(default_pallet_locations)
 
 
 def add_config_folder(folder):
-    folders = _get_config_folders()
-
-    if folder in folders:
-        return '{} is already in the config folders list!'.format(folder)
-
     try:
         _validate_config_folder(folder, raises=True)
     except Exception as e:
         return e.message
 
-    folders.append(folder)
-
-    _set_config_folders(folders)
-
-    return '{} added'.format(folder)
+    return set_config_prop('paths', folder)
 
 
 def remove_config_folder(folder):
@@ -55,7 +45,7 @@ def remove_config_folder(folder):
     except ValueError:
         return '{} is not in the config folders list!'.format(folder)
 
-    _set_config_folders(folders)
+    set_config_prop('paths', folders, override=True)
 
     return '{} removed'.format(folder)
 
@@ -75,6 +65,48 @@ def list_config_folders():
         validate_results.append(_validate_config_folder(folder))
 
     return validate_results
+
+
+def get_config():
+    #: write default config if the file does not exist
+    if not exists('config.json'):
+        return _create_default_config(default_pallet_locations)
+
+    with open('config.json', 'r') as json_config_file:
+        return loads(json_config_file.read())
+
+
+def get_config_prop(key):
+    return get_config()[key]
+
+
+def set_config_prop(key, value, override=False):
+    config = get_config()
+
+    if key not in config:
+        return '{} not found in config.'.format(key)
+
+    if not override:
+        try:
+            if not isinstance(value, list):
+                if value not in config[key]:
+                    config[key].append(value)
+                else:
+                    return '{} already contains {}'.format(key, value)
+            else:
+                for item in value:
+                    if item not in config[key]:
+                        config[key].append(item)
+        except AttributeError:
+            #: prop is not an array set value instead of append
+            config[key] = value
+    else:
+        config[key] = value
+
+    with open('config.json', 'w') as json_config_file:
+        json_config_file.write(dumps(config))
+
+    return 'Added {} to {}'.format(value, key)
 
 
 def start_lift(file_path=None):
@@ -102,33 +134,12 @@ def start_lift(file_path=None):
         print(msg)
 
 
-def _set_config_folders(folders):
-    if type(folders) != list:
-        raise Exception('config file data must be a list.')
-
-    #: write default config if the file does not exist
-    if not exists('config.json'):
-        return _create_default_config(folders)
-
-    with open('config.json', 'r') as json_config_file:
-        config = loads(json_config_file.read())
-
-        if 'paths' not in config:
-            return _create_default_config(folders)
-
-    with open('config.json', 'w') as json_config_file:
-        config['paths'] = folders
-        json_config_file.write(dumps(config))
-
-        return abspath(json_config_file.name)
-
-
 def _create_default_config(folders):
     with open('config.json', 'w') as json_config_file:
         data = {
             'paths': folders,
             'logLevel': 'INFO',
-            'logger': 'file',
+            'logger': '',
             'notify': ['stdavis@utah.gov', 'sgourley@utah.gov']
         }
 
@@ -138,13 +149,7 @@ def _create_default_config(folders):
 
 
 def _get_config_folders():
-    if not exists('config.json'):
-        raise Exception('config file not found.')
-
-    with open('config.json', 'r') as json_config_file:
-        config = loads(json_config_file.read())
-
-        return config['paths']
+    return get_config_prop('paths')
 
 
 def _validate_config_folder(folder, raises=False):

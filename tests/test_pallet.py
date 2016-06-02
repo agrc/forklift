@@ -53,13 +53,60 @@ class TestPallet(unittest.TestCase):
         self.assertEquals(self.patient.get_crates()[1].destination_workspace, 'destination2')
         self.assertEquals(self.patient.get_crates()[1].destination_name, 'fc2_new')
 
-    def test_add_crate(self):
-        self.patient.add_crate(('fc1', 'source1', 'destination1'))
+    def test_add_crate_with_string(self):
+        self.patient.add_crate('fc1', {'source_workspace': 'source1', 'destination_workspace': 'destination1'})
+
         self.assertEquals(len(self.patient.get_crates()), 1)
 
         #: single source_name with defaults
         self.assertEquals(self.patient.get_crates()[0].source_name, 'fc1')
+        self.assertEquals(self.patient.get_crates()[0].destination_name, 'fc1')
         self.assertEquals(self.patient.get_crates()[0].source_workspace, 'source1')
+        self.assertEquals(self.patient.get_crates()[0].destination_workspace, 'destination1')
+
+    def test_add_crate_with_tuple_one_value(self):
+        self.patient.add_crate(('fc1'), {'source_workspace': 'source1', 'destination_workspace': 'destination1'})
+
+        self.assertEquals(len(self.patient.get_crates()), 1)
+
+        #: single source_name with defaults
+        self.assertEquals(self.patient.get_crates()[0].source_name, 'fc1')
+        self.assertEquals(self.patient.get_crates()[0].destination_name, 'fc1')
+        self.assertEquals(self.patient.get_crates()[0].source_workspace, 'source1')
+        self.assertEquals(self.patient.get_crates()[0].destination_workspace, 'destination1')
+
+    def test_add_crate_with_tuple_two_values(self):
+        self.patient.add_crate(('fc1', 'source1'), {'source_workspace': 'source2', 'destination_workspace': 'destination1'})
+
+        self.assertEquals(len(self.patient.get_crates()), 1)
+
+        #: single source_name with defaults
+        self.assertEquals(self.patient.get_crates()[0].source_name, 'fc1')
+        self.assertEquals(self.patient.get_crates()[0].destination_name, 'fc1')
+        self.assertEquals(self.patient.get_crates()[0].source_workspace, 'source1')
+        self.assertEquals(self.patient.get_crates()[0].destination_workspace, 'destination1')
+
+    def test_add_crate_with_tuple_three_values(self):
+        self.patient.add_crate(('fc1', 'source1', 'destination1'))
+
+        self.assertEquals(len(self.patient.get_crates()), 1)
+
+        #: single source_name with defaults
+        self.assertEquals(self.patient.get_crates()[0].source_name, 'fc1')
+        self.assertEquals(self.patient.get_crates()[0].destination_name, 'fc1')
+        self.assertEquals(self.patient.get_crates()[0].source_workspace, 'source1')
+        self.assertEquals(self.patient.get_crates()[0].destination_workspace, 'destination1')
+
+    def test_add_crate_with_tuple_four_values(self):
+        self.patient.add_crate(('fc1', 'source1', 'destination1', 'dest_name'))
+
+        self.assertEquals(len(self.patient.get_crates()), 1)
+
+        #: single source_name with defaults
+        self.assertEquals(self.patient.get_crates()[0].source_name, 'fc1')
+        self.assertEquals(self.patient.get_crates()[0].destination_name, 'dest_name')
+        self.assertEquals(self.patient.get_crates()[0].source_workspace, 'source1')
+        self.assertEquals(self.patient.get_crates()[0].destination_workspace, 'destination1')
 
     def test_is_ready_to_ship_no_crates_returns_true(self):
         self.assertTrue(self.patient.is_ready_to_ship())

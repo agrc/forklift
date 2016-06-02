@@ -82,10 +82,10 @@ class Pallet(object):
 
             self._crates.append(Crate(**params))
 
-    def add_crate(self, crate_info):
-        '''crate_info: (source_name, source workspace, destintion workspace, destination name)
+    def add_crate(self, crate_info, defaults={}):
+        '''Same as above but one at a time
         '''
-        self.add_crates([crate_info])
+        self.add_crates([crate_info], defaults)
 
     def validate_crate(self, crate):
         '''Override to provide your own validation to determine whether the data within

@@ -7,11 +7,13 @@ A module for testing crate.py
 '''
 
 import unittest
+from arcpy import env
 from forklift.models import Crate
 from os.path import join
 
 
 class TestCrate(unittest.TestCase):
+
     def test_pass_all_values(self):
         crate = Crate('sourceName', 'blah', 'hello', 'blur')
         self.assertEquals(crate.source_name, 'sourceName')
@@ -50,3 +52,37 @@ class TestCrate(unittest.TestCase):
 
         self.assertEquals(crate.source_name, 'foo')
         self.assertEquals(crate.source, join('bar', 'foo'))
+
+    def test_crate_ctor_replaces_period_with___(self):
+        source_name = 'db.owner.name'
+        source_workspace = 'does not matter'
+        destination_workspace = env.scratchGDB
+
+        x = Crate(source_name, source_workspace, destination_workspace)
+
+        self.assertEquals(x.destination_name, 'db_owner_name')
+
+    def test_crate_ctor_prepends_T_if_name_starts_with_non_alpha(self):
+        source_name = '123456789'
+        source_workspace = 'does not matter'
+        destination_workspace = env.scratchGDB
+
+        x = Crate(source_name, source_workspace, destination_workspace)
+        # : arcpy seems to put a T infront of this to make it valid?
+        self.assertEquals(x.destination_name, 'T' + source_name)
+
+        source_name = '*special_character'
+        x = Crate(source_name, source_workspace, destination_workspace)
+        self.assertEquals(x.destination_name, 'T_special_character')
+
+        source_name = '%special_character'
+        x = Crate(source_name, source_workspace, destination_workspace)
+        self.assertEquals(x.destination_name, 'T_special_character')
+
+    def test_crate_ctor_replaces_space_with___(self):
+        source_name = 'space in name'
+        source_workspace = 'does not matter'
+        destination_workspace = env.scratchGDB
+
+        x = Crate(source_name, source_workspace, destination_workspace)
+        self.assertEquals(x.destination_name, 'space_in_name')

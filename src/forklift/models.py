@@ -8,6 +8,7 @@ A module that contains the model classes for forklift
 
 
 import logging
+from arcpy import env, ValidateTableName as create_valid_table_name
 from pprint import PrettyPrinter
 from os.path import join
 
@@ -159,8 +160,14 @@ class Crate(object):
         self.source_workspace = source_workspace
         #: the name of the destination database
         self.destination_workspace = destination_workspace
+
+        temp = env.workspace
+        env.workspace = destination_workspace
+
         #: the name of the output data table
-        self.destination_name = destination_name or source_name
+        self.destination_name = create_valid_table_name(destination_name or source_name)
+
+        env.workspace = temp
         #: the result of the core.update method being called on this crate
         self.result = self.UNINITIALIZED
         #: optional definition of destination coordinate system to support reprojecting
@@ -170,7 +177,7 @@ class Crate(object):
         #: the full path to the source data
         self.source = join(source_workspace, source_name)
         #: the full path to the destination data
-        self.destination = join(destination_workspace, self.destination_name)
+        self.destination = join(self.destination_workspace, self.destination_name)
 
     def set_source_name(self, value):
         '''Sets the source_name and updates the source property

@@ -3,9 +3,53 @@
     "total_pallets": 5,
     "pallets": [
         {
-
+            "name": "Z:\\forklift\\samples\\PalletSamples.py:StringCratePallet",
+            "success": true,
+            "crates": [{
+                "name": "FeatureClassOne",
+                "result": "Created table successfully."
+            }, {
+                "name": "FeatureClassTwo",
+                "result": "Created table successfully."
+            }]
         }, {
-
+            "name": "Z:\\forklift\\samples\\PalletSamples.py:ExplicitCratePallet",
+            "success": true,
+            "crates": [{
+                "name": "FeatureClassOne",
+                "result": "Data updated successfully."
+            }]
+        }, {
+            "name": "Z:\\forklift\\samples\\PalletSamples.py:OneValueTupleCratePallet",
+            "success": false,
+            "message": "pallet failed to run because it broke",
+            "crates": [{
+                "name": "FeatureClassOne",
+                "result": "Data is invalid",
+                "crate_message": "a very long message with a stack trace and all sorts of errors"
+            }, {
+                "name": "FeatureClassOne",
+                "result": "Created table successfully."
+            }, {
+                "name": "FeatureClassTwo",
+                "result": "Created table successfully."
+            }]
+        }, {
+            "name": "Z:\\forklift\\samples\\PalletSamples.py:ShapefileCratePallet",
+            "success": false,
+            "message": "warehouse fire",
+            "crates": [{
+                "name": "FeatureClassOne",
+                "result": "Data is invalid",
+                "crate_message": "schema change..."
+            }]
+        }, {
+            "name": "Z:\\forklift\\samples\\PalletSamples.py:SdeCratePallet",
+            "success": true,
+            "crates": [{
+                "name": "FeatureClassOne",
+                "result": "Data updated successfully."
+            }]
         }
     ]
 }

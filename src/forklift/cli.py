@@ -129,9 +129,20 @@ def start_lift(file_path=None):
 
     log.info('elapsed time: %s', seat.format_time(clock() - start_seconds))
 
-    for msg in lift.process_pallets(pallets):
+    pallet_reports = lift.process_pallets(pallets)
+    for msg in pallet_reports:
         log.info(msg)
         print(msg)
+
+    _send_report_email(pallet_reports)
+
+
+def _send_report_email(pallet_reports):
+    #: TODO: add num_success_pallets and total pallets
+    # d = {'total_pallets': len(pallet_reports),
+    #      'num_successful_pallets': len(filter(lambda p: p.success[0], pallet_reports)),
+    #      'pallets': []}
+    pass
 
 
 def _create_default_config(folders):

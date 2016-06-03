@@ -9,6 +9,7 @@ A module that contains the model classes for forklift
 
 import logging
 from arcpy import env, ValidateTableName as create_valid_table_name
+from inspect import getsourcefile
 from pprint import PrettyPrinter
 from os.path import join
 
@@ -30,6 +31,7 @@ class Pallet(object):
         self._crates = []
         #: the status of the pallet (successful: Bool, message: string)
         self.success = (True, None)
+        self.name = '{}:{}'.format(getsourcefile(self.__class__), self.__class__.__name__)
 
     def process(self):
         '''Invoked if any crates have data updates.
@@ -123,7 +125,10 @@ class Pallet(object):
     def get_report(self):
         '''Returns a message about the result of each crate in the pallet.
         '''
-        return ['{}: {}'.format(c.destination, c.result) for c in self.get_crates()]
+        return {'name': self.name,
+                'success': self.success[0],
+                'message': self.success[1],
+                'crates': [crate.get_report() for crate in self._crates]}
 
     def __repr__(self):
         '''Override for better logging. Use with %r
@@ -201,6 +206,12 @@ class Crate(object):
             self.result = value = ('unknown result', value)
 
         return value
+
+    def get_report(self):
+        '''Returns the relavant info related to this crate that is shown on the report as a dictionary'''
+        return {'name': self.destination_name,
+                'result': self.result[0],
+                'crate_message': self.result[1]}
 
     def __repr__(self):
         '''Override for better logging. Use with %r

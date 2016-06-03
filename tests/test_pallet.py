@@ -18,6 +18,18 @@ class TestPallet(unittest.TestCase):
     def test_can_use_logging(self):
         self.patient.log.info('this works')
 
+    def test_name_prop(self):
+        class NamePallet(Pallet):
+            def __init__(self):
+                super(NamePallet, self).__init__()
+                self.add_crates(['fc1',
+                                 'fc2',
+                                 ('fc3', 'source', 'destination'),
+                                 ('fc4', 'source', 'destination', 'fc4_new')],
+                                {'source_workspace': 'C:\\MapData\\UDNR.sde',
+                                 'destination_workspace': 'C:\\MapData\\UDNR.gdb'})
+        self.assertIn('test_pallet.py:NamePallet', NamePallet().name)
+
     def test_add_crates(self):
         source = 'C:\\MapData\\UDNR.sde'
         dest = 'C:\\MapData\\UDNR.gdb'
@@ -239,3 +251,38 @@ class TestPallet(unittest.TestCase):
         self.assertEqual(self.patient.process(), NotImplemented)
         self.assertEqual(self.patient.ship(), NotImplemented)
         self.assertEqual(self.patient.validate_crate(None), NotImplemented)
+
+
+class TestPalletGetReport(unittest.TestCase):
+    def test_successful_pallet(self):
+        pallet = Pallet()
+        pallet.add_crates(['fc1', 'fc2', 'fc3'], {'source_workspace': 'Z:\\a\\path\\to\\database.sde',
+                                                  'destination_workspace': 'Z:\\a\\path\\to\\database.gdb'})
+        pallet.success = (True, None)
+        pallet.name = 'name'
+        pallet._crates[0].result = (Crate.CREATED, None)
+        pallet._crates[1].result = (Crate.UPDATED, None)
+        pallet._crates[2].result = (Crate.NO_CHANGES, None)
+
+        report = pallet.get_report()
+
+        self.assertEqual(report['name'], 'name')
+        self.assertEqual(report['success'], True)
+        self.assertEqual(report['crates'][0]['result'], Crate.CREATED)
+        self.assertEqual(report['crates'][0]['name'], 'fc1')
+
+    def test_failed_pallet(self):
+        pallet = Pallet()
+        pallet.add_crates(['fc4', 'fc5', 'fc6'], {'source_workspace': 'Z:\\a\\path\\to\\database.sde',
+                                                  'destination_workspace': 'Z:\\a\\path\\to\\database.gdb'})
+        pallet.success = (False, 'Failed message')
+        pallet._crates[0].result = (Crate.UPDATED, None)
+        pallet._crates[1].result = (Crate.INVALID_DATA, 'Invalid data message')
+        pallet._crates[2].result = (Crate.UNHANDLED_EXCEPTION, None)
+
+        report = pallet.get_report()
+
+        self.assertEqual(report['success'], False)
+        self.assertEqual(report['message'], 'Failed message')
+        self.assertEqual(report['crates'][1]['result'], Crate.INVALID_DATA)
+        self.assertEqual(report['crates'][1]['crate_message'], 'Invalid data message')

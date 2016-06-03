@@ -12,14 +12,16 @@
             'dojo/dom-construct',
 
             'dojo/text!./data/report.json',
-            'dojo/text!../src/forklift/report.html'
+            'dojo/text!../src/forklift/report_template.html'
         ], function (
             domConstruct,
 
             testJson,
             reportTemplate
         ) {
-            domConstruct.place(Mustache.render(reportTemplate, JSON.parse(testJson)), document.body);
+            var dom = Mustache.render(reportTemplate, JSON.parse(testJson));
+            domConstruct.place(dom, document.body);
+            console.debug(dom);
         });
     </script>
 </body>

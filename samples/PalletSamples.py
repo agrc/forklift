@@ -9,6 +9,10 @@ We should be able to run them twice without errors. Once to create, and once to 
 
 from arcpy import env
 from forklift.models import Pallet
+from os import path
+
+
+data_folder = path.join(path.dirname(path.realpath(__file__)), 'data')
 
 
 class StringCratePallet(Pallet):
@@ -17,7 +21,7 @@ class StringCratePallet(Pallet):
         super(StringCratePallet, self).__init__()
 
         destination_workspace = env.scratchGDB
-        source_workspace = 'Database Connections\\agrc@sgid10.sde'
+        source_workspace = path.join(data_folder, 'agrc@sgid10.sde')
 
         self.add_crate('Counties', {'source_workspace': source_workspace,
                                     'destination_workspace': destination_workspace})
@@ -29,7 +33,7 @@ class ExplicitCratePallet(Pallet):
         super(ExplicitCratePallet, self).__init__()
 
         destination_workspace = env.scratchGDB
-        source_workspace = 'Database Connections\\agrc@sgid10.sde'
+        source_workspace = path.join(data_folder, 'agrc@sgid10.sde')
 
         crate_info = ('SGID10.GEOSCIENCE.AvalanchePaths', source_workspace, destination_workspace, 'AvyPaths')
         self.add_crate(crate_info)
@@ -41,7 +45,7 @@ class OneValueTupleCratePallet(Pallet):
         super(OneValueTupleCratePallet, self).__init__()
 
         destination_workspace = env.scratchGDB
-        source_workspace = 'Database Connections\\agrc@sgid10.sde'
+        source_workspace = path.join(data_folder, 'agrc@sgid10.sde')
 
         crate_info = ('SGID10.GEOSCIENCE.AvalanchePaths')
         self.add_crate(crate_info, {'source_workspace': source_workspace,
@@ -54,7 +58,7 @@ class ShapefileCratePallet(Pallet):
         super(ShapefileCratePallet, self).__init__()
 
         destination_workspace = env.scratchGDB
-        source_workspace = env.scratchFolder + '\\myshape.shp'
+        source_workspace = path.join(data_folder, 'myshape.shp')
 
         self.add_crate('myshape', {'source_workspace': source_workspace,
                                    'destination_workspace': destination_workspace})
@@ -65,8 +69,8 @@ class SdeCratePallet(Pallet):
     def __init__(self):
         super(SdeCratePallet, self).__init__()
 
-        destination_workspace = 'Database Connections\\UPDATE_TESTS.sde'
-        source_workspace = 'Database Connections\\agrc@sgid10.sde'
+        destination_workspace = path.join(data_folder, 'UPDATE_TESTS.sde')
+        source_workspace = path.join(data_folder, 'agrc@sgid10.sde')
 
         self.add_crate('SGID10.Boundaries.Counties', {'source_workspace': source_workspace,
                                                       'destination_workspace': destination_workspace})

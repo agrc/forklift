@@ -24,6 +24,7 @@ from time import clock
 
 log = logging.getLogger('forklift')
 default_pallet_locations = ['c:\\scheduled']
+template = join(abspath(__file__), 'report_template.html')
 
 
 def init():
@@ -144,7 +145,7 @@ def _send_report_email(pallet_reports):
     report_dict = {'total_pallets': len(pallet_reports),
                    'num_success_pallets': len(filter(lambda p: p['success'], pallet_reports)),
                    'pallets': pallet_reports}
-    with open(join(dirname(__file__), 'report_template.html')) as template_file:
+    with open(template, 'r') as template_file:
         email_content = pystache.render(template_file.read(), report_dict)
 
     if get_config_prop('sendEmails'):

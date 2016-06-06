@@ -67,7 +67,8 @@ setup(
     keywords=[
     ],
     install_requires=[
-        'docopt==0.6.2'
+        'docopt==0.6.2',
+        'pystache==0.5.4'
     ],
     dependency_links=[
     ],

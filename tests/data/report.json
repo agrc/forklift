@@ -26,7 +26,7 @@
             "crates": [{
                 "name": "FeatureClassOne",
                 "result": "Data is invalid",
-                "crate_message": "a very long message with a stack trace and all sorts of errors"
+                "crate_message": "a very long message with a stack trace and all sorts of errors a very long message with a stack trace and all sorts of errors"
             }, {
                 "name": "FeatureClassOne",
                 "result": "Created table successfully."

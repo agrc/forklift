@@ -141,9 +141,9 @@ def start_lift(file_path=None):
 def _send_report_email(pallet_reports):
     '''Create and send report email'''
     report_dict = {'total_pallets': len(pallet_reports),
-                   'num_successful_pallets': len(filter(lambda p: p.success[0], pallet_reports)),
+                   'num_success_pallets': len(filter(lambda p: p['success'], pallet_reports)),
                    'pallets': pallet_reports}
-    with open('report_template.html') as template_file:
+    with open(join(dirname(__file__), 'report_template.html')) as template_file:
         email_content = pystache.render(template_file.read(), report_dict)
 
     if get_config_prop('sendEmails'):
@@ -158,6 +158,7 @@ def _send_report_email(pallet_reports):
     else:
         print('sendEmails is false. No email sent.')
         print(email_content)
+
 
 def _create_default_config(folders):
     with open('config.json', 'w') as json_config_file:

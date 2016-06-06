@@ -1,14 +1,19 @@
 <p><b>{{num_success_pallets}}</b> out of <b>{{total_pallets}}</b> pallets ran successfully.</p>
 
-{{#pallets}}
-<div style='background-color: {{#success}}#2ECC40{{/success}}{{^success}}#FF4136{{/success}}'>
-{{name}}
-</div>
-{{^success}}
-<b>{{message}}</b>
-{{/success}}
-<table style='margin-left: 20px; margin-bottom: 20px'>
+<table >
     <tbody>
+        {{#pallets}}
+        <tr>
+            <td colspan='2' style='background-color: {{#success}}#83ec8f{{/success}}
+                {{^success}}#fc7973{{/success}}'>
+                {{name}}
+            </td>
+        </tr>
+        {{^success}}
+        <tr>
+            <td colspan='2'><b>{{message}}</b></td>
+        </tr>
+        {{/success}}
         {{#crates}}
         <tr>
             <td>{{name}}:</td>
@@ -20,6 +25,7 @@
         </tr>
         {{/crate_message}}
         {{/crates}}
+        <tr><td></td></tr>
+        {{/pallets}}
     </tbody>
 </table>
-{{/pallets}}

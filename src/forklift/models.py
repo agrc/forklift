@@ -8,7 +8,7 @@ A module that contains the model classes for forklift
 
 
 import logging
-from arcpy import env, ValidateTableName as create_valid_table_name
+from arcpy import env, SpatialReference, ValidateTableName as create_valid_table_name
 from inspect import getsourcefile
 from pprint import PrettyPrinter
 from os.path import join
@@ -176,6 +176,9 @@ class Crate(object):
         #: the result of the core.update method being called on this crate
         self.result = self.UNINITIALIZED
         #: optional definition of destination coordinate system to support reprojecting
+        if destination_coordinate_system is not None and isinstance(destination_coordinate_system, int):
+            destination_coordinate_system = SpatialReference(destination_coordinate_system)
+
         self.destination_coordinate_system = destination_coordinate_system
         #: optional geographic transformation to support reprojecting
         self.geographic_transformation = geographic_transformation

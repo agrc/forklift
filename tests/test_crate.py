@@ -7,7 +7,7 @@ A module for testing crate.py
 '''
 
 import unittest
-from arcpy import env
+from arcpy import env, SpatialReference
 from forklift.models import Crate
 from os.path import join
 
@@ -86,3 +86,19 @@ class TestCrate(unittest.TestCase):
 
         x = Crate(source_name, source_workspace, destination_workspace)
         self.assertEquals(x.destination_name, 'space_in_name')
+
+    def test_init_with_coordinate_system_as_number_becomes_spatial_reference(self):
+        crate = Crate('foo', 'bar', 'baz', 'qux', 26912)
+        self.assertEquals(crate.source_name, 'foo')
+        self.assertEquals(crate.source_workspace, 'bar')
+        self.assertEquals(crate.destination_workspace, 'baz')
+        self.assertEquals(crate.destination_name, 'qux')
+        self.assertIsInstance(crate.destination_coordinate_system, SpatialReference)
+
+    def test_init_with_coordinate_system_does_not_change(self):
+        crate = Crate('foo', 'bar', 'baz', 'qux', SpatialReference(26921))
+        self.assertEquals(crate.source_name, 'foo')
+        self.assertEquals(crate.source_workspace, 'bar')
+        self.assertEquals(crate.destination_workspace, 'baz')
+        self.assertEquals(crate.destination_name, 'qux')
+        self.assertIsInstance(crate.destination_coordinate_system, SpatialReference)

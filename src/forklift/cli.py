@@ -24,7 +24,7 @@ from time import clock
 
 log = logging.getLogger('forklift')
 default_pallet_locations = ['c:\\scheduled']
-template = join(abspath(__file__), 'report_template.html')
+template = join(abspath(dirname(__file__)), 'report_template.html')
 
 
 def init():

@@ -15,10 +15,10 @@ import secrets
 import sys
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from glob import glob
 from json import dumps, loads
 from models import Pallet
 from os.path import abspath, exists, join, splitext, basename, dirname, isfile
+from os import walk
 from smtplib import SMTP
 from time import clock
 
@@ -200,8 +200,10 @@ def _get_pallets_in_folders(folders):
     pallets = []
 
     for folder in folders:
-        for py_file in glob(join(folder, '*.py')):
-            pallets.extend(_get_pallets_in_file(py_file))
+        for root, dirs, files in walk(folder):
+            for file_name in files:
+                if file_name.endswith('.py'):
+                    pallets.extend(_get_pallets_in_file(join(root, file_name)))
 
     return pallets
 

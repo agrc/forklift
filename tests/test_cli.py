@@ -158,15 +158,16 @@ class TestListPallets(unittest.TestCase):
         test_pallets_folder = join(test_data_folder, 'list_pallets')
         pallets = cli.list_pallets(folders=[test_pallets_folder])
 
-        self.assertEquals(len(pallets), 3)
+        self.assertEquals(len(pallets), 4)
         self.assertEquals(pallets[0][0], join(test_pallets_folder, 'multiple_pallets.py'))
         self.assertEquals(pallets[0][1], 'PalletOne')
+        self.assertEquals(pallets[3][1], 'NestedPallet')
 
     def test_list_pallets_from_config(self):
         cli.set_config_prop('paths', [test_pallets_folder], override=True)
         pallets = cli.list_pallets()
 
-        self.assertEquals(len(pallets), 3)
+        self.assertEquals(len(pallets), 4)
         self.assertEquals(pallets[0][0], join(test_pallets_folder, 'multiple_pallets.py'))
         self.assertEquals(pallets[0][1], 'PalletOne')
 
@@ -202,5 +203,5 @@ class TestCliStartLift(unittest.TestCase):
         cli.set_config_prop('paths', [test_pallets_folder], override=True)
         cli.start_lift()
 
-        self.assertEqual(len(process_crates_for.call_args[0][0]), 3)
-        self.assertEqual(len(process_pallets.call_args[0][0]), 3)
+        self.assertEqual(len(process_crates_for.call_args[0][0]), 4)
+        self.assertEqual(len(process_pallets.call_args[0][0]), 4)

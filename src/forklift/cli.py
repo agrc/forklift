@@ -14,10 +14,11 @@ import seat
 import secrets
 import sys
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from glob import glob
 from json import dumps, loads
 from models import Pallet
-from os.path import abspath, exists, join, splitext, basename, dirname
+from os.path import abspath, exists, join, splitext, basename, dirname, isfile
 from smtplib import SMTP
 from time import clock
 
@@ -148,15 +149,19 @@ def _send_report_email(pallet_reports):
 
     if get_config_prop('sendEmails'):
         to_addresses = ','.join(get_config_prop('notify'))
-        message = MIMEText(email_content, 'html')
+        message = MIMEMultipart()
         message['Subject'] = 'Forklift report'
         message['From'] = secrets.from_address
         message['To'] = to_addresses
-        s = SMTP(secrets.smtp_server, secrets.smtp_port)
-        s.sendmail(secrets.from_address, to_addresses, message.as_string())
-        s.quit()
+        message.attach(MIMEText(email_content, 'html'))
+        log_file = 'forklift.log'
+        if isfile(log_file):
+            message.attach(MIMEText(file(log_file).read()))
+        smtp = SMTP(secrets.smtp_server, secrets.smtp_port)
+        smtp.sendmail(secrets.from_address, to_addresses, message.as_string())
+        smtp.quit()
     else:
-        print('sendEmails is false. No email sent.')
+        print('`sendEmails` is false. No email sent. Email content:')
         print(email_content)
 
 

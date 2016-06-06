@@ -9,12 +9,16 @@ A module that contains the implementation of the cli commands
 import core
 import lift
 import logging
+import pystache
 import seat
+import secrets
 import sys
+from email.mime.text import MIMEText
 from glob import glob
 from json import dumps, loads
 from models import Pallet
 from os.path import abspath, exists, join, splitext, basename, dirname
+from smtplib import SMTP
 from time import clock
 
 log = logging.getLogger('forklift')
@@ -130,20 +134,30 @@ def start_lift(file_path=None):
     log.info('elapsed time: %s', seat.format_time(clock() - start_seconds))
 
     pallet_reports = lift.process_pallets(pallets)
-    for msg in pallet_reports:
-        log.info(msg)
-        print(msg)
 
     _send_report_email(pallet_reports)
 
 
 def _send_report_email(pallet_reports):
-    #: TODO: add num_success_pallets and total pallets
-    # d = {'total_pallets': len(pallet_reports),
-    #      'num_successful_pallets': len(filter(lambda p: p.success[0], pallet_reports)),
-    #      'pallets': []}
-    pass
+    '''Create and send report email'''
+    report_dict = {'total_pallets': len(pallet_reports),
+                   'num_successful_pallets': len(filter(lambda p: p.success[0], pallet_reports)),
+                   'pallets': pallet_reports}
+    with open('report_template.html') as template_file:
+        email_content = pystache.render(template_file.read(), report_dict)
 
+    if get_config_prop('sendEmails'):
+        to_addresses = ','.join(get_config_prop('notify'))
+        message = MIMEText(email_content, 'html')
+        message['Subject'] = 'Forklift report'
+        message['From'] = secrets.from_address
+        message['To'] = to_addresses
+        s = SMTP(secrets.smtp_server, secrets.smtp_port)
+        s.sendmail(secrets.from_address, to_addresses, message.as_string())
+        s.quit()
+    else:
+        print('sendEmails is false. No email sent.')
+        print(email_content)
 
 def _create_default_config(folders):
     with open('config.json', 'w') as json_config_file:

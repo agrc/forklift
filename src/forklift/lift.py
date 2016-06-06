@@ -25,15 +25,18 @@ def process_crates_for(pallets, update_def):
     log.info('processing crates for %d pallets.', len(pallets))
 
     for pallet in pallets:
-        log.debug('processing pallet %r', pallet)
+        log.info('processing crates for pallet: %s', pallet.name)
+        log.debug('%r', pallet)
         for crate in pallet.get_crates():
             if crate.destination not in processed_crates:
-                log.debug('processing crate %r', crate)
+                log.info('crate: %s', crate.destination_name)
+                log.debug('%r', crate)
                 start_seconds = clock()
 
                 processed_crates[crate.destination] = crate.set_result(update_def(crate, pallet.validate_crate))
 
                 log.debug('finished crate %s',  seat.format_time(clock() - start_seconds))
+                log.info('result: %s', crate.result)
             else:
                 log.debug('skipping crate %r', crate)
 
@@ -53,7 +56,8 @@ def process_pallets(pallets):
     for pallet in pallets:
         if pallet.is_ready_to_ship():  #: checks for schema changes or errors
             if pallet.requires_processing():  #: checks for data that was updated
-                log.debug('processing pallet %r', pallet)
+                log.info('processing pallet: %s', pallet.name)
+                log.debug('%r', pallet)
                 start_seconds = clock()
 
                 try:
@@ -68,6 +72,7 @@ def process_pallets(pallets):
             start_seconds = clock()
 
             try:
+                log.info('shipping pallet: %s', pallet.name)
                 pallet.ship()
                 log.debug('shipped pallet %s', seat.format_time(clock() - start_seconds))
             except Exception as e:

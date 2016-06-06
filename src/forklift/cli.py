@@ -171,7 +171,8 @@ def _create_default_config(folders):
             'paths': folders,
             'logLevel': 'INFO',
             'logger': '',
-            'notify': ['stdavis@utah.gov', 'sgourley@utah.gov']
+            'notify': ['stdavis@utah.gov', 'sgourley@utah.gov'],
+            'sendEmails': False
         }
 
         json_config_file.write(dumps(data))

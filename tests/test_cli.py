@@ -37,7 +37,8 @@ class TestConfigInit(unittest.TestCase):
             self.assertEquals(config_dict, {u"logLevel": u"INFO",
                                             u"paths": [u"c:\\scheduled"],
                                             u"logger": u"",
-                                            u"notify": [u"stdavis@utah.gov", u"sgourley@utah.gov"]})
+                                            u"notify": [u"stdavis@utah.gov", u"sgourley@utah.gov"],
+                                            u"sendEmails": False})
 
     def test_init_returns_path_for_existing_config_file(self):
         self.assertEquals(cli.init(), cli.init())

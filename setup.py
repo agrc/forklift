@@ -68,7 +68,13 @@ setup(
     ],
     install_requires=[
         'docopt==0.6.2',
-        'pystache==0.5.4'
+        'pystache==0.5.4',
+        'gitpython==2.0.4',
+        'requests==2.10.0',
+        #: pyopenssl, ndg-httpsclient, pyasn1 are there to disable ssl warnings in requests
+        'pyopenssl==16.0.0',
+        'ndg-httpsclient==0.4.0',
+        'pyasn1==0.1.9'
     ],
     dependency_links=[
     ],

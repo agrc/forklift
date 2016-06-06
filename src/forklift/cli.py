@@ -15,60 +15,59 @@ import secrets
 import sys
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from git import Repo
 from json import dumps, loads
 from models import Pallet
 from os.path import abspath, exists, join, splitext, basename, dirname, isfile
 from os import walk
+from requests import get
 from smtplib import SMTP
 from time import clock
 
 log = logging.getLogger('forklift')
-default_pallet_locations = ['c:\\scheduled']
 template = join(abspath(dirname(__file__)), 'report_template.html')
+default_warehouse_location = 'c:\\scheduled'
 
 
 def init():
     if exists('config.json'):
         return abspath('config.json')
 
-    return _create_default_config(default_pallet_locations)
+    return _create_default_config(default_warehouse_location)
 
 
-def add_config_folder(folder):
+def add_repo(repo):
     try:
-        _validate_config_folder(folder, raises=True)
+        _validate_repo(repo, raises=True)
     except Exception as e:
         return e.message
 
-    return set_config_prop('paths', folder)
+    return set_config_prop('repositories', repo)
 
 
-def remove_config_folder(folder):
-    folders = _get_config_folders()
+def remove_repo(repo):
+    repos = _get_repos()
 
     try:
-        folders.remove(folder)
+        repos.remove(repo)
     except ValueError:
-        return '{} is not in the config folders list!'.format(folder)
+        return '{} is not in the repositories list!'.format(repo)
 
-    set_config_prop('paths', folders, override=True)
+    set_config_prop('repositories', repos, override=True)
 
-    return '{} removed'.format(folder)
-
-
-def list_pallets(folders=None):
-    if folders is None:
-        folders = _get_config_folders()
-
-    return _get_pallets_in_folders(folders)
+    return '{} removed'.format(repo)
 
 
-def list_config_folders():
-    folders = _get_config_folders()
+def list_pallets():
+    return _get_pallets_in_folder(get_config_prop('warehouse'))
+
+
+def list_repos():
+    folders = _get_repos()
 
     validate_results = []
     for folder in folders:
-        validate_results.append(_validate_config_folder(folder))
+        validate_results.append(_validate_repo(folder))
 
     return validate_results
 
@@ -76,7 +75,7 @@ def list_config_folders():
 def get_config():
     #: write default config if the file does not exist
     if not exists('config.json'):
-        return _create_default_config(default_pallet_locations)
+        return _create_default_config(default_warehouse_location)
 
     with open('config.json', 'r') as json_config_file:
         return loads(json_config_file.read())
@@ -117,6 +116,9 @@ def set_config_prop(key, value, override=False):
 
 def start_lift(file_path=None):
     log.info('starting forklift')
+
+    git_update()
+
     start_seconds = clock()
 
     if file_path is not None:
@@ -166,10 +168,24 @@ def _send_report_email(pallet_reports):
         print(email_content)
 
 
-def _create_default_config(folders):
+def git_update():
+    pass
+    # git_folder = get_config_prop('warehouse')
+    # for repo in get_config_prop('repos'):
+    #     if not exists(join(git_folder, repo.split('/')[1])):
+    #         log.info('cloning {}'.format(git_folder))
+    #         Repo.clone_from(_repo_to_url(repo), git_folder)
+
+
+def _repo_to_url(repo):
+    return 'https://github.com/{}.git'.format(repo)
+
+
+def _create_default_config(folder):
     with open('config.json', 'w') as json_config_file:
         data = {
-            'paths': folders,
+            'warehouse': folder,
+            'repositories': [],
             'notify': ['stdavis@utah.gov', 'sgourley@utah.gov'],
             'sendEmails': False
         }
@@ -179,29 +195,30 @@ def _create_default_config(folders):
         return abspath(json_config_file.name)
 
 
-def _get_config_folders():
-    return get_config_prop('paths')
+def _get_repos():
+    return get_config_prop('repositories')
 
 
-def _validate_config_folder(folder, raises=False):
-    if exists(folder):
+def _validate_repo(repo, raises=False):
+    url = _repo_to_url(repo)
+    response = get(url)
+    if response.status_code == 200:
         message = '[Valid]'
     else:
-        message = '[Folder not found]'
+        message = '[Invalid URL]'
         if raises:
-            raise Exception('{}: {}'.format(folder, message))
+            raise Exception('{}: {}'.format(repo, message))
 
-    return ('{}: {}'.format(folder, message))
+    return ('{}: {}'.format(repo, message))
 
 
-def _get_pallets_in_folders(folders):
+def _get_pallets_in_folder(folder):
     pallets = []
 
-    for folder in folders:
-        for root, dirs, files in walk(folder):
-            for file_name in files:
-                if file_name.endswith('.py'):
-                    pallets.extend(_get_pallets_in_file(join(root, file_name)))
+    for root, dirs, files in walk(folder):
+        for file_name in files:
+            if file_name.endswith('.py'):
+                pallets.extend(_get_pallets_in_file(join(root, file_name)))
 
     return pallets
 

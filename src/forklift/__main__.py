@@ -6,26 +6,25 @@ forklift 🚜
 Usage:
     forklift config init
     forklift config set --key <key> --value <value>
-    forklift config folder --add <folder-path>
-    forklift config folder --remove <folder-path>
-    forklift config folder list
-    forklift list-pallets [<folder-path>]
+    forklift config repos --add <repo>
+    forklift config repos --remove <repo>
+    forklift config repos --list
+    forklift list-pallets
     forklift lift [<file-path>]
 
 Arguments:
-    folder-path     a path to a folder
-    file-path       a path to a file
+    repo            the name of a GitHub repository in <owner>/<name> format
+    file-path       a path to a file that defines a pallet
 
 Examples:
-    python -m forklift config init                            creates the config file.
-    python -m forklift config set --key <key> --value <value> sets a key in the config with a value
-    python -m forklift config folder --add path/to/folder     adds a path to the config. Checks for duplicates.
-    python -m forklift config folder --remove path/to/folder  removes a path from the config.
-    python -m forklift config folder list                     outputs the list of pallet folder paths in your config file.
-    python -m forklift list-pallets                           outputs the list of pallets from the config.
-    python -m forklift list-pallets path/to/folder            outputs the list of pallets for the passed in path.
-    python -m forklift lift                                   the main entry for running all of pallets found in the config paths.
-    python -m forklift lift path/to/file                      run a specific pallets.
+    python -m forklift config init                               creates the config file.
+    python -m forklift config set --key <key> --value <value>    sets a key in the config with a value
+    python -m forklift config repos --add agrc/ugs-chemistry     adds a path to the config. Checks for duplicates.
+    python -m forklift config repos --remove agrc/ugs-chemistry  removes a path from the config.
+    python -m forklift config repos --list                       outputs the list of pallet folder paths in your config file.
+    python -m forklift list-pallets                              outputs the list of pallets from the config.
+    python -m forklift lift                                      the main entry for running all of pallets found in the config paths.
+    python -m forklift lift path/to/file                         run a specific pallets.
 '''
 
 import cli
@@ -46,12 +45,12 @@ def main():
             message = cli.init()
             print('config file: {}'.format(message))
 
-        if args['folder'] and args['<folder-path>']:
+        if args['repos'] and args['<repo>']:
             if args['--add']:
-                message = cli.add_config_folder(args['<folder-path>'])
+                message = cli.add_repo(args['<repo>'])
 
             if args['--remove']:
-                message = cli.remove_config_folder(args['<folder-path>'])
+                message = cli.remove_repo(args['<repo>'])
 
             print(message)
 
@@ -59,8 +58,8 @@ def main():
             message = cli.set_config_prop(args['<key>'], args['<value>'])
             print(message)
 
-        if args['folder'] and args['list']:
-            for folder in cli.list_config_folders():
+        if args['repos'] and args['--list']:
+            for folder in cli.list_repos():
                 print(folder)
     elif args['list-pallets']:
         if args['<folder-path>']:

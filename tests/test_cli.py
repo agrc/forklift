@@ -34,12 +34,13 @@ class TestConfigInit(unittest.TestCase):
 
         with open(path) as config:
             config_dict = loads(config.read())
-            self.assertEquals(config_dict, {u"paths": [u"c:\\scheduled"],
-                                            u"notify": [u"stdavis@utah.gov", u"sgourley@utah.gov"],
-                                            u"sendEmails": False})
+            self.assertEqual(config_dict, {u"warehouse": u"c:\\scheduled",
+                                           u"repositories": [],
+                                           u"notify": [u"stdavis@utah.gov", u"sgourley@utah.gov"],
+                                           u"sendEmails": False})
 
     def test_init_returns_path_for_existing_config_file(self):
-        self.assertEquals(cli.init(), cli.init())
+        self.assertEqual(cli.init(), cli.init())
 
 
 class TestConfigSet(unittest.TestCase):
@@ -55,10 +56,10 @@ class TestConfigSet(unittest.TestCase):
             remove('config.json')
 
     def test_set_config_prop_overrides_all_values(self):
-        folders = ['blah', 'blah2']
-        cli.set_config_prop('paths', folders, override=True)
+        folder = 'blah'
+        cli.set_config_prop('warehouse', folder, override=True)
 
-        self.assertEquals(cli.get_config_prop('paths'), folders)
+        self.assertEqual(cli.get_config_prop('warehouse'), folder)
 
     @patch('forklift.cli._create_default_config')
     def test_get_config_creates_default_config(self, mock_obj):
@@ -75,7 +76,7 @@ class TestConfigSet(unittest.TestCase):
 
         message = cli.set_config_prop('this was', 'not found')
 
-        self.assertEquals(message, 'this was not found in config.')
+        self.assertEqual(message, 'this was not found in config.')
 
     @patch('forklift.cli.get_config')
     def test_set_config_prop_appends_items_from_list_if_not_overriding(self, mock_obj):
@@ -83,7 +84,7 @@ class TestConfigSet(unittest.TestCase):
 
         message = cli.set_config_prop('test', [1, 2, 3])
 
-        self.assertEquals(message, 'Added [1, 2, 3] to test')
+        self.assertEqual(message, 'Added [1, 2, 3] to test')
 
     @patch('forklift.cli.get_config')
     def test_set_config_prop_sets_value(self, mock_obj):
@@ -91,10 +92,10 @@ class TestConfigSet(unittest.TestCase):
 
         message = cli.set_config_prop('test', 'value')
 
-        self.assertEquals(message, 'Added value to test')
+        self.assertEqual(message, 'Added value to test')
 
 
-class TestConfigFolder(unittest.TestCase):
+class TestRepos(unittest.TestCase):
 
     def setUp(self):
         if exists('config.json'):
@@ -106,38 +107,48 @@ class TestConfigFolder(unittest.TestCase):
         if exists('config.json'):
             remove('config.json')
 
-    def test_add_config_folder_invalid(self):
-        result = cli.add_config_folder('bad folder')
+    def test_add_repo(self):
+        path = cli.init()
 
-        self.assertIn('[Folder not found]', result)
+        cli.add_repo('agrc/forklift')
 
-    def test_add_config_folder_checks_for_duplicates(self):
-        cli.add_config_folder(abspath('tests\data'))
-        cli.add_config_folder(abspath('tests\data'))
+        with open(path) as config:
+            self.assertEqual(['agrc/forklift'], loads(config.read())['repositories'])
+
+    def test_add_repo_invalid(self):
+        result = cli.add_repo('bad/repo')
+
+        self.assertIn('[Invalid URL]', result)
+
+    @patch('forklift.cli._validate_repo')
+    def test_add_repo_checks_for_duplicates(self, _validate_repo_mock):
+        _validate_repo_mock.return_value = ''
+        cli.add_repo('tests/data')
+        cli.add_repo('tests/data')
 
         with open(self.path) as config:
-            self.assertEquals(['c:\\scheduled', abspath('tests\data')], loads(config.read())['paths'])
+            self.assertEqual(loads(config.read())['repositories'], ['tests/data'])
 
-    def test_remove_config_folder(self):
+    def test_remove_repo(self):
         test_config_path = join(test_data_folder, 'remove_test_config.json')
 
         with open(self.path, 'w') as json_data_file, open(test_config_path) as test_config_file:
             json_data_file.write(test_config_file.read())
 
-        cli.remove_config_folder('path/one')
+        cli.remove_repo('path/one')
 
         with open(self.path) as test_config_file:
-            self.assertEquals(['path/two'], loads(test_config_file.read())['paths'])
+            self.assertEqual(['path/two'], loads(test_config_file.read())['repositories'])
 
-    def test_remove_config_folder_checks_for_existing(self):
-        self.assertEquals('{} is not in the config folders list!'.format('blah'), cli.remove_config_folder('blah'))
+    def test_remove_repo_checks_for_existing(self):
+        self.assertEqual('{} is not in the repositories list!'.format('blah'), cli.remove_repo('blah'))
 
-    def test_list_config_folders(self):
-        cli.set_config_prop('paths', ['blah', 'blah2'], override=True)
+    def test_list_repos(self):
+        cli.set_config_prop('repositories', ['blah', 'blah2'], override=True)
 
-        result = cli.list_config_folders()
+        result = cli.list_repos()
 
-        self.assertEquals(result, ['blah: [Folder not found]', 'blah2: [Folder not found]'])
+        self.assertEqual(result, ['blah: [Invalid URL]', 'blah2: [Invalid URL]'])
 
 
 class TestListPallets(unittest.TestCase):
@@ -154,28 +165,20 @@ class TestListPallets(unittest.TestCase):
 
     def test_list_pallets(self):
         test_pallets_folder = join(test_data_folder, 'list_pallets')
-        pallets = cli.list_pallets(folders=[test_pallets_folder])
+        pallets = cli._get_pallets_in_folder(test_pallets_folder)
 
-        self.assertEquals(len(pallets), 4)
-        self.assertEquals(pallets[0][0], join(test_pallets_folder, 'multiple_pallets.py'))
-        self.assertEquals(pallets[0][1], 'PalletOne')
-        self.assertEquals(pallets[3][1], 'NestedPallet')
+        self.assertEqual(len(pallets), 4)
+        self.assertEqual(pallets[0][0], join(test_pallets_folder, 'multiple_pallets.py'))
+        self.assertEqual(pallets[0][1], 'PalletOne')
+        self.assertEqual(pallets[3][1], 'NestedPallet')
 
     def test_list_pallets_from_config(self):
-        cli.set_config_prop('paths', [test_pallets_folder], override=True)
+        cli.set_config_prop('warehouse', test_pallets_folder, override=True)
         pallets = cli.list_pallets()
 
-        self.assertEquals(len(pallets), 4)
-        self.assertEquals(pallets[0][0], join(test_pallets_folder, 'multiple_pallets.py'))
-        self.assertEquals(pallets[0][1], 'PalletOne')
-
-    def test_add_config_folder(self):
-        path = cli.init()
-
-        cli.add_config_folder(abspath('tests\data'))
-
-        with open(path) as config:
-            self.assertEquals(['c:\\scheduled', abspath('tests\data')], loads(config.read())['paths'])
+        self.assertEqual(len(pallets), 4)
+        self.assertEqual(pallets[0][0], join(test_pallets_folder, 'multiple_pallets.py'))
+        self.assertEqual(pallets[0][1], 'PalletOne')
 
 
 @patch('forklift.lift.process_crates_for')
@@ -198,8 +201,13 @@ class TestCliStartLift(unittest.TestCase):
         self.assertEqual(len(process_pallets.call_args[0][0]), 2)
 
     def test_lift_with_out_path(self, process_pallets, process_crates_for):
-        cli.set_config_prop('paths', [test_pallets_folder], override=True)
+        cli.set_config_prop('warehouse', test_pallets_folder, override=True)
         cli.start_lift()
 
         self.assertEqual(len(process_crates_for.call_args[0][0]), 4)
         self.assertEqual(len(process_pallets.call_args[0][0]), 4)
+
+
+class TestCliGeneral(unittest.TestCase):
+    def testrepo_to_url(self):
+        self.assertEqual(cli._repo_to_url('repo'), 'https://github.com/repo.git')

@@ -16,6 +16,7 @@ import sys
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from git import Repo
+from importlib import import_module
 from json import dumps, loads
 from models import Pallet
 from os.path import abspath, exists, join, splitext, basename, dirname, isfile
@@ -169,12 +170,21 @@ def _send_report_email(pallet_reports):
 
 
 def git_update():
-    pass
-    # git_folder = get_config_prop('warehouse')
-    # for repo in get_config_prop('repos'):
-    #     if not exists(join(git_folder, repo.split('/')[1])):
-    #         log.info('cloning {}'.format(git_folder))
-    #         Repo.clone_from(_repo_to_url(repo), git_folder)
+    warehouse = get_config_prop('warehouse')
+    for repo_name in get_config_prop('repositories'):
+        folder = join(warehouse, repo_name.split('/')[1])
+        if not exists(folder):
+            log.info('cloning {}'.format(repo_name))
+            Repo.clone_from(_repo_to_url(repo_name), join(warehouse, folder))
+        else:
+            repo = _get_repo(folder)
+            origin = repo.remotes[0]
+            origin.pull()
+
+
+def _get_repo(folder):
+    #: abstraction to enable mocking in tests
+    return Repo(folder)
 
 
 def _repo_to_url(repo):
@@ -219,7 +229,6 @@ def _get_pallets_in_folder(folder):
         for file_name in files:
             if file_name.endswith('.py'):
                 pallets.extend(_get_pallets_in_file(join(root, file_name)))
-
     return pallets
 
 
@@ -231,7 +240,11 @@ def _get_pallets_in_file(file_path):
     if folder not in sys.path:
         sys.path.append(folder)
 
-    mod = __import__(name)
+    try:
+        mod = import_module(name)
+    except:
+        # skip modules that fail to import
+        return []
 
     for member in dir(mod):
         try:

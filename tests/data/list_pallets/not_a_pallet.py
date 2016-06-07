@@ -13,3 +13,6 @@ class Hello(object):
         pass
 
 some_property = 1
+
+#: make sure this fails to import
+raise Exception('')

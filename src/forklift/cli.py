@@ -13,6 +13,7 @@ import pystache
 import seat
 import secrets
 import sys
+from colorama import init, Fore, Back, Style
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from git import Repo
@@ -28,6 +29,7 @@ from time import clock
 log = logging.getLogger('forklift')
 template = join(abspath(dirname(__file__)), 'report_template.html')
 default_warehouse_location = 'c:\\scheduled'
+init()
 
 
 def init():
@@ -143,11 +145,29 @@ def start_lift(file_path=None):
     _send_report_email(pallet_reports)
 
 
-def _send_report_email(pallet_reports):
-    '''Create and send report email'''
-    report_dict = {'total_pallets': len(pallet_reports),
-                   'num_success_pallets': len(filter(lambda p: p['success'], pallet_reports)),
-                   'pallets': pallet_reports}
+    def format_dictionary(pallet_reports):
+        str = '{7}{8}{0}{1}{2}{9}{3}{4} out of {5} pallets ran successfully.{6}{3}{7}'.format(
+            Fore.GREEN, Back.WHITE, pallet_reports['num_success_pallets'], Fore.RESET, Fore.BLACK,
+            len(pallet_reports['pallets']), Back.RESET, linesep, Style.DIM, Style.NORMAL)
+
+        for report in pallet_reports['pallets']:
+            color = Fore.GREEN
+            if not report['success']:
+                color = Fore.RED
+
+            str += '{}{}{}{}'.format(color, report['name'], Fore.RESET, linesep)
+
+            if not report['success']:
+                str += '  pallet message: {}{}{}{}'.format(Fore.YELLOW, report['message'], Fore.RESET, linesep)
+
+            for crate in report['crates']:
+                str += '    {0:40}{1}{2}'.format(crate['name'], crate['crate_message'], linesep)
+
+        return str
+
+    log.info('%s', format_dictionary(report_object))
+
+
     with open(template, 'r') as template_file:
         email_content = pystache.render(template_file.read(), report_dict)
 

@@ -35,7 +35,7 @@ def process_crates_for(pallets, update_def):
 
                 processed_crates[crate.destination] = crate.set_result(update_def(crate, pallet.validate_crate))
 
-                log.debug('finished crate %s',  seat.format_time(clock() - start_seconds))
+                log.debug('finished crate %s', seat.format_time(clock() - start_seconds))
                 log.info('result: %s', crate.result)
             else:
                 log.debug('skipping crate %r', crate)
@@ -82,3 +82,12 @@ def process_pallets(pallets):
         reports.append(pallet.get_report())
 
     return reports
+
+
+def create_report_object(pallet_reports, elapsed_time):
+    report = {'total_pallets': len(pallet_reports),
+              'num_success_pallets': len(filter(lambda p: p['success'], pallet_reports)),
+              'pallets': pallet_reports,
+              'total_time': elapsed_time}
+
+    return report

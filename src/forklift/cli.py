@@ -174,9 +174,10 @@ def git_update():
     for repo_name in get_config_prop('repositories'):
         folder = join(warehouse, repo_name.split('/')[1])
         if not exists(folder):
-            log.info('cloning {}'.format(repo_name))
+            log.info('git cloning: {}'.format(repo_name))
             Repo.clone_from(_repo_to_url(repo_name), join(warehouse, folder))
         else:
+            log.info('git updating: {}'.format(repo_name))
             repo = _get_repo(folder)
             origin = repo.remotes[0]
             origin.pull()

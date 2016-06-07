@@ -49,7 +49,7 @@ class CoreTests(unittest.TestCase):
 
         crate = Crate('badname', 'nofolder', '')
 
-        self.assertEquals(core.update(crate, lambda x: True)[0], Crate.CREATED)
+        self.assertEqual(core.update(crate, lambda x: True)[0], Crate.CREATED)
         core._create_destination_data.assert_called_once()
 
     @patch('arcpy.Exists')
@@ -58,7 +58,7 @@ class CoreTests(unittest.TestCase):
 
         crate = Crate('', '', '')
 
-        self.assertEquals(core.update(crate, raise_validation_exception)[0], Crate.INVALID_DATA)
+        self.assertEqual(core.update(crate, raise_validation_exception)[0], Crate.INVALID_DATA)
 
     @patch('arcpy.Exists')
     def test_update_default_validation_that_fails(self, arcpy_exists):
@@ -70,7 +70,7 @@ class CoreTests(unittest.TestCase):
 
         crate = Crate('', '', '')
 
-        self.assertEquals(core.update(crate, custom)[0], Crate.INVALID_DATA)
+        self.assertEqual(core.update(crate, custom)[0], Crate.INVALID_DATA)
 
     @patch('arcpy.Exists')
     def test_update_successfully_updated(self, arcpy_exists):
@@ -80,7 +80,7 @@ class CoreTests(unittest.TestCase):
 
         crate = Crate('', '', '')
 
-        self.assertEquals(core.update(crate, lambda c: True)[0], Crate.UPDATED)
+        self.assertEqual(core.update(crate, lambda c: True)[0], Crate.UPDATED)
 
     @patch('arcpy.Exists')
     def test_update_no_changes(self, arcpy_exists):
@@ -89,7 +89,7 @@ class CoreTests(unittest.TestCase):
 
         crate = Crate('', '', '')
 
-        self.assertEquals(core.update(crate, lambda c: True)[0], Crate.NO_CHANGES)
+        self.assertEqual(core.update(crate, lambda c: True)[0], Crate.NO_CHANGES)
 
     @patch('arcpy.Exists')
     def test_update_error(self, arcpy_exists):
@@ -98,7 +98,7 @@ class CoreTests(unittest.TestCase):
 
         crate = Crate('', '', '')
 
-        self.assertEquals(core.update(crate, lambda c: True), (Crate.UNHANDLED_EXCEPTION, 'error'))
+        self.assertEqual(core.update(crate, lambda c: True), (Crate.UNHANDLED_EXCEPTION, 'error'))
 
     def test_has_changes(self):
         self.assertFalse(self.run_has_changes('ZipCodes', 'ZipCodes_same'))
@@ -115,16 +115,16 @@ class CoreTests(unittest.TestCase):
         self.assertTrue(self.run_has_changes('NullDates', 'NullDates2'))
 
     def test_filter_shape_fields(self):
-        self.assertEquals(core._filter_fields(['shape', 'test', 'Shape_length', 'Global_ID']), ['test'])
+        self.assertEqual(core._filter_fields(['shape', 'test', 'Shape_length', 'Global_ID']), ['test'])
 
     def test_schema_changes(self):
         arcpy.Copy_management(check_for_changes_gdb, test_gdb)
 
         result = core._check_schema(path.join(test_gdb, 'ZipCodes'), path.join(check_for_changes_gdb, 'FieldLength'))
-        self.assertEquals(result, False)
+        self.assertEqual(result, False)
 
         result = core._check_schema(path.join(test_gdb, 'ZipCodes'), path.join(check_for_changes_gdb, 'ZipCodes'))
-        self.assertEquals(result, True)
+        self.assertEqual(result, True)
 
     def test_check_schema_ignore_length_for_all_except_text(self):
         self.check_for_local_sde()
@@ -133,7 +133,7 @@ class CoreTests(unittest.TestCase):
         result = core._check_schema(
             path.join(update_tests_sde, r'UPDATE_TESTS.DBO.Hello\UPDATE_TESTS.DBO.DNROilGasWells'),
             path.join(check_for_changes_gdb, 'DNROilGasWells'))
-        self.assertEquals(result, True)
+        self.assertEqual(result, True)
 
     def test_move_data_table(self):
         self.check_for_local_sde()
@@ -142,7 +142,7 @@ class CoreTests(unittest.TestCase):
         crate = Crate('Providers', update_tests_sde, test_gdb)  #: table
         core._move_data(crate)
 
-        self.assertEquals(int(arcpy.GetCount_management(crate.destination).getOutput(0)), 57)
+        self.assertEqual(int(arcpy.GetCount_management(crate.destination).getOutput(0)), 57)
 
     def test_move_data_feature_class(self):
         self.check_for_local_sde()
@@ -151,19 +151,19 @@ class CoreTests(unittest.TestCase):
         crate = Crate('DNROilGasWells', update_tests_sde, test_gdb)  #: feature class
         core._move_data(crate)
 
-        self.assertEquals(int(arcpy.GetCount_management(crate.destination).getOutput(0)), 5)
+        self.assertEqual(int(arcpy.GetCount_management(crate.destination).getOutput(0)), 5)
 
     def test_check_schema_match(self):
-        self.assertEquals(
+        self.assertEqual(
             core._check_schema(
                 path.join(check_for_changes_gdb, 'FieldLength'), path.join(check_for_changes_gdb, 'FieldLength2')),
             False)
 
-        self.assertEquals(
+        self.assertEqual(
             core._check_schema(
                 path.join(check_for_changes_gdb, 'FieldType'), path.join(check_for_changes_gdb, 'FieldType2')), False)
 
-        self.assertEquals(
+        self.assertEqual(
             core._check_schema(
                 path.join(check_for_changes_gdb, 'ZipCodes'), path.join(check_for_changes_gdb2, 'ZipCodes')), True)
 
@@ -192,7 +192,7 @@ class CoreTests(unittest.TestCase):
                          geographic_transformation='NAD_1983_To_WGS_1984_5')
         core._create_destination_data(fc_crate)
         self.assertTrue(arcpy.Exists(fc_crate.destination))
-        self.assertEquals(arcpy.Describe(fc_crate.destination).spatialReference.name, spatial_reference.name)
+        self.assertEqual(arcpy.Describe(fc_crate.destination).spatialReference.name, spatial_reference.name)
 
     @patch('arcpy.da.Walk')
     def test_try_to_find_data_source_by_name_returns_and_updates_feature_name(self, walk):

@@ -8,6 +8,8 @@ A module that contains methods to handle pallets
 
 import logging
 import seat
+import shutil
+from os import path
 from time import clock
 
 log = logging.getLogger('forklift')
@@ -84,10 +86,27 @@ def process_pallets(pallets):
     return reports
 
 
-def create_report_object(pallet_reports, elapsed_time):
-    report = {'total_pallets': len(pallet_reports),
-              'num_success_pallets': len(filter(lambda p: p['success'], pallet_reports)),
-              'pallets': pallet_reports,
-              'total_time': elapsed_time}
+def copy_data(pallets, copy_destinations):
+    '''pallets: Pallets[]
 
-    return report
+    Loop over all of the pallets and extra the distinct copy_data workspaces.
+    Loop over all of the copy_data workspaces and copy them to copy_destinations as defined in the config.'''
+    copy_workspaces = []
+    for pallet in pallets:
+        if pallet.is_ready_to_ship():
+            copy_workspaces = copy_workspaces + pallet.copy_data
+    copy_workspaces = set(copy_workspaces)
+
+    for source in copy_workspaces:
+        for destination in copy_destinations:
+            destination_workspace = path.join(destination, path.basename(source))
+
+            shutil.rmtree(destination_workspace)
+            shutil.copytree(source, destination_workspace)
+
+
+def create_report_object(pallet_reports, elapsed_time):
+    return {'total_pallets': len(pallet_reports),
+            'num_success_pallets': len(filter(lambda p: p['success'], pallet_reports)),
+            'pallets': pallet_reports,
+            'total_time': elapsed_time}

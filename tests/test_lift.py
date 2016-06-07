@@ -9,7 +9,7 @@ A module for testing lift.py
 import unittest
 from forklift import lift
 from forklift.models import Pallet, Crate
-from mock import Mock
+from mock import Mock, patch
 
 
 class TestLift(unittest.TestCase):
@@ -103,3 +103,34 @@ class TestLift(unittest.TestCase):
         lift.process_pallets([pallet])
 
         self.assertEqual(pallet.success, (False, 'ship error'))
+
+    @patch('shutil.rmtree')
+    @patch('shutil.copytree')
+    def test_copy_data(self, copytree_mock, rmtree_mock):
+        three = 'C:\\MapData\\three.gdb'
+        two = 'C:\\MapData\\two.gdb'
+
+        class CopyPalletOne(Pallet):
+            def __init__(self):
+                super(CopyPalletOne, self).__init__()
+
+                self.copy_data = ['C:\\MapData\\one.gdb', two]
+
+        class CopyPalletTwo(Pallet):
+            def __init__(self):
+                super(CopyPalletTwo, self).__init__()
+
+                self.copy_data = ['C:\\MapData\\one.gdb', three]
+
+        class CopyPalletThree(Pallet):
+            def __init__(self):
+                super(CopyPalletThree, self).__init__()
+
+                self.copy_data = ['C:\\MapData\\four.gdb', three]
+        palletThree = CopyPalletThree()
+        palletThree.is_ready_to_ship = Mock(return_value=False)
+
+        lift.copy_data([CopyPalletOne(), CopyPalletTwo(), palletThree], ['dest1', 'dest2'])
+
+        self.assertEqual(copytree_mock.call_count, 6)
+        self.assertEqual(rmtree_mock.call_count, 6)

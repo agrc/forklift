@@ -38,7 +38,7 @@ class TestConfigInit(unittest.TestCase):
                                            u"repositories": [],
                                            u"notify": [u"stdavis@utah.gov", u"sgourley@utah.gov"],
                                            u"sendEmails": False,
-                                           u"copy_destinations": []})
+                                           u"copyDestinations": []})
 
     def test_init_returns_path_for_existing_config_file(self):
         self.assertEqual(cli.init(), cli.init())

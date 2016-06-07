@@ -25,9 +25,9 @@ class TestLift(unittest.TestCase):
         update_def = Mock(return_value=(Crate.UPDATED, 'message'))
         lift.process_crates_for([pallet], update_def)
 
-        self.assertEquals(update_def.call_count, 2)
-        self.assertEquals(crate1.result[0], Crate.UPDATED)
-        self.assertEquals(crate2.result[0], Crate.UPDATED)
+        self.assertEqual(update_def.call_count, 2)
+        self.assertEqual(crate1.result[0], Crate.UPDATED)
+        self.assertEqual(crate2.result[0], Crate.UPDATED)
 
     def test_process_crate_doesnt_call_update_def_on_duplicate_crates(self):
         crate1 = Crate('', '', 'a', '')
@@ -37,9 +37,9 @@ class TestLift(unittest.TestCase):
         update_def = Mock(return_value=(Crate.UPDATED, 'message'))
         lift.process_crates_for([pallet], update_def)
 
-        self.assertEquals(update_def.call_count, 1)
-        self.assertEquals(crate1.result[0], Crate.UPDATED)
-        self.assertEquals(crate2.result[0], Crate.UPDATED)
+        self.assertEqual(update_def.call_count, 1)
+        self.assertEqual(crate1.result[0], Crate.UPDATED)
+        self.assertEqual(crate2.result[0], Crate.UPDATED)
 
     def test_process_pallets_all_ready_to_ship(self):
         ready_pallet = self.PalletMock()
@@ -47,7 +47,7 @@ class TestLift(unittest.TestCase):
 
         lift.process_pallets([ready_pallet, ready_pallet])
 
-        self.assertEquals(ready_pallet.ship.call_count, 2)
+        self.assertEqual(ready_pallet.ship.call_count, 2)
 
     def test_process_pallets_all_requires_processing(self):
         requires_pallet = self.PalletMock()
@@ -56,7 +56,7 @@ class TestLift(unittest.TestCase):
 
         lift.process_pallets([requires_pallet, requires_pallet])
 
-        self.assertEquals(requires_pallet.process.call_count, 2)
+        self.assertEqual(requires_pallet.process.call_count, 2)
 
     def test_process_pallets_mixed_bag(self):
         pallet1 = Mock(Pallet)('one')
@@ -86,7 +86,7 @@ class TestLift(unittest.TestCase):
 
         result = lift.process_pallets([reports_pallet, reports_pallet])
 
-        self.assertEquals(result, ['hello', 'hello'])
+        self.assertEqual(result, ['hello', 'hello'])
 
     def test_process_pallets_handles_process_exception(self):
         pallet = self.PalletMock()
@@ -94,7 +94,7 @@ class TestLift(unittest.TestCase):
 
         lift.process_pallets([pallet])
 
-        self.assertEquals(pallet.success, (False, 'process error'))
+        self.assertEqual(pallet.success, (False, 'process error'))
 
     def test_process_pallets_handles_ship_exception(self):
         pallet = self.PalletMock()
@@ -102,4 +102,4 @@ class TestLift(unittest.TestCase):
 
         lift.process_pallets([pallet])
 
-        self.assertEquals(pallet.success, (False, 'ship error'))
+        self.assertEqual(pallet.success, (False, 'ship error'))

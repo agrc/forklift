@@ -34,9 +34,7 @@ class TestConfigInit(unittest.TestCase):
 
         with open(path) as config:
             config_dict = loads(config.read())
-            self.assertEquals(config_dict, {u"logLevel": u"INFO",
-                                            u"paths": [u"c:\\scheduled"],
-                                            u"logger": u"",
+            self.assertEquals(config_dict, {u"paths": [u"c:\\scheduled"],
                                             u"notify": [u"stdavis@utah.gov", u"sgourley@utah.gov"],
                                             u"sendEmails": False})
 

@@ -35,7 +35,6 @@ from docopt import docopt
 
 
 detailed_formatter = logging.Formatter(fmt='%(levelname).4s %(asctime)s %(module)s:%(lineno)-4s %(message)s', datefmt='%m-%d %H:%M:%S')
-cli.init()
 
 
 def main():
@@ -87,22 +86,17 @@ def _setup_logging():
     log.logThreads = 0
     log.logProcesses = 0
 
-    logger = cli.get_config_prop('logger')
-    log_level = cli.get_config_prop('logLevel')
+    file_handler = logging.handlers.TimedRotatingFileHandler('forklift.log', when='D', interval=1, backupCount=7)
+    file_handler.setFormatter(detailed_formatter)
+    file_handler.setLevel('DEBUG')
 
-    if logger == 'file':
-        handler = logging.handlers.TimedRotatingFileHandler('forklift.log', when='D', interval=1, backupCount=7)
-        handler.setFormatter(detailed_formatter)
-        handler.setLevel(log_level)
-    elif logger == 'console':
-        handler = logging.StreamHandler(stream=sys.stdout)
-        handler.setFormatter(detailed_formatter)
-        handler.setLevel(log_level)
-    else:
-        handler = logging.NullHandler()
+    console_handler = logging.StreamHandler(stream=sys.stdout)
+    console_handler.setFormatter(detailed_formatter)
+    console_handler.setLevel('INFO')
 
-    log.addHandler(handler)
-    log.setLevel(log_level)
+    log.addHandler(file_handler)
+    log.addHandler(console_handler)
+    log.setLevel('DEBUG')
 
 
 if __name__ == '__main__':

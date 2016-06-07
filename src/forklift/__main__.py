@@ -35,7 +35,7 @@ import sys
 from docopt import docopt
 
 
-detailed_formatter = logging.Formatter(fmt='%(levelname).4s %(asctime)s %(module)s:%(lineno)-4s %(message)s', datefmt='%m-%d %H:%M:%S')
+detailed_formatter = logging.Formatter(fmt='%(levelname).4s %(asctime)s %(module)10s:%(lineno)5s %(message)s', datefmt='%m-%d %H:%M:%S')
 
 
 def main():

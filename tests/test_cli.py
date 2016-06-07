@@ -9,7 +9,7 @@ A module that contains tests for the cli.py module
 import unittest
 from forklift import cli
 from json import loads
-from mock import patch
+from mock import patch, Mock
 from os import remove
 from os.path import abspath, dirname, join, exists
 
@@ -209,5 +209,34 @@ class TestCliStartLift(unittest.TestCase):
 
 
 class TestCliGeneral(unittest.TestCase):
-    def testrepo_to_url(self):
+    def test_repo_to_url(self):
         self.assertEqual(cli._repo_to_url('repo'), 'https://github.com/repo.git')
+
+
+class TestGitUpdate(unittest.TestCase):
+    def setUp(self):
+        if exists('config.json'):
+            remove('config.json')
+
+    def tearDown(self):
+        if exists('config.json'):
+            remove('config.json')
+
+    @patch('git.Repo.clone_from')
+    @patch('forklift.cli._get_repo')
+    @patch('forklift.cli._validate_repo')
+    def test_git_update(self, _validate_repo_mock, _get_repo_mock, clone_from_mock):
+        remote_mock = Mock()
+        remote_mock.pull = Mock()
+        repo_mock = Mock()
+        repo_mock.remotes = [remote_mock]
+        _get_repo_mock.return_value = repo_mock
+        _validate_repo_mock.return_value = ''
+        cli.init()
+        cli.set_config_prop('warehouse', test_pallets_folder, override=True)
+        cli.set_config_prop('repositories', ['agrc/nested', 'agrc/forklift'])
+
+        cli.git_update()
+
+        clone_from_mock.assert_called_once()
+        remote_mock.pull.assert_called_once()

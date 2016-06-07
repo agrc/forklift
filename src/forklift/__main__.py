@@ -10,6 +10,7 @@ Usage:
     forklift config repos --remove <repo>
     forklift config repos --list
     forklift list-pallets
+    forklift git-update
     forklift lift [<file-path>]
 
 Arguments:
@@ -23,6 +24,7 @@ Examples:
     python -m forklift config repos --remove agrc/ugs-chemistry  removes a path from the config.
     python -m forklift config repos --list                       outputs the list of pallet folder paths in your config file.
     python -m forklift list-pallets                              outputs the list of pallets from the config.
+    python -m forklift git-update                                pulls the latest updates to all git repositories
     python -m forklift lift                                      the main entry for running all of pallets found in the config paths.
     python -m forklift lift path/to/file                         run a specific pallets.
 '''
@@ -62,16 +64,15 @@ def main():
             for folder in cli.list_repos():
                 print(folder)
     elif args['list-pallets']:
-        if args['<folder-path>']:
-            pallets = cli.list_pallets([args['<folder-path>']])
-        else:
-            pallets = cli.list_pallets()
+        pallets = cli.list_pallets()
 
         if len(pallets) == 0:
             print('No pallets found!')
         else:
             for plug in pallets:
                 print(': '.join(plug))
+    elif args['git-update']:
+        cli.git_update()
     elif args['lift']:
         if args['<file-path>']:
             cli.start_lift(args['<file-path>'])

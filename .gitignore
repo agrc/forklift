@@ -44,3 +44,4 @@ secrets.py
 src/forklift.log*
 src/config.json
 config.json
+*.log

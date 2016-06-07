@@ -22,6 +22,7 @@ from json import dumps, loads
 from models import Pallet
 from os.path import abspath, exists, join, splitext, basename, dirname, isfile
 from os import walk
+from os import linesep
 from requests import get
 from smtplib import SMTP
 from time import clock
@@ -138,12 +139,17 @@ def start_lift(file_path=None):
 
     lift.process_crates_for(pallets, core.update)
 
-    log.info('elapsed time: %s', seat.format_time(clock() - start_seconds))
+    elapsed_time = seat.format_time(clock() - start_seconds)
+    log.info('elapsed time: %s', elapsed_time)
 
     pallet_reports = lift.process_pallets(pallets)
+    report_object = lift.create_report_object(pallet_reports, elapsed_time)
 
-    _send_report_email(pallet_reports)
+    email = get_config_prop('sendEmails')
+    if email:
+        _send_report_email(report_object)
 
+    print('Finished in %s. General email notification: %s', elapsed_time, email)
 
     def format_dictionary(pallet_reports):
         str = '{7}{8}{0}{1}{2}{9}{3}{4} out of {5} pallets ran successfully.{6}{3}{7}'.format(
@@ -168,25 +174,26 @@ def start_lift(file_path=None):
     log.info('%s', format_dictionary(report_object))
 
 
+def _send_report_email(report_object):
+    '''Create and send report email
+    '''
     with open(template, 'r') as template_file:
-        email_content = pystache.render(template_file.read(), report_dict)
+        email_content = pystache.render(template_file.read(), report_object)
 
-    if get_config_prop('sendEmails'):
-        to_addresses = ','.join(get_config_prop('notify'))
-        message = MIMEMultipart()
-        message['Subject'] = 'Forklift report'
-        message['From'] = secrets.from_address
-        message['To'] = to_addresses
-        message.attach(MIMEText(email_content, 'html'))
-        log_file = 'forklift.log'
-        if isfile(log_file):
-            message.attach(MIMEText(file(log_file).read()))
-        smtp = SMTP(secrets.smtp_server, secrets.smtp_port)
-        smtp.sendmail(secrets.from_address, to_addresses, message.as_string())
-        smtp.quit()
-    else:
-        print('`sendEmails` is false. No email sent. Email content:')
-        print(email_content)
+    to_addresses = ','.join(get_config_prop('notify'))
+    message = MIMEMultipart()
+    message['Subject'] = 'Forklift report'
+    message['From'] = secrets.from_address
+    message['To'] = to_addresses
+    message.attach(MIMEText(email_content, 'html'))
+
+    log_file = 'forklift.log'
+    if isfile(log_file):
+        message.attach(MIMEText(file(log_file).read()))
+
+    smtp = SMTP(secrets.smtp_server, secrets.smtp_port)
+    smtp.sendmail(secrets.from_address, to_addresses, message.as_string())
+    smtp.quit()
 
 
 def git_update():

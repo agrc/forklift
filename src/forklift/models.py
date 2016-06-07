@@ -103,7 +103,7 @@ class Pallet(object):
 
         returns: Boolean'''
         for crate in self._crates:
-            if crate.result in [Crate.INVALID_DATA, Crate.UNHANDLED_EXCEPTION]:
+            if crate.result[0] in [Crate.INVALID_DATA, Crate.UNHANDLED_EXCEPTION]:
                 return False
 
         return True
@@ -115,10 +115,10 @@ class Pallet(object):
         has_updated = False
 
         for crate in self._crates:
-            if crate.result in [Crate.INVALID_DATA, Crate.UNHANDLED_EXCEPTION]:
+            if crate.result[0] in [Crate.INVALID_DATA, Crate.UNHANDLED_EXCEPTION]:
                 return False
             if not has_updated:
-                has_updated = crate.result == Crate.UPDATED
+                has_updated = crate.result[0] == Crate.UPDATED
 
         return has_updated
 
@@ -126,7 +126,7 @@ class Pallet(object):
         '''Returns a message about the result of each crate in the pallet.
         '''
         return {'name': self.name,
-                'success': self.success[0],
+                'success': self.success[0] and self.is_ready_to_ship(),
                 'message': self.success[1],
                 'crates': [crate.get_report() for crate in self._crates]}
 

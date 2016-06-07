@@ -125,7 +125,7 @@ class TestPallet(unittest.TestCase):
 
     def test_is_ready_to_ship_crates_with_updates_returns_true(self):
         updated = Crate('', '', '', '')
-        updated.result = Crate.UPDATED
+        updated.result = (Crate.UPDATED, None)
 
         self.patient._crates = [updated, updated, updated]
 
@@ -133,7 +133,7 @@ class TestPallet(unittest.TestCase):
 
     def test_is_ready_to_ship_crates_with_no_changes_returns_true(self):
         no_changes = Crate('', '', '', '')
-        no_changes.result = Crate.NO_CHANGES
+        no_changes.result = (Crate.NO_CHANGES, None)
 
         self.patient._crates = [no_changes, no_changes, no_changes]
 
@@ -141,10 +141,10 @@ class TestPallet(unittest.TestCase):
 
     def test_is_ready_to_ship_crates_with_updates_and_no_changes_returns_true(self):
         updated = Crate('', '', '', '')
-        updated.result = Crate.UPDATED
+        updated.result = (Crate.UPDATED, None)
 
         no_changes = Crate('', '', '', '')
-        no_changes.result = Crate.NO_CHANGES
+        no_changes.result = (Crate.NO_CHANGES, None)
 
         self.patient._crates = [no_changes, updated, no_changes]
 
@@ -152,13 +152,13 @@ class TestPallet(unittest.TestCase):
 
     def test_is_ready_to_ship_crates_with_any_schema_changed_returns_false(self):
         updated = Crate('', '', '', '')
-        updated.result = Crate.UPDATED
+        updated.result = (Crate.UPDATED, None)
 
         no_changes = Crate('', '', '', '')
-        no_changes.result = Crate.NO_CHANGES
+        no_changes.result = (Crate.NO_CHANGES, None)
 
         schema_change = Crate('', '', '', '')
-        schema_change.result = Crate.INVALID_DATA
+        schema_change.result = (Crate.INVALID_DATA, None)
 
         self.patient._crates = [updated, no_changes, schema_change]
 
@@ -166,13 +166,13 @@ class TestPallet(unittest.TestCase):
 
     def test_is_ready_to_ship_crates_with_any_exception_returns_false(self):
         updated = Crate('', '', '', '')
-        updated.result = Crate.UPDATED
+        updated.result = (Crate.UPDATED, None)
 
         no_changes = Crate('', '', '', '')
-        no_changes.result = Crate.NO_CHANGES
+        no_changes.result = (Crate.NO_CHANGES, None)
 
         unhandled_exception = Crate('', '', '', '')
-        unhandled_exception.result = Crate.UNHANDLED_EXCEPTION
+        unhandled_exception.result = (Crate.UNHANDLED_EXCEPTION, None)
 
         self.patient._crates = [updated, no_changes, unhandled_exception]
 
@@ -180,16 +180,16 @@ class TestPallet(unittest.TestCase):
 
     def test_is_ready_to_ship_crates_with_all_returns_false(self):
         updated = Crate('', '', '', '')
-        updated.result = Crate.UPDATED
+        updated.result = (Crate.UPDATED, None)
 
         no_changes = Crate('', '', '', '')
-        no_changes.result = Crate.NO_CHANGES
+        no_changes.result = (Crate.NO_CHANGES, None)
 
         schema_change = Crate('', '', '', '')
-        schema_change.result = Crate.INVALID_DATA
+        schema_change.result = (Crate.INVALID_DATA, None)
 
         unhandled_exception = Crate('', '', '', '')
-        unhandled_exception.result = Crate.UNHANDLED_EXCEPTION
+        unhandled_exception.result = (Crate.UNHANDLED_EXCEPTION, None)
 
         self.patient._crates = [updated, no_changes, unhandled_exception, schema_change]
 
@@ -200,7 +200,7 @@ class TestPallet(unittest.TestCase):
 
     def test_requires_processing_crates_with_updates_returns_true(self):
         updated = Crate('', '', '', '')
-        updated.result = Crate.UPDATED
+        updated.result = (Crate.UPDATED, None)
 
         self.patient._crates = [updated, updated]
 
@@ -208,10 +208,10 @@ class TestPallet(unittest.TestCase):
 
     def test_requires_processing_crates_with_updates_and_changes_returns_true(self):
         updated = Crate('', '', '', '')
-        updated.result = Crate.UPDATED
+        updated.result = (Crate.UPDATED, None)
 
         no_changes = Crate('', '', '', '')
-        no_changes.result = Crate.NO_CHANGES
+        no_changes.result = (Crate.NO_CHANGES, None)
 
         self.patient._crates = [updated, no_changes, no_changes]
 
@@ -219,7 +219,7 @@ class TestPallet(unittest.TestCase):
 
     def test_requires_processing_crates_with_update_and_no_changes_returns_true(self):
         updated = Crate('', '', '', '')
-        updated.result = Crate.UPDATED
+        updated.result = (Crate.UPDATED, None)
 
         self.patient._crates = [updated, updated, updated]
 
@@ -227,10 +227,10 @@ class TestPallet(unittest.TestCase):
 
     def test_requires_processing_crates_with_schema_changes_returns_false(self):
         updated = Crate('', '', '', '')
-        updated.result = Crate.UPDATED
+        updated.result = (Crate.UPDATED, None)
 
         schema_change = Crate('', '', '', '')
-        schema_change.result = Crate.INVALID_DATA
+        schema_change.result = (Crate.INVALID_DATA, None)
 
         self.patient._crates = [schema_change, updated, updated]
 
@@ -238,10 +238,10 @@ class TestPallet(unittest.TestCase):
 
     def test_requires_processing_crates_with_unhandled_exception_returns_false(self):
         updated = Crate('', '', '', '')
-        updated.result = Crate.UPDATED
+        updated.result = (Crate.UPDATED, None)
 
         unhandled_exception = Crate('', '', '', '')
-        unhandled_exception.result = Crate.UNHANDLED_EXCEPTION
+        unhandled_exception.result = (Crate.UNHANDLED_EXCEPTION, None)
 
         self.patient._crates = [updated, updated, unhandled_exception]
 
@@ -268,7 +268,7 @@ class TestPalletGetReport(unittest.TestCase):
 
         self.assertEqual(report['name'], 'name')
         self.assertEqual(report['success'], True)
-        self.assertEqual(report['crates'][0]['result'], Crate.CREATED)
+        self.assertEqual(report['crates'][0]['result'], Crate.CREATED, None)
         self.assertEqual(report['crates'][0]['name'], 'fc1')
 
     def test_failed_pallet(self):

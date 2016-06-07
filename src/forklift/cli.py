@@ -225,7 +225,8 @@ def _create_default_config(folder):
             'warehouse': folder,
             'repositories': [],
             'notify': ['stdavis@utah.gov', 'sgourley@utah.gov'],
-            'sendEmails': False
+            'sendEmails': False,
+            'copy_destinations': []
         }
 
         json_config_file.write(dumps(data))

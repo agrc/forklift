@@ -216,7 +216,7 @@ def _validate_repo(repo, raises=False):
     if response.status_code == 200:
         message = '[Valid]'
     else:
-        message = '[Invalid URL]'
+        message = '[Invalid repo name or owner]'
         if raises:
             raise Exception('{}: {}'.format(repo, message))
 

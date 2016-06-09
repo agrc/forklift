@@ -106,11 +106,27 @@ def copy_data(pallets, copy_destinations):
             start_seconds = clock()
             try:
                 if path.exists(destination_workspace):
-                    log.debug('removing destination')
-                    shutil.rmtree(destination_workspace)
+                    log.debug('%s exists moving', destination_workspace)
+                    shutil.move(destination_workspace, destination_workspace + 'x')
+
+                log.debug('copying source to destination')
                 shutil.copytree(source, destination_workspace)
+
+                if path.exists(destination_workspace + 'x'):
+                    log.debug('removing temporary gdb: %s', destination_workspace + 'x')
+                    shutil.rmtree(destination_workspace + 'x')
+
                 log.info('copy successful in %s', seat.format_time(clock() - start_seconds))
             except Exception as e:
+                try:
+                    #: if there was a problem and the temp gdb exists, put it back
+                    if path.exists(destination_workspace) and path.exists(destination_workspace + 'x'):
+                        log.debug('%s cleaning up.', destination_workspace)
+                        shutil.rmtree(destination_workspace)
+                        shutil.move(destination_workspace + 'x', destination_workspace)
+                except Exception:
+                    log.error('%s might be in a corrupted state', destination_workspace, exec_info=True)
+
                 pallet.success = (False, str(e))
                 log.error('there was an error copying %s to %s', source, destination_workspace, exc_info=True)
 

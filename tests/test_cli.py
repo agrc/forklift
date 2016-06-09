@@ -8,6 +8,7 @@ A module that contains tests for the cli.py module
 
 import unittest
 from forklift import cli
+from forklift.models import Crate
 from json import loads
 from mock import patch, Mock
 from os import remove

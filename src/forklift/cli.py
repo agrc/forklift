@@ -13,7 +13,7 @@ import pystache
 import seat
 import secrets
 import sys
-from colorama import init, Fore, Back, Style
+from colorama import init, Fore
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from git import Repo
@@ -29,13 +29,14 @@ from time import clock
 
 log = logging.getLogger('forklift')
 template = join(abspath(dirname(__file__)), 'report_template.html')
+config_location = join(abspath(dirname(__file__)), '..', 'config.json')
 default_warehouse_location = 'c:\\scheduled'
 init()
 
 
 def init():
-    if exists('config.json'):
-        return abspath('config.json')
+    if exists(config_location):
+        return abspath(config_location)
 
     return _create_default_config(default_warehouse_location)
 
@@ -78,10 +79,10 @@ def list_repos():
 
 def get_config():
     #: write default config if the file does not exist
-    if not exists('config.json'):
+    if not exists(config_location):
         return _create_default_config(default_warehouse_location)
 
-    with open('config.json', 'r') as json_config_file:
+    with open(config_location, 'r') as json_config_file:
         return loads(json_config_file.read())
 
 
@@ -112,7 +113,7 @@ def set_config_prop(key, value, override=False):
     else:
         config[key] = value
 
-    with open('config.json', 'w') as json_config_file:
+    with open(config_location, 'w') as json_config_file:
         json_config_file.write(dumps(config))
 
     return 'Added {} to {}'.format(value, key)
@@ -158,27 +159,7 @@ def start_lift(file_path=None):
 
     print('Finished in {}. General email notification: {}'.format(elapsed_time, email))
 
-    def format_dictionary(pallet_reports):
-        str = '{7}{8}{0}{1}{2}{9}{3}{4} out of {5} pallets ran successfully.{6}{3}{7}'.format(
-            Fore.GREEN, Back.WHITE, pallet_reports['num_success_pallets'], Fore.RESET, Fore.BLACK,
-            len(pallet_reports['pallets']), Back.RESET, linesep, Style.DIM, Style.NORMAL)
-
-        for report in pallet_reports['pallets']:
-            color = Fore.GREEN
-            if not report['success']:
-                color = Fore.RED
-
-            str += '{}{}{}{}'.format(color, report['name'], Fore.RESET, linesep)
-
-            if not report['success']:
-                str += '  pallet message: {}{}{}{}'.format(Fore.YELLOW, report['message'], Fore.RESET, linesep)
-
-            for crate in report['crates']:
-                str += '    {0:40}{1}{2}'.format(crate['name'], crate['crate_message'], linesep)
-
-        return str
-
-    log.info('%s', format_dictionary(report_object))
+    log.info('%s', _format_dictionary(report_object))
 
 
 def _send_report_email(report_object):
@@ -227,7 +208,7 @@ def _repo_to_url(repo):
 
 
 def _create_default_config(folder):
-    with open('config.json', 'w') as json_config_file:
+    with open(config_location, 'w') as json_config_file:
         data = {
             'warehouse': folder,
             'repositories': [],
@@ -292,3 +273,29 @@ def _get_pallets_in_file(file_path):
             pass
 
     return pallets
+
+
+def _format_dictionary(pallet_reports):
+    str = '{3}{3}    {4}{0}{2} out of {5}{1}{2} pallets ran successfully in {6}.{3}'.format(
+        pallet_reports['num_success_pallets'], len(pallet_reports['pallets']), Fore.RESET, linesep, Fore.GREEN,
+        Fore.CYAN, pallet_reports['total_time'])
+
+    for report in pallet_reports['pallets']:
+        color = Fore.GREEN
+        if not report['success']:
+            color = Fore.RED
+
+        str += '{}{}{}{}'.format(color, report['name'], Fore.RESET, linesep)
+
+        if not report['success'] and report['message'] is not None:
+            str += 'pallet message: {}{}{}{}'.format(Fore.YELLOW, report['message'], Fore.RESET, linesep)
+
+        for crate in report['crates']:
+            str += '{0:>40}{3} - {1}{4}{2}'.format(crate['name'], crate['result'], linesep, Fore.CYAN, Fore.RESET)
+
+            if crate['crate_message'] is None:
+                continue
+
+            str += 'crate message: {0}{1}{2}{3}'.format(Fore.MAGENTA, crate['crate_message'], Fore.RESET, linesep)
+
+    return str

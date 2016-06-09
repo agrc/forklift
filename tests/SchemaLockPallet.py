@@ -6,8 +6,6 @@ SchemaLockPallet.py
 A module that contains Pallets to test forklift with data that is being used by arcgis server service.
 These can be thought of as acceptance/exploritory tests.
 '''
-
-from arcpy import env
 from forklift.models import Pallet
 from os import path
 
@@ -34,6 +32,8 @@ class NoSchemaLockPallet(Pallet):
 
     def __init__(self):
         super(NoSchemaLockPallet, self).__init__()
+
+        self.arcgis_services = [('forklift/NoSchemaLock', 'MapServer')]
 
         source_workspace = path.join(data_folder, 'NewSchemaData.gdb')
         destination_workspace = path.join(data_folder, 'NoSchemaLock.gdb')

@@ -23,7 +23,7 @@ class SchemaLockedPallet(Pallet):
 
         source_workspace = path.join(data_folder, 'NewSchemaData.gdb')
         destination_workspace = path.join(data_folder, 'SchemaLock.gdb')
-        copy_to = path.join(data_folder, 'copyTo', 'CopiedSchemaLock.gdb')
+        copy_to = destination_workspace
 
         self.add_crate('Empty', {'source_workspace': source_workspace, 'destination_workspace': destination_workspace})
 
@@ -37,7 +37,7 @@ class NoSchemaLockPallet(Pallet):
 
         source_workspace = path.join(data_folder, 'NewSchemaData.gdb')
         destination_workspace = path.join(data_folder, 'NoSchemaLock.gdb')
-        copy_to = path.join(data_folder, 'copyTo', 'CopiedSchemaLock.gdb')
+        copy_to = destination_workspace
 
         self.add_crate('Empty', {'source_workspace': source_workspace, 'destination_workspace': destination_workspace})
 

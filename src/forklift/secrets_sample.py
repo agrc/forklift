@@ -9,3 +9,7 @@ A skeleton implementation of secrets.py defining the properties to be filled out
 smtp_server = '<server>'
 smtp_port = '<port number>'
 from_address = '<email address>'
+
+ags_username = '<arcgis admin username>'
+ags_password = '<arcgis admin password>'
+ags_server = '<arcgis base url>'

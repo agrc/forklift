@@ -96,9 +96,11 @@ class TestLift(unittest.TestCase):
 
         self.assertEqual(pallet.success, (False, 'ship error'))
 
+    @patch('os.path.exists')
     @patch('shutil.rmtree')
     @patch('shutil.copytree')
-    def test_copy_data(self, copytree_mock, rmtree_mock):
+    def test_copy_data(self, copytree_mock, rmtree_mock, exists_mock):
+        exists_mock.return_value = True
         three = 'C:\\MapData\\three.gdb'
         two = 'C:\\MapData\\two.gdb'
 

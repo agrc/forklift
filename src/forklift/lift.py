@@ -97,8 +97,17 @@ def copy_data(pallets, copy_destinations):
         for destination in copy_destinations:
             destination_workspace = path.join(destination, path.basename(source))
 
-            shutil.rmtree(destination_workspace)
-            shutil.copytree(source, destination_workspace)
+            log.info('copying {} to {}...'.format(source, destination_workspace))
+            start_seconds = clock()
+            try:
+                if path.exists(destination_workspace):
+                    shutil.rmtree(destination_workspace)
+                shutil.copytree(source, destination_workspace)
+                log.info('copy successful in %s', seat.format_time(clock() - start_seconds))
+            except Exception as e:
+                pallet.success = (False, str(e))
+                log.error('there was an error copying {} to {}: {}'.format(source, destination_workspace, e))
+
 
 def create_report_object(pallets, elapsed_time):
     reports = [pallet.get_report() for pallet in pallets]

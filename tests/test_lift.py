@@ -126,6 +126,24 @@ class TestLift(unittest.TestCase):
 
         self.assertEqual(copytree_mock.call_count, 6)
         self.assertEqual(rmtree_mock.call_count, 6)
+
+    @patch('shutil.rmtree')
+    @patch('shutil.copytree')
+    def test_copy_data_error(self, copytree_mock, rmtree_mock):
+        error_message = 'there was an error'
+        copytree_mock.side_effect = Exception(error_message)
+
+        class CopyPalletOne(Pallet):
+            def __init__(self):
+                super(CopyPalletOne, self).__init__()
+
+                self.copy_data = ['C:\\MapData\\one.gdb']
+        pallet = CopyPalletOne()
+
+        lift.copy_data([pallet], ['hello'])
+
+        self.assertEqual(pallet.success, (False, error_message))
+
     def test_create_report_object(self):
         p1 = Pallet()
         p1.success = (False, '')

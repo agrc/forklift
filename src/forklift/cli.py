@@ -13,7 +13,7 @@ import pystache
 import seat
 import secrets
 import sys
-from colorama import init, Fore, Back, Style
+from colorama import init, Fore
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from git import Repo
@@ -152,27 +152,7 @@ def start_lift(file_path=None):
 
     print('Finished in %s. General email notification: %s', elapsed_time, email)
 
-    def format_dictionary(pallet_reports):
-        str = '{7}{8}{0}{1}{2}{9}{3}{4} out of {5} pallets ran successfully.{6}{3}{7}'.format(
-            Fore.GREEN, Back.WHITE, pallet_reports['num_success_pallets'], Fore.RESET, Fore.BLACK,
-            len(pallet_reports['pallets']), Back.RESET, linesep, Style.DIM, Style.NORMAL)
-
-        for report in pallet_reports['pallets']:
-            color = Fore.GREEN
-            if not report['success']:
-                color = Fore.RED
-
-            str += '{}{}{}{}'.format(color, report['name'], Fore.RESET, linesep)
-
-            if not report['success']:
-                str += '  pallet message: {}{}{}{}'.format(Fore.YELLOW, report['message'], Fore.RESET, linesep)
-
-            for crate in report['crates']:
-                str += '    {0:40}{1}{2}'.format(crate['name'], crate['crate_message'], linesep)
-
-        return str
-
-    log.info('%s', format_dictionary(report_object))
+    log.info('%s', _format_dictionary(report_object))
 
 
 def _send_report_email(report_object):
@@ -285,3 +265,29 @@ def _get_pallets_in_file(file_path):
             pass
 
     return pallets
+
+
+def _format_dictionary(pallet_reports):
+    str = '{3}{3}    {4}{0}{2} out of {5}{1}{2} pallets ran successfully in {6}.{3}'.format(
+        pallet_reports['num_success_pallets'], len(pallet_reports['pallets']), Fore.RESET, linesep, Fore.GREEN,
+        Fore.CYAN, pallet_reports['total_time'])
+
+    for report in pallet_reports['pallets']:
+        color = Fore.GREEN
+        if not report['success']:
+            color = Fore.RED
+
+        str += '{}{}{}{}'.format(color, report['name'], Fore.RESET, linesep)
+
+        if not report['success'] and report['message'] is not None:
+            str += 'pallet message: {}{}{}{}'.format(Fore.YELLOW, report['message'], Fore.RESET, linesep)
+
+        for crate in report['crates']:
+            str += '{0:>40}{3} - {1}{4}{2}'.format(crate['name'], crate['result'], linesep, Fore.CYAN, Fore.RESET)
+
+            if crate['crate_message'] is None:
+                continue
+
+            str += 'crate message: {0}{1}{2}{3}'.format(Fore.MAGENTA, crate['crate_message'], Fore.RESET, linesep)
+
+    return str

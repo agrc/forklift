@@ -97,7 +97,7 @@ def copy_data(pallets, copy_destinations):
     lightswitch = LightSwitch()
 
     for pallet in pallets:
-        if not pallet.is_ready_to_ship():
+        if not pallet.requires_processing():
             continue
 
         copy_workspaces |= set(pallet.copy_data)  # noqa
@@ -153,9 +153,9 @@ def copy_data(pallets, copy_destinations):
                     #: There is still a lock?
                     #: The service probably wasn't shut down
                     #: if there was a problem and the temp gdb exists
-                    #: since we couln't delete it before we probably can't delete it know
-                    #: so take what is in the x and copy it over what it can in the original
-                    #: that _should_ leave the gdb in a working state
+                    #: since we couln't delete it before we probably can't delete it now
+                    #: so take what is in x and copy it over what it can in the original
+                    #: that _should_ leave the gdb in a functioning state
                     if path.exists(destination_workspace) and path.exists(destination_workspace + 'x'):
                         log.debug('cleaning up %s', destination_workspace)
                         _copy_with_overwrite(destination_workspace + 'x', destination_workspace)
@@ -194,10 +194,12 @@ def _copy_with_overwrite(source, destination):
             try:
                 if path.exists(dst_file):
                     remove(dst_file)
-            except Exception as e:
-                log.info(str(e))
+            except:
+                #: shouldn't matter a whole lot
+                pass
 
             try:
                 shutil.move(src_file, dst_dir)
-            except Exception as e:
-                log.info(str(e))
+            except:
+                #: shouldn't matter a whole lot
+                pass

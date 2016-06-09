@@ -11,9 +11,9 @@ import lift
 import logging
 import pystache
 import seat
-import secrets
 import sys
 from colorama import init, Fore
+from messaging import send_email
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from git import Repo
@@ -24,7 +24,6 @@ from os.path import abspath, exists, join, splitext, basename, dirname, isfile
 from os import walk
 from os import linesep
 from requests import get
-from smtplib import SMTP
 from time import clock
 
 log = logging.getLogger('forklift')
@@ -168,20 +167,14 @@ def _send_report_email(report_object):
     with open(template, 'r') as template_file:
         email_content = pystache.render(template_file.read(), report_object)
 
-    to_addresses = ','.join(get_config_prop('notify'))
     message = MIMEMultipart()
-    message['Subject'] = 'Forklift report'
-    message['From'] = secrets.from_address
-    message['To'] = to_addresses
     message.attach(MIMEText(email_content, 'html'))
 
     log_file = 'forklift.log'
     if isfile(log_file):
         message.attach(MIMEText(file(log_file).read()))
 
-    smtp = SMTP(secrets.smtp_server, secrets.smtp_port)
-    smtp.sendmail(secrets.from_address, to_addresses, message.as_string())
-    smtp.quit()
+    send_email(get_config_prop('notify'), 'Forklift Report', message)
 
 
 def git_update():

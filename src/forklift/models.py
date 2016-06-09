@@ -7,9 +7,11 @@ A module that contains the model classes for forklift
 '''
 
 
+import cli
 import logging
 from arcpy import env, SpatialReference, ValidateTableName as create_valid_table_name
 from inspect import getsourcefile
+from messaging import send_email
 from pprint import PrettyPrinter
 from os.path import join
 
@@ -137,6 +139,12 @@ class Pallet(object):
                 'success': self.success[0] and self.is_ready_to_ship(),
                 'message': self.success[1],
                 'crates': [crate.get_report() for crate in self._crates]}
+
+    def send_email(self, to, subject, body):
+        '''wrapper around messaging.send_email
+        '''
+        if cli.get_config_prop('sendEmails'):
+            send_email(to, subject, body)
 
     def __repr__(self):
         '''Override for better logging. Use with %r

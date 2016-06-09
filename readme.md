@@ -35,11 +35,12 @@ Interacting with forklift is done via the [command line interface](src/forklift/
 - `copyDestinations` A list of folders that you want any data defined in `Pallet.copy_data` to be copied to upon successful processing of the pallet.
 
 ### Development Usage
-1. `setup.py install`
-1. Update `secrets.py` based on the [sample.](/src/forklift/secrets_sample.py)
+1. `pip install .\` from the directory containing `setup.py`.
+1. Update `secrets.py` based on the [sample.](/src/forklift/secrets_sample.py).
 1. from the `**/src**` directory execute `python -m forklift -h` for usage.
 
 ### Tests
+`pip install tox`
 `tox`
 
 Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) will automatically be skipped if it is not found on your system.

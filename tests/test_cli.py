@@ -38,7 +38,8 @@ class TestConfigInit(unittest.TestCase):
             self.assertEqual(config_dict, {u"warehouse": u"c:\\scheduled",
                                            u"repositories": [],
                                            u"notify": [u"stdavis@utah.gov", u"sgourley@utah.gov"],
-                                           u"sendEmails": False})
+                                           u"sendEmails": False,
+                                           u"copyDestinations": []})
 
     def test_init_returns_path_for_existing_config_file(self):
         self.assertEqual(cli.init(), cli.init())

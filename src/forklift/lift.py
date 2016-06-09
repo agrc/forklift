@@ -8,6 +8,8 @@ A module that contains methods to handle pallets
 
 import logging
 import seat
+import shutil
+from os import path
 from time import clock
 
 log = logging.getLogger('forklift')
@@ -49,7 +51,6 @@ def process_pallets(pallets):
     Loop over all pallets, check if data has changed and determine whether to call process.
     Finally, determine whether to call ship.
     '''
-    reports = []
 
     log.info('processing and shipping pallets...')
 
@@ -77,17 +78,41 @@ def process_pallets(pallets):
                 log.debug('shipped pallet %s', seat.format_time(clock() - start_seconds))
             except Exception as e:
                 pallet.success = (False, e.message)
+
                 log.error('error shipping pallet: %s for pallet: %r', e.message, pallet, exc_info=True)
 
-        reports.append(pallet.get_report())
 
-    return reports
+def copy_data(pallets, copy_destinations):
+    '''pallets: Pallets[]
+
+    Loop over all of the pallets and extract the distinct copy_data workspaces.
+    Then loop over all of the copy_data workspaces and copy them to copy_destinations as defined in the config.'''
+    copy_workspaces = []
+    for pallet in pallets:
+        if pallet.is_ready_to_ship():
+            copy_workspaces = copy_workspaces + pallet.copy_data
+    copy_workspaces = set(copy_workspaces)
+
+    for source in copy_workspaces:
+        for destination in copy_destinations:
+            destination_workspace = path.join(destination, path.basename(source))
+
+            log.info('copying {} to {}...'.format(source, destination_workspace))
+            start_seconds = clock()
+            try:
+                if path.exists(destination_workspace):
+                    shutil.rmtree(destination_workspace)
+                shutil.copytree(source, destination_workspace)
+                log.info('copy successful in %s', seat.format_time(clock() - start_seconds))
+            except Exception as e:
+                pallet.success = (False, str(e))
+                log.error('there was an error copying %s to %s', source, destination_workspace, exc_info=True)
 
 
-def create_report_object(pallet_reports, elapsed_time):
-    report = {'total_pallets': len(pallet_reports),
-              'num_success_pallets': len(filter(lambda p: p['success'], pallet_reports)),
-              'pallets': pallet_reports,
-              'total_time': elapsed_time}
+def create_report_object(pallets, elapsed_time):
+    reports = [pallet.get_report() for pallet in pallets]
 
-    return report
+    return {'total_pallets': len(reports),
+            'num_success_pallets': len(filter(lambda p: p['success'], reports)),
+            'pallets': reports,
+            'total_time': elapsed_time}

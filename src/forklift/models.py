@@ -32,6 +32,9 @@ class Pallet(object):
         #: the status of the pallet (successful: Bool, message: string)
         self.success = (True, None)
         self.name = '{}:{}'.format(getsourcefile(self.__class__), self.__class__.__name__)
+        self.copy_data = []
+        self.destination_coordinate_system = SpatialReference(3857)
+        self.geographic_transformation = 'NAD_1983_To_WGS_1984_5'
 
     def process(self):
         '''Invoked if any crates have data updates.
@@ -74,6 +77,8 @@ class Pallet(object):
 
         for info in crate_infos:
             params = defaults.copy()
+            params.update({'destination_coordinate_system': self.destination_coordinate_system,
+                           'geographic_transformation': self.geographic_transformation})
 
             #: info can be a table name here instead of a tuple
             if isinstance(info, basestring):

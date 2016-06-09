@@ -138,19 +138,26 @@ def start_lift(file_path=None):
         PalletClass = getattr(__import__(module_name), class_name)
         pallets.append(PalletClass())
 
+    start_process = clock()
     lift.process_crates_for(pallets, core.update)
+    log.info('process_crates time: %s', seat.format_time(clock() - start_process))
+
+    start_process = clock()
+    lift.process_pallets(pallets)
+    log.info('process_pallets time: %s', seat.format_time(clock() - start_process))
+
+    start_copy = clock()
+    lift.copy_data(pallets, get_config_prop('copyDestinations'))
+    log.info('copy_data time: %s', seat.format_time(clock() - start_copy))
 
     elapsed_time = seat.format_time(clock() - start_seconds)
-    log.info('elapsed time: %s', elapsed_time)
-
-    pallet_reports = lift.process_pallets(pallets)
-    report_object = lift.create_report_object(pallet_reports, elapsed_time)
+    report_object = lift.create_report_object(pallets, elapsed_time)
 
     email = get_config_prop('sendEmails')
     if email:
         _send_report_email(report_object)
 
-    print('Finished in %s. General email notification: %s', elapsed_time, email)
+    print('Finished in {}. General email notification: {}'.format(elapsed_time, email))
 
     log.info('%s', _format_dictionary(report_object))
 
@@ -206,7 +213,8 @@ def _create_default_config(folder):
             'warehouse': folder,
             'repositories': [],
             'notify': ['stdavis@utah.gov', 'sgourley@utah.gov'],
-            'sendEmails': False
+            'sendEmails': False,
+            'copyDestinations': []
         }
 
         json_config_file.write(dumps(data))

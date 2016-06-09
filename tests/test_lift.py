@@ -9,7 +9,7 @@ A module for testing lift.py
 import unittest
 from forklift import lift
 from forklift.models import Pallet, Crate
-from mock import Mock
+from mock import Mock, patch
 
 
 class TestLift(unittest.TestCase):
@@ -80,14 +80,6 @@ class TestLift(unittest.TestCase):
         pallet3.ship.assert_called_once()
         pallet3.process.assert_called_once()
 
-    def test_process_pallets_returns_reports(self):
-        reports_pallet = self.PalletMock()
-        reports_pallet.get_report.return_value = 'hello'
-
-        result = lift.process_pallets([reports_pallet, reports_pallet])
-
-        self.assertEqual(result, ['hello', 'hello'])
-
     def test_process_pallets_handles_process_exception(self):
         pallet = self.PalletMock()
         pallet.process.side_effect = Exception('process error')
@@ -103,3 +95,65 @@ class TestLift(unittest.TestCase):
         lift.process_pallets([pallet])
 
         self.assertEqual(pallet.success, (False, 'ship error'))
+
+    @patch('os.path.exists')
+    @patch('shutil.rmtree')
+    @patch('shutil.copytree')
+    def test_copy_data(self, copytree_mock, rmtree_mock, exists_mock):
+        exists_mock.return_value = True
+        three = 'C:\\MapData\\three.gdb'
+        two = 'C:\\MapData\\two.gdb'
+
+        class CopyPalletOne(Pallet):
+            def __init__(self):
+                super(CopyPalletOne, self).__init__()
+
+                self.copy_data = ['C:\\MapData\\one.gdb', two]
+
+        class CopyPalletTwo(Pallet):
+            def __init__(self):
+                super(CopyPalletTwo, self).__init__()
+
+                self.copy_data = ['C:\\MapData\\one.gdb', three]
+
+        class CopyPalletThree(Pallet):
+            def __init__(self):
+                super(CopyPalletThree, self).__init__()
+
+                self.copy_data = ['C:\\MapData\\four.gdb', three]
+        palletThree = CopyPalletThree()
+        palletThree.is_ready_to_ship = Mock(return_value=False)
+
+        lift.copy_data([CopyPalletOne(), CopyPalletTwo(), palletThree], ['dest1', 'dest2'])
+
+        self.assertEqual(copytree_mock.call_count, 6)
+        self.assertEqual(rmtree_mock.call_count, 6)
+
+    @patch('shutil.rmtree')
+    @patch('shutil.copytree')
+    def test_copy_data_error(self, copytree_mock, rmtree_mock):
+        error_message = 'there was an error'
+        copytree_mock.side_effect = Exception(error_message)
+
+        class CopyPalletOne(Pallet):
+            def __init__(self):
+                super(CopyPalletOne, self).__init__()
+
+                self.copy_data = ['C:\\MapData\\one.gdb']
+        pallet = CopyPalletOne()
+
+        lift.copy_data([pallet], ['hello'])
+
+        self.assertEqual(pallet.success, (False, error_message))
+
+    def test_create_report_object(self):
+        p1 = Pallet()
+        p1.success = (False, '')
+
+        p2 = Pallet()
+        p3 = Pallet()
+
+        report = lift.create_report_object([p1, p2, p3], 10)
+
+        self.assertEqual(report['total_pallets'], 3)
+        self.assertEqual(report['num_success_pallets'], 2)

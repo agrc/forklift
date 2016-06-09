@@ -1,8 +1,5 @@
 🚜 Forklift
 ===================================
-
-[![Build Status](https://travis-ci.org/agrc/forklift.svg?branch=master)](https://travis-ci.org/agrc/forklift) [![codecov.io](http://codecov.io/github/agrc/forklift/coverage.svg?branch=master)](http://codecov.io/github/agrc/forklift?branch=master)
-
 A CLI tool for managing a plethora of scheduled task python scripts.
 
 ### Usage

@@ -120,6 +120,25 @@ class TestPallet(unittest.TestCase):
         self.assertEqual(self.patient.get_crates()[0].source_workspace, 'source1')
         self.assertEqual(self.patient.get_crates()[0].destination_workspace, 'destination1')
 
+    def test_add_crate_default_reproject(self):
+        self.patient.add_crate(('fc1', 'source1', 'destination1', 'dest_name'))
+        self.patient.add_crate(('fc1', 'source1', 'destination1', 'dest_name'),
+                               {'source_workspace': 'hello', 'destination_workspace': 'blah'})
+
+        self.assertEqual(self.patient.get_crates()[0].destination_coordinate_system.factoryCode, 3857)
+        self.assertEqual(self.patient.get_crates()[0].geographic_transformation, 'NAD_1983_To_WGS_1984_5')
+        self.assertEqual(self.patient.get_crates()[1].destination_coordinate_system.factoryCode, 3857)
+
+    def test_add_crate_alternative_reproject(self):
+        class ReprojectPallet(Pallet):
+            def __init__(self):
+                super(ReprojectPallet, self).__init__()
+                self.destination_coordinate_system = 26912
+        pallet = ReprojectPallet()
+        pallet.add_crate(('fc1', 'source1', 'destination1', 'dest_name'))
+
+        self.assertEqual(pallet.get_crates()[0].destination_coordinate_system.factoryCode, 26912)
+
     def test_is_ready_to_ship_no_crates_returns_true(self):
         self.assertTrue(self.patient.is_ready_to_ship())
 

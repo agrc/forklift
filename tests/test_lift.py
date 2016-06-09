@@ -12,6 +12,19 @@ from forklift.models import Pallet, Crate
 from mock import Mock, patch
 
 
+fgd_describe = Mock()
+fgd_describe.workspaceFactoryProgID = 'esriDataSourcesGDB.FileGDBWorkspaceFactory'
+non_fgd_describe = Mock()
+non_fgd_describe.workspaceFactoryProgID = 'not a fgd'
+
+
+def describe_side_effect(workspace):
+    if workspace.endswith('.gdb'):
+        return fgd_describe
+    else:
+        return non_fgd_describe
+
+
 class TestLift(unittest.TestCase):
 
     def setUp(self):
@@ -96,10 +109,13 @@ class TestLift(unittest.TestCase):
 
         self.assertEqual(pallet.success, (False, 'ship error'))
 
+    @patch('forklift.lift.Describe')
+    @patch('forklift.lift.Compact_management')
     @patch('os.path.exists')
     @patch('shutil.rmtree')
     @patch('shutil.copytree')
-    def test_copy_data(self, copytree_mock, rmtree_mock, exists_mock):
+    def test_copy_data(self, copytree_mock, rmtree_mock, exists_mock, compact_mock, describe_mock):
+        describe_mock.side_effect = describe_side_effect
         exists_mock.return_value = True
         three = 'C:\\MapData\\three.gdb'
         two = 'C:\\MapData\\two.gdb'
@@ -120,7 +136,7 @@ class TestLift(unittest.TestCase):
             def __init__(self):
                 super(CopyPalletThree, self).__init__()
 
-                self.copy_data = ['C:\\MapData\\four.gdb', three]
+                self.copy_data = ['C:\\MapData\\four', three]
         palletThree = CopyPalletThree()
         palletThree.is_ready_to_ship = Mock(return_value=False)
 
@@ -128,10 +144,14 @@ class TestLift(unittest.TestCase):
 
         self.assertEqual(copytree_mock.call_count, 6)
         self.assertEqual(rmtree_mock.call_count, 6)
+        self.assertEqual(compact_mock.call_count, 3)
 
+    @patch('forklift.lift.Describe')
+    @patch('forklift.lift.Compact_management')
     @patch('shutil.rmtree')
     @patch('shutil.copytree')
-    def test_copy_data_error(self, copytree_mock, rmtree_mock):
+    def test_copy_data_error(self, copytree_mock, rmtree_mock, compact_mock, describe_mock):
+        describe_mock.side_effect = describe_side_effect
         error_message = 'there was an error'
         copytree_mock.side_effect = Exception(error_message)
 

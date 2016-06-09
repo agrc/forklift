@@ -9,6 +9,7 @@ A module that contains methods to handle pallets
 import logging
 import seat
 import shutil
+from arcpy import Compact_management, Describe
 from os import path
 from time import clock
 
@@ -94,6 +95,10 @@ def copy_data(pallets, copy_destinations):
     copy_workspaces = set(copy_workspaces)
 
     for source in copy_workspaces:
+        if Describe(source).workspaceFactoryProgID.startswith('esriDataSourcesGDB.FileGDBWorkspaceFactory'):
+            log.info('compacting %s', source)
+            Compact_management(source)
+
         for destination in copy_destinations:
             destination_workspace = path.join(destination, path.basename(source))
 
@@ -101,6 +106,7 @@ def copy_data(pallets, copy_destinations):
             start_seconds = clock()
             try:
                 if path.exists(destination_workspace):
+                    log.debug('removing destination')
                     shutil.rmtree(destination_workspace)
                 shutil.copytree(source, destination_workspace)
                 log.info('copy successful in %s', seat.format_time(clock() - start_seconds))

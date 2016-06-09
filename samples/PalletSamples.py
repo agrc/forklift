@@ -26,6 +26,8 @@ class StringCratePallet(Pallet):
         self.add_crate('Counties', {'source_workspace': source_workspace,
                                     'destination_workspace': destination_workspace})
 
+        self.copy_data = [destination_workspace]
+
 
 class ExplicitCratePallet(Pallet):
 
@@ -37,6 +39,8 @@ class ExplicitCratePallet(Pallet):
 
         crate_info = ('SGID10.GEOSCIENCE.AvalanchePaths', source_workspace, destination_workspace, 'AvyPaths')
         self.add_crate(crate_info)
+
+        self.copy_data = [destination_workspace]
 
 
 class OneValueTupleCratePallet(Pallet):

@@ -32,6 +32,7 @@ class Pallet(object):
         #: the status of the pallet (successful: Bool, message: string)
         self.success = (True, None)
         self.name = '{}:{}'.format(getsourcefile(self.__class__), self.__class__.__name__)
+        self.copy_data = []
 
     def process(self):
         '''Invoked if any crates have data updates.

@@ -85,8 +85,8 @@ def process_pallets(pallets):
 def copy_data(pallets, copy_destinations):
     '''pallets: Pallets[]
 
-    Loop over all of the pallets and extra the distinct copy_data workspaces.
-    Loop over all of the copy_data workspaces and copy them to copy_destinations as defined in the config.'''
+    Loop over all of the pallets and extract the distinct copy_data workspaces.
+    Then loop over all of the copy_data workspaces and copy them to copy_destinations as defined in the config.'''
     copy_workspaces = []
     for pallet in pallets:
         if pallet.is_ready_to_ship():

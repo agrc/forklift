@@ -29,13 +29,14 @@ from time import clock
 
 log = logging.getLogger('forklift')
 template = join(abspath(dirname(__file__)), 'report_template.html')
+config_location = join(abspath(dirname(__file__)), '..', 'config.json')
 default_warehouse_location = 'c:\\scheduled'
 init()
 
 
 def init():
-    if exists('config.json'):
-        return abspath('config.json')
+    if exists(config_location):
+        return abspath(config_location)
 
     return _create_default_config(default_warehouse_location)
 
@@ -78,10 +79,10 @@ def list_repos():
 
 def get_config():
     #: write default config if the file does not exist
-    if not exists('config.json'):
+    if not exists(config_location):
         return _create_default_config(default_warehouse_location)
 
-    with open('config.json', 'r') as json_config_file:
+    with open(config_location, 'r') as json_config_file:
         return loads(json_config_file.read())
 
 
@@ -112,7 +113,7 @@ def set_config_prop(key, value, override=False):
     else:
         config[key] = value
 
-    with open('config.json', 'w') as json_config_file:
+    with open(config_location, 'w') as json_config_file:
         json_config_file.write(dumps(config))
 
     return 'Added {} to {}'.format(value, key)
@@ -220,7 +221,7 @@ def _repo_to_url(repo):
 
 
 def _create_default_config(folder):
-    with open('config.json', 'w') as json_config_file:
+    with open(config_location, 'w') as json_config_file:
         data = {
             'warehouse': folder,
             'repositories': [],

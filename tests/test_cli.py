@@ -15,17 +15,18 @@ from os.path import abspath, dirname, join, exists
 
 test_data_folder = join(dirname(abspath(__file__)), 'data')
 test_pallets_folder = join(test_data_folder, 'list_pallets')
+cli.config_location = config_location = join(abspath(dirname(__file__)), 'config.json')
 
 
 class TestConfigInit(unittest.TestCase):
 
     def setUp(self):
-        if exists('config.json'):
-            remove('config.json')
+        if exists(config_location):
+            remove(config_location)
 
     def tearDown(self):
-        if exists('config.json'):
-            remove('config.json')
+        if exists(config_location):
+            remove(config_location)
 
     def test_init_creates_default_config_file(self):
         path = cli.init()
@@ -46,14 +47,14 @@ class TestConfigInit(unittest.TestCase):
 class TestConfigSet(unittest.TestCase):
 
     def setUp(self):
-        if exists('config.json'):
-            remove('config.json')
+        if exists(config_location):
+            remove(config_location)
 
         cli.init()
 
     def tearDown(self):
-        if exists('config.json'):
-            remove('config.json')
+        if exists(config_location):
+            remove(config_location)
 
     def test_set_config_prop_overrides_all_values(self):
         folder = 'blah'
@@ -63,8 +64,8 @@ class TestConfigSet(unittest.TestCase):
 
     @patch('forklift.cli._create_default_config')
     def test_get_config_creates_default_config(self, mock_obj):
-        if exists('config.json'):
-            remove('config.json')
+        if exists(config_location):
+            remove(config_location)
 
         cli.get_config()
 
@@ -98,14 +99,14 @@ class TestConfigSet(unittest.TestCase):
 class TestRepos(unittest.TestCase):
 
     def setUp(self):
-        if exists('config.json'):
-            remove('config.json')
+        if exists(config_location):
+            remove(config_location)
 
         self.path = cli.init()
 
     def tearDown(self):
-        if exists('config.json'):
-            remove('config.json')
+        if exists(config_location):
+            remove(config_location)
 
     def test_add_repo(self):
         path = cli.init()
@@ -154,14 +155,14 @@ class TestRepos(unittest.TestCase):
 class TestListPallets(unittest.TestCase):
 
     def setUp(self):
-        if exists('config.json'):
-            remove('config.json')
+        if exists(config_location):
+            remove(config_location)
 
         cli.init()
 
     def tearDown(self):
-        if exists('config.json'):
-            remove('config.json')
+        if exists(config_location):
+            remove(config_location)
 
     def test_list_pallets(self):
         test_pallets_folder = join(test_data_folder, 'list_pallets')
@@ -184,15 +185,16 @@ class TestListPallets(unittest.TestCase):
 @patch('forklift.lift.process_crates_for')
 @patch('forklift.lift.process_pallets')
 class TestCliStartLift(unittest.TestCase):
+
     def setUp(self):
-        if exists('config.json'):
-            remove('config.json')
+        if exists(config_location):
+            remove(config_location)
 
         cli.init()
 
     def tearDown(self):
-        if exists('config.json'):
-            remove('config.json')
+        if exists(config_location):
+            remove(config_location)
 
     def test_lift_with_path(self, process_pallets, process_crates_for):
         cli.start_lift(join(test_pallets_folder, 'multiple_pallets.py'))
@@ -209,18 +211,20 @@ class TestCliStartLift(unittest.TestCase):
 
 
 class TestCliGeneral(unittest.TestCase):
+
     def test_repo_to_url(self):
         self.assertEqual(cli._repo_to_url('repo'), 'https://github.com/repo.git')
 
 
 class TestGitUpdate(unittest.TestCase):
+
     def setUp(self):
-        if exists('config.json'):
-            remove('config.json')
+        if exists(config_location):
+            remove(config_location)
 
     def tearDown(self):
-        if exists('config.json'):
-            remove('config.json')
+        if exists(config_location):
+            remove(config_location)
 
     @patch('git.Repo.clone_from')
     @patch('forklift.cli._get_repo')

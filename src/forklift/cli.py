@@ -140,9 +140,6 @@ def start_lift(file_path=None):
     lift.process_crates_for(pallets, core.update)
 
     lift.process_pallets(pallets)
-
-    lift.copy_data(pallets, get_config_prop('copyDestinations'))
-
     elapsed_time = seat.format_time(clock() - start_seconds)
     log.info('elapsed time: %s', elapsed_time)
 
@@ -152,7 +149,7 @@ def start_lift(file_path=None):
     if email:
         _send_report_email(report_object)
 
-    print('Finished in %s. General email notification: %s', elapsed_time, email)
+    print('Finished in {}. General email notification: {}'.format(elapsed_time, email))
 
     def format_dictionary(pallet_reports):
         str = '{7}{8}{0}{1}{2}{9}{3}{4} out of {5} pallets ran successfully.{6}{3}{7}'.format(

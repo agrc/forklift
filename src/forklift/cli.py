@@ -137,12 +137,19 @@ def start_lift(file_path=None):
         PalletClass = getattr(__import__(module_name), class_name)
         pallets.append(PalletClass())
 
+    start_process = clock()
     lift.process_crates_for(pallets, core.update)
+    log.info('process_crates time: %s', seat.format_time(clock() - start_process))
 
+    start_process = clock()
     lift.process_pallets(pallets)
-    elapsed_time = seat.format_time(clock() - start_seconds)
-    log.info('elapsed time: %s', elapsed_time)
+    log.info('process_pallets time: %s', seat.format_time(clock() - start_process))
 
+    start_copy = clock()
+    lift.copy_data(pallets, get_config_prop('copyDestinations'))
+    log.info('copy_data time: %s', seat.format_time(clock() - start_copy))
+
+    elapsed_time = seat.format_time(clock() - start_seconds)
     report_object = lift.create_report_object(pallets, elapsed_time)
 
     email = get_config_prop('sendEmails')

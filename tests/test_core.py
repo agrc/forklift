@@ -63,7 +63,7 @@ class CoreTests(unittest.TestCase):
     @patch('arcpy.Exists')
     def test_update_default_validation_that_fails(self, arcpy_exists):
         arcpy_exists.return_value = True
-        core._check_schema = Mock(side_effect=ValidationException())
+        core.check_schema = Mock(side_effect=ValidationException())
 
         def custom(crate):
             return NotImplemented
@@ -120,17 +120,17 @@ class CoreTests(unittest.TestCase):
     def test_schema_changes(self):
         arcpy.Copy_management(check_for_changes_gdb, test_gdb)
 
-        result = core._check_schema(path.join(test_gdb, 'ZipCodes'), path.join(check_for_changes_gdb, 'FieldLength'))
+        result = core.check_schema(path.join(test_gdb, 'ZipCodes'), path.join(check_for_changes_gdb, 'FieldLength'))
         self.assertEqual(result, False)
 
-        result = core._check_schema(path.join(test_gdb, 'ZipCodes'), path.join(check_for_changes_gdb, 'ZipCodes'))
+        result = core.check_schema(path.join(test_gdb, 'ZipCodes'), path.join(check_for_changes_gdb, 'ZipCodes'))
         self.assertEqual(result, True)
 
     def test_check_schema_ignore_length_for_all_except_text(self):
         self.check_for_local_sde()
 
         # only worry about length on text fields
-        result = core._check_schema(
+        result = core.check_schema(
             path.join(update_tests_sde, r'UPDATE_TESTS.DBO.Hello\UPDATE_TESTS.DBO.DNROilGasWells'),
             path.join(check_for_changes_gdb, 'DNROilGasWells'))
         self.assertEqual(result, True)
@@ -155,16 +155,16 @@ class CoreTests(unittest.TestCase):
 
     def test_check_schema_match(self):
         self.assertEqual(
-            core._check_schema(
+            core.check_schema(
                 path.join(check_for_changes_gdb, 'FieldLength'), path.join(check_for_changes_gdb, 'FieldLength2')),
             False)
 
         self.assertEqual(
-            core._check_schema(
+            core.check_schema(
                 path.join(check_for_changes_gdb, 'FieldType'), path.join(check_for_changes_gdb, 'FieldType2')), False)
 
         self.assertEqual(
-            core._check_schema(
+            core.check_schema(
                 path.join(check_for_changes_gdb, 'ZipCodes'), path.join(check_for_changes_gdb2, 'ZipCodes')), True)
 
     def test_create_destination_data_feature_class(self):

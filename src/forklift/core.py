@@ -26,7 +26,7 @@ def update(crate, validate_crate):
         One of the result string constants from models.Crate
 
     Checks to see if a crate can be updated by using validate_crate (if implemented
-    within the pallet) or _check_schema otherwise. If the crate is valid it
+    within the pallet) or check_schema otherwise. If the crate is valid it
     then updates the data.
     '''
 
@@ -44,7 +44,7 @@ def update(crate, validate_crate):
         try:
             has_custom = validate_crate(crate)
             if has_custom == NotImplemented:
-                _check_schema(crate.source, crate.destination)
+                check_schema(crate.source, crate.destination)
         except ValidationException as e:
             log.warn('validation error: %s for crate %r',
                      e.message,
@@ -124,7 +124,7 @@ def _move_data(crate):
     log.debug('edit session stopped')
 
 
-def _check_schema(source_dataset, destination_dataset):
+def check_schema(source_dataset, destination_dataset):
     '''
     source_dataset: String
     destination_dataset: String

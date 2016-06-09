@@ -34,6 +34,12 @@ Interacting with forklift is done via the [command line interface](src/forklift/
 - `repositories` A list of repositories (`<owner>/<name>`) that will be cloned/updated into the warehouse folder.
 - `copyDestinations` A list of folders that you want any data defined in `Pallet.copy_data` to be copied to upon successful processing of the pallet.
 
+Any of these properties can be set via the `config set` command like so:
+```
+forklift config set --key sendEmails --value False
+```
+If the property is a list then the value is appended to the existing list.
+
 ### Development Usage
 1. `pip install .\` from the directory containing `setup.py`.
 1. Update `secrets.py` based on the [sample.](/src/forklift/secrets_sample.py).

@@ -106,7 +106,7 @@ def copy_data(pallets, copy_destinations):
                 log.info('copy successful in %s', seat.format_time(clock() - start_seconds))
             except Exception as e:
                 pallet.success = (False, str(e))
-                log.error('there was an error copying {} to {}: {}'.format(source, destination_workspace, e))
+                log.error('there was an error copying %s to %s', source, destination_workspace, exc_info=True)
 
 
 def create_report_object(pallets, elapsed_time):

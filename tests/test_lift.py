@@ -80,14 +80,6 @@ class TestLift(unittest.TestCase):
         pallet3.ship.assert_called_once()
         pallet3.process.assert_called_once()
 
-    def test_process_pallets_returns_reports(self):
-        reports_pallet = self.PalletMock()
-        reports_pallet.get_report.return_value = 'hello'
-
-        result = lift.process_pallets([reports_pallet, reports_pallet])
-
-        self.assertEqual(result, ['hello', 'hello'])
-
     def test_process_pallets_handles_process_exception(self):
         pallet = self.PalletMock()
         pallet.process.side_effect = Exception('process error')
@@ -134,3 +126,14 @@ class TestLift(unittest.TestCase):
 
         self.assertEqual(copytree_mock.call_count, 6)
         self.assertEqual(rmtree_mock.call_count, 6)
+    def test_create_report_object(self):
+        p1 = Pallet()
+        p1.success = (False, '')
+
+        p2 = Pallet()
+        p3 = Pallet()
+
+        report = lift.create_report_object([p1, p2, p3], 10)
+
+        self.assertEqual(report['total_pallets'], 3)
+        self.assertEqual(report['num_success_pallets'], 2)

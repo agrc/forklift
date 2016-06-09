@@ -139,11 +139,11 @@ def start_lift(file_path=None):
 
     lift.process_crates_for(pallets, core.update)
 
+    lift.process_pallets(pallets)
     elapsed_time = seat.format_time(clock() - start_seconds)
     log.info('elapsed time: %s', elapsed_time)
 
-    pallet_reports = lift.process_pallets(pallets)
-    report_object = lift.create_report_object(pallet_reports, elapsed_time)
+    report_object = lift.create_report_object(pallets, elapsed_time)
 
     email = get_config_prop('sendEmails')
     if email:

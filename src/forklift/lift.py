@@ -51,7 +51,6 @@ def process_pallets(pallets):
     Loop over all pallets, check if data has changed and determine whether to call process.
     Finally, determine whether to call ship.
     '''
-    reports = []
 
     log.info('processing and shipping pallets...')
 
@@ -79,11 +78,8 @@ def process_pallets(pallets):
                 log.debug('shipped pallet %s', seat.format_time(clock() - start_seconds))
             except Exception as e:
                 pallet.success = (False, e.message)
+
                 log.error('error shipping pallet: %s for pallet: %r', e.message, pallet, exc_info=True)
-
-        reports.append(pallet.get_report())
-
-    return reports
 
 
 def copy_data(pallets, copy_destinations):
@@ -104,9 +100,10 @@ def copy_data(pallets, copy_destinations):
             shutil.rmtree(destination_workspace)
             shutil.copytree(source, destination_workspace)
 
+def create_report_object(pallets, elapsed_time):
+    reports = [pallet.get_report() for pallet in pallets]
 
-def create_report_object(pallet_reports, elapsed_time):
-    return {'total_pallets': len(pallet_reports),
-            'num_success_pallets': len(filter(lambda p: p['success'], pallet_reports)),
-            'pallets': pallet_reports,
+    return {'total_pallets': len(reports),
+            'num_success_pallets': len(filter(lambda p: p['success'], reports)),
+            'pallets': reports,
             'total_time': elapsed_time}

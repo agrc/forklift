@@ -10,6 +10,7 @@ A module that contains the model classes for forklift
 import logging
 from arcpy import env, SpatialReference, ValidateTableName as create_valid_table_name
 from inspect import getsourcefile
+from messaging import send_email
 from pprint import PrettyPrinter
 from os.path import join
 
@@ -38,6 +39,8 @@ class Pallet(object):
         #: default output coordinate system and transformation
         self.destination_coordinate_system = SpatialReference(3857)
         self.geographic_transformation = 'NAD_1983_To_WGS_1984_5'
+
+        self.send_email = send_email
 
     def process(self):
         '''Invoked if any crates have data updates.

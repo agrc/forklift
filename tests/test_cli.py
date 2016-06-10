@@ -7,7 +7,7 @@ A module that contains tests for the cli.py module
 '''
 
 import unittest
-from forklift import cli
+from forklift import cli, config
 from forklift.models import Crate
 from json import loads
 from mock import patch, Mock
@@ -16,7 +16,7 @@ from os.path import abspath, dirname, join, exists
 
 test_data_folder = join(dirname(abspath(__file__)), 'data')
 test_pallets_folder = join(test_data_folder, 'list_pallets')
-cli.config_location = config_location = join(abspath(dirname(__file__)), 'config.json')
+config.config_location = config_location = join(abspath(dirname(__file__)), 'config.json')
 
 
 class TestConfigInit(unittest.TestCase):
@@ -44,58 +44,6 @@ class TestConfigInit(unittest.TestCase):
 
     def test_init_returns_path_for_existing_config_file(self):
         self.assertEqual(cli.init(), cli.init())
-
-
-class TestConfigSet(unittest.TestCase):
-
-    def setUp(self):
-        if exists(config_location):
-            remove(config_location)
-
-        cli.init()
-
-    def tearDown(self):
-        if exists(config_location):
-            remove(config_location)
-
-    def test_set_config_prop_overrides_all_values(self):
-        folder = 'blah'
-        cli.set_config_prop('warehouse', folder, override=True)
-
-        self.assertEqual(cli.get_config_prop('warehouse'), folder)
-
-    @patch('forklift.cli._create_default_config')
-    def test_get_config_creates_default_config(self, mock_obj):
-        if exists(config_location):
-            remove(config_location)
-
-        cli.get_config()
-
-        mock_obj.assert_called_once()
-
-    @patch('forklift.cli.get_config')
-    def test_set_config_prop_returns_message_if_not_found(self, mock_obj):
-        mock_obj.return_value = {}
-
-        message = cli.set_config_prop('this was', 'not found')
-
-        self.assertEqual(message, 'this was not found in config.')
-
-    @patch('forklift.cli.get_config')
-    def test_set_config_prop_appends_items_from_list_if_not_overriding(self, mock_obj):
-        mock_obj.return_value = {'test': []}
-
-        message = cli.set_config_prop('test', [1, 2, 3])
-
-        self.assertEqual(message, 'Added [1, 2, 3] to test')
-
-    @patch('forklift.cli.get_config')
-    def test_set_config_prop_sets_value(self, mock_obj):
-        mock_obj.return_value = {'test': ''}
-
-        message = cli.set_config_prop('test', 'value')
-
-        self.assertEqual(message, 'Added value to test')
 
 
 class TestRepos(unittest.TestCase):
@@ -147,7 +95,7 @@ class TestRepos(unittest.TestCase):
         self.assertEqual('{} is not in the repositories list!'.format('blah'), cli.remove_repo('blah'))
 
     def test_list_repos(self):
-        cli.set_config_prop('repositories', ['blah', 'blah2'], override=True)
+        config.set_config_prop('repositories', ['blah', 'blah2'], override=True)
 
         result = cli.list_repos()
 
@@ -176,7 +124,7 @@ class TestListPallets(unittest.TestCase):
         self.assertEqual(pallets[3][1], 'NestedPallet')
 
     def test_list_pallets_from_config(self):
-        cli.set_config_prop('warehouse', test_pallets_folder, override=True)
+        config.set_config_prop('warehouse', test_pallets_folder, override=True)
         pallets = cli.list_pallets()
 
         self.assertEqual(len(pallets), 4)
@@ -205,7 +153,7 @@ class TestCliStartLift(unittest.TestCase):
         self.assertEqual(len(process_pallets.call_args[0][0]), 2)
 
     def test_lift_with_out_path(self, process_pallets, process_crates_for):
-        cli.set_config_prop('warehouse', test_pallets_folder, override=True)
+        config.set_config_prop('warehouse', test_pallets_folder, override=True)
         cli.start_lift()
 
         self.assertEqual(len(process_crates_for.call_args[0][0]), 4)
@@ -239,8 +187,8 @@ class TestGitUpdate(unittest.TestCase):
         _get_repo_mock.return_value = repo_mock
         _validate_repo_mock.return_value = ''
         cli.init()
-        cli.set_config_prop('warehouse', test_pallets_folder, override=True)
-        cli.set_config_prop('repositories', ['agrc/nested', 'agrc/forklift'])
+        config.set_config_prop('warehouse', test_pallets_folder, override=True)
+        config.set_config_prop('repositories', ['agrc/nested', 'agrc/forklift'])
 
         cli.git_update()
 

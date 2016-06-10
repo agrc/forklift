@@ -6,39 +6,36 @@ lift.py
 A module that contains the implementation of the cli commands
 '''
 
+import config
 import core
 import lift
 import logging
 import pystache
 import seat
-import secrets
 import sys
-from colorama import init, Fore
+from colorama import init as colorama_init, Fore
+from messaging import send_email
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from git import Repo
 from importlib import import_module
-from json import dumps, loads
 from models import Pallet
 from os.path import abspath, exists, join, splitext, basename, dirname, isfile
 from os import walk
 from os import linesep
 from requests import get
-from smtplib import SMTP
 from time import clock
 
 log = logging.getLogger('forklift')
 template = join(abspath(dirname(__file__)), 'report_template.html')
-config_location = join(abspath(dirname(__file__)), '..', 'config.json')
-default_warehouse_location = 'c:\\scheduled'
-init()
+colorama_init()
 
 
 def init():
-    if exists(config_location):
-        return abspath(config_location)
+    if exists(config.config_location):
+        return abspath(config.config_location)
 
-    return _create_default_config(default_warehouse_location)
+    return config.create_default_config()
 
 
 def add_repo(repo):
@@ -47,7 +44,7 @@ def add_repo(repo):
     except Exception as e:
         return e.message
 
-    return set_config_prop('repositories', repo)
+    return config.set_config_prop('repositories', repo)
 
 
 def remove_repo(repo):
@@ -58,13 +55,13 @@ def remove_repo(repo):
     except ValueError:
         return '{} is not in the repositories list!'.format(repo)
 
-    set_config_prop('repositories', repos, override=True)
+    config.set_config_prop('repositories', repos, override=True)
 
     return '{} removed'.format(repo)
 
 
 def list_pallets():
-    return _get_pallets_in_folder(get_config_prop('warehouse'))
+    return _get_pallets_in_folder(config.get_config_prop('warehouse'))
 
 
 def list_repos():
@@ -75,48 +72,6 @@ def list_repos():
         validate_results.append(_validate_repo(folder))
 
     return validate_results
-
-
-def get_config():
-    #: write default config if the file does not exist
-    if not exists(config_location):
-        return _create_default_config(default_warehouse_location)
-
-    with open(config_location, 'r') as json_config_file:
-        return loads(json_config_file.read())
-
-
-def get_config_prop(key):
-    return get_config()[key]
-
-
-def set_config_prop(key, value, override=False):
-    config = get_config()
-
-    if key not in config:
-        return '{} not found in config.'.format(key)
-
-    if not override:
-        try:
-            if not isinstance(value, list):
-                if value not in config[key]:
-                    config[key].append(value)
-                else:
-                    return '{} already contains {}'.format(key, value)
-            else:
-                for item in value:
-                    if item not in config[key]:
-                        config[key].append(item)
-        except AttributeError:
-            #: prop is not an array set value instead of append
-            config[key] = value
-    else:
-        config[key] = value
-
-    with open(config_location, 'w') as json_config_file:
-        json_config_file.write(dumps(config))
-
-    return 'Added {} to {}'.format(value, key)
 
 
 def start_lift(file_path=None):
@@ -147,17 +102,15 @@ def start_lift(file_path=None):
     log.info('process_pallets time: %s', seat.format_time(clock() - start_process))
 
     start_copy = clock()
-    lift.copy_data(pallets, get_config_prop('copyDestinations'))
+    lift.copy_data(pallets, config.get_config_prop('copyDestinations'))
     log.info('copy_data time: %s', seat.format_time(clock() - start_copy))
 
     elapsed_time = seat.format_time(clock() - start_seconds)
     report_object = lift.create_report_object(pallets, elapsed_time)
 
-    email = get_config_prop('sendEmails')
-    if email:
-        _send_report_email(report_object)
+    _send_report_email(report_object)
 
-    print('Finished in {}. General email notification: {}'.format(elapsed_time, email))
+    print('Finished in {}.'.format(elapsed_time))
 
     log.info('%s', _format_dictionary(report_object))
 
@@ -168,25 +121,19 @@ def _send_report_email(report_object):
     with open(template, 'r') as template_file:
         email_content = pystache.render(template_file.read(), report_object)
 
-    to_addresses = ','.join(get_config_prop('notify'))
     message = MIMEMultipart()
-    message['Subject'] = 'Forklift report'
-    message['From'] = secrets.from_address
-    message['To'] = to_addresses
     message.attach(MIMEText(email_content, 'html'))
 
     log_file = 'forklift.log'
     if isfile(log_file):
         message.attach(MIMEText(file(log_file).read()))
 
-    smtp = SMTP(secrets.smtp_server, secrets.smtp_port)
-    smtp.sendmail(secrets.from_address, to_addresses, message.as_string())
-    smtp.quit()
+    send_email(config.get_config_prop('notify'), 'Forklift Report', message)
 
 
 def git_update():
-    warehouse = get_config_prop('warehouse')
-    for repo_name in get_config_prop('repositories'):
+    warehouse = config.get_config_prop('warehouse')
+    for repo_name in config.get_config_prop('repositories'):
         folder = join(warehouse, repo_name.split('/')[1])
         if not exists(folder):
             log.info('git cloning: {}'.format(repo_name))
@@ -207,23 +154,8 @@ def _repo_to_url(repo):
     return 'https://github.com/{}.git'.format(repo)
 
 
-def _create_default_config(folder):
-    with open(config_location, 'w') as json_config_file:
-        data = {
-            'warehouse': folder,
-            'repositories': [],
-            'notify': ['stdavis@utah.gov', 'sgourley@utah.gov'],
-            'sendEmails': False,
-            'copyDestinations': []
-        }
-
-        json_config_file.write(dumps(data))
-
-        return abspath(json_config_file.name)
-
-
 def _get_repos():
-    return get_config_prop('repositories')
+    return config.get_config_prop('repositories')
 
 
 def _validate_repo(repo, raises=False):

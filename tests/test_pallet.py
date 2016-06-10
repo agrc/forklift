@@ -244,6 +244,14 @@ class TestPallet(unittest.TestCase):
 
         self.assertTrue(self.patient.requires_processing())
 
+    def test_requires_processing_crates_result_created_returns_true(self):
+        updated = Crate('', '', '', '')
+        updated.result = (Crate.CREATED, None)
+
+        self.patient._crates = [updated]
+
+        self.assertTrue(self.patient.requires_processing())
+
     def test_requires_processing_crates_with_schema_changes_returns_false(self):
         updated = Crate('', '', '', '')
         updated.result = (Crate.UPDATED, None)

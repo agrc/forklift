@@ -46,6 +46,6 @@ def send_email(to, subject, body):
         smtp.sendmail(secrets.from_address, to_addresses, message.as_string())
         smtp.quit()
     else:
-        log.info('No email sent. Message: %s', message.as_string())
+        log.info('sendEmails is False. No email sent.')
 
     return smtp

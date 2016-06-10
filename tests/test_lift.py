@@ -111,8 +111,8 @@ class TestLift(unittest.TestCase):
 
     @patch('forklift.lift.Describe')
     @patch('forklift.lift.Compact_management')
-    @patch('os.path.exists')
-    @patch('shutil.rmtree')
+    @patch('forklift.lift.path.exists')
+    @patch('shutil.move')
     @patch('shutil.copytree')
     def test_copy_data(self, copytree_mock, rmtree_mock, exists_mock, compact_mock, describe_mock):
         describe_mock.side_effect = describe_side_effect
@@ -125,22 +125,24 @@ class TestLift(unittest.TestCase):
                 super(CopyPalletOne, self).__init__()
 
                 self.copy_data = ['C:\\MapData\\one.gdb', two]
+        pallet_one = CopyPalletOne()
+        pallet_one.requires_processing = Mock(return_value=True)
 
         class CopyPalletTwo(Pallet):
             def __init__(self):
                 super(CopyPalletTwo, self).__init__()
 
                 self.copy_data = ['C:\\MapData\\one.gdb', three]
+        pallet_two = CopyPalletTwo()
+        pallet_two.requires_processing = Mock(return_value=True)
 
         class CopyPalletThree(Pallet):
             def __init__(self):
                 super(CopyPalletThree, self).__init__()
 
                 self.copy_data = ['C:\\MapData\\four', three]
-        palletThree = CopyPalletThree()
-        palletThree.is_ready_to_ship = Mock(return_value=False)
 
-        lift.copy_data([CopyPalletOne(), CopyPalletTwo(), palletThree], ['dest1', 'dest2'])
+        lift.copy_data([pallet_one, pallet_two, CopyPalletThree()], ['dest1', 'dest2'])
 
         self.assertEqual(copytree_mock.call_count, 6)
         self.assertEqual(rmtree_mock.call_count, 6)
@@ -148,7 +150,7 @@ class TestLift(unittest.TestCase):
 
     @patch('forklift.lift.Describe')
     @patch('forklift.lift.Compact_management')
-    @patch('shutil.rmtree')
+    @patch('shutil.move')
     @patch('shutil.copytree')
     def test_copy_data_error(self, copytree_mock, rmtree_mock, compact_mock, describe_mock):
         describe_mock.side_effect = describe_side_effect
@@ -161,6 +163,7 @@ class TestLift(unittest.TestCase):
 
                 self.copy_data = ['C:\\MapData\\one.gdb']
         pallet = CopyPalletOne()
+        pallet.requires_processing = Mock(return_value=True)
 
         lift.copy_data([pallet], ['hello'])
 

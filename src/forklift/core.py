@@ -9,10 +9,11 @@ Tools for updating the data associated with a models.Crate
 import arcpy
 import logging
 from datetime import datetime
+from exceptions import ValidationException
 from itertools import izip
 from numpy.testing import assert_almost_equal
 from models import Crate
-from exceptions import ValidationException
+from os import path
 
 log = logging.getLogger('forklift')
 
@@ -64,9 +65,17 @@ def update(crate, validate_crate):
 
 
 def _create_destination_data(crate):
+    if not path.exists(crate.destination_workspace):
+        if crate.destination_workspace.endswith('.gdb'):
+            log.warning('destination not found; creating %s', crate.destination_workspace)
+            arcpy.CreateFileGDB_management(path.dirname(crate.destination_workspace), path.basename(crate.destination_workspace))
+        else:
+            raise Exception('destination_workspace does not exist! {}'.format(crate.destination_workspace))
     if _is_table(crate):
+        log.info('creating new table: %s', crate.destination)
         arcpy.CopyRows_management(crate.source, crate.destination)
     else:
+        log.info('creating new feature class: %s', crate.destination)
         arcpy.env.outputCoordinateSystem = crate.destination_coordinate_system
         arcpy.env.geographicTransformations = crate.geographic_transformation
 

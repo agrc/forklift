@@ -14,28 +14,36 @@ from forklift.exceptions import ValidationException
 from itertools import chain
 from os import path
 from nose import SkipTest
-from mock import Mock, patch
+from mock import Mock
+from mock import patch
+from nose.tools import raises
 
 current_folder = path.dirname(path.abspath(__file__))
 check_for_changes_gdb = path.join(current_folder, 'data', 'checkForChanges.gdb')
 check_for_changes_gdb2 = path.join(current_folder, 'data', 'checkForChanges2.gdb')
 update_tests_sde = path.join(current_folder, 'data', 'UPDATE_TESTS.sde')
 test_gdb = path.join(current_folder, 'data', 'test.gdb')
+test_folder = path.join(current_folder, 'data', 'test_create_folder')
 
 
 def raise_validation_exception(crate):
     raise ValidationException()
 
 
+def delete_if_exists(data):
+    if arcpy.Exists(data):
+        arcpy.Delete_management(data)
+
+
 class CoreTests(unittest.TestCase):
 
     def setUp(self):
-        if arcpy.Exists(test_gdb):
-            arcpy.Delete_management(test_gdb)
+        delete_if_exists(test_gdb)
+        delete_if_exists(test_folder)
 
     def tearDown(self):
-        if arcpy.Exists(test_gdb):
-            arcpy.Delete_management(test_gdb)
+        delete_if_exists(test_gdb)
+        delete_if_exists(test_folder)
 
     def check_for_local_sde(self):
         if not arcpy.Exists(path.join(update_tests_sde, 'ZipCodes')):
@@ -193,6 +201,21 @@ class CoreTests(unittest.TestCase):
         core._create_destination_data(fc_crate)
         self.assertTrue(arcpy.Exists(fc_crate.destination))
         self.assertEqual(arcpy.Describe(fc_crate.destination).spatialReference.name, spatial_reference.name)
+
+    @patch('arcpy.CreateFileGDB_management', wraps=arcpy.CreateFileGDB_management)
+    def test_create_destination_data_workspace(self, create_mock):
+        #: file geodatabase
+        crate = Crate('DNROilGasWells', check_for_changes_gdb, test_gdb)
+        core._create_destination_data(crate)
+
+        create_mock.assert_called_once()
+
+    @raises(Exception)
+    def test_create_destination_data_raises(self):
+        #: non-file geodatabase
+        crate = Crate('DNROilGasWells', check_for_changes_gdb, test_folder, 'test.shp')
+
+        self.assertRaises(core._create_destination_data, crate)
 
     @patch('arcpy.da.Walk')
     def test_try_to_find_data_source_by_name_returns_and_updates_feature_name(self, walk):

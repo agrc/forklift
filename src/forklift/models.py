@@ -7,7 +7,6 @@ A module that contains the model classes for forklift
 '''
 
 
-import cli
 import logging
 from arcpy import env, SpatialReference, ValidateTableName as create_valid_table_name
 from inspect import getsourcefile
@@ -40,6 +39,8 @@ class Pallet(object):
         #: default output coordinate system and transformation
         self.destination_coordinate_system = SpatialReference(3857)
         self.geographic_transformation = 'NAD_1983_To_WGS_1984_5'
+
+        self.send_email = send_email
 
     def process(self):
         '''Invoked if any crates have data updates.
@@ -139,12 +140,6 @@ class Pallet(object):
                 'success': self.success[0] and self.is_ready_to_ship(),
                 'message': self.success[1],
                 'crates': [crate.get_report() for crate in self._crates]}
-
-    def send_email(self, to, subject, body):
-        '''wrapper around messaging.send_email
-        '''
-        if cli.get_config_prop('sendEmails'):
-            send_email(to, subject, body)
 
     def __repr__(self):
         '''Override for better logging. Use with %r

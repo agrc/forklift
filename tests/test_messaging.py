@@ -13,7 +13,7 @@ from forklift.messaging import send_email
 from mock import patch
 
 
-@patch('forklift.cli.get_config_prop')
+@patch('forklift.messaging.get_config_prop')
 @patch('forklift.messaging.SMTP', autospec=True)
 class SendEmail(unittest.TestCase):
     def test_to_addresses(self, SMTP_mock, get_config_prop_mock):

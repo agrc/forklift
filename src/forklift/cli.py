@@ -108,11 +108,9 @@ def start_lift(file_path=None):
     elapsed_time = seat.format_time(clock() - start_seconds)
     report_object = lift.create_report_object(pallets, elapsed_time)
 
-    email = config.get_config_prop('sendEmails')
-    if email:
-        _send_report_email(report_object)
+    _send_report_email(report_object)
 
-    print('Finished in {}. General email notification: {}'.format(elapsed_time, email))
+    print('Finished in {}.'.format(elapsed_time))
 
     log.info('%s', _format_dictionary(report_object))
 

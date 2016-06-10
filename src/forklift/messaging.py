@@ -6,10 +6,15 @@ email.py
 A module that contains a method for sending emails
 '''
 
+import logging
 import secrets
+from config import get_config_prop
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from smtplib import SMTP
+
+
+log = logging.getLogger('forklift')
 
 
 def send_email(to, subject, body):
@@ -37,7 +42,10 @@ def send_email(to, subject, body):
     message['To'] = to_addresses
 
     smtp = SMTP(secrets.smtp_server, secrets.smtp_port)
-    smtp.sendmail(secrets.from_address, to_addresses, message.as_string())
-    smtp.quit()
+    if get_config_prop('sendEmails'):
+        smtp.sendmail(secrets.from_address, to_addresses, message.as_string())
+        smtp.quit()
+    else:
+        log.info('No email sent. Message: %s', message.as_string())
 
     return smtp

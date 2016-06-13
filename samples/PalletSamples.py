@@ -10,6 +10,7 @@ We should be able to run them twice without errors. Once to create, and once to 
 from arcpy import env
 from forklift.models import Pallet
 from os import path
+from os import environ
 
 
 data_folder = path.join(path.dirname(path.realpath(__file__)), 'data')
@@ -81,3 +82,10 @@ class SdeCratePallet(Pallet):
 
         self.add_crate('SGID10.Boundaries.Counties', {'source_workspace': source_workspace,
                                                       'destination_workspace': destination_workspace})
+
+
+class ArgumentExamplePallet(Pallet):
+    def __init__(self):
+        super(ArgumentExamplePallet, self).__init__()
+
+        print('FORKLIFT_PALLET_ARG: {}'.format(environ['FORKLIFT_PALLET_ARGUMENT']))

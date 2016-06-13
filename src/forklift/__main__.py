@@ -11,28 +11,31 @@ Usage:
     forklift config repos --list
     forklift list-pallets
     forklift git-update
-    forklift lift [<file-path>]
+    forklift lift [<file-path>] --pallet-arg <arg>
 
 Arguments:
-    repo            the name of a GitHub repository in <owner>/<name> format
-    file-path       a path to a file that defines a pallet
+    repo            The name of a GitHub repository in <owner>/<name> format.
+    file-path       A path to a file that defines a pallet.
+    arg             A string to set as the FORKLIFT_PALLET_ARGUMENT environment variable.
 
 Examples:
-    python -m forklift config init                               creates the config file.
-    python -m forklift config set --key <key> --value <value>    sets a key in the config with a value
-    python -m forklift config repos --add agrc/ugs-chemistry     adds a path to the config. Checks for duplicates.
-    python -m forklift config repos --remove agrc/ugs-chemistry  removes a path from the config.
-    python -m forklift config repos --list                       outputs the list of pallet folder paths in your config file.
-    python -m forklift list-pallets                              outputs the list of pallets from the config.
-    python -m forklift git-update                                pulls the latest updates to all git repositories
-    python -m forklift lift                                      the main entry for running all of pallets found in the config paths.
-    python -m forklift lift path/to/file                         run a specific pallets.
+    python -m forklift config init                               Creates the config file.
+    python -m forklift config set --key <key> --value <value>    Sets a key in the config with a value.
+    python -m forklift config repos --add agrc/ugs-chemistry     Adds a path to the config. Checks for duplicates.
+    python -m forklift config repos --remove agrc/ugs-chemistry  Removes a path from the config.
+    python -m forklift config repos --list                       Outputs the list of pallet folder paths in your config file.
+    python -m forklift list-pallets                              Outputs the list of pallets from the config.
+    python -m forklift git-update                                Pulls the latest updates to all git repositories.
+    python -m forklift lift                                      The main entry for running all of pallets found in the warehouse folder.
+    python -m forklift lift path/to/file                         Run a specific pallet.
+    python -m forklift lift path/to/file --pallet-arg arg        Run a specific pallet setting "arg" as the FORKLIFT_PALLET_ARGUMENT environment variable.
 '''
 
 import cli
 import logging.config
 import sys
 from docopt import docopt
+from os import environ
 
 
 detailed_formatter = logging.Formatter(fmt='%(levelname).4s %(asctime)s %(module)10s:%(lineno)5s %(message)s', datefmt='%m-%d %H:%M:%S')
@@ -75,6 +78,8 @@ def main():
         cli.git_update()
     elif args['lift']:
         if args['<file-path>']:
+            if args['--pallet-arg']:
+                environ['FORKLIFT_PALLET_ARGUMENT'] = args['<arg>']
             cli.start_lift(args['<file-path>'])
         else:
             cli.start_lift()

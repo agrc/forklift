@@ -74,7 +74,7 @@ def list_repos():
     return validate_results
 
 
-def start_lift(file_path=None):
+def start_lift(file_path=None, pallet_arg=None):
     log.info('starting forklift')
 
     git_update()
@@ -91,7 +91,10 @@ def start_lift(file_path=None):
         module_name = splitext(basename(info[0]))[0]
         class_name = info[1]
         PalletClass = getattr(__import__(module_name), class_name)
-        pallets.append(PalletClass())
+        if pallet_arg is not None:
+            pallets.append(PalletClass(pallet_arg))
+        else:
+            pallets.append(PalletClass())
 
     start_process = clock()
     lift.process_crates_for(pallets, core.update)

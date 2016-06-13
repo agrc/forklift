@@ -16,7 +16,7 @@ token_url = r'{}generateToken'.format(base_url)
 services_url = r'{}services'.format(base_url)
 username = secrets.ags_username
 password = secrets.ags_password
-server = secrets.ags_server
+server = secrets.ags_server_host
 
 
 class LightSwitch(object):

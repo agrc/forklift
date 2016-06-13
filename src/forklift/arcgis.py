@@ -64,11 +64,11 @@ class LightSwitch(object):
                 'client': 'requestip',
                 'f': 'json'}
 
-        r = requests.post(token_url.format(server), data=data)
-        r.raise_for_status()
+        response = requests.post(token_url.format(server), data=data)
+        response.raise_for_status()
 
-        r = r.json()
-        self._return_false_for_status(r)
+        response_data = response.json()
+        self._return_false_for_status(response_data)
 
-        self.token = r['token']
-        self.token_expire_date = r['expires']
+        self.token = response_data['token']
+        self.token_expire_date = response_data['expires']

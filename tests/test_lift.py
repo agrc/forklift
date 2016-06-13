@@ -11,7 +11,6 @@ from forklift import lift
 from forklift.models import Pallet, Crate
 from mock import Mock, patch
 
-
 fgd_describe = Mock()
 fgd_describe.workspaceFactoryProgID = 'esriDataSourcesGDB.FileGDBWorkspaceFactory'
 non_fgd_describe = Mock()
@@ -121,22 +120,27 @@ class TestLift(unittest.TestCase):
         two = 'C:\\MapData\\two.gdb'
 
         class CopyPalletOne(Pallet):
+
             def __init__(self):
                 super(CopyPalletOne, self).__init__()
 
                 self.copy_data = ['C:\\MapData\\one.gdb', two]
+
         pallet_one = CopyPalletOne()
         pallet_one.requires_processing = Mock(return_value=True)
 
         class CopyPalletTwo(Pallet):
+
             def __init__(self):
                 super(CopyPalletTwo, self).__init__()
 
                 self.copy_data = ['C:\\MapData\\one.gdb', three]
+
         pallet_two = CopyPalletTwo()
         pallet_two.requires_processing = Mock(return_value=True)
 
         class CopyPalletThree(Pallet):
+
             def __init__(self):
                 super(CopyPalletThree, self).__init__()
 
@@ -158,16 +162,68 @@ class TestLift(unittest.TestCase):
         copytree_mock.side_effect = Exception(error_message)
 
         class CopyPalletOne(Pallet):
+
             def __init__(self):
                 super(CopyPalletOne, self).__init__()
 
                 self.copy_data = ['C:\\MapData\\one.gdb']
+
         pallet = CopyPalletOne()
         pallet.requires_processing = Mock(return_value=True)
 
         lift.copy_data([pallet], ['hello'])
 
         self.assertEqual(pallet.success, (False, error_message))
+
+    @patch('forklift.lift.LightSwitch', autospec=True)
+    @patch('forklift.lift.Describe')
+    @patch('forklift.lift.Compact_management')
+    @patch('forklift.lift.path.exists')
+    @patch('shutil.move')
+    @patch('shutil.copytree')
+    def test_copy_data_turns_off_and_on_services(self, copytree_mock, rmtree_mock, exists_mock, compact_mock,
+                                                 describe_mock, lightswitch_mock):
+        describe_mock.side_effect = describe_side_effect
+        exists_mock.return_value = True
+        three = 'C:\\MapData\\three.gdb'
+        two = 'C:\\MapData\\two.gdb'
+
+        class CopyPalletOne(Pallet):
+
+            def __init__(self):
+                super(CopyPalletOne, self).__init__()
+
+                self.copy_data = ['C:\\MapData\\one.gdb', two]
+                self.arcgis_services = [('Pallet', 'MapServer')]
+
+        class CopyPalletTwo(Pallet):
+
+            def __init__(self):
+                super(CopyPalletTwo, self).__init__()
+
+                self.copy_data = ['C:\\MapData\\one.gdb', three]
+                self.arcgis_services = [('Pallet', 'MapServer')]
+
+        class CopyPalletThree(Pallet):
+
+            def __init__(self):
+                super(CopyPalletThree, self).__init__()
+
+                self.copy_data = ['C:\\MapData\\four', three]
+
+        pallet_one = CopyPalletOne()
+        pallet_one.requires_processing = Mock(return_value=True)
+
+        pallet_two = CopyPalletTwo()
+        pallet_two.requires_processing = Mock(return_value=True)
+
+        lift.copy_data([pallet_one, pallet_two, CopyPalletThree()], ['dest1', 'dest2'])
+
+        self.assertEqual(copytree_mock.call_count, 6)
+        self.assertEqual(rmtree_mock.call_count, 6)
+        self.assertEqual(compact_mock.call_count, 3)
+        self.assertEqual(len(lightswitch_mock().turn_on.mock_calls), 3)
+        self.assertEqual(len(lightswitch_mock().turn_off.mock_calls), 3)
 
     def test_create_report_object(self):
         p1 = Pallet()

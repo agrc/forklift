@@ -131,6 +131,13 @@ class TestListPallets(unittest.TestCase):
         self.assertEqual(pallets[0][0], join(test_pallets_folder, 'multiple_pallets.py'))
         self.assertEqual(pallets[0][1], 'PalletOne')
 
+    def test_list_pallets_order(self):
+        pallets = cli._get_pallets_in_file(join(test_data_folder, 'pallet_order.py'))
+
+        self.assertEqual(pallets[0][1], 'PalletA')
+        self.assertEqual(pallets[1][1], 'PalletB')
+        self.assertEqual(pallets[2][1], 'PalletC')
+
 
 @patch('forklift.lift.process_crates_for')
 @patch('forklift.lift.process_pallets')

@@ -25,7 +25,7 @@ class Pallet(object):
     any post processing that needs to happen.
     '''
 
-    def __init__(self):
+    def __init__(self, arg=None):
         #: the logging module to keep track of the pallet
         self.log = logging.getLogger('forklift')
         #: the table names for all dependent data for an application

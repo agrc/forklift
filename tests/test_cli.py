@@ -159,6 +159,17 @@ class TestCliStartLift(unittest.TestCase):
         self.assertEqual(len(process_crates_for.call_args[0][0]), 4)
         self.assertEqual(len(process_pallets.call_args[0][0]), 4)
 
+    def test_lift_pallet_arg(self, process_pallets, process_crates_for):
+        cli.start_lift(join(test_data_folder, 'pallet_argument.py'), 'test')
+
+        pallet = process_crates_for.call_args[0][0][0]
+        self.assertEqual(pallet.arg, 'test')
+
+        cli.start_lift(join(test_data_folder, 'pallet_argument.py'))
+
+        pallet = process_crates_for.call_args[0][0][0]
+        self.assertEqual(pallet.arg, None)
+
 
 class TestCliGeneral(unittest.TestCase):
 

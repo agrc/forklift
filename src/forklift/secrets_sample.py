@@ -12,4 +12,4 @@ from_address = '<email address>'
 
 ags_username = '<arcgis admin username>'
 ags_password = '<arcgis admin password>'
-ags_server = '<arcgis base url>'
+ags_server_host = '<arcgis host address eg: http://ags_server_host:6080/arcgis>'

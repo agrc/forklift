@@ -72,10 +72,10 @@ def _create_destination_data(crate):
         else:
             raise Exception('destination_workspace does not exist! {}'.format(crate.destination_workspace))
     if _is_table(crate):
-        log.info('creating new table: %s', crate.destination)
+        log.warn('creating new table: %s', crate.destination)
         arcpy.CopyRows_management(crate.source, crate.destination)
     else:
-        log.info('creating new feature class: %s', crate.destination)
+        log.warn('creating new feature class: %s', crate.destination)
         arcpy.env.outputCoordinateSystem = crate.destination_coordinate_system
         arcpy.env.geographicTransformations = crate.geographic_transformation
 

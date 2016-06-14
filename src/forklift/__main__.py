@@ -35,9 +35,14 @@ import cli
 import logging.config
 import sys
 from docopt import docopt
+from os import makedirs
+from os.path import abspath
+from os.path import dirname
+from os.path import join
 
-
-detailed_formatter = logging.Formatter(fmt='%(levelname).4s %(asctime)s %(module)10s:%(lineno)5s %(message)s', datefmt='%m-%d %H:%M:%S')
+log_location = join(abspath(dirname(__file__)), '..', 'forklift-garage', 'forklift.log')
+detailed_formatter = logging.Formatter(fmt='%(levelname).4s %(asctime)s %(module)10s:%(lineno)5s %(message)s',
+                                       datefmt='%m-%d %H:%M:%S')
 
 
 def main():
@@ -91,7 +96,12 @@ def _setup_logging():
     log.logThreads = 0
     log.logProcesses = 0
 
-    file_handler = logging.handlers.TimedRotatingFileHandler('forklift.log', when='D', interval=1, backupCount=7)
+    try:
+        makedirs(dirname(log_location))
+    except:
+        pass
+
+    file_handler = logging.handlers.TimedRotatingFileHandler(log_location, when='D', interval=1, backupCount=7)
     file_handler.setFormatter(detailed_formatter)
     file_handler.setLevel('DEBUG')
 

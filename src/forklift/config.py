@@ -7,16 +7,25 @@ A module that contains logic for reading and writing the config file
 '''
 
 import logging
-from os.path import join, abspath, dirname, exists
+from os import makedirs
+from os.path import abspath
+from os.path import dirname
+from os.path import exists
+from os.path import join
 from json import dumps, loads
 
 
 log = logging.getLogger('forklift')
-config_location = join(abspath(dirname(__file__)), '..', 'config.json')
-default_warehouse_location = 'c:\\scheduled'
+config_location = join(abspath(dirname(__file__)), '..', 'forklift-garage', 'config.json')
+default_warehouse_location = 'c:\\scheduled\\warehouse'
 
 
 def create_default_config():
+    try:
+        makedirs(dirname(config_location))
+    except:
+        pass
+
     with open(config_location, 'w') as json_config_file:
         data = {
             'warehouse': default_warehouse_location,

@@ -37,10 +37,12 @@ forklift config set --key sendEmails --value False
 ```
 If the property is a list then the value is appended to the existing list.
 
-### Install
+### Install to First Successful Run
 1. Update `secrets.py` based on the [sample.](/src/forklift/secrets_sample.py).
 1. `pip install .\` from the directory containing `setup.py`.
-2. `forklift -h`
+2. `forklift config init`
+3. `forklift repos --add user/repo`
+4. `forklift lift`
 
 ### Development Usage
 1. Update `secrets.py` based on the [sample.](/src/forklift/secrets_sample.py).

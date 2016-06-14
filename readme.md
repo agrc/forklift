@@ -2,6 +2,9 @@
 ===================================
 A CLI tool for managing a plethora of scheduled task python scripts.
 
+> The first rule :tractor: is it does not work on any sabboth.   
+> The second rule of :tractor: your out of your element Donny.
+
 ### Usage
 The work that forklift does is defined by plugins called [Pallets](src/forklift/models.py). `Pallet` is a base class that allows the user to define a job for forklift to perform by creating a new class that inherits from `Pallet`. Each pallet can have zero or more [Crates](src/forklift/models.py). A `Crate` is a class that defines data that needs to be moved from one location to another (reprojecting to web mercator by default). Crates are created by calling the `add_crates` (or `add_crate`) methods within `__init__` on the pallet. For example:
 ```python

@@ -41,7 +41,8 @@ If the property is a list then the value is appended to the existing list.
 1. Update `secrets.py` based on the [sample.](/src/forklift/secrets_sample.py).
 1. `pip install .\` from the directory containing `setup.py`.
 2. `forklift config init`
-3. `forklift repos --add user/repo`
+4. `forklift config set --key copyDestinations --value c:\\MapData` - This is where you want your output placed.
+3. `forklift repos --add agrc/parcels` - The agrc/parcesls is the user/repo to scan for Pallets.
 4. `forklift lift`
 
 ### Development Usage

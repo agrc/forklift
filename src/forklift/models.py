@@ -32,13 +32,16 @@ class Pallet(object):
         self._crates = []
         #: the status of the pallet (successful: Bool, message: string)
         self.success = (True, None)
-        self.name = '{}:{}'.format(getsourcefile(self.__class__), self.__class__.__name__)
-        #: a list of folders that you want the destination data from the crates copied to
+        #: a list databases or folders that you want forklift to copy to `destinationDestinations`
         #: after a successful process & ship
         self.copy_data = []
+        #: a list of arcgis server services that should be shut down before copying data in `copy_data`
+        self.arcgis_services = []
         #: default output coordinate system and transformation
         self.destination_coordinate_system = SpatialReference(3857)
         self.geographic_transformation = 'NAD_1983_To_WGS_1984_5'
+        #: a unique name for this pallet
+        self.name = '{}:{}'.format(getsourcefile(self.__class__), self.__class__.__name__)
 
         self.send_email = send_email
 

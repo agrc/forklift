@@ -194,8 +194,9 @@ def _get_pallets_in_file(file_path):
 
     try:
         mod = import_module(name)
-    except:
+    except ImportError as e:
         # skip modules that fail to import
+        log.warn('%s failed to import: %s', name, e.message)
         return []
 
     for member in dir(mod):

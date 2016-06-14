@@ -48,6 +48,7 @@ detailed_formatter = logging.Formatter(fmt='%(levelname).4s %(asctime)s %(module
 def main():
     args = docopt(__doc__, version='1.0.0')
     _setup_logging()
+    _add_global_error_handler()
 
     if args['config']:
         if args['init']:
@@ -88,6 +89,23 @@ def main():
                 cli.start_lift(args['<file-path>'])
         else:
             cli.start_lift()
+
+
+def global_exception_handler(ex_cls, ex, tb):
+    import traceback
+
+    log = logging.getLogger('forklift')
+
+    last_traceback = (traceback.extract_tb(tb))[-1]
+    line_number = last_traceback[1]
+    file_name = last_traceback[0].split(".")[0]
+
+    log.error(('global error handler line: %s (%s)' % (line_number, file_name)))
+    log.error(traceback.format_exception(ex_cls, ex, tb))
+
+
+def _add_global_error_handler():
+    sys.excepthook = global_exception_handler
 
 
 def _setup_logging():

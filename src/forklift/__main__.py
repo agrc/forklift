@@ -5,6 +5,7 @@ forklift 🚜
 
 Usage:
     forklift config init
+    forklift config open
     forklift config set --key <key> --value <value>
     forklift config repos --add <repo>
     forklift config repos --remove <repo>
@@ -36,6 +37,7 @@ import logging.config
 import sys
 from docopt import docopt
 from os import makedirs
+from os import startfile
 from os.path import abspath
 from os.path import dirname
 from os.path import join
@@ -51,6 +53,9 @@ def main():
     _add_global_error_handler()
 
     if args['config']:
+        if args['open']:
+            startfile(cli.init())
+
         if args['init']:
             message = cli.init()
             print('config file: {}'.format(message))

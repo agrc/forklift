@@ -33,6 +33,7 @@ Interacting with forklift is done via the [command line interface](src/forklift/
 - `notify` A list of emails that will be sent the summary report each time `forklift lift` is run (assuming `sendEmails: true`).
 - `repositories` A list of repositories (`<owner>/<name>`) that will be cloned/updated into the warehouse folder.
 - `copyDestinations` A list of folders that you want any data defined in `Pallet.copy_data` to be copied to upon successful processing of the pallet.
+- `configuration` A string of configurations that are passed to build to allow a pallet to use different settings based on how forklift is being run. Defaults to `Production`
 
 Any of these properties can be set via the `config set` command like so:
 ```

@@ -50,8 +50,9 @@ def process_crates_for(pallets, update_def):
                 crate.set_result(processed_crates[crate.destination])
 
 
-def process_pallets(pallets):
+def process_pallets(pallets, configuration):
     '''pallets: [Pallet]
+    configuration: string. Production, Staging, Dev
 
     Loop over all pallets, check if data has changed and determine whether to call process.
     Finally, determine whether to call ship.

@@ -105,7 +105,7 @@ def start_lift(file_path=None, pallet_arg=None):
     log.info('process_crates time: %s', seat.format_time(clock() - start_process))
 
     start_process = clock()
-    lift.process_pallets(pallets)
+    lift.process_pallets(pallets, config.get_config_prop('configuration'))
     log.info('process_pallets time: %s', seat.format_time(clock() - start_process))
 
     start_copy = clock()

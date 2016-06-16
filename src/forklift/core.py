@@ -200,7 +200,7 @@ def _filter_fields(lst):
 
 
 def _is_naughty_field(fld):
-    return 'SHAPE' in fld.upper() or fld.upper() in ['GLOBAL_ID', 'GLOBALID']
+    return 'SHAPE' in fld.upper() or fld.upper() in ['GLOBAL_ID', 'GLOBALID', 'OBJECTID_1']
 
 
 def _has_changes(crate):
@@ -227,11 +227,12 @@ def _has_changes(crate):
 
     fields = [fld.name for fld in arcpy.ListFields(crate.destination)]
 
-    # filter out shape fields
+    # filter out shape fields and other problematic fields
+    fields = _filter_fields(fields)
+
     if is_table:
         output_sr = None
     else:
-        fields = _filter_fields(fields)
         shape_type = arcpy.Describe(crate.destination).shapeType
 
         if shape_type == 'Polygon':

@@ -20,10 +20,11 @@ from time import clock
 log = logging.getLogger('forklift')
 
 
-def process_crates_for(pallets, update_def):
+def process_crates_for(pallets, update_def, configuration='Production'):
     '''
     pallets: Pallet[]
     update_def: Function. core.update
+    configuration: string. Production, Staging, Dev
 
     Calls update_def on all crates (excluding duplicates) in pallets
     '''
@@ -34,6 +35,15 @@ def process_crates_for(pallets, update_def):
     for pallet in pallets:
         log.info('processing crates for pallet: %s', pallet.name)
         log.debug('%r', pallet)
+
+        try:
+            log.debug('building pallet: %s', pallet.name)
+            pallet.build(configuration)
+        except Exception as e:
+            pallet.success = (False, e.message)
+            log.error('error building pallet: %s for pallet: %r', e.message, pallet, exc_info=True)
+            continue
+
         for crate in pallet.get_crates():
             if crate.destination not in processed_crates:
                 log.info('crate: %s', crate.destination_name)
@@ -50,9 +60,8 @@ def process_crates_for(pallets, update_def):
                 crate.set_result(processed_crates[crate.destination])
 
 
-def process_pallets(pallets, configuration):
+def process_pallets(pallets):
     '''pallets: [Pallet]
-    configuration: string. Production, Staging, Dev
 
     Loop over all pallets, check if data has changed and determine whether to call process.
     Finally, determine whether to call ship.
@@ -62,12 +71,6 @@ def process_pallets(pallets, configuration):
 
     for pallet in pallets:
         if pallet.is_ready_to_ship():  #: checks for schema changes or errors
-            try:
-                pallet.build()
-            except Exception as e:
-                pallet.success = (False, e.message)
-                log.error('error building pallet: %s for pallet: %r', e.message, pallet, exc_info=True)
-
             if pallet.requires_processing() and pallet.success[0]:  #: checks for data that was updated
                 log.info('processing pallet: %s', pallet.name)
                 log.debug('%r', pallet)

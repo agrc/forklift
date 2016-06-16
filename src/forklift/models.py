@@ -45,6 +45,12 @@ class Pallet(object):
 
         self.send_email = send_email
 
+    def build(self, configuration='Production'):
+        '''Invoked before process and ship. Any logic that could cause a pallet to error
+        should be placed in here instead of the `__init__` method.
+        '''
+        return
+
     def process(self):
         '''Invoked if any crates have data updates.
         '''

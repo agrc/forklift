@@ -61,6 +61,12 @@ def process_pallets(pallets):
 
     for pallet in pallets:
         if pallet.is_ready_to_ship():  #: checks for schema changes or errors
+            try:
+                pallet.build()
+            except Exception as e:
+                pallet.success = (False, e.message)
+                log.error('error building pallet: %s for pallet: %r', e.message, pallet, exc_info=True)
+
             if pallet.requires_processing():  #: checks for data that was updated
                 log.info('processing pallet: %s', pallet.name)
                 log.debug('%r', pallet)

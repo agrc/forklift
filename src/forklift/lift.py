@@ -68,7 +68,7 @@ def process_pallets(pallets, configuration):
                 pallet.success = (False, e.message)
                 log.error('error building pallet: %s for pallet: %r', e.message, pallet, exc_info=True)
 
-            if pallet.requires_processing():  #: checks for data that was updated
+            if pallet.requires_processing() and pallet.success[0]:  #: checks for data that was updated
                 log.info('processing pallet: %s', pallet.name)
                 log.debug('%r', pallet)
                 start_seconds = clock()

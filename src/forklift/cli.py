@@ -91,10 +91,14 @@ def start_lift(file_path=None, pallet_arg=None):
         module_name = splitext(basename(info[0]))[0]
         class_name = info[1]
         PalletClass = getattr(__import__(module_name), class_name)
-        if pallet_arg is not None:
-            pallets.append(PalletClass(pallet_arg))
-        else:
-            pallets.append(PalletClass())
+
+        try:
+            if pallet_arg is not None:
+                pallets.append(PalletClass(pallet_arg))
+            else:
+                pallets.append(PalletClass())
+        except Exception as e:
+            log.error('error creating pallet class: %s. %s', class_name, e.message, exc_info=True)
 
     start_process = clock()
     lift.process_crates_for(pallets, core.update)

@@ -194,7 +194,7 @@ class Crate(object):
 
         env.workspace = temp
         #: the result of the core.update method being called on this crate
-        self.result = self.UNINITIALIZED
+        self.result = (self.UNINITIALIZED, None)
         #: optional definition of destination coordinate system to support reprojecting
         if destination_coordinate_system is not None and isinstance(destination_coordinate_system, int):
             destination_coordinate_system = SpatialReference(destination_coordinate_system)

@@ -62,6 +62,16 @@ class TestCrate(unittest.TestCase):
 
         self.assertEqual(x.destination_name, 'db_owner_name')
 
+    def test_crate_ctor_doesnt_alter_destination_name(self):
+        source_name = 'name'
+        source_workspace = 'does not matter'
+        destination_workspace = env.scratchGDB
+        destination_name = 'db.owner.name'
+
+        x = Crate(source_name, source_workspace, destination_workspace, destination_name)
+
+        self.assertEqual(x.destination_name, destination_name)
+
     def test_crate_ctor_prepends_T_if_name_starts_with_non_alpha(self):
         source_name = '123456789'
         source_workspace = 'does not matter'

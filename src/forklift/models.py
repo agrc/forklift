@@ -190,7 +190,7 @@ class Crate(object):
         env.workspace = destination_workspace
 
         #: the name of the output data table
-        self.destination_name = create_valid_table_name(destination_name or source_name)
+        self.destination_name = destination_name or create_valid_table_name(source_name)
 
         env.workspace = temp
         #: the result of the core.update method being called on this crate

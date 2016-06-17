@@ -56,6 +56,7 @@ class TestLift(unittest.TestCase):
     def test_process_pallets_all_ready_to_ship(self):
         ready_pallet = self.PalletMock()
         ready_pallet.is_ready_to_ship.return_value = True
+        ready_pallet.success = (True,)
 
         lift.process_pallets([ready_pallet, ready_pallet])
 
@@ -65,6 +66,7 @@ class TestLift(unittest.TestCase):
         requires_pallet = self.PalletMock()
         requires_pallet.is_ready_to_ship.return_value = True
         requires_pallet.requires_processing.return_value = True
+        requires_pallet.success = (True,)
 
         lift.process_pallets([requires_pallet, requires_pallet])
 
@@ -74,14 +76,17 @@ class TestLift(unittest.TestCase):
         pallet1 = Mock(Pallet)('one')
         pallet1.is_ready_to_ship = Mock(return_value=True)
         pallet1.requires_processing = Mock(return_value=False)
+        pallet1.success = (True,)
 
         pallet2 = Mock(Pallet)('two')
         pallet2.is_ready_to_ship = Mock(return_value=False)
         pallet2.requires_processing = Mock(return_value=False)
+        pallet2.success = (True,)
 
         pallet3 = Mock(Pallet)('three')
         pallet3.is_ready_to_ship = Mock(return_value=True)
         pallet3.requires_processing = Mock(return_value=True)
+        pallet3.success = (True,)
 
         lift.process_pallets([pallet1, pallet2, pallet3])
 
@@ -95,6 +100,7 @@ class TestLift(unittest.TestCase):
     def test_process_pallets_handles_process_exception(self):
         pallet = self.PalletMock()
         pallet.process.side_effect = Exception('process error')
+        pallet.success = (True,)
 
         lift.process_pallets([pallet])
 
@@ -103,6 +109,7 @@ class TestLift(unittest.TestCase):
     def test_process_pallets_handles_ship_exception(self):
         pallet = self.PalletMock()
         pallet.ship.side_effect = Exception('ship error')
+        pallet.success = (True,)
 
         lift.process_pallets([pallet])
 

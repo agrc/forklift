@@ -36,11 +36,12 @@ class TestConfigInit(unittest.TestCase):
 
         with open(path) as config:
             config_dict = loads(config.read())
-            self.assertEqual(config_dict, {u"warehouse": u"c:\\scheduled",
+            self.assertEqual(config_dict, {u"warehouse": u"c:\\scheduled\\warehouse",
                                            u"repositories": [],
                                            u"notify": [u"stdavis@utah.gov", u"sgourley@utah.gov"],
                                            u"sendEmails": False,
-                                           u"copyDestinations": []})
+                                           u"copyDestinations": [],
+                                           u"configuration": u"Production"})
 
     def test_init_returns_path_for_existing_config_file(self):
         self.assertEqual(cli.init(), cli.init())

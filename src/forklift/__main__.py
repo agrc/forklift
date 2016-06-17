@@ -21,6 +21,7 @@ Arguments:
 
 Examples:
     python -m forklift config init                               Creates the config file.
+    python -m forklift config open                               Opens the config file (config.json) with whatever program is associated with .json files on your machine.
     python -m forklift config set --key <key> --value <value>    Sets a key in the config with a value.
     python -m forklift config repos --add agrc/ugs-chemistry     Adds a path to the config. Checks for duplicates.
     python -m forklift config repos --remove agrc/ugs-chemistry  Removes a path from the config.

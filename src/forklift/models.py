@@ -113,7 +113,8 @@ class Pallet(object):
         '''Override to provide your own validation to determine whether the data within
         a create is ready to be updated.
 
-        This method should return a Boolean indicating if the crate is ready for an update.
+        This method should return `True` if the crate is ready for an update. Otherwise it
+        should raise `exceptions.ValidationException`.
         If this method is not overriden the default validate method within core is used.'''
         return NotImplemented
 

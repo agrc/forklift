@@ -51,6 +51,8 @@ class Pallet(object):
     def build(self, configuration='Production'):
         '''Invoked before process and ship. Any logic that could cause a pallet to error
         should be placed in here instead of the `__init__` method.
+
+        configuration: string `Production`, `Staging`, or `Dev`
         '''
         return
 

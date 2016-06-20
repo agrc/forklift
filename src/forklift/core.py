@@ -156,7 +156,8 @@ def check_schema(source_dataset, destination_dataset):
         field_dict = {}
 
         for field in arcpy.ListFields(dataset):
-            if not _is_naughty_field(field.name):
+            #: don't worry about comparing OBJECTID field
+            if not _is_naughty_field(field.name) and field.name != 'OBJECTID':
                 field_dict[field.name.upper()] = field
 
         return field_dict
@@ -214,7 +215,7 @@ def _filter_fields(lst):
 
 
 def _is_naughty_field(fld):
-    return 'SHAPE' in fld.upper() or fld.upper() in ['GLOBAL_ID', 'GLOBALID'] or fld.startswith('OBJECTID')
+    return 'SHAPE' in fld.upper() or fld.upper() in ['GLOBAL_ID', 'GLOBALID'] or fld.startswith('OBJECTID_')
 
 
 def _has_changes(crate):
@@ -282,7 +283,6 @@ def _has_changes(crate):
     if 'OBJECTID' in [f.name for f in arcpy.ListFields(crate.source)]:
         #: compare each feature based on sorting by OBJECTID if both tables have that field
         #: we assume that destination has it
-        fields.append('OBJECTID')
         sql_clause = (None, 'ORDER BY OBJECTID')
         source_has_oid = True
     else:

@@ -171,13 +171,15 @@ def check_schema(source_dataset, destination_dataset):
                                           .format(source_fld.name, source_fld.length, destination_fld.length))
 
     if len(missing_fields) > 0:
-        log.warn('Missing fields in %s: %s', source_dataset, ', '.join(missing_fields))
+        msg = 'Missing fields in {}: {}'.format(source_dataset, ', '.join(missing_fields))
+        log.warn(msg)
 
-        return False
+        raise ValidationException(msg)
     elif len(mismatching_fields) > 0:
-        log.warn('Mismatching fields in %s: %s', source_dataset, ', '.join(mismatching_fields))
+        msg = 'Mismatching fields in {}: {}'.format(source_dataset, ', '.join(mismatching_fields))
+        log.warn(msg)
 
-        return False
+        raise ValidationException(msg)
     else:
         return True
 

@@ -240,7 +240,7 @@ def _has_changes(crate):
 
     log.debug('destination feature count: %s source feature count: %s', destination_feature_count, source_feature_count)
     if destination_feature_count != source_feature_count:
-        log.info('feature count is different')
+        log.info('feature count is different. source: %d destination: %d', source_feature_count, destination_feature_count)
         return True
 
     fields = [fld.name for fld in arcpy.ListFields(crate.destination)]

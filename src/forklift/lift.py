@@ -11,6 +11,7 @@ import seat
 import shutil
 from arcgis import LightSwitch
 from arcpy import Compact_management, Describe
+from forklift.models import Crate
 from os import makedirs
 from os import path
 from os import remove
@@ -45,8 +46,12 @@ def process_crates_for(pallets, update_def, configuration='Production'):
             continue
 
         for crate in pallet.get_crates():
+            log.info('crate: %s', crate.destination_name)
+            if crate.result[0] == Crate.INVALID_DATA:
+                log.warn('result: %s', crate.result)
+                continue
+
             if crate.destination not in processed_crates:
-                log.info('crate: %s', crate.destination_name)
                 log.debug('%r', crate)
                 start_seconds = clock()
 
@@ -55,7 +60,7 @@ def process_crates_for(pallets, update_def, configuration='Production'):
                 log.debug('finished crate %s', seat.format_time(clock() - start_seconds))
                 log.info('result: %s', crate.result)
             else:
-                log.debug('skipping crate %r', crate)
+                log.info('skipping crate')
 
                 crate.set_result(processed_crates[crate.destination])
 

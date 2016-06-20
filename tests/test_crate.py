@@ -25,6 +25,14 @@ class TestCrate(unittest.TestCase):
         crate = Crate('sourceName', 'source', 'destination')
         self.assertEqual(crate.destination_name, crate.source_name)
 
+    def test_bad_destination_name(self):
+        crate = Crate('sourceName', 'source', 'destination_workspace', 'destination.Name')
+        self.assertEqual(crate.result, (Crate.INVALID_DATA, 'Validation error with destination_name: destination.Name != destination_Name'))
+
+    def test_good_destination_name(self):
+        crate = Crate('sourceName', 'source', 'destination_workspace', 'destinationName')
+        self.assertEqual(crate.result, (Crate.UNINITIALIZED, None))
+
     def test_set_result_with_valid_result_returns_result(self):
         crate = Crate('foo', 'bar', 'baz', 'goo')
 
@@ -53,15 +61,6 @@ class TestCrate(unittest.TestCase):
         self.assertEqual(crate.source_name, 'foo')
         self.assertEqual(crate.source, join('bar', 'foo'))
 
-    def test_crate_ctor_replaces_period_with___(self):
-        source_name = 'db.owner.name'
-        source_workspace = 'does not matter'
-        destination_workspace = env.scratchGDB
-
-        x = Crate(source_name, source_workspace, destination_workspace)
-
-        self.assertEqual(x.destination_name, 'db_owner_name')
-
     def test_crate_ctor_doesnt_alter_destination_name(self):
         source_name = 'name'
         source_workspace = 'does not matter'
@@ -71,31 +70,6 @@ class TestCrate(unittest.TestCase):
         x = Crate(source_name, source_workspace, destination_workspace, destination_name)
 
         self.assertEqual(x.destination_name, destination_name)
-
-    def test_crate_ctor_prepends_T_if_name_starts_with_non_alpha(self):
-        source_name = '123456789'
-        source_workspace = 'does not matter'
-        destination_workspace = env.scratchGDB
-
-        x = Crate(source_name, source_workspace, destination_workspace)
-        # : arcpy seems to put a T infront of this to make it valid?
-        self.assertEqual(x.destination_name, 'T' + source_name)
-
-        source_name = '*special_character'
-        x = Crate(source_name, source_workspace, destination_workspace)
-        self.assertEqual(x.destination_name, 'T_special_character')
-
-        source_name = '%special_character'
-        x = Crate(source_name, source_workspace, destination_workspace)
-        self.assertEqual(x.destination_name, 'T_special_character')
-
-    def test_crate_ctor_replaces_space_with___(self):
-        source_name = 'space in name'
-        source_workspace = 'does not matter'
-        destination_workspace = env.scratchGDB
-
-        x = Crate(source_name, source_workspace, destination_workspace)
-        self.assertEqual(x.destination_name, 'space_in_name')
 
     def test_init_with_coordinate_system_as_number_becomes_spatial_reference(self):
         crate = Crate('foo', 'bar', 'baz', 'qux', 26912)

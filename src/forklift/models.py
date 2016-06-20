@@ -186,16 +186,20 @@ class Crate(object):
         self.source_workspace = source_workspace
         #: the name of the destination database
         self.destination_workspace = destination_workspace
-
-        temp = env.workspace
-        env.workspace = destination_workspace
-
-        #: the name of the output data table
-        self.destination_name = destination_name or create_valid_table_name(source_name)
-
-        env.workspace = temp
         #: the result of the core.update method being called on this crate
         self.result = (self.UNINITIALIZED, None)
+        #: the name of the output data table
+        self.destination_name = destination_name or source_name
+
+        #: crate_valid_table_name using env.workspace for the rules
+        temp = env.workspace
+        env.workspace = destination_workspace
+        valid_destination_name = create_valid_table_name(self.destination_name)
+        env.workspace = temp
+
+        if valid_destination_name != self.destination_name:
+            self.result = (Crate.INVALID_DATA, 'Validation error with destination_name: {} != {}'.format(self.destination_name, valid_destination_name))
+
         #: optional definition of destination coordinate system to support reprojecting
         if destination_coordinate_system is not None and isinstance(destination_coordinate_system, int):
             destination_coordinate_system = SpatialReference(destination_coordinate_system)

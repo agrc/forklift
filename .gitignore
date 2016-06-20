@@ -41,7 +41,6 @@ htmlcov
 secrets.py
 
 *.lock
-src/forklift.log*
-src/config.json
+forklift.log*
 config.json
 *.log

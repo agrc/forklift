@@ -90,6 +90,7 @@ def start_lift(file_path=None, pallet_arg=None):
     for info in pallet_infos:
         module_name = splitext(basename(info[0]))[0]
         class_name = info[1]
+        log.debug('attempting to import %s from %s', info[1], info[0])
         PalletClass = getattr(__import__(module_name), class_name)
 
         try:

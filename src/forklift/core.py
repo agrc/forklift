@@ -200,7 +200,7 @@ def _filter_fields(lst):
 
 
 def _is_naughty_field(fld):
-    return 'SHAPE' in fld.upper() or fld.upper() in ['GLOBAL_ID', 'GLOBALID', 'OBJECTID_1']
+    return 'SHAPE' in fld.upper() or fld.upper() in ['GLOBAL_ID', 'GLOBALID']
 
 
 def _has_changes(crate):
@@ -259,12 +259,19 @@ def _has_changes(crate):
             else:
                 return shape_value
 
-        # support for reprojecting
+        #: support for reprojecting
         output_sr = arcpy.Describe(crate.destination).spatialReference
 
-    # compare each feature based on sorting by OBJECTID
-    with arcpy.da.SearchCursor(crate.destination, fields, sql_clause=(None, 'ORDER BY OBJECTID')) as f_cursor, \
-            arcpy.da.SearchCursor(crate.source, fields, sql_clause=(None, 'ORDER BY OBJECTID'),
+    if 'OBJECTID' in [f.name for f in arcpy.ListFields(crate.source)]:
+        #: compare each feature based on sorting by OBJECTID
+        sql_clause = (None, 'ORDER BY OBJECTID')
+        source_fields = fields
+    else:
+        sql_clause = None
+        source_fields = list(fields)
+        source_fields.remove('OBJECTID')
+    with arcpy.da.SearchCursor(crate.destination, fields, sql_clause=sql_clause) as f_cursor, \
+            arcpy.da.SearchCursor(crate.source, source_fields, sql_clause=sql_clause,
                                   spatial_reference=output_sr) as sde_cursor:
         for destination_row, source_row in izip(f_cursor, sde_cursor):
             if destination_row != source_row:

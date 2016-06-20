@@ -52,6 +52,10 @@ class CoreTests(unittest.TestCase):
     def run_has_changes(self, fc1, fc2):
         return core._has_changes(Crate(fc1, check_for_changes_gdb, check_for_changes_gdb, fc2))
 
+    def test_has_changes_no_OBJECTID_in_source(self):
+        tbl = 'NO_OBJECTID_TEST'
+        self.assertTrue(core._has_changes(Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, check_for_changes_gdb, tbl)))
+
     def test_update_no_existing_destination(self):
         core._create_destination_data = Mock()
 

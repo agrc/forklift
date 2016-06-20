@@ -8,10 +8,12 @@ A module that contains the model classes for forklift
 
 
 import logging
+import config
 from arcpy import env, SpatialReference, ValidateTableName as create_valid_table_name
 from inspect import getsourcefile
 from messaging import send_email
 from pprint import PrettyPrinter
+from os.path import dirname
 from os.path import join
 
 
@@ -42,7 +44,8 @@ class Pallet(object):
         self.geographic_transformation = 'NAD_1983_To_WGS_1984_5'
         #: a unique name for this pallet
         self.name = '{}:{}'.format(getsourcefile(self.__class__), self.__class__.__name__)
-
+        #: the location of the garage containing logs and sde connection files etc
+        self.garage = dirname(config.config_location)
         self.send_email = send_email
 
     def build(self, configuration='Production'):

@@ -122,11 +122,22 @@ def _move_data(crate):
         fields.append('SHAPE@')
         output_sr = arcpy.Describe(crate.destination).spatialReference
 
+    if 'OBJECTID' in [f.name for f in arcpy.ListFields(crate.source)]:
+        sql_clause = (None, 'ORDER BY OBJECTID')
+        source_has_oid = True
+    else:
+        sql_clause = None
+        fields = '*'
+        source_has_oid = False
     with arcpy.da.InsertCursor(crate.destination, fields) as icursor, \
-        arcpy.da.SearchCursor(crate.source, fields, sql_clause=(None, 'ORDER BY OBJECTID'),
+        arcpy.da.SearchCursor(crate.source, fields, sql_clause=sql_clause,
                               spatial_reference=output_sr) as cursor:
         for row in cursor:
-            icursor.insertRow(row)
+            if source_has_oid:
+                icursor.insertRow(row)
+            else:
+                #: pass a zero as object id (it gets auto generated anyway)
+                icursor.insertRow((0,) + row)
 
     edit_session.stopOperation()
     edit_session.stopEditing(True)
@@ -150,6 +161,7 @@ def check_schema(source_dataset, destination_dataset):
 
         return field_dict
 
+    log.info('checking schema...')
     missing_fields = []
     mismatching_fields = []
     source_fields = get_fields(source_dataset)
@@ -202,7 +214,7 @@ def _filter_fields(lst):
 
 
 def _is_naughty_field(fld):
-    return 'SHAPE' in fld.upper() or fld.upper() in ['GLOBAL_ID', 'GLOBALID']
+    return 'SHAPE' in fld.upper() or fld.upper() in ['GLOBAL_ID', 'GLOBALID'] or fld.startswith('OBJECTID')
 
 
 def _has_changes(crate):
@@ -217,6 +229,8 @@ def _has_changes(crate):
     returns: Boolean
         False if there are no changes
     '''
+    log.info('checking for changes...')
+
     is_table = _is_table(crate)
 
     # try simple feature count first
@@ -225,6 +239,7 @@ def _has_changes(crate):
 
     log.debug('destination feature count: %s source feature count: %s', destination_feature_count, source_feature_count)
     if destination_feature_count != source_feature_count:
+        log.info('feature count is different')
         return True
 
     fields = [fld.name for fld in arcpy.ListFields(crate.destination)]
@@ -265,15 +280,17 @@ def _has_changes(crate):
         output_sr = arcpy.Describe(crate.destination).spatialReference
 
     if 'OBJECTID' in [f.name for f in arcpy.ListFields(crate.source)]:
-        #: compare each feature based on sorting by OBJECTID
+        #: compare each feature based on sorting by OBJECTID if both tables have that field
+        #: we assume that destination has it
+        fields.append('OBJECTID')
         sql_clause = (None, 'ORDER BY OBJECTID')
-        source_fields = fields
+        source_has_oid = True
     else:
         sql_clause = None
-        source_fields = list(fields)
-        source_fields.remove('OBJECTID')
+        fields = '*'
+        source_has_oid = False
     with arcpy.da.SearchCursor(crate.destination, fields, sql_clause=sql_clause) as f_cursor, \
-            arcpy.da.SearchCursor(crate.source, source_fields, sql_clause=sql_clause,
+            arcpy.da.SearchCursor(crate.source, fields, sql_clause=sql_clause,
                                   spatial_reference=output_sr) as sde_cursor:
         for destination_row, source_row in izip(f_cursor, sde_cursor):
             if destination_row != source_row:
@@ -281,6 +298,7 @@ def _has_changes(crate):
                 if destination_row[-1] != source_row[-1] and not is_table:
                     if shape_type not in ['Polygon', 'Polyline', 'Point']:
                         #: for complex types always return true for now
+                        log.info('complex type = always changes for now')
                         return True
                     destination_shape = parse_shape(destination_row[-1])
                     source_shape = parse_shape(source_row[-1])
@@ -290,6 +308,8 @@ def _has_changes(crate):
                         destination_row = list(destination_row[:-1])
                         source_row = list(source_row[:-1])
                     except AssertionError:
+                        log.info('changes found in a shape comparison')
+                        log.debug('source shape: %s, destination shape: %s', source_row[:-1], destination_row[:-1])
                         return True
 
                 # trim microseconds since they can be off by one between file and sde databases
@@ -303,10 +323,18 @@ def _has_changes(crate):
                         except:
                             pass
 
-                # compare all values except OBJECTID
-                if destination_row[1:] != source_row[1:]:
+                if source_has_oid:
+                    # compare all values except OBJECTID
+                    start_field_index = 1
+                else:
+                    start_field_index = 0
+
+                if destination_row[1:] != source_row[start_field_index:]:
+                    log.info('changes found in non-shape field comparison')
+                    log.debug('source row: %s, destination row: %s', source_row, destination_row)
                     return True
 
+    log.info('no changes found')
     return False
 
 

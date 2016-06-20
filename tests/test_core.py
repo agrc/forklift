@@ -16,7 +16,6 @@ from os import path
 from nose import SkipTest
 from mock import Mock
 from mock import patch
-from nose.tools import raises
 
 current_folder = path.dirname(path.abspath(__file__))
 check_for_changes_gdb = path.join(current_folder, 'data', 'checkForChanges.gdb')
@@ -54,7 +53,12 @@ class CoreTests(unittest.TestCase):
 
     def test_has_changes_no_OBJECTID_in_source(self):
         tbl = 'NO_OBJECTID_TEST'
+
+        #: has changes
         self.assertTrue(core._has_changes(Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, check_for_changes_gdb, tbl)))
+
+        #: no changes
+        self.assertFalse(core._has_changes(Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, check_for_changes_gdb, '{}_NO_CHANGES'.format(tbl))))
 
     def test_update_no_existing_destination(self):
         core._create_destination_data = Mock()
@@ -132,8 +136,8 @@ class CoreTests(unittest.TestCase):
     def test_schema_changes(self):
         arcpy.Copy_management(check_for_changes_gdb, test_gdb)
 
-        result = core.check_schema(path.join(test_gdb, 'ZipCodes'), path.join(check_for_changes_gdb, 'FieldLength'))
-        self.assertEqual(result, False)
+        with self.assertRaises(ValidationException):
+            core.check_schema(path.join(test_gdb, 'ZipCodes'), path.join(check_for_changes_gdb, 'FieldLength'))
 
         result = core.check_schema(path.join(test_gdb, 'ZipCodes'), path.join(check_for_changes_gdb, 'ZipCodes'))
         self.assertEqual(result, True)
@@ -166,14 +170,11 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(int(arcpy.GetCount_management(crate.destination).getOutput(0)), 5)
 
     def test_check_schema_match(self):
-        self.assertEqual(
-            core.check_schema(
-                path.join(check_for_changes_gdb, 'FieldLength'), path.join(check_for_changes_gdb, 'FieldLength2')),
-            False)
+        with self.assertRaises(ValidationException):
+            core.check_schema(path.join(check_for_changes_gdb, 'FieldLength'), path.join(check_for_changes_gdb, 'FieldLength2'))
 
-        self.assertEqual(
-            core.check_schema(
-                path.join(check_for_changes_gdb, 'FieldType'), path.join(check_for_changes_gdb, 'FieldType2')), False)
+        with self.assertRaises(ValidationException):
+            core.check_schema(path.join(check_for_changes_gdb, 'FieldType'), path.join(check_for_changes_gdb, 'FieldType2'))
 
         self.assertEqual(
             core.check_schema(
@@ -214,12 +215,12 @@ class CoreTests(unittest.TestCase):
 
         create_mock.assert_called_once()
 
-    @raises(Exception)
     def test_create_destination_data_raises(self):
         #: non-file geodatabase
         crate = Crate('DNROilGasWells', check_for_changes_gdb, test_folder, 'test.shp')
 
-        self.assertRaises(core._create_destination_data, crate)
+        with self.assertRaises(Exception):
+            core._create_destination_data(crate)
 
     @patch('arcpy.da.Walk')
     def test_try_to_find_data_source_by_name_returns_and_updates_feature_name(self, walk):

@@ -45,7 +45,7 @@ def update(crate, validate_crate):
         try:
             has_custom = validate_crate(crate)
             if has_custom == NotImplemented:
-                check_schema(crate.source, crate.destination)
+                check_schema(crate)
         except ValidationException as e:
             log.warn('validation error: %s for crate %r',
                      e.message,
@@ -144,12 +144,11 @@ def _move_data(crate):
     log.debug('edit session stopped')
 
 
-def check_schema(source_dataset, destination_dataset):
+def check_schema(crate):
     '''
-    source_dataset: String
-    destination_dataset: String
+    crate: Crate
 
-    returns: Boolean - True if the schemas match
+    returns: Boolean - True if the schemas match, raises ValidationException if no match
     '''
 
     def get_fields(dataset):
@@ -162,11 +161,17 @@ def check_schema(source_dataset, destination_dataset):
 
         return field_dict
 
+    def abstract_type(type):
+        if type in ['Double', 'Integer', 'Single', 'SmallInteger']:
+            return 'Numeric'
+        else:
+            return type
+
     log.info('checking schema...')
     missing_fields = []
     mismatching_fields = []
-    source_fields = get_fields(source_dataset)
-    destination_fields = get_fields(destination_dataset)
+    source_fields = get_fields(crate.source)
+    destination_fields = get_fields(crate.destination)
 
     for field_key in destination_fields.keys():
         # make sure that all fields from destination are in source
@@ -176,7 +181,7 @@ def check_schema(source_dataset, destination_dataset):
             missing_fields.append(destination_fld.name)
         else:
             source_fld = source_fields[field_key]
-            if source_fld.type != destination_fld.type:
+            if abstract_type(source_fld.type) != abstract_type(destination_fld.type):
                 mismatching_fields.append('{}: source type of {} does not match destination type of {}'
                                           .format(source_fld.name, source_fld.type, destination_fld.type))
             elif source_fld.type == 'String' and source_fld.length != destination_fld.length:
@@ -184,12 +189,12 @@ def check_schema(source_dataset, destination_dataset):
                                           .format(source_fld.name, source_fld.length, destination_fld.length))
 
     if len(missing_fields) > 0:
-        msg = 'Missing fields in {}: {}'.format(source_dataset, ', '.join(missing_fields))
+        msg = 'Missing fields in {}: {}'.format(crate.source, ', '.join(missing_fields))
         log.warn(msg)
 
         raise ValidationException(msg)
     elif len(mismatching_fields) > 0:
-        msg = 'Mismatching fields in {}: {}'.format(source_dataset, ', '.join(mismatching_fields))
+        msg = 'Mismatching fields in {}: {}'.format(crate.source, ', '.join(mismatching_fields))
         log.warn(msg)
 
         raise ValidationException(msg)
@@ -221,11 +226,6 @@ def _is_naughty_field(fld):
 def _has_changes(crate):
     '''
     crate: Crate
-    f: String
-        The name of the fgdb feature class
-    sde: String
-        The name of the sde feature class
-    is_table: Boolean
 
     returns: Boolean
         False if there are no changes

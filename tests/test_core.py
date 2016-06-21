@@ -137,18 +137,32 @@ class CoreTests(unittest.TestCase):
         arcpy.Copy_management(check_for_changes_gdb, test_gdb)
 
         with self.assertRaises(ValidationException):
-            core.check_schema(path.join(test_gdb, 'ZipCodes'), path.join(check_for_changes_gdb, 'FieldLength'))
+            core.check_schema(Crate('ZipCodes', test_gdb, check_for_changes_gdb, 'FieldLength'))
 
-        result = core.check_schema(path.join(test_gdb, 'ZipCodes'), path.join(check_for_changes_gdb, 'ZipCodes'))
+        result = core.check_schema(Crate('ZipCodes', test_gdb, check_for_changes_gdb, 'ZipCodes'))
         self.assertEqual(result, True)
+
+        result = core.check_schema(Crate('FieldTypeFloat', test_gdb, update_tests_sde, 'FieldTypeFloat'))
+        self.assertEqual(result, True)
+
 
     def test_check_schema_ignore_length_for_all_except_text(self):
         self.check_for_local_sde()
 
         # only worry about length on text fields
-        result = core.check_schema(
-            path.join(update_tests_sde, r'UPDATE_TESTS.DBO.Hello\UPDATE_TESTS.DBO.DNROilGasWells'),
-            path.join(check_for_changes_gdb, 'DNROilGasWells'))
+        result = core.check_schema(Crate(r'UPDATE_TESTS.DBO.Hello\UPDATE_TESTS.DBO.DNROilGasWells',
+                                         update_tests_sde,
+                                         check_for_changes_gdb,
+                                         'DNROilGasWells'))
+        self.assertEqual(result, True)
+
+    def test_check_schema_no_objectid_in_source(self):
+        self.check_for_local_sde()
+
+        result = core.check_schema(Crate('UPDATE_TESTS.dbo.NO_OBJECTID_TEST',
+                                         update_tests_sde,
+                                         check_for_changes_gdb,
+                                         r'NO_OBJECTID_TEST'))
         self.assertEqual(result, True)
 
     def test_move_data_table(self):
@@ -171,14 +185,23 @@ class CoreTests(unittest.TestCase):
 
     def test_check_schema_match(self):
         with self.assertRaises(ValidationException):
-            core.check_schema(path.join(check_for_changes_gdb, 'FieldLength'), path.join(check_for_changes_gdb, 'FieldLength2'))
+            core.check_schema(Crate('FieldLength', check_for_changes_gdb, check_for_changes_gdb, 'FieldLength2'))
 
         with self.assertRaises(ValidationException):
-            core.check_schema(path.join(check_for_changes_gdb, 'FieldType'), path.join(check_for_changes_gdb, 'FieldType2'))
+            core.check_schema(Crate('FieldType', check_for_changes_gdb, check_for_changes_gdb, 'FieldType2'))
 
-        self.assertEqual(
-            core.check_schema(
-                path.join(check_for_changes_gdb, 'ZipCodes'), path.join(check_for_changes_gdb2, 'ZipCodes')), True)
+        self.assertEqual(core.check_schema(Crate('ZipCodes', check_for_changes_gdb, check_for_changes_gdb2, 'ZipCodes')), True)
+
+    def test_move_data_no_objectid(self):
+        self.check_for_local_sde()
+        arcpy.Copy_management(check_for_changes_gdb, test_gdb)
+
+        crate = Crate('NO_OBJECTID_TEST', update_tests_sde, test_gdb)
+        core._move_data(crate)
+
+        with arcpy.da.SearchCursor(crate.destination, '*') as cur:
+            row = cur.next()
+            self.assertEqual('this is   ', row[1])
 
     def test_create_destination_data_feature_class(self):
         arcpy.CreateFileGDB_management(path.join(current_folder, 'data'), 'test.gdb')

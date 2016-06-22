@@ -36,7 +36,7 @@ def create_default_config():
             'configuration': 'Production'
         }
 
-        json_config_file.write(dumps(data))
+        json_config_file.write(dumps(data, sort_keys=True, indent=2, separators=(',', ': ')))
 
         return abspath(json_config_file.name)
 
@@ -78,6 +78,6 @@ def set_config_prop(key, value, override=False):
         config[key] = value
 
     with open(config_location, 'w') as json_config_file:
-        json_config_file.write(dumps(config))
+        json_config_file.write(dumps(config, sort_keys=True, indent=2, separators=(',', ': ')))
 
     return 'Added {} to {}'.format(value, key)

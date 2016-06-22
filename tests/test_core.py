@@ -44,7 +44,7 @@ class CoreTests(unittest.TestCase):
         delete_if_exists(test_gdb)
         delete_if_exists(test_folder)
 
-    def check_for_local_sde(self):
+    def skip_if_no_local_sde(self):
         if not arcpy.Exists(path.join(update_tests_sde, 'ZipCodes')):
             raise SkipTest('No test SDE dectected, skipping test')
 
@@ -52,6 +52,8 @@ class CoreTests(unittest.TestCase):
         return core._has_changes(Crate(fc1, check_for_changes_gdb, check_for_changes_gdb, fc2))
 
     def test_has_changes_no_OBJECTID_in_source(self):
+        self.skip_if_no_local_sde()
+
         tbl = 'NO_OBJECTID_TEST'
 
         #: has changes
@@ -142,11 +144,14 @@ class CoreTests(unittest.TestCase):
         result = core.check_schema(Crate('ZipCodes', test_gdb, check_for_changes_gdb, 'ZipCodes'))
         self.assertEqual(result, True)
 
+    def test_schema_changes_in_sde(self, arg):
+        self.skip_if_no_local_sde()
+
         result = core.check_schema(Crate('FieldTypeFloat', test_gdb, update_tests_sde, 'FieldTypeFloat'))
         self.assertEqual(result, True)
 
     def test_check_schema_ignore_length_for_all_except_text(self):
-        self.check_for_local_sde()
+        self.skip_if_no_local_sde()
 
         # only worry about length on text fields
         result = core.check_schema(Crate(r'UPDATE_TESTS.DBO.Hello\UPDATE_TESTS.DBO.DNROilGasWells',
@@ -156,7 +161,7 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(result, True)
 
     def test_check_schema_no_objectid_in_source(self):
-        self.check_for_local_sde()
+        self.skip_if_no_local_sde()
 
         result = core.check_schema(Crate('UPDATE_TESTS.dbo.NO_OBJECTID_TEST',
                                          update_tests_sde,
@@ -165,7 +170,7 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(result, True)
 
     def test_move_data_table(self):
-        self.check_for_local_sde()
+        self.skip_if_no_local_sde()
         arcpy.Copy_management(check_for_changes_gdb, test_gdb)
 
         crate = Crate('Providers', update_tests_sde, test_gdb)  #: table
@@ -174,7 +179,7 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(int(arcpy.GetCount_management(crate.destination).getOutput(0)), 57)
 
     def test_move_data_feature_class(self):
-        self.check_for_local_sde()
+        self.skip_if_no_local_sde()
         arcpy.Copy_management(check_for_changes_gdb, test_gdb)
 
         crate = Crate('DNROilGasWells', update_tests_sde, test_gdb)  #: feature class
@@ -192,7 +197,7 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(core.check_schema(Crate('ZipCodes', check_for_changes_gdb, check_for_changes_gdb2, 'ZipCodes')), True)
 
     def test_move_data_no_objectid(self):
-        self.check_for_local_sde()
+        self.skip_if_no_local_sde()
         arcpy.Copy_management(check_for_changes_gdb, test_gdb)
 
         crate = Crate('NO_OBJECTID_TEST', update_tests_sde, test_gdb)

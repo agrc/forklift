@@ -145,7 +145,6 @@ class CoreTests(unittest.TestCase):
         result = core.check_schema(Crate('FieldTypeFloat', test_gdb, update_tests_sde, 'FieldTypeFloat'))
         self.assertEqual(result, True)
 
-
     def test_check_schema_ignore_length_for_all_except_text(self):
         self.check_for_local_sde()
 

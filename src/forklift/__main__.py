@@ -5,11 +5,11 @@ forklift 🚜
 
 Usage:
     forklift config init
-    forklift config open
     forklift config set --key <key> --value <value>
     forklift config repos --add <repo>
     forklift config repos --remove <repo>
     forklift config repos --list
+    forklift garage open
     forklift list-pallets
     forklift git-update
     forklift lift [<file-path>] [--pallet-arg <arg>]
@@ -21,11 +21,11 @@ Arguments:
 
 Examples:
     python -m forklift config init                               Creates the config file.
-    python -m forklift config open                               Opens the config file with whatever program is associated with .json files on your machine.
     python -m forklift config set --key <key> --value <value>    Sets a key in the config with a value.
     python -m forklift config repos --add agrc/ugs-chemistry     Adds a path to the config. Checks for duplicates.
     python -m forklift config repos --remove agrc/ugs-chemistry  Removes a path from the config.
     python -m forklift config repos --list                       Outputs the list of pallet folder paths in your config file.
+    python -m forklift garage open                               Opens the garage folder with explorer.
     python -m forklift list-pallets                              Outputs the list of pallets from the config.
     python -m forklift git-update                                Pulls the latest updates to all git repositories.
     python -m forklift lift                                      The main entry for running all of pallets found in the warehouse folder.
@@ -54,10 +54,10 @@ def main():
     _setup_logging()
     _add_global_error_handler()
 
-    if args['config']:
-        if args['open']:
-            startfile(cli.init())
+    if args['garage'] and args['open']:
+        startfile(dirname(cli.init()))
 
+    if args['config']:
         if args['init']:
             message = cli.init()
             print('config file: {}'.format(message))

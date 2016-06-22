@@ -33,6 +33,7 @@ Examples:
     python -m forklift lift path/to/file --pallet-arg arg        Run a specific pallet with "arg" as an initialization parameter.
 '''
 
+import config
 import cli
 import logging.config
 import sys
@@ -71,7 +72,7 @@ def main():
             print(message)
 
         if args['set'] and args['<key>'] and args['<value>']:
-            message = cli.set_config_prop(args['<key>'], args['<value>'])
+            message = config.set_config_prop(args['<key>'], args['<value>'])
             print(message)
 
         if args['repos'] and args['--list']:

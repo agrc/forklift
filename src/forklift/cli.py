@@ -150,7 +150,13 @@ def git_update():
             log.info('git updating: {}'.format(repo_name))
             repo = _get_repo(folder)
             origin = repo.remotes[0]
-            origin.pull()
+            fetch_infos = origin.pull()
+
+            if len(fetch_infos) > 0:
+                if fetch_infos[0].flags == 4:
+                    log.debug('no updates to pallet')
+                elif fetch_infos[0].flags in [32, 64]:
+                    log.info('updated to %s', fetch_infos[0].commit.name_rev)
 
 
 def _get_repo(folder):

@@ -132,7 +132,7 @@ def _send_report_email(report_object):
     message = MIMEMultipart()
     message.attach(MIMEText(email_content, 'html'))
 
-    log_file = 'forklift.log'
+    log_file = join(dirname(config.config_location), 'forklift.log')
     if isfile(log_file):
         message.attach(MIMEText(file(log_file).read()))
 

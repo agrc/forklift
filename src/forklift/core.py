@@ -186,9 +186,15 @@ def check_schema(crate):
                 mismatching_fields.append('{}: source type of {} does not match destination type of {}'
                                           .format(source_fld.name, source_fld.type, destination_fld.type))
             elif source_fld.type == 'String':
-                if source_fld.length > 4000:
-                    log.warn('%s is longer than 4000 characters. Truncation may occur.', source_fld.name)
-                    source_fld.length = 4000
+                def truncate_field_length(field):
+                    if field.length > 4000:
+                        log.warn('%s is longer than 4000 characters. Truncation may occur.', field.name)
+                        return 4000
+                    else:
+                        return field.length
+
+                source_fld.length = truncate_field_length(source_fld)
+                destination_fld.length = truncate_field_length(destination_fld)
                 if source_fld.length != destination_fld.length:
                     mismatching_fields.append('{}: source length of {} does not match destination length of {}'
                                               .format(source_fld.name, source_fld.length, destination_fld.length))

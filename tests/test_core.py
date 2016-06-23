@@ -144,8 +144,9 @@ class CoreTests(unittest.TestCase):
         result = core.check_schema(Crate('ZipCodes', test_gdb, check_for_changes_gdb, 'ZipCodes'))
         self.assertEqual(result, True)
 
-    def test_schema_changes_in_sde(self, arg):
+    def test_schema_changes_in_sde(self):
         self.skip_if_no_local_sde()
+        arcpy.Copy_management(check_for_changes_gdb, test_gdb)
 
         result = core.check_schema(Crate('FieldTypeFloat', test_gdb, update_tests_sde, 'FieldTypeFloat'))
         self.assertEqual(result, True)

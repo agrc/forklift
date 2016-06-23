@@ -184,9 +184,13 @@ def check_schema(crate):
             if abstract_type(source_fld.type) != abstract_type(destination_fld.type):
                 mismatching_fields.append('{}: source type of {} does not match destination type of {}'
                                           .format(source_fld.name, source_fld.type, destination_fld.type))
-            elif source_fld.type == 'String' and source_fld.length != destination_fld.length:
-                mismatching_fields.append('{}: source length of {} does not match destination length of {}'
-                                          .format(source_fld.name, source_fld.length, destination_fld.length))
+            elif source_fld.type == 'String':
+                if source_fld.length > 4000:
+                    log.warn('%s is longer than 4000 characters. Truncation may occur.', source_fld.name)
+                    source_fld.length = 4000
+                if source_fld.length != destination_fld.length:
+                    mismatching_fields.append('{}: source length of {} does not match destination length of {}'
+                                              .format(source_fld.name, source_fld.length, destination_fld.length))
 
     if len(missing_fields) > 0:
         msg = 'Missing fields in {}: {}'.format(crate.source, ', '.join(missing_fields))

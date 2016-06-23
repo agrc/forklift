@@ -129,11 +129,12 @@ def _move_data(crate):
         sql_clause = None
         fields = '*'
         source_has_oid = False
+        destination_has_oid = 'OBJECTID' in [f.name for f in arcpy.ListFields(crate.destination)]
     with arcpy.da.InsertCursor(crate.destination, fields) as icursor, \
         arcpy.da.SearchCursor(crate.source, fields, sql_clause=sql_clause,
                               spatial_reference=output_sr) as cursor:
         for row in cursor:
-            if source_has_oid:
+            if source_has_oid or not destination_has_oid:
                 icursor.insertRow(row)
             else:
                 #: pass a zero as object id (it gets auto generated anyway)

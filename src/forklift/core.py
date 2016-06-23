@@ -113,7 +113,7 @@ def _move_data(crate):
     edit_session.startEditing(False, False)
     edit_session.startOperation()
 
-    fields = [fld.name for fld in arcpy.ListFields(crate.destination)]
+    fields = set([fld.name for fld in arcpy.ListFields(crate.destination)]) & set([fld.name for fld in arcpy.ListFields(crate.source)])
     fields = _filter_fields(fields)
 
     if is_table:
@@ -122,23 +122,15 @@ def _move_data(crate):
         fields.append('SHAPE@')
         output_sr = arcpy.Describe(crate.destination).spatialReference
 
-    if 'OBJECTID' in [f.name for f in arcpy.ListFields(crate.source)]:
+    if 'OBJECTID' in [f.name for f in arcpy.ListFields(crate.source)] and 'OBJECTID' in [f.name for f in arcpy.ListFields(crate.destination)]:
         sql_clause = (None, 'ORDER BY OBJECTID')
-        source_has_oid = True
     else:
         sql_clause = None
-        fields = '*'
-        source_has_oid = False
-        destination_has_oid = 'OBJECTID' in [f.name for f in arcpy.ListFields(crate.destination)]
     with arcpy.da.InsertCursor(crate.destination, fields) as icursor, \
         arcpy.da.SearchCursor(crate.source, fields, sql_clause=sql_clause,
                               spatial_reference=output_sr) as cursor:
         for row in cursor:
-            if source_has_oid or not destination_has_oid:
-                icursor.insertRow(row)
-            else:
-                #: pass a zero as object id (it gets auto generated anyway)
-                icursor.insertRow((0,) + row)
+            icursor.insertRow(row)
 
     edit_session.stopOperation()
     edit_session.stopEditing(True)
@@ -224,7 +216,9 @@ def _filter_fields(lst):
 
     new_fields = []
     for fld in lst:
-        if not _is_naughty_field(fld):
+        if fld == 'OBJECTID':
+            new_fields.append('OID@')
+        elif not _is_naughty_field(fld):
             new_fields.append(fld)
 
     return new_fields
@@ -254,7 +248,7 @@ def _has_changes(crate):
         log.info('feature count is different. source: %d destination: %d', source_feature_count, destination_feature_count)
         return True
 
-    fields = [fld.name for fld in arcpy.ListFields(crate.destination)]
+    fields = set([fld.name for fld in arcpy.ListFields(crate.destination)]) & set([fld.name for fld in arcpy.ListFields(crate.source)])
 
     # filter out shape fields and other problematic fields
     fields = _filter_fields(fields)
@@ -291,15 +285,11 @@ def _has_changes(crate):
         #: support for reprojecting
         output_sr = arcpy.Describe(crate.destination).spatialReference
 
-    if 'OBJECTID' in [f.name for f in arcpy.ListFields(crate.source)]:
+    if 'OBJECTID' in [f.name for f in arcpy.ListFields(crate.source)] and 'OBJECTID' in [f.name for f in arcpy.ListFields(crate.destination)]:
         #: compare each feature based on sorting by OBJECTID if both tables have that field
-        #: we assume that destination has it
         sql_clause = (None, 'ORDER BY OBJECTID')
-        source_has_oid = True
     else:
         sql_clause = None
-        fields = '*'
-        source_has_oid = False
     with arcpy.da.SearchCursor(crate.destination, fields, sql_clause=sql_clause) as f_cursor, \
             arcpy.da.SearchCursor(crate.source, fields, sql_clause=sql_clause,
                                   spatial_reference=output_sr) as sde_cursor:
@@ -320,7 +310,7 @@ def _has_changes(crate):
                         source_row = list(source_row[:-1])
                     except AssertionError:
                         log.info('changes found in a shape comparison')
-                        log.debug('source shape: %s, destination shape: %s', source_row[:-1], destination_row[:-1])
+                        log.debug('source shape: %s, destination shape: %s', source_row[-1], destination_row[-1])
                         return True
 
                 # trim microseconds since they can be off by one between file and sde databases
@@ -334,15 +324,15 @@ def _has_changes(crate):
                         except:
                             pass
 
-                if source_has_oid:
+                if fields[0] == 'OID@':
                     # compare all values except OBJECTID
                     start_field_index = 1
                 else:
                     start_field_index = 0
 
-                if destination_row[1:] != source_row[start_field_index:]:
+                if destination_row[start_field_index:] != source_row[start_field_index:]:
                     log.info('changes found in non-shape field comparison')
-                    log.debug('source row: %s, destination row: %s', source_row, destination_row)
+                    log.debug('source row: %s, destination row: %s', source_row[start_field_index:], destination_row[start_field_index:])
                     return True
 
     log.info('no changes found')

@@ -201,6 +201,7 @@ class TestGitUpdate(unittest.TestCase):
     def test_git_update(self, _validate_repo_mock, _get_repo_mock, clone_from_mock):
         remote_mock = Mock()
         remote_mock.pull = Mock()
+        remote_mock.pull.return_value = []
         repo_mock = Mock()
         repo_mock.remotes = [remote_mock]
         _get_repo_mock.return_value = repo_mock

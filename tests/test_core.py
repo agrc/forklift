@@ -89,7 +89,8 @@ class CoreTests(unittest.TestCase):
     @patch('arcpy.Exists')
     def test_update_error(self, arcpy_exists):
         arcpy_exists.return_value = True
-        core._has_changes = Mock(side_effect=Exception('error'))
+        core._has_changes = Mock(side_effect=Exception())
+        core._move_data = Mock(side_effect=Exception('error'))
 
         crate = Crate('', '', '')
 

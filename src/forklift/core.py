@@ -56,6 +56,7 @@ def update(crate, validate_crate):
         try:
             has_changes = _has_changes(crate)
         except:
+            log.warn('Exception thrown while checking for changes. Assuming that there are changes...', exc_info=True)
             has_changes = True
         if has_changes:
             _move_data(crate)
@@ -130,15 +131,24 @@ def _move_data(crate):
         sql_clause = (None, 'ORDER BY OBJECTID')
     else:
         sql_clause = None
-    with arcpy.da.InsertCursor(crate.destination, fields) as icursor, \
-        arcpy.da.SearchCursor(crate.source, fields, sql_clause=sql_clause,
-                              spatial_reference=output_sr) as cursor:
-        for row in cursor:
-            icursor.insertRow(row)
+    try:
+        with arcpy.da.InsertCursor(crate.destination, fields) as icursor, \
+            arcpy.da.SearchCursor(crate.source, fields, sql_clause=sql_clause,
+                                  spatial_reference=output_sr) as cursor:
+            for row in cursor:
+                icursor.insertRow(row)
 
-    edit_session.stopOperation()
-    edit_session.stopEditing(True)
-    log.debug('edit session stopped')
+        edit_session.stopOperation()
+        edit_session.stopEditing(True)
+        log.debug('edit session stopped')
+    except:
+        log.warn('Error while trying to update data via InsertCursor. Falling back to Append tool...', exc_info=True)
+
+        edit_session.stopOperation()
+        edit_session.stopEditing(False)
+        log.debug('edit session stopped without saving changes')
+
+        arcpy.Append_management(crate.source, crate.destination, 'NO_TEST')
 
 
 def check_schema(crate):

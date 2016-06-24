@@ -53,7 +53,11 @@ def update(crate, validate_crate):
                      exc_info=True)
             return (Crate.INVALID_DATA, e.message)
 
-        if _has_changes(crate):
+        try:
+            has_changes = _has_changes(crate)
+        except:
+            has_changes = True
+        if has_changes:
             _move_data(crate)
 
             return (Crate.UPDATED, None)

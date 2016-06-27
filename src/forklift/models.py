@@ -257,6 +257,6 @@ class Crate(object):
             'source_workspace': self.source_workspace,
             'destination_name': self.destination_name,
             'destination_workspace': self.destination_workspace,
-            'destination_coordinate_system': self.destination_coordinate_system,
+            'destination_coordinate_system': self.destination_coordinate_system.name,
             'geographic_transformation': self.geographic_transformation
         })

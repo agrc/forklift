@@ -43,7 +43,7 @@ def send_email(to, subject, body):
 
     smtp = SMTP(secrets.smtp_server, secrets.smtp_port)
     if get_config_prop('sendEmails'):
-        smtp.sendmail(secrets.from_address, to_addresses, message.as_string())
+        smtp.sendmail(secrets.from_address, to, message.as_string())
         smtp.quit()
     else:
         log.info('sendEmails is False. No email sent.')

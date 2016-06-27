@@ -249,6 +249,10 @@ class Crate(object):
     def __repr__(self):
         '''Override for better logging. Use with %r
         '''
+        spatial_reference = None
+        if hasattr(self.destination_coordinate_system, 'name'):
+            spatial_reference = self.destination_coordinate_system.name
+
         return pprinter.pformat({
             'source': self.source,
             'destination': self.destination,
@@ -257,6 +261,6 @@ class Crate(object):
             'source_workspace': self.source_workspace,
             'destination_name': self.destination_name,
             'destination_workspace': self.destination_workspace,
-            'destination_coordinate_system': self.destination_coordinate_system.name,
+            'destination_coordinate_system':  spatial_reference,
             'geographic_transformation': self.geographic_transformation
         })

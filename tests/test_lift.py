@@ -115,11 +115,11 @@ class TestLift(unittest.TestCase):
 
         self.assertEqual(pallet.success, (False, 'ship error'))
 
-    @patch('forklift.lift.Describe')
-    @patch('forklift.lift.Compact_management')
-    @patch('forklift.lift.path.exists')
-    @patch('shutil.move')
-    @patch('shutil.copytree')
+    @patch('forklift.lift.Describe', autospec=True)
+    @patch('forklift.lift.Compact_management', autospec=True)
+    @patch('forklift.lift.path.exists', autospec=True)
+    @patch('shutil.move', autospec=True)
+    @patch('shutil.copytree', autospec=True)
     def test_copy_data(self, copytree_mock, rmtree_mock, exists_mock, compact_mock, describe_mock):
         describe_mock.side_effect = describe_side_effect
         exists_mock.return_value = True
@@ -159,10 +159,10 @@ class TestLift(unittest.TestCase):
         self.assertEqual(rmtree_mock.call_count, 6)
         self.assertEqual(compact_mock.call_count, 3)
 
-    @patch('forklift.lift.Describe')
-    @patch('forklift.lift.Compact_management')
-    @patch('shutil.move')
-    @patch('shutil.copytree')
+    @patch('forklift.lift.Describe', autospec=True)
+    @patch('forklift.lift.Compact_management', autospec=True)
+    @patch('shutil.move', autospec=True)
+    @patch('shutil.copytree', autospec=True)
     def test_copy_data_error(self, copytree_mock, rmtree_mock, compact_mock, describe_mock):
         describe_mock.side_effect = describe_side_effect
         error_message = 'there was an error'
@@ -183,11 +183,11 @@ class TestLift(unittest.TestCase):
         self.assertEqual(pallet.success, (False, error_message))
 
     @patch('forklift.lift.LightSwitch', autospec=True)
-    @patch('forklift.lift.Describe')
-    @patch('forklift.lift.Compact_management')
-    @patch('forklift.lift.path.exists')
-    @patch('shutil.move')
-    @patch('shutil.copytree')
+    @patch('forklift.lift.Describe', autospec=True)
+    @patch('forklift.lift.Compact_management', autospec=True)
+    @patch('forklift.lift.path.exists', autospec=True)
+    @patch('shutil.move', autospec=True)
+    @patch('shutil.copytree', autospec=True)
     def test_copy_data_turns_off_and_on_services(self, copytree_mock, rmtree_mock, exists_mock, compact_mock,
                                                  describe_mock, lightswitch_mock):
         describe_mock.side_effect = describe_side_effect

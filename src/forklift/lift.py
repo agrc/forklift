@@ -157,8 +157,9 @@ def copy_data(pallets, config_copy_destinations):
                 except Exception:
                     log.error('%s might be in a corrupted state', destination_workspace, exc_info=True)
 
-                for pallet in destination_to_pallet[destination]:
-                    pallet.success = (False, str(e))
+                if source in destination_to_pallet:
+                    for pallet in destination_to_pallet[source]:
+                        pallet.success = (False, str(e))
 
                 log.error('there was an error copying %s to %s', source, destination_workspace, exc_info=True)
 

@@ -127,12 +127,10 @@ class Pallet(object):
         '''Returns True if there are not any schema changes or errors within the crates
         associated with the pallet. Returns True if there are no crates defined.
 
-        returns: Boolean'''
-        for crate in self._crates:
-            if crate.result[0] in [Crate.INVALID_DATA, Crate.UNHANDLED_EXCEPTION]:
-                return False
+        Override this method to make pallets ship on a different schedule
 
-        return True
+        returns: Boolean'''
+        return self.are_crates_valid()
 
     def requires_processing(self):
         '''Returns True if any crates were updated. Returns False if there are no crates defined.
@@ -148,11 +146,22 @@ class Pallet(object):
 
         return has_updated
 
+    def are_crates_valid(self):
+        '''Returns True if there are not any schema changes or errors within the crates
+        associated with the pallet. Returns True if there are no crates defined.
+
+        returns: Boolean'''
+        for crate in self._crates:
+            if crate.result[0] in [Crate.INVALID_DATA, Crate.UNHANDLED_EXCEPTION]:
+                return False
+
+        return True
+
     def get_report(self):
         '''Returns a message about the result of each crate in the pallet.
         '''
         return {'name': self.name,
-                'success': self.success[0] and self.is_ready_to_ship(),
+                'success': self.success[0] and self.are_crates_valid(),
                 'message': self.success[1],
                 'crates': [crate.get_report() for crate in self._crates]}
 

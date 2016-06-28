@@ -5,6 +5,7 @@
         {
             "name": "Z:\\forklift\\samples\\PalletSamples.py:StringCratePallet",
             "success": true,
+            "message": null,
             "crates": [{
                 "name": "FeatureClassOne",
                 "result": "Created table successfully."
@@ -15,6 +16,7 @@
         }, {
             "name": "Z:\\forklift\\samples\\PalletSamples.py:ExplicitCratePallet",
             "success": true,
+            "message": "This pallet only runs on Fridays.",
             "crates": [{
                 "name": "FeatureClassOne",
                 "result": "Data updated successfully."
@@ -46,6 +48,7 @@
         }, {
             "name": "Z:\\forklift\\samples\\PalletSamples.py:SdeCratePallet",
             "success": true,
+            "message": null,
             "crates": [{
                 "name": "FeatureClassOne",
                 "result": "Data updated successfully."

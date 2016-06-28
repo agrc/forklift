@@ -119,8 +119,9 @@ class TestLift(unittest.TestCase):
     @patch('forklift.lift.Compact_management', autospec=True)
     @patch('forklift.lift.path.exists', autospec=True)
     @patch('shutil.move', autospec=True)
+    @patch('shutil.rmtree', autospec=True)
     @patch('shutil.copytree', autospec=True)
-    def test_copy_data(self, copytree_mock, rmtree_mock, exists_mock, compact_mock, describe_mock):
+    def test_copy_data(self, copytree_mock, rmtree_mock, move, exists_mock, compact_mock, describe_mock):
         describe_mock.side_effect = describe_side_effect
         exists_mock.return_value = True
         three = 'C:\\MapData\\three.gdb'
@@ -146,8 +147,9 @@ class TestLift(unittest.TestCase):
     @patch('forklift.lift.Describe', autospec=True)
     @patch('forklift.lift.Compact_management', autospec=True)
     @patch('shutil.move', autospec=True)
+    @patch('shutil.rmtree', autospec=True)
     @patch('shutil.copytree', autospec=True)
-    def test_copy_data_error(self, copytree_mock, rmtree_mock, compact_mock, describe_mock):
+    def test_copy_data_error(self, copytree_mock, rmtree_mock, move, compact_mock, describe_mock):
         describe_mock.side_effect = describe_side_effect
         error_message = 'there was an error'
         copytree_mock.side_effect = Exception(error_message)
@@ -165,8 +167,9 @@ class TestLift(unittest.TestCase):
     @patch('forklift.lift.Compact_management', autospec=True)
     @patch('forklift.lift.path.exists', autospec=True)
     @patch('shutil.move', autospec=True)
+    @patch('shutil.rmtree', autospec=True)
     @patch('shutil.copytree', autospec=True)
-    def test_copy_data_turns_off_and_on_services(self, copytree_mock, rmtree_mock, exists_mock, compact_mock,
+    def test_copy_data_turns_off_and_on_services(self, copytree_mock, rmtree_mock, move, exists_mock, compact_mock,
                                                  describe_mock, lightswitch_mock):
         describe_mock.side_effect = describe_side_effect
         exists_mock.return_value = True

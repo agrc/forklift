@@ -82,11 +82,12 @@ def start_lift(file_path=None, pallet_arg=None):
     start_seconds = clock()
 
     if file_path is not None:
-        pallet_infos = _get_pallets_in_file(file_path)
+        pallet_infos = set(_get_pallets_in_file(file_path) + list_pallets())
     else:
         pallet_infos = list_pallets()
 
-    pallets = []
+    all_pallets = []
+    pallets_to_lift = []
     for info in pallet_infos:
         module_name = splitext(basename(info[0]))[0]
         class_name = info[1]
@@ -95,26 +96,30 @@ def start_lift(file_path=None, pallet_arg=None):
 
         try:
             if pallet_arg is not None:
-                pallets.append(PalletClass(pallet_arg))
+                pallet = PalletClass(pallet_arg)
             else:
-                pallets.append(PalletClass())
+                pallet = PalletClass()
+
+            all_pallets.append(pallet)
+            if info[0] == file_path or file_path is None:
+                pallets_to_lift.append(pallet)
         except Exception as e:
             log.error('error creating pallet class: %s. %s', class_name, e.message, exc_info=True)
 
     start_process = clock()
-    lift.process_crates_for(pallets, core.update, config.get_config_prop('configuration'))
+    lift.process_crates_for(pallets_to_lift, core.update, config.get_config_prop('configuration'))
     log.info('process_crates time: %s', seat.format_time(clock() - start_process))
 
     start_process = clock()
-    lift.process_pallets(pallets)
+    lift.process_pallets(pallets_to_lift)
     log.info('process_pallets time: %s', seat.format_time(clock() - start_process))
 
     start_copy = clock()
-    lift.copy_data(pallets, config.get_config_prop('copyDestinations'))
+    lift.copy_data(pallets_to_lift, all_pallets, config.get_config_prop('copyDestinations'))
     log.info('copy_data time: %s', seat.format_time(clock() - start_copy))
 
     elapsed_time = seat.format_time(clock() - start_seconds)
-    report_object = lift.create_report_object(pallets, elapsed_time)
+    report_object = lift.create_report_object(pallets_to_lift, elapsed_time)
 
     _send_report_email(report_object)
 
@@ -234,7 +239,7 @@ def _format_dictionary(pallet_reports):
 
         str += '{}{}{}{}'.format(color, report['name'], Fore.RESET, linesep)
 
-        if not report['success'] and report['message'] is not None:
+        if report['message'] is not None:
             str += 'pallet message: {}{}{}{}'.format(Fore.YELLOW, report['message'], Fore.RESET, linesep)
 
         for crate in report['crates']:

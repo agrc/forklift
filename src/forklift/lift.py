@@ -102,13 +102,13 @@ def process_pallets(pallets):
                 log.error('error shipping pallet: %s for pallet: %r', e.message, pallet, exc_info=True)
 
 
-def copy_data(pallets, config_copy_destinations):
+def copy_data(pallets, all_pallets, config_copy_destinations):
     '''pallets: Pallets[]
 
     Loop over all of the pallets and extract the distinct copy_data workspaces.
     Then loop over all of the copy_data workspaces and copy them to config_copy_destinations as defined in the config.'''
     lightswitch = LightSwitch()
-    copy_workspaces, source_to_services, destination_to_pallet = _hydrate_copy_structures(pallets)
+    copy_workspaces, source_to_services, destination_to_pallet = _hydrate_copy_structures(pallets, all_pallets)
 
     for source in copy_workspaces:
         if Describe(source).workspaceFactoryProgID.startswith('esriDataSourcesGDB.FileGDBWorkspaceFactory'):
@@ -202,21 +202,23 @@ def _copy_with_overwrite(source, destination):
                 pass
 
 
-def _hydrate_copy_structures(pallets):
+def _hydrate_copy_structures(specific_pallets, all_pallets):
     copy_workspaces = set([])
     source_to_services = {}
     destination_to_pallet = {}
 
-    for pallet in pallets:
+    for pallet in all_pallets:
         if not pallet.requires_processing():
             continue
 
-        copy_workspaces |= set(pallet.copy_data)  # noqa
+        if pallet in specific_pallets:
+            copy_workspaces |= set([x.lower() for x in pallet.copy_data])  # noqa
 
         services = pallet.arcgis_services
 
         #: loop over all the copy_data workspaces
         for workspace in pallet.copy_data:
+            workspace = workspace.lower()
             destination_to_pallet.setdefault(workspace, []).append(pallet)
             source_to_services.setdefault(workspace, set([]))
             #: add the service types to the workspace

@@ -10,7 +10,8 @@ import logging
 import seat
 import shutil
 from arcgis import LightSwitch
-from arcpy import Compact_management, Describe
+from arcpy import Compact_management
+from arcpy import Describe
 from forklift.models import Crate
 from os import makedirs
 from os import path

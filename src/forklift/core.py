@@ -274,10 +274,11 @@ def _has_changes(crate):
     # filter out shape fields and other problematic fields
     fields = _filter_fields(fields)
 
-    if is_table:
-        output_sr = None
-    else:
-        shape_type = arcpy.Describe(crate.destination).shapeType
+    temp_compare_table = None
+
+    if not is_table:
+        destination_describe = arcpy.Describe(crate.destination)
+        shape_type = destination_describe.shapeType
 
         if shape_type == 'Polygon':
             shape_token = 'SHAPE@AREA'
@@ -304,7 +305,17 @@ def _has_changes(crate):
                 return shape_value
 
         #: support for reprojecting
-        output_sr = arcpy.Describe(crate.destination).spatialReference
+        if arcpy.Describe(crate.source).spatialReference.name != destination_describe.spatialReference.name:
+            arcpy.env.outputCoordinateSystem = crate.destination_coordinate_system
+            arcpy.env.geographicTransformations = crate.geographic_transformation
+
+            temp_compare_table = crate.destination + '_x'
+            if arcpy.Exists(temp_compare_table):
+                arcpy.Delete_management(temp_compare_table)
+            arcpy.CopyFeatures_management(crate.source, temp_compare_table)
+
+            arcpy.env.outputCoordinateSystem = None
+            arcpy.env.geographicTransformations = None
 
     if 'OBJECTID' in [f.name for f in arcpy.ListFields(crate.source)] and 'OBJECTID' in [f.name for f in arcpy.ListFields(crate.destination)]:
         #: compare each feature based on sorting by OBJECTID if both tables have that field
@@ -321,8 +332,7 @@ def _has_changes(crate):
     arcpy.env.geographicTransformations = crate.geographic_transformation
 
     with arcpy.da.SearchCursor(crate.destination, fields, sql_clause=sql_clause) as f_cursor, \
-            arcpy.da.SearchCursor(crate.source, fields, sql_clause=sql_clause,
-                                  spatial_reference=output_sr) as sde_cursor:
+            arcpy.da.SearchCursor(temp_compare_table or crate.source, fields, sql_clause=sql_clause) as sde_cursor:
         for destination_row, source_row in izip(f_cursor, sde_cursor):
             if destination_row != source_row:
                 # check shapes first
@@ -363,9 +373,8 @@ def _has_changes(crate):
                     log.info('changes found in non-shape field comparison')
                     log.debug('source row: %s, destination row: %s', source_row[start_field_index:], destination_row[start_field_index:])
                     return True
-
-    arcpy.env.outputCoordinateSystem = None
-    arcpy.env.geographicTransformations = None
+    if temp_compare_table is not None:
+        arcpy.Delete_management(temp_compare_table)
 
     log.info('no changes found')
     return False

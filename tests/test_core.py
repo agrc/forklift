@@ -40,6 +40,7 @@ def skip_if_no_local_sde():
 
 
 class CoreTests(unittest.TestCase):
+
     def setUp(self):
         delete_if_exists(test_gdb)
         delete_if_exists(test_folder)
@@ -114,21 +115,36 @@ class CoreTests(unittest.TestCase):
         self.assertFalse(core._has_changes(Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, check_for_changes_gdb, '{}_NO_CHANGES'.format(tbl))))
 
     def test_has_changes(self):
-        self.assertFalse(self.run_has_changes('ZipCodes', 'ZipCodes_same'))
-        self.assertTrue(self.run_has_changes('ZipCodes', 'ZipCodes_geoMod'))
-        self.assertTrue(self.run_has_changes('ZipCodes', 'ZipCodes_attMod'))
-        self.assertTrue(self.run_has_changes('ZipCodes', 'ZipCodes_newFeature'))
-        self.assertFalse(self.run_has_changes('DNROilGasWells', 'DNROilGasWells'))
-        self.assertFalse(self.run_has_changes('Line', 'Line'))
-        self.assertFalse(self.run_has_changes('NullShape', 'NullShape'))
-        self.assertFalse(self.run_has_changes('Providers', 'Providers'))
-        self.assertTrue(self.run_has_changes('NullDates', 'NullDates2'))
+
+        def run_has_changes(fc1, fc2):
+            return core._has_changes(Crate(fc1, check_for_changes_gdb, check_for_changes_gdb, fc2))
+
+        self.assertFalse(run_has_changes('ZipCodes', 'ZipCodes_same'))
+        self.assertTrue(run_has_changes('ZipCodes', 'ZipCodes_geoMod'))
+        self.assertTrue(run_has_changes('ZipCodes', 'ZipCodes_attMod'))
+        self.assertTrue(run_has_changes('ZipCodes', 'ZipCodes_newFeature'))
+        self.assertFalse(run_has_changes('DNROilGasWells', 'DNROilGasWells'))
+        self.assertFalse(run_has_changes('Line', 'Line'))
+        self.assertFalse(run_has_changes('NullShape', 'NullShape'))
+        self.assertFalse(run_has_changes('Providers', 'Providers'))
+        self.assertTrue(run_has_changes('NullDates', 'NullDates2'))
+        self.assertTrue(run_has_changes('NullDates', 'NullDates2'))
+
+    def test_has_changes_sde(self):
+        skip_if_no_local_sde()
+
+        def run(name):
+            return core._has_changes(Crate(name,
+                                           update_tests_sde,
+                                           check_for_changes_gdb,
+                                           destination_coordinate_system=arcpy.SpatialReference(3857),
+                                           geographic_transformation='NAD_1983_To_WGS_1984_5'))
+
+        self.assertFalse(run('Parcels_Morgan'))
+        self.assertFalse(run('RuralTelcomBoundaries'))  # different coordinate systems
 
     def test_has_changes_shapefile(self):
         self.assertFalse(core._has_changes(Crate('shapefile.shp', path.join(current_folder, 'data'), check_for_changes_gdb, 'shapefile')))
-
-    def test_has_changes_null_date_fields(self):
-        self.assertTrue(self.run_has_changes('NullDates', 'NullDates2'))
 
     @patch('arcpy.Exists')
     def test_update_no_changes(self, arcpy_exists):
@@ -159,19 +175,13 @@ class CoreTests(unittest.TestCase):
         skip_if_no_local_sde()
 
         # only worry about length on text fields
-        result = core.check_schema(Crate(r'UPDATE_TESTS.DBO.Hello\UPDATE_TESTS.DBO.DNROilGasWells',
-                                         update_tests_sde,
-                                         check_for_changes_gdb,
-                                         'DNROilGasWells'))
+        result = core.check_schema(Crate(r'UPDATE_TESTS.DBO.Hello\UPDATE_TESTS.DBO.DNROilGasWells', update_tests_sde, check_for_changes_gdb, 'DNROilGasWells'))
         self.assertEqual(result, True)
 
     def test_check_schema_no_objectid_in_source(self):
         skip_if_no_local_sde()
 
-        result = core.check_schema(Crate('UPDATE_TESTS.dbo.NO_OBJECTID_TEST',
-                                         update_tests_sde,
-                                         check_for_changes_gdb,
-                                         r'NO_OBJECTID_TEST'))
+        result = core.check_schema(Crate('UPDATE_TESTS.dbo.NO_OBJECTID_TEST', update_tests_sde, check_for_changes_gdb, r'NO_OBJECTID_TEST'))
         self.assertEqual(result, True)
 
     def test_check_schema_match(self):
@@ -274,10 +284,7 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(crate.source, path.join(crate.source_workspace, crate.source_name))
 
     def test_try_to_find_data_source_by_name_returns_None_if_not_sde(self):
-        crate = Crate(source_name='something.shp',
-                      source_workspace='c:\\temp',
-                      destination_workspace='c:\\something.gdb',
-                      destination_name='Counties')
+        crate = Crate(source_name='something.shp', source_workspace='c:\\temp', destination_workspace='c:\\something.gdb', destination_name='Counties')
 
         self.assertIsNone(core._try_to_find_data_source_by_name(crate)[0])
 

@@ -208,10 +208,7 @@ def _hydrate_copy_structures(specific_pallets, all_pallets):
     destination_to_pallet = {}
 
     for pallet in all_pallets:
-        if not pallet.requires_processing():
-            continue
-
-        if pallet in specific_pallets:
+        if pallet.requires_processing() and pallet in specific_pallets:
             copy_workspaces |= set([x.lower() for x in pallet.copy_data])  # noqa
 
         services = pallet.arcgis_services

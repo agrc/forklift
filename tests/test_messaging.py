@@ -20,7 +20,7 @@ class SendEmail(unittest.TestCase):
         get_config_prop_mock.return_value = True
         smtp = send_email(['one@utah.gov', 'two@utah.gov'], '', '')
 
-        self.assertEqual(smtp.sendmail.call_args[0][1], 'one@utah.gov,two@utah.gov')
+        self.assertEqual(smtp.sendmail.call_args[0][1], ['one@utah.gov', 'two@utah.gov'])
 
         smtp = send_email('one@utah.gov', '', '')
 

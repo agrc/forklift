@@ -238,7 +238,7 @@ def _filter_fields(lst):
     new_fields = []
     for fld in lst:
         if fld == 'OBJECTID':
-            new_fields.append('OID@')
+            new_fields.insert(0, 'OID@')
         elif not _is_naughty_field(fld):
             new_fields.append(fld)
 

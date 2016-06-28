@@ -126,34 +126,18 @@ class TestLift(unittest.TestCase):
         three = 'C:\\MapData\\three.gdb'
         two = 'C:\\MapData\\two.gdb'
 
-        class CopyPalletOne(Pallet):
-
-            def __init__(self):
-                super(CopyPalletOne, self).__init__()
-
-                self.copy_data = ['C:\\MapData\\one.gdb', two]
-
-        pallet_one = CopyPalletOne()
+        pallet_one = Pallet()
+        pallet_one.copy_data = ['C:\\MapData\\one.gdb', two]
         pallet_one.requires_processing = Mock(return_value=True)
 
-        class CopyPalletTwo(Pallet):
-
-            def __init__(self):
-                super(CopyPalletTwo, self).__init__()
-
-                self.copy_data = ['C:\\MapData\\one.gdb', three]
-
-        pallet_two = CopyPalletTwo()
+        pallet_two = Pallet()
+        pallet_two.copy_data = ['C:\\MapData\\one.gdb', three]
         pallet_two.requires_processing = Mock(return_value=True)
 
-        class CopyPalletThree(Pallet):
+        pallet_three = Pallet()
+        pallet_three.copy_data = ['C:\\MapData\\four', three]
 
-            def __init__(self):
-                super(CopyPalletThree, self).__init__()
-
-                self.copy_data = ['C:\\MapData\\four', three]
-
-        lift.copy_data([pallet_one, pallet_two, CopyPalletThree()], ['dest1', 'dest2'])
+        lift.copy_data([pallet_one, pallet_two, pallet_three], ['dest1', 'dest2'])
 
         self.assertEqual(copytree_mock.call_count, 6)
         self.assertEqual(rmtree_mock.call_count, 6)
@@ -168,14 +152,8 @@ class TestLift(unittest.TestCase):
         error_message = 'there was an error'
         copytree_mock.side_effect = Exception(error_message)
 
-        class CopyPalletOne(Pallet):
-
-            def __init__(self):
-                super(CopyPalletOne, self).__init__()
-
-                self.copy_data = ['C:\\MapData\\one.gdb']
-
-        pallet = CopyPalletOne()
+        pallet = Pallet()
+        pallet.copy_data = ['C:\\MapData\\one.gdb']
         pallet.requires_processing = Mock(return_value=True)
 
         lift.copy_data([pallet], ['hello'])
@@ -195,36 +173,20 @@ class TestLift(unittest.TestCase):
         three = 'C:\\MapData\\three.gdb'
         two = 'C:\\MapData\\two.gdb'
 
-        class CopyPalletOne(Pallet):
-
-            def __init__(self):
-                super(CopyPalletOne, self).__init__()
-
-                self.copy_data = ['C:\\MapData\\one.gdb', two]
-                self.arcgis_services = [('Pallet', 'MapServer')]
-
-        class CopyPalletTwo(Pallet):
-
-            def __init__(self):
-                super(CopyPalletTwo, self).__init__()
-
-                self.copy_data = ['C:\\MapData\\one.gdb', three]
-                self.arcgis_services = [('Pallet', 'MapServer')]
-
-        class CopyPalletThree(Pallet):
-
-            def __init__(self):
-                super(CopyPalletThree, self).__init__()
-
-                self.copy_data = ['C:\\MapData\\four', three]
-
-        pallet_one = CopyPalletOne()
+        pallet_one = Pallet()
+        pallet_one.copy_data = ['C:\\MapData\\one.gdb', two]
+        pallet_one.arcgis_services = [('Pallet', 'MapServer')]
         pallet_one.requires_processing = Mock(return_value=True)
 
-        pallet_two = CopyPalletTwo()
+        pallet_two = Pallet()
+        pallet_two.copy_data = ['C:\\MapData\\one.gdb', three]
+        pallet_two.arcgis_services = [('Pallet', 'MapServer')]
         pallet_two.requires_processing = Mock(return_value=True)
 
-        lift.copy_data([pallet_one, pallet_two, CopyPalletThree()], ['dest1', 'dest2'])
+        pallet_three = Pallet()
+        pallet_three.copy_data = ['C:\\MapData\\four', three]
+
+        lift.copy_data([pallet_one, pallet_two, pallet_three], ['dest1', 'dest2'])
 
         self.assertEqual(copytree_mock.call_count, 6)
         self.assertEqual(rmtree_mock.call_count, 6)

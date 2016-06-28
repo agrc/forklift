@@ -11,7 +11,7 @@ import logging
 from datetime import datetime
 from exceptions import ValidationException
 from itertools import izip
-from numpy.testing import assert_almost_equal
+from math import fabs
 from models import Crate
 from os import path
 
@@ -312,6 +312,11 @@ def _has_changes(crate):
     else:
         sql_clause = None
 
+    def is_almost_equal(arg, arg2):
+        difference = fabs(arg - arg2)
+
+        return difference <= 10.0
+
     arcpy.env.outputCoordinateSystem = crate.destination_coordinate_system
     arcpy.env.geographicTransformations = crate.geographic_transformation
 
@@ -328,12 +333,11 @@ def _has_changes(crate):
                         return True
                     destination_shape = parse_shape(destination_row[-1])
                     source_shape = parse_shape(source_row[-1])
-                    try:
-                        assert_almost_equal(destination_shape, source_shape, -1)
+                    if is_almost_equal(destination_shape, source_shape):
                         # trim off shapes
                         destination_row = list(destination_row[:-1])
                         source_row = list(source_row[:-1])
-                    except AssertionError:
+                    else:
                         log.info('changes found in a shape comparison')
                         log.debug('source shape: %s, destination shape: %s', source_row[-1], destination_row[-1])
                         return True

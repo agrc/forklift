@@ -131,6 +131,10 @@ def _move_data(crate):
         sql_clause = (None, 'ORDER BY OBJECTID')
     else:
         sql_clause = None
+
+    arcpy.env.outputCoordinateSystem = crate.destination_coordinate_system
+    arcpy.env.geographicTransformations = crate.geographic_transformation
+
     try:
         with arcpy.da.InsertCursor(crate.destination, fields) as icursor, \
             arcpy.da.SearchCursor(crate.source, fields, sql_clause=sql_clause,
@@ -149,6 +153,9 @@ def _move_data(crate):
         log.debug('edit session stopped without saving changes')
 
         arcpy.Append_management(crate.source, crate.destination, 'NO_TEST')
+    finally:
+        arcpy.env.outputCoordinateSystem = None
+        arcpy.env.geographicTransformations = None
 
 
 def check_schema(crate):
@@ -304,6 +311,10 @@ def _has_changes(crate):
         sql_clause = (None, 'ORDER BY OBJECTID')
     else:
         sql_clause = None
+
+    arcpy.env.outputCoordinateSystem = crate.destination_coordinate_system
+    arcpy.env.geographicTransformations = crate.geographic_transformation
+
     with arcpy.da.SearchCursor(crate.destination, fields, sql_clause=sql_clause) as f_cursor, \
             arcpy.da.SearchCursor(crate.source, fields, sql_clause=sql_clause,
                                   spatial_reference=output_sr) as sde_cursor:
@@ -348,6 +359,9 @@ def _has_changes(crate):
                     log.info('changes found in non-shape field comparison')
                     log.debug('source row: %s, destination row: %s', source_row[start_field_index:], destination_row[start_field_index:])
                     return True
+
+    arcpy.env.outputCoordinateSystem = None
+    arcpy.env.geographicTransformations = None
 
     log.info('no changes found')
     return False

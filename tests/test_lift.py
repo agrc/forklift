@@ -243,3 +243,54 @@ class TestLift(unittest.TestCase):
 
         self.assertEqual(report['total_pallets'], 3)
         self.assertEqual(report['num_success_pallets'], 2)
+
+    def test_hydrate_copy_structures_with_empty_is_ok(self):
+        pallets = [Pallet(), Pallet()]
+        pallets[0].requires_processing = Mock(return_value=True)
+        pallets[1].requires_processing = Mock(return_value=True)
+
+        lift._hydrate_copy_structures(pallets)
+
+    def test_hydrate_copy_structures_unions_arcgis_services(self):
+        pallets = [Pallet(), Pallet()]
+
+        pallets[0].requires_processing = Mock(return_value=True)
+        pallets[1].requires_processing = Mock(return_value=True)
+
+        pallets[0].copy_data = ['location']
+        pallets[1].copy_data = ['location']
+
+        pallets[0].arcgis_services = [('a', 'a'), ('b', 'b')]
+        pallets[1].arcgis_services = [('a', 'a'), ('c', 'c')]
+
+        copy_workspaces, source_to_services, destination_to_pallet = lift._hydrate_copy_structures(pallets)
+        self.assertEqual(source_to_services['location'], set([('a', 'a'), ('b', 'b'), ('c', 'c')]))
+
+    def test_hydrate_copy_structures_unions_all_copy_data_locations(self):
+        pallets = [Pallet(), Pallet(), Pallet()]
+
+        pallets[0].requires_processing = Mock(return_value=True)
+        pallets[1].requires_processing = Mock(return_value=True)
+        pallets[2].requires_processing = Mock(return_value=True)
+
+        pallets[0].copy_data = ['location']
+        pallets[1].copy_data = ['location']
+        pallets[2].copy_data = ['location2']
+
+        copy_workspaces, source_to_services, destination_to_pallet = lift._hydrate_copy_structures(pallets)
+        self.assertEqual(copy_workspaces, set(['location', 'location2']))
+
+    def test_hydrate_copy_structures_creates_destination_dictionary(self):
+        pallets = [Pallet(), Pallet(), Pallet()]
+
+        pallets[0].requires_processing = Mock(return_value=True)
+        pallets[1].requires_processing = Mock(return_value=True)
+        pallets[2].requires_processing = Mock(return_value=True)
+
+        pallets[0].copy_data = ['location']
+        pallets[1].copy_data = ['location']
+        pallets[2].copy_data = ['location2']
+
+        copy_workspaces, source_to_services, destination_to_pallet = lift._hydrate_copy_structures(pallets)
+        self.assertEqual(destination_to_pallet['location'], [pallets[0], pallets[1]])
+        self.assertEqual(destination_to_pallet['location2'], [pallets[2]])

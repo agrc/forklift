@@ -102,34 +102,13 @@ def process_pallets(pallets):
                 log.error('error shipping pallet: %s for pallet: %r', e.message, pallet, exc_info=True)
 
 
-def copy_data(pallets, copy_destinations):
+def copy_data(pallets, config_copy_destinations):
     '''pallets: Pallets[]
 
     Loop over all of the pallets and extract the distinct copy_data workspaces.
-    Then loop over all of the copy_data workspaces and copy them to copy_destinations as defined in the config.'''
-    copy_workspaces = set([])
-    source_to_services = {}
+    Then loop over all of the copy_data workspaces and copy them to config_copy_destinations as defined in the config.'''
     lightswitch = LightSwitch()
-
-    for pallet in pallets:
-        if not pallet.requires_processing():
-            continue
-
-        copy_workspaces |= set(pallet.copy_data)  # noqa
-
-        try:
-            #: try to get arcgis_services
-            services = pallet.arcgis_services
-
-            #: loop over all the copy_data workspaces
-            for workspace in pallet.copy_data:
-                source_to_services.setdefault(workspace, set([]))
-                #: add the service types to the workspace
-                for service in services:
-                    source_to_services[workspace].add(service)
-        except AttributeError:
-            #: pallet has no dependent services
-            continue
+    copy_workspaces, source_to_services, destination_to_pallet = _hydrate_copy_structures(pallets)
 
     for source in copy_workspaces:
         if Describe(source).workspaceFactoryProgID.startswith('esriDataSourcesGDB.FileGDBWorkspaceFactory'):
@@ -145,7 +124,7 @@ def copy_data(pallets, copy_destinations):
                 log.debug('stopping %s.%s', service[0], service[1])
                 lightswitch.turn_off(service[0], service[1])
 
-        for destination in copy_destinations:
+        for destination in config_copy_destinations:
             destination_workspace = path.join(destination, path.basename(source))
 
             log.info('copying {} to {}...'.format(source, destination_workspace))
@@ -178,7 +157,9 @@ def copy_data(pallets, copy_destinations):
                 except Exception:
                     log.error('%s might be in a corrupted state', destination_workspace, exc_info=True)
 
-                pallet.success = (False, str(e))
+                for pallet in destination_to_pallet[destination]:
+                    pallet.success = (False, str(e))
+
                 log.error('there was an error copying %s to %s', source, destination_workspace, exc_info=True)
 
         for service in services:
@@ -218,3 +199,27 @@ def _copy_with_overwrite(source, destination):
             except:
                 #: shouldn't matter a whole lot
                 pass
+
+
+def _hydrate_copy_structures(pallets):
+    copy_workspaces = set([])
+    source_to_services = {}
+    destination_to_pallet = {}
+
+    for pallet in pallets:
+        if not pallet.requires_processing():
+            continue
+
+        copy_workspaces |= set(pallet.copy_data)  # noqa
+
+        services = pallet.arcgis_services
+
+        #: loop over all the copy_data workspaces
+        for workspace in pallet.copy_data:
+            destination_to_pallet.setdefault(workspace, []).append(pallet)
+            source_to_services.setdefault(workspace, set([]))
+            #: add the service types to the workspace
+            for service in services:
+                source_to_services[workspace].add(service)
+
+    return copy_workspaces, source_to_services, destination_to_pallet

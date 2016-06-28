@@ -259,3 +259,41 @@ class TestLift(unittest.TestCase):
         copy_workspaces, source_to_services, destination_to_pallet = lift._hydrate_copy_structures([], pallets)
         self.assertEqual(destination_to_pallet['location'], [pallets[0], pallets[1]])
         self.assertEqual(destination_to_pallet['location2'], [pallets[2]])
+
+    def test_hydrate_copy_structures_prevents_duplicate_copy_datas(self):
+        pallets = [Pallet(), Pallet(), Pallet()]
+
+        pallets[0].requires_processing = Mock(return_value=True)
+        pallets[1].requires_processing = Mock(return_value=True)
+        pallets[2].requires_processing = Mock(return_value=True)
+
+        pallets[0].copy_data = ['location']
+        pallets[1].copy_data = ['Location']
+        pallets[2].copy_data = ['location2']
+
+        copy_workspaces, source_to_services, destination_to_pallet = lift._hydrate_copy_structures(pallets, pallets)
+        copy_workspaces = list(copy_workspaces)
+
+        self.assertEqual(len(copy_workspaces), 2)
+        self.assertEqual(copy_workspaces[0], 'location')
+        self.assertEqual(copy_workspaces[1], 'location2')
+
+    def test_hydrate_copy_structures_only_includes_copy_data_in_specific_pallets(self):
+        pallets = [Pallet(), Pallet(), Pallet()]
+
+        pallets[0].requires_processing = Mock(return_value=True)
+
+        pallets[0].copy_data = ['location']
+        pallets[0].arcgis_services = ['service1']
+        pallets[1].copy_data = ['Location']
+        pallets[1].arcgis_services = ['service2']
+        pallets[2].copy_data = ['location2']
+
+        copy_workspaces, source_to_services, destination_to_pallet = lift._hydrate_copy_structures(pallets[:1], pallets)
+        copy_workspaces = list(copy_workspaces)
+
+        self.assertEqual(copy_workspaces[0], 'location')
+        self.assertEqual(len(copy_workspaces), 1)
+        self.assertEqual(destination_to_pallet['location'], [pallets[0], pallets[1]])
+        self.assertEqual(destination_to_pallet['location2'], [pallets[2]])
+        self.assertEqual(source_to_services['location'], set(['service2', 'service1']))

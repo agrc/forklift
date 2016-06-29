@@ -276,6 +276,15 @@ def _has_changes(crate):
 
     temp_compare_table = None
 
+    def remove_temp_table(table):
+        if table is not None and arcpy.Exists(table):
+            arcpy.Delete_management(table)
+
+    def is_almost_equal(arg, arg2):
+        difference = fabs(arg - arg2)
+
+        return difference <= 10.0
+
     if not is_table:
         destination_describe = arcpy.Describe(crate.destination)
         shape_type = destination_describe.shapeType
@@ -310,8 +319,8 @@ def _has_changes(crate):
             arcpy.env.geographicTransformations = crate.geographic_transformation
 
             temp_compare_table = crate.destination + '_x'
-            if arcpy.Exists(temp_compare_table):
-                arcpy.Delete_management(temp_compare_table)
+            remove_temp_table(temp_compare_table)
+
             arcpy.CopyFeatures_management(crate.source, temp_compare_table)
 
             arcpy.env.outputCoordinateSystem = None
@@ -322,11 +331,6 @@ def _has_changes(crate):
         sql_clause = (None, 'ORDER BY OBJECTID')
     else:
         sql_clause = None
-
-    def is_almost_equal(arg, arg2):
-        difference = fabs(arg - arg2)
-
-        return difference <= 10.0
 
     arcpy.env.outputCoordinateSystem = crate.destination_coordinate_system
     arcpy.env.geographicTransformations = crate.geographic_transformation
@@ -340,9 +344,13 @@ def _has_changes(crate):
                     if shape_type not in ['Polygon', 'Polyline', 'Point']:
                         #: for complex types always return true for now
                         log.info('complex type = always changes for now')
+                        remove_temp_table(temp_compare_table)
+
                         return True
+
                     destination_shape = parse_shape(destination_row[-1])
                     source_shape = parse_shape(source_row[-1])
+
                     if is_almost_equal(destination_shape, source_shape):
                         # trim off shapes
                         destination_row = list(destination_row[:-1])
@@ -350,6 +358,8 @@ def _has_changes(crate):
                     else:
                         log.info('changes found in a shape comparison')
                         log.debug('source shape: %s, destination shape: %s', source_row[-1], destination_row[-1])
+                        remove_temp_table(temp_compare_table)
+
                         return True
 
                 # trim microseconds since they can be off by one between file and sde databases
@@ -372,11 +382,13 @@ def _has_changes(crate):
                 if destination_row[start_field_index:] != source_row[start_field_index:]:
                     log.info('changes found in non-shape field comparison')
                     log.debug('source row: %s, destination row: %s', source_row[start_field_index:], destination_row[start_field_index:])
-                    return True
-    if temp_compare_table is not None:
-        arcpy.Delete_management(temp_compare_table)
+                    remove_temp_table(temp_compare_table)
 
+                    return True
+
+    remove_temp_table(temp_compare_table)
     log.info('no changes found')
+
     return False
 
 

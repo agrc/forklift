@@ -162,7 +162,7 @@ class Pallet(object):
         '''
         return {'name': self.name,
                 'success': self.success[0] and self.are_crates_valid(),
-                'message': self.success[1],
+                'message': self.success[1] or '',
                 'crates': [crate.get_report() for crate in self._crates]}
 
     def __repr__(self):
@@ -253,7 +253,7 @@ class Crate(object):
         '''Returns the relavant info related to this crate that is shown on the report as a dictionary'''
         return {'name': self.destination_name,
                 'result': self.result[0],
-                'crate_message': self.result[1]}
+                'crate_message': self.result[1] or ''}
 
     def __repr__(self):
         '''Override for better logging. Use with %r

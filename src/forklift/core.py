@@ -278,6 +278,7 @@ def _has_changes(crate):
 
     def remove_temp_table(table):
         if table is not None and arcpy.Exists(table):
+            log.debug('deleting %s', table)
             arcpy.Delete_management(table)
 
     def is_almost_equal(arg, arg2):
@@ -321,6 +322,7 @@ def _has_changes(crate):
             temp_compare_table = crate.destination + '_x'
             remove_temp_table(temp_compare_table)
 
+            log.debug('creating %s', temp_compare_table)
             arcpy.CopyFeatures_management(crate.source, temp_compare_table)
 
             arcpy.env.outputCoordinateSystem = None

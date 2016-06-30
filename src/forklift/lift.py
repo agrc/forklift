@@ -123,7 +123,10 @@ def copy_data(pallets, all_pallets, config_copy_destinations):
 
             for service in services:
                 log.debug('stopping %s.%s', service[0], service[1])
-                lightswitch.turn_off(service[0], service[1])
+                status = lightswitch.turn_off(service[0], service[1])
+
+                if not status[0]:
+                    log.warn('service %s did not stop: %s', service[0], status[1])
 
         for destination in config_copy_destinations:
             destination_workspace = path.join(destination, path.basename(source))
@@ -166,7 +169,10 @@ def copy_data(pallets, all_pallets, config_copy_destinations):
 
         for service in services:
             log.debug('starting %s.%s', service[0], service[1])
-            lightswitch.turn_on(service[0], service[1])
+            status = lightswitch.turn_on(service[0], service[1])
+
+            if not status[0]:
+                log.error('service %s did not start: %s', service[0], status[1])
 
 
 def create_report_object(pallets, elapsed_time):

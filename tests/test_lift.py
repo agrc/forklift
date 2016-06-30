@@ -194,8 +194,8 @@ class TestLift(unittest.TestCase):
         self.assertEqual(copytree_mock.call_count, 6)
         self.assertEqual(rmtree_mock.call_count, 6)
         self.assertEqual(compact_mock.call_count, 3)
-        self.assertEqual(len(lightswitch_mock().turn_on.mock_calls), 3)
-        self.assertEqual(len(lightswitch_mock().turn_off.mock_calls), 3)
+        self.assertEqual(lightswitch_mock().turn_on.call_count, 3)
+        self.assertEqual(lightswitch_mock().turn_off.call_count, 3)
 
     def test_create_report_object(self):
         p1 = Pallet()
@@ -275,8 +275,8 @@ class TestLift(unittest.TestCase):
         copy_workspaces = list(copy_workspaces)
 
         self.assertEqual(len(copy_workspaces), 2)
-        self.assertEqual(copy_workspaces[0], 'location')
-        self.assertEqual(copy_workspaces[1], 'location2')
+        self.assertIn('location', copy_workspaces)
+        self.assertIn('location2', copy_workspaces)
 
     def test_hydrate_copy_structures_only_includes_copy_data_in_specific_pallets(self):
         pallets = [Pallet(), Pallet(), Pallet()]

@@ -131,11 +131,12 @@ class CoreTests(unittest.TestCase):
 
     def test_has_changes_sde(self):
         skip_if_no_local_sde()
+        arcpy.Copy_management(check_for_changes_gdb, test_gdb)
 
         def run(name):
             return core._has_changes(Crate(name,
                                            update_tests_sde,
-                                           check_for_changes_gdb,
+                                           test_gdb,
                                            destination_coordinate_system=arcpy.SpatialReference(3857),
                                            geographic_transformation='NAD_1983_To_WGS_1984_5'))
 

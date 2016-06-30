@@ -45,7 +45,7 @@ from os.path import dirname
 from os.path import join
 
 log_location = join(abspath(dirname(__file__)), '..', 'forklift-garage', 'forklift.log')
-detailed_formatter = logging.Formatter(fmt='%(levelname)7s %(asctime)s %(module)10s:%(lineno)5s %(message)s',
+detailed_formatter = logging.Formatter(fmt='%(levelname)-7s %(asctime)s %(module)10s:%(lineno)5s %(message)s',
                                        datefmt='%m-%d %H:%M:%S')
 
 

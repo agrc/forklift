@@ -12,7 +12,7 @@ Usage:
     forklift garage open
     forklift list-pallets
     forklift git-update
-    forklift lift [<file-path>] [--pallet-arg <arg>]
+    forklift lift [<file-path>] [--pallet-arg <arg>] [--verbose]
 
 Arguments:
     repo            The name of a GitHub repository in <owner>/<name> format.
@@ -20,17 +20,18 @@ Arguments:
     arg             A string to be used as an optional initialization parameter to the pallet.
 
 Examples:
-    python -m forklift config init                               Creates the config file.
-    python -m forklift config set --key <key> --value <value>    Sets a key in the config with a value.
-    python -m forklift config repos --add agrc/ugs-chemistry     Adds a path to the config. Checks for duplicates.
-    python -m forklift config repos --remove agrc/ugs-chemistry  Removes a path from the config.
-    python -m forklift config repos --list                       Outputs the list of pallet folder paths in your config file.
-    python -m forklift garage open                               Opens the garage folder with explorer.
-    python -m forklift list-pallets                              Outputs the list of pallets from the config.
-    python -m forklift git-update                                Pulls the latest updates to all git repositories.
-    python -m forklift lift                                      The main entry for running all of pallets found in the warehouse folder.
-    python -m forklift lift path/to/file                         Run a specific pallet.
-    python -m forklift lift path/to/file --pallet-arg arg        Run a specific pallet with "arg" as an initialization parameter.
+    forklift config init                               Creates the config file.
+    forklift config set --key <key> --value <value>    Sets a key in the config with a value.
+    forklift config repos --add agrc/ugs-chemistry     Adds a path to the config. Checks for duplicates.
+    forklift config repos --remove agrc/ugs-chemistry  Removes a path from the config.
+    forklift config repos --list                       Outputs the list of pallet folder paths in your config file.
+    forklift garage open                               Opens the garage folder with explorer.
+    forklift list-pallets                              Outputs the list of pallets from the config.
+    forklift git-update                                Pulls the latest updates to all git repositories.
+    forklift lift                                      The main entry for running all of pallets found in the warehouse folder.
+    forklift lift --verbose                            Print DEBUG statements to the console.
+    forklift lift path/to/file                         Run a specific pallet.
+    forklift lift path/to/file --pallet-arg arg        Run a specific pallet with "arg" as an initialization parameter.
 '''
 
 import config
@@ -51,7 +52,7 @@ detailed_formatter = logging.Formatter(fmt='%(levelname)-7s %(asctime)s %(module
 
 def main():
     args = docopt(__doc__, version='1.3.0')
-    log = _setup_logging()
+    log = _setup_logging(args['--verbose'])
     _add_global_error_handler()
 
     if args['garage'] and args['open']:
@@ -117,11 +118,17 @@ def _add_global_error_handler():
     sys.excepthook = global_exception_handler
 
 
-def _setup_logging():
+def _setup_logging(verbose):
     log = logging.getLogger('forklift')
 
     log.logThreads = 0
     log.logProcesses = 0
+
+    debug = 'DEBUG'
+    info = 'INFO'
+
+    if verbose:
+        info = debug
 
     try:
         makedirs(dirname(log_location))
@@ -130,15 +137,15 @@ def _setup_logging():
 
     file_handler = logging.handlers.TimedRotatingFileHandler(log_location, when='H', interval=23, backupCount=7)
     file_handler.setFormatter(detailed_formatter)
-    file_handler.setLevel('DEBUG')
+    file_handler.setLevel(debug)
 
     console_handler = logging.StreamHandler(stream=sys.stdout)
     console_handler.setFormatter(detailed_formatter)
-    console_handler.setLevel('INFO')
+    console_handler.setLevel(info)
 
     log.addHandler(file_handler)
     log.addHandler(console_handler)
-    log.setLevel('DEBUG')
+    log.setLevel(debug)
 
     return log
 

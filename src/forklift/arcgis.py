@@ -8,6 +8,7 @@ A module that contains a class to control arcgis services.
 
 import requests
 import secrets
+from time import sleep
 from time import time
 
 
@@ -49,6 +50,8 @@ class LightSwitch(object):
         r.raise_for_status()
 
         ok = self._return_false_for_status(r.json())
+
+        sleep(10.0)
 
         return ok
 

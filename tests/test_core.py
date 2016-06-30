@@ -128,7 +128,6 @@ class CoreTests(unittest.TestCase):
         self.assertFalse(run_has_changes('NullShape', 'NullShape'))
         self.assertFalse(run_has_changes('Providers', 'Providers'))
         self.assertTrue(run_has_changes('NullDates', 'NullDates2'))
-        self.assertTrue(run_has_changes('NullDates', 'NullDates2'))
 
     def test_has_changes_sde(self):
         skip_if_no_local_sde()

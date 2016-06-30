@@ -51,7 +51,7 @@ detailed_formatter = logging.Formatter(fmt='%(levelname)7s %(asctime)s %(module)
 
 def main():
     args = docopt(__doc__, version='1.3.0')
-    _setup_logging()
+    log = _setup_logging()
     _add_global_error_handler()
 
     if args['garage'] and args['open']:
@@ -97,6 +97,8 @@ def main():
         else:
             cli.start_lift()
 
+    log.shutdown()
+
 
 def global_exception_handler(ex_cls, ex, tb):
     import traceback
@@ -137,6 +139,8 @@ def _setup_logging():
     log.addHandler(file_handler)
     log.addHandler(console_handler)
     log.setLevel('DEBUG')
+
+    return log
 
 
 if __name__ == '__main__':

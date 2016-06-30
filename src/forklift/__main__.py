@@ -39,6 +39,7 @@ import cli
 import logging.config
 import sys
 from docopt import docopt
+from logging import shutdown
 from os import makedirs
 from os import startfile
 from os.path import abspath
@@ -52,7 +53,7 @@ detailed_formatter = logging.Formatter(fmt='%(levelname)-7s %(asctime)s %(module
 
 def main():
     args = docopt(__doc__, version='1.4.0')
-    log = _setup_logging(args['--verbose'])
+    _setup_logging(args['--verbose'])
     _add_global_error_handler()
 
     if args['garage'] and args['open']:
@@ -98,7 +99,7 @@ def main():
         else:
             cli.start_lift()
 
-    log.shutdown()
+    shutdown()
 
 
 def global_exception_handler(ex_cls, ex, tb):

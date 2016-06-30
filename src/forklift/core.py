@@ -108,7 +108,7 @@ def _move_data(crate):
     '''
     is_table = _is_table(crate)
 
-    log.info('moving data...')
+    log.info('updating data...')
     log.debug('trucating data for %s', crate.destination_name)
     arcpy.TruncateTable_management(crate.destination)
 
@@ -121,16 +121,14 @@ def _move_data(crate):
     fields = set([fld.name for fld in arcpy.ListFields(crate.destination)]) & set([fld.name for fld in arcpy.ListFields(crate.source)])
     fields = _filter_fields(fields)
 
-    if is_table:
-        output_sr = None
-    else:
+    output_sr = None
+    if not is_table:
         fields.append('SHAPE@')
         output_sr = arcpy.Describe(crate.destination).spatialReference
 
+    sql_clause = None
     if 'OBJECTID' in [f.name for f in arcpy.ListFields(crate.source)] and 'OBJECTID' in [f.name for f in arcpy.ListFields(crate.destination)]:
         sql_clause = (None, 'ORDER BY OBJECTID')
-    else:
-        sql_clause = None
 
     arcpy.env.outputCoordinateSystem = crate.destination_coordinate_system
     arcpy.env.geographicTransformations = crate.geographic_transformation

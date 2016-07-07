@@ -51,7 +51,7 @@ class LightSwitch(object):
 
         ok = self._return_false_for_status(r.json())
 
-        sleep(10.0)
+        sleep(3.0)
 
         return ok
 

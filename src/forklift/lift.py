@@ -103,78 +103,6 @@ def process_pallets(pallets):
                 log.error('error shipping pallet: %s for pallet: %r', e.message, pallet, exc_info=True)
 
 
-def copy_data(pallets, all_pallets, config_copy_destinations):
-    '''pallets: Pallets[]
-
-    Loop over all of the pallets and extract the distinct copy_data workspaces.
-    Then loop over all of the copy_data workspaces and copy them to config_copy_destinations as defined in the config.'''
-    lightswitch = LightSwitch()
-    copy_workspaces, source_to_services, destination_to_pallet = _hydrate_copy_structures(pallets, all_pallets)
-
-    for source in copy_workspaces:
-        if Describe(source).workspaceFactoryProgID.startswith('esriDataSourcesGDB.FileGDBWorkspaceFactory'):
-            log.info('compacting %s', source)
-            Compact_management(source)
-
-        services = []
-        if source in source_to_services:
-            services = source_to_services[source]
-            log.info('stopping %s services dependent upon %s.', len(services), source)
-
-            for service in services:
-                log.debug('stopping %s.%s', service[0], service[1])
-                status = lightswitch.turn_off(service[0], service[1])
-
-                if not status[0]:
-                    log.warn('service %s did not stop: %s', service[0], status[1])
-
-        for destination in config_copy_destinations:
-            destination_workspace = path.join(destination, path.basename(source))
-
-            log.info('copying {} to {}...'.format(source, destination_workspace))
-            start_seconds = clock()
-            try:
-                if path.exists(destination_workspace):
-                    log.debug('%s exists moving', destination_workspace)
-                    shutil.move(destination_workspace, destination_workspace + 'x')
-
-                log.debug('copying source to destination')
-                shutil.copytree(source, destination_workspace)
-
-                if path.exists(destination_workspace + 'x'):
-                    log.debug('removing temporary gdb: %s', destination_workspace + 'x')
-                    shutil.rmtree(destination_workspace + 'x')
-
-                log.info('copy successful in %s', seat.format_time(clock() - start_seconds))
-            except Exception as e:
-                try:
-                    #: There is still a lock?
-                    #: The service probably wasn't shut down
-                    #: if there was a problem and the temp gdb exists
-                    #: since we couln't delete it before we probably can't delete it now
-                    #: so take what is in x and copy it over what it can in the original
-                    #: that _should_ leave the gdb in a functioning state
-                    if path.exists(destination_workspace) and path.exists(destination_workspace + 'x'):
-                        log.debug('cleaning up %s', destination_workspace)
-                        _copy_with_overwrite(destination_workspace + 'x', destination_workspace)
-                        shutil.rmtree(destination_workspace + 'x')
-                except Exception:
-                    log.error('%s might be in a corrupted state', destination_workspace, exc_info=True)
-
-                if source in destination_to_pallet:
-                    for pallet in destination_to_pallet[source]:
-                        pallet.success = (False, str(e))
-
-                log.error('there was an error copying %s to %s', source, destination_workspace, exc_info=True)
-
-        for service in services:
-            log.debug('starting %s.%s', service[0], service[1])
-            status = lightswitch.turn_on(service[0], service[1])
-
-            if not status[0]:
-                log.error('service %s did not start: %s', service[0], status[1])
-
-
 def create_report_object(pallets, elapsed_time):
     reports = [pallet.get_report() for pallet in pallets]
 
@@ -209,24 +137,107 @@ def _copy_with_overwrite(source, destination):
                 pass
 
 
-def _hydrate_copy_structures(specific_pallets, all_pallets):
-    copy_workspaces = set([])
-    source_to_services = {}
+def copy_data(specific_pallets, all_pallets, config_copy_destinations):
+    #: we're lifting everything
+    if len(specific_pallets) == 0:
+        specific_pallets = all_pallets
+
+    #: filter out pallets whose data did not change
+    specific_pallets = [pallet for pallet in specific_pallets if pallet.requires_processing() is True]
+
+    #: no pallets to process. we are done here
+    if len(specific_pallets) == 0:
+        return
+
+    lightswitch = LightSwitch()
+    services_affected, data_being_moved, destination_to_pallet = _hydrate_data_structures(specific_pallets, all_pallets)
+
+    log.info('stopping %s dependent services.', len(services_affected))
+    for service in services_affected:
+        log.debug('stopping %s.%s', service[0], service[1])
+        status = lightswitch.turn_off(service[0], service[1])
+
+        if not status[0]:
+            log.warn('service %s did not stop: %s', service[0], status[1])
+
+    for source in data_being_moved:
+        if Describe(source).workspaceFactoryProgID.startswith('esriDataSourcesGDB.FileGDBWorkspaceFactory'):
+            log.info('compacting %s', source)
+            Compact_management(source)
+
+        for destination in config_copy_destinations:
+            destination_workspace = path.join(destination, path.basename(source))
+
+            log.info('copying {} to {}...'.format(source, destination_workspace))
+            start_seconds = clock()
+            try:
+                if path.exists(destination_workspace):
+                    log.debug('%s exists moving', destination_workspace)
+                    shutil.move(destination_workspace, destination_workspace + 'x')
+
+                log.debug('copying source to destination')
+                shutil.copytree(source, destination_workspace)
+
+                if path.exists(destination_workspace + 'x'):
+                    log.debug('removing temporary gdb: %s', destination_workspace + 'x')
+                    shutil.rmtree(destination_workspace + 'x')
+
+                log.info('copy successful in %s', seat.format_time(clock() - start_seconds))
+            except Exception as e:
+                try:
+                    #: There is still a lock?
+                    #: The service probably wasn't shut down
+                    #: if there was a problem and the temp gdb exists
+                    #: since we couln't delete it before we probably can't delete it now
+                    #: so take what is in x and copy it over what it can in the original
+                    #: that _should_ leave the gdb in a functioning state
+                    if path.exists(destination_workspace) and path.exists(destination_workspace + 'x'):
+                        log.debug('cleaning up %s', destination_workspace)
+                        _copy_with_overwrite(destination_workspace + 'x', destination_workspace)
+                        shutil.rmtree(destination_workspace + 'x')
+                except Exception:
+                    log.error('%s might be in a corrupted state', destination_workspace, exc_info=True)
+
+                if source.lower() in destination_to_pallet:
+                    for pallet in destination_to_pallet[source.lower()]:
+                        pallet.success = (False, str(e))
+
+                log.error('there was an error copying %s to %s', source, destination_workspace, exc_info=True)
+
+    log.info('starting %s dependent services.', len(services_affected))
+    for service in services_affected:
+        log.debug('starting %s.%s', service[0], service[1])
+        status = lightswitch.turn_on(service[0], service[1])
+
+        if not status[0]:
+            log.error('service %s did not start: %s', service[0], status[1])
+
+
+def _hydrate_data_structures(specific_pallets, all_pallets):
+    services_affected = set([])
+    data_being_moved = set([])
     destination_to_pallet = {}
 
-    for pallet in all_pallets:
-        if pallet.requires_processing() and pallet in specific_pallets:
-            copy_workspaces |= set([x.lower() for x in pallet.copy_data])  # noqa
+    #: get the services affected by this pallet
+    for pallet in specific_pallets:
+        for service in pallet.arcgis_services:
+            services_affected.add(service)
 
-        services = pallet.arcgis_services
-
-        #: loop over all the copy_data workspaces
         for workspace in pallet.copy_data:
             workspace = workspace.lower()
-            destination_to_pallet.setdefault(workspace, []).append(pallet)
-            source_to_services.setdefault(workspace, set([]))
-            #: add the service types to the workspace
-            for service in services:
-                source_to_services[workspace].add(service)
+            data_being_moved.add(workspace)
 
-    return copy_workspaces, source_to_services, destination_to_pallet
+    #: append the services that share datasources
+    for pallet in all_pallets:
+        for workspace in pallet.copy_data:
+            workspace = workspace.lower()
+            if workspace not in data_being_moved:
+                continue
+
+            for service in pallet.arcgis_services:
+                services_affected.add(service)
+
+            destination_to_pallet.setdefault(workspace, []).append(pallet)
+            break
+
+    return services_affected, data_being_moved, destination_to_pallet

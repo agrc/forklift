@@ -23,12 +23,15 @@ from models import Pallet
 from os.path import abspath, exists, join, splitext, basename, dirname, isfile
 from os import walk
 from os import linesep
+from re import compile
 from requests import get
 from time import clock
 
 log = logging.getLogger('forklift')
 template = join(abspath(dirname(__file__)), 'report_template.html')
 colorama_init()
+
+pallet_file_regex = compile(ur'pallet.*\.py$')
 
 
 def init():
@@ -195,7 +198,7 @@ def _get_pallets_in_folder(folder):
 
     for root, dirs, files in walk(folder):
         for file_name in files:
-            if file_name.endswith('.py'):
+            if pallet_file_regex.search(file_name.lower()):
                 pallets.extend(_get_pallets_in_file(join(root, file_name)))
     return pallets
 
@@ -212,7 +215,7 @@ def _get_pallets_in_file(file_path):
         mod = import_module(name)
     except Exception as e:
         # skip modules that fail to import
-        log.warn('%s failed to import: %s', file_path, e.message, exc_info=True)
+        log.error('%s failed to import: %s', file_path, e.message, exc_info=True)
         return []
 
     for member in dir(mod):

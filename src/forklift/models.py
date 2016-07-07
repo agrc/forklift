@@ -25,6 +25,9 @@ class Pallet(object):
 
     Pallets are plugins for the forklift main process. They define a list of crates and
     any post processing that needs to happen.
+
+    In order for a pallet to be recognized by forklift, the file within which it is defined needs to have
+    `pallet` (case-insensitive) somewhere in the filename.
     '''
 
     def __init__(self, arg=None):

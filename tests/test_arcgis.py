@@ -81,7 +81,7 @@ class TestLightSwitch(unittest.TestCase):
 
         return_false_for_status_mock = Mock(return_value=(True, None))
         self.patient._request_token = request_token_mock
-        self.patient.token_expire_date = (time() * 1000) + 10000
+        self.patient.token_expire_milliseconds = (time() * 1000) + 10000
         self.patient._return_false_for_status = return_false_for_status_mock
 
         self.patient._fetch('url')
@@ -114,4 +114,4 @@ class TestLightSwitch(unittest.TestCase):
         self.patient._request_token()
 
         self.assertEqual(self.patient.token, 'token1')
-        self.assertEqual(self.patient.token_expire_date, '123')
+        self.assertEqual(self.patient.token_expire_milliseconds, 123)

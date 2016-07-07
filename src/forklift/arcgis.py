@@ -23,7 +23,7 @@ server = secrets.ags_server_host
 class LightSwitch(object):
     def __init__(self):
         self.token = None
-        self.token_expire_date = 0
+        self.token_expire_milliseconds = 0
         self.payload = None
 
     def turn_off(self, service, type):
@@ -41,7 +41,7 @@ class LightSwitch(object):
 
     def _fetch(self, url):
         # check to make sure that token isn't expired
-        if self.token_expire_date <= time() * 1000:
+        if self.token_expire_milliseconds <= time() * 1000:
             self._request_token()
 
         data = {'f': 'json', 'token': self.token}
@@ -74,4 +74,4 @@ class LightSwitch(object):
         self._return_false_for_status(response_data)
 
         self.token = response_data['token']
-        self.token_expire_date = response_data['expires']
+        self.token_expire_milliseconds = int(response_data['expires'])

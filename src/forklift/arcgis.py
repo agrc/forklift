@@ -65,6 +65,7 @@ class LightSwitch(object):
         data = {'username': username,
                 'password': password,
                 'client': 'requestip',
+                'expiration': 60,
                 'f': 'json'}
 
         response = requests.post(token_url.format(server), data=data)

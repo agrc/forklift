@@ -212,11 +212,15 @@ def _get_pallets_in_file(file_path):
         sys.path.append(folder)
 
     try:
+        if name in sys.modules.keys():
+            del(sys.modules[name])
         mod = import_module(name)
     except Exception as e:
         # skip modules that fail to import
         log.error('%s failed to import: %s', file_path, e.message, exc_info=True)
         return []
+
+    sys.path.remove(folder)
 
     for member in dir(mod):
         try:

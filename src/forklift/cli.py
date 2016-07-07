@@ -18,7 +18,7 @@ from messaging import send_email
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from git import Repo
-from importlib import import_module
+from imp import load_source
 from models import Pallet
 from os.path import abspath, exists, join, splitext, basename, dirname, isfile
 from os import walk
@@ -95,7 +95,7 @@ def start_lift(file_path=None, pallet_arg=None):
         module_name = splitext(basename(info[0]))[0]
         class_name = info[1]
         log.debug('attempting to import %s from %s', info[1], info[0])
-        PalletClass = getattr(__import__(module_name), class_name)
+        PalletClass = getattr(load_source(module_name, info[0]), class_name)
 
         try:
             if pallet_arg is not None:
@@ -214,13 +214,12 @@ def _get_pallets_in_file(file_path):
     try:
         if name in sys.modules.keys():
             del(sys.modules[name])
-        mod = import_module(name)
+
+        mod = load_source(name, file_path)
     except Exception as e:
         # skip modules that fail to import
         log.error('%s failed to import: %s', file_path, e.message, exc_info=True)
         return []
-
-    sys.path.remove(folder)
 
     for member in dir(mod):
         try:

@@ -12,14 +12,13 @@ import lift
 import logging
 import pystache
 import seat
-import sys
 from colorama import init as colorama_init, Fore
 from messaging import send_email
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from git import Repo
-from imp import load_source
 from models import Pallet
+from nose.importer import Importer
 from os.path import abspath, exists, join, splitext, basename, dirname, isfile
 from os import walk
 from os import linesep
@@ -30,6 +29,7 @@ from time import clock
 log = logging.getLogger('forklift')
 template = join(abspath(dirname(__file__)), 'report_template.html')
 colorama_init()
+importer = Importer()
 
 pallet_file_regex = compile(ur'pallet.*\.py$')
 
@@ -95,7 +95,7 @@ def start_lift(file_path=None, pallet_arg=None):
         module_name = splitext(basename(info[0]))[0]
         class_name = info[1]
         log.debug('attempting to import %s from %s', info[1], info[0])
-        PalletClass = getattr(load_source(module_name, info[0]), class_name)
+        PalletClass = getattr(importer.importFromDir(dirname(info[0]), module_name), class_name)
 
         try:
             if pallet_arg is not None:
@@ -208,14 +208,8 @@ def _get_pallets_in_file(file_path):
     name = splitext(basename(file_path))[0]
     folder = dirname(file_path)
 
-    if folder not in sys.path:
-        sys.path.append(folder)
-
     try:
-        if name in sys.modules.keys():
-            del(sys.modules[name])
-
-        mod = load_source(name, file_path)
+        mod = importer.importFromDir(folder, name)
     except Exception as e:
         # skip modules that fail to import
         log.error('%s failed to import: %s', file_path, e.message, exc_info=True)

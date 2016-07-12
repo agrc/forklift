@@ -12,14 +12,13 @@ import lift
 import logging
 import pystache
 import seat
-import sys
 from colorama import init as colorama_init, Fore
 from messaging import send_email
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from git import Repo
-from imp import load_source
 from models import Pallet
+from nose.importer import Importer
 from os.path import abspath, exists, join, splitext, basename, dirname, isfile
 from os import walk
 from os import linesep
@@ -30,6 +29,8 @@ from time import clock
 log = logging.getLogger('forklift')
 template = join(abspath(dirname(__file__)), 'report_template.html')
 colorama_init()
+# importer = Importer({'addPaths': False})
+importer = Importer()
 
 pallet_file_regex = compile(ur'pallet.*\.py$')
 
@@ -92,10 +93,8 @@ def start_lift(file_path=None, pallet_arg=None):
     all_pallets = []
     pallets_to_lift = []
     for info in pallet_infos:
-        module_name = splitext(basename(info[0]))[0]
-        class_name = info[1]
-        log.debug('attempting to import %s from %s', info[1], info[0])
-        PalletClass = getattr(load_source(module_name, info[0]), class_name)
+        mod_path, PalletClass = info
+        log.debug('attempting to import %s from %s', info[1], mod_path)
 
         try:
             if pallet_arg is not None:
@@ -107,7 +106,7 @@ def start_lift(file_path=None, pallet_arg=None):
             if info[0] == file_path or file_path is None:
                 pallets_to_lift.append(pallet)
         except Exception as e:
-            log.error('error creating pallet class: %s. %s', class_name, e.message, exc_info=True)
+            log.error('error creating pallet class: %s. %s', PalletClass, e.message, exc_info=True)
 
     start_process = clock()
     lift.process_crates_for(pallets_to_lift, core.update, config.get_config_prop('configuration'))
@@ -129,6 +128,8 @@ def start_lift(file_path=None, pallet_arg=None):
     print('Finished in {}.'.format(elapsed_time))
 
     log.info('%s', _format_dictionary(report_object))
+
+    return pallets_to_lift
 
 
 def _send_report_email(report_object):
@@ -204,18 +205,12 @@ def _get_pallets_in_folder(folder):
 
 
 def _get_pallets_in_file(file_path):
+    import pdb; pdb.set_trace()
     pallets = []
     name = splitext(basename(file_path))[0]
-    folder = dirname(file_path)
-
-    if folder not in sys.path:
-        sys.path.append(folder)
 
     try:
-        if name in sys.modules.keys():
-            del(sys.modules[name])
-
-        mod = load_source(name, file_path)
+        mod = importer.importFromPath(file_path, name)
     except Exception as e:
         # skip modules that fail to import
         log.error('%s failed to import: %s', file_path, e.message, exc_info=True)
@@ -225,7 +220,7 @@ def _get_pallets_in_file(file_path):
         try:
             potential_class = getattr(mod, member)
             if issubclass(potential_class, Pallet) and potential_class != Pallet:
-                pallets.append((file_path, member))
+                pallets.append((file_path, potential_class))
         except:
             #: member was likely not a class
             pass

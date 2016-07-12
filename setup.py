@@ -75,7 +75,8 @@ setup(
         #: pyopenssl, ndg-httpsclient, pyasn1 are there to disable ssl warnings in requests
         'pyopenssl==16.0.0',
         'ndg-httpsclient==0.4.0',
-        'pyasn1==0.1.9'
+        'pyasn1==0.1.9',
+        'nose==1.3.7'
     ],
     dependency_links=[
     ],

@@ -215,6 +215,7 @@ def copy_data(specific_pallets, all_pallets, config_copy_destinations):
         results += start_msg
         log.error(start_msg)
 
+    return results
 
 
 def _hydrate_data_structures(specific_pallets, all_pallets):

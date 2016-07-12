@@ -91,9 +91,7 @@ def start_lift(file_path=None, pallet_arg=None):
 
     all_pallets = []
     pallets_to_lift = []
-    for info in pallet_infos:
-        PalletClass = info[1]
-
+    for pallet_location, PalletClass in pallet_infos:
         try:
             if pallet_arg is not None:
                 pallet = PalletClass(pallet_arg)
@@ -101,7 +99,7 @@ def start_lift(file_path=None, pallet_arg=None):
                 pallet = PalletClass()
 
             all_pallets.append(pallet)
-            if info[0] == file_path or file_path is None:
+            if pallet_location == file_path or file_path is None:
                 pallets_to_lift.append(pallet)
         except Exception as e:
             log.error('error creating pallet class: %s. %s', class_name, e.message, exc_info=True)

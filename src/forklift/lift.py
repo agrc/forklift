@@ -157,9 +157,11 @@ def copy_data(specific_pallets, all_pallets, config_copy_destinations):
     log.info('stopping %s dependent services.', len(services_affected))
     ok, problem_children = lightswitch.ensure('off', services_affected)
 
+    service_msg = 'services will still not {}. this will affect data copy. {}'
     if not ok:
-        results += 'services will still not stop. this will affect data copy. {}'.format(problem_children)
-        log.error('services will still not stop. this will affect data copy %s', problem_children)
+        stop_msg = service_msg.format('stop', problem_children)
+        results += stop_msg
+        log.error(stop_msg)
 
     for source in data_being_moved:
         if Describe(source).workspaceFactoryProgID.startswith('esriDataSourcesGDB.FileGDBWorkspaceFactory'):
@@ -209,8 +211,9 @@ def copy_data(specific_pallets, all_pallets, config_copy_destinations):
     ok, problem_children = lightswitch.ensure('on', services_affected)
 
     if not ok:
-        results += 'services will still not start. this will affect everyone: %s'.format(problem_children)
-        log.error('services will still not start. this will affect everyone %s', affected_service, problem_children)
+        start_msg = service_msg.format('start', problem_children)
+        results += start_msg
+        log.error(start_msg)
 
 
 

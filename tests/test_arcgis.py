@@ -118,3 +118,44 @@ class TestLightSwitch(unittest.TestCase):
 
         self.assertEqual(self.patient.token, 'token1')
         self.assertEqual(self.patient.token_expire_milliseconds, 123)
+
+    @patch('forklift.arcgis.sleep')
+    def test_ensure_tries_five_times_with_failures(self, sleep):
+        affected_services = [('1', 'MapServer')]
+
+        self.patient.turn_on = Mock(return_value=(False, ''))
+        self.patient.turn_off = Mock()
+
+        status, affected_services = self.patient.ensure('on', affected_services)
+
+        self.assertFalse(status)
+        self.assertEqual('1.MapServer', affected_services)
+        self.assertEqual(self.patient.turn_on.call_count, 5)
+        self.patient.turn_off.assert_not_called()
+        sleep.assert_has_calls([call(1), call(2), call(3), call(5), call(8)])
+
+    @patch('forklift.arcgis.sleep')
+    def test_ensure_returns_formatted_problems(self, sleep):
+        affected_services = [('1', 'MapServer'), ('2', 'GPServer'), ('3', 'GeocodeServer')]
+
+        self.patient.turn_on = Mock(return_value=(False, ''))
+        self.patient.turn_off = Mock()
+
+        status, affected_services = self.patient.ensure('on', affected_services)
+
+        self.assertEqual('1.MapServer, 2.GPServer, 3.GeocodeServer', affected_services)
+
+    @patch('forklift.arcgis.sleep')
+    def test_ensure_tries_until_success(self, sleep):
+        affected_services = [('1', 'MapServer')]
+
+        self.patient.turn_on = Mock(side_effect=[(False, ''), (True, '')])
+        self.patient.turn_off = Mock()
+
+        status, affected_services = self.patient.ensure('on', affected_services)
+
+        self.assertTrue(status)
+        self.assertEqual(affected_services, '')
+        self.patient.turn_off.assert_not_called()
+        self.assertEqual(self.patient.turn_on.call_count, 2)
+        sleep.assert_has_calls([call(1)])

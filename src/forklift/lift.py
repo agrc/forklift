@@ -153,12 +153,10 @@ def copy_data(specific_pallets, all_pallets, config_copy_destinations):
     services_affected, data_being_moved, destination_to_pallet = _hydrate_data_structures(specific_pallets, all_pallets)
 
     log.info('stopping %s dependent services.', len(services_affected))
-    for service in services_affected:
-        log.debug('stopping %s.%s', service[0], service[1])
-        status = lightswitch.turn_off(service[0], service[1])
+    ok, problem_children = lightswitch.ensure('off', services_affected)
 
-        if not status[0]:
-            log.warn('service %s did not stop: %s', service[0], status[1])
+    if not ok:
+        log.error('services will still not stop. this will affect data copy %s', problem_children)
 
     for source in data_being_moved:
         if Describe(source).workspaceFactoryProgID.startswith('esriDataSourcesGDB.FileGDBWorkspaceFactory'):
@@ -205,12 +203,10 @@ def copy_data(specific_pallets, all_pallets, config_copy_destinations):
                 log.error('there was an error copying %s to %s', source, destination_workspace, exc_info=True)
 
     log.info('starting %s dependent services.', len(services_affected))
-    for service in services_affected:
-        log.debug('starting %s.%s', service[0], service[1])
-        status = lightswitch.turn_on(service[0], service[1])
+    ok, problem_children = lightswitch.ensure('on', services_affected)
 
-        if not status[0]:
-            log.error('service %s did not start: %s', service[0], status[1])
+    if not ok:
+        log.error('services will still not start. this will affect everyone %s', affected_service, problem_children)
 
 
 def _hydrate_data_structures(specific_pallets, all_pallets):

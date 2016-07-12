@@ -102,7 +102,7 @@ def start_lift(file_path=None, pallet_arg=None):
             if pallet_location == file_path or file_path is None:
                 pallets_to_lift.append(pallet)
         except Exception as e:
-            log.error('error creating pallet class: %s. %s', class_name, e.message, exc_info=True)
+            log.error('error creating pallet class: %s. %s', PalletClass.__name__, e.message, exc_info=True)
 
     start_process = clock()
     lift.process_crates_for(pallets_to_lift, core.update, config.get_config_prop('configuration'))
@@ -113,11 +113,11 @@ def start_lift(file_path=None, pallet_arg=None):
     log.info('process_pallets time: %s', seat.format_time(clock() - start_process))
 
     start_copy = clock()
-    lift.copy_data(pallets_to_lift, all_pallets, config.get_config_prop('copyDestinations'))
+    copy_results = lift.copy_data(pallets_to_lift, all_pallets, config.get_config_prop('copyDestinations'))
     log.info('copy_data time: %s', seat.format_time(clock() - start_copy))
 
     elapsed_time = seat.format_time(clock() - start_seconds)
-    report_object = lift.create_report_object(pallets_to_lift, elapsed_time)
+    report_object = lift.create_report_object(pallets_to_lift, elapsed_time, copy_results)
 
     _send_report_email(report_object)
 
@@ -229,6 +229,9 @@ def _format_dictionary(pallet_reports):
     str = '{3}{3}    {4}{0}{2} out of {5}{1}{2} pallets ran successfully in {6}.{3}'.format(
         pallet_reports['num_success_pallets'], len(pallet_reports['pallets']), Fore.RESET, linesep, Fore.GREEN,
         Fore.CYAN, pallet_reports['total_time'])
+
+    if pallet_reports['copy_results'] is not None:
+        str += '{}There was a problem restarting these services: {}{}{}'.format(Fore.RED, pallet_reports['copy_results'], Fore.RESET, linesep)
 
     for report in pallet_reports['pallets']:
         color = Fore.GREEN

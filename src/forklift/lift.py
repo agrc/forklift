@@ -103,13 +103,14 @@ def process_pallets(pallets):
                 log.error('error shipping pallet: %s for pallet: %r', e.message, pallet, exc_info=True)
 
 
-def create_report_object(pallets, elapsed_time):
+def create_report_object(pallets, elapsed_time, copy_results):
     reports = [pallet.get_report() for pallet in pallets]
 
     return {'total_pallets': len(reports),
             'num_success_pallets': len(filter(lambda p: p['success'], reports)),
             'pallets': reports,
-            'total_time': elapsed_time}
+            'total_time': elapsed_time,
+            'copy_results': copy_results}
 
 
 def _copy_with_overwrite(source, destination):
@@ -151,14 +152,16 @@ def copy_data(specific_pallets, all_pallets, config_copy_destinations):
 
     lightswitch = LightSwitch()
     services_affected, data_being_moved, destination_to_pallet = _hydrate_data_structures(specific_pallets, all_pallets)
+    results = ''
 
     log.info('stopping %s dependent services.', len(services_affected))
-    for service in services_affected:
-        log.debug('stopping %s.%s', service[0], service[1])
-        status = lightswitch.turn_off(service[0], service[1])
+    ok, problem_children = lightswitch.ensure('off', services_affected)
 
-        if not status[0]:
-            log.warn('service %s did not stop: %s', service[0], status[1])
+    service_msg = 'services will still not {}. this will affect data copy. {}'
+    if not ok:
+        stop_msg = service_msg.format('stop', problem_children)
+        results += stop_msg
+        log.error(stop_msg)
 
     for source in data_being_moved:
         if Describe(source).workspaceFactoryProgID.startswith('esriDataSourcesGDB.FileGDBWorkspaceFactory'):
@@ -205,12 +208,14 @@ def copy_data(specific_pallets, all_pallets, config_copy_destinations):
                 log.error('there was an error copying %s to %s', source, destination_workspace, exc_info=True)
 
     log.info('starting %s dependent services.', len(services_affected))
-    for service in services_affected:
-        log.debug('starting %s.%s', service[0], service[1])
-        status = lightswitch.turn_on(service[0], service[1])
+    ok, problem_children = lightswitch.ensure('on', services_affected)
 
-        if not status[0]:
-            log.error('service %s did not start: %s', service[0], status[1])
+    if not ok:
+        start_msg = service_msg.format('start', problem_children)
+        results += start_msg
+        log.error(start_msg)
+
+    return results
 
 
 def _hydrate_data_structures(specific_pallets, all_pallets):

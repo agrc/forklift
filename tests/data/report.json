@@ -1,6 +1,7 @@
 {
     "num_success_pallets": 3,
     "total_pallets": 5,
+    "copy_results": "1.MapServer, 2.GPServer, 3.GeocodeServer",
     "pallets": [
         {
             "name": "Z:\\forklift\\samples\\PalletSamples.py:StringCratePallet",

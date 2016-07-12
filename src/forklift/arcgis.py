@@ -6,11 +6,14 @@ arcgis.py
 A module that contains a class to control arcgis services.
 '''
 
+import logging
 import requests
 import secrets
 from time import sleep
 from time import time
 
+
+log = logging.getLogger('forklift')
 
 base_url = r'http://{}:6080/arcgis/admin/'
 token_url = r'{}generateToken'.format(base_url)
@@ -25,6 +28,31 @@ class LightSwitch(object):
         self.token = None
         self.token_expire_milliseconds = 0
         self.payload = None
+
+    def ensure(self, what, affected_services):
+        tries = 4
+        wait = [8, 5, 3, 2, 1]
+
+        while len(affected_services) > 0 and tries >= 0:
+            problem_child = []
+            sleep(wait[tries])
+
+            for service_name, service_type in affected_services:
+                if what == 'off':
+                    log.debug('stopping %s.%s', service_name, service_type)
+                    status, message = self.turn_off(service_name, service_type)
+                else:
+                    log.debug('starting %s.%s', service_name, service_type)
+                    status, message = self.turn_on(service_name, service_type)
+
+                if not status:
+                    problem_child.append((service_name, service_type))
+
+            tries -= 1
+            affected_services = problem_child
+            log.debug('retrying to start %s',  ', '.join([name + '.' + service for name, service in affected_services]))
+
+        return (len(affected_services) == 0, ', '.join([name + '.' + service for name, service in affected_services]))
 
     def turn_off(self, service, type):
         return self._flip_switch(service, type, 'stop')

@@ -209,9 +209,6 @@ def _get_pallets_in_file(file_path):
         sys.path.append(folder)
 
     try:
-        if name in sys.modules.keys():
-            del(sys.modules[name])
-
         mod = load_source(name, file_path)
     except Exception as e:
         # skip modules that fail to import

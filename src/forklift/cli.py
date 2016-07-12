@@ -91,12 +91,7 @@ def start_lift(file_path=None, pallet_arg=None):
 
     all_pallets = []
     pallets_to_lift = []
-    for info in pallet_infos:
-        module_name = splitext(basename(info[0]))[0]
-        class_name = info[1]
-        log.debug('attempting to import %s from %s', info[1], info[0])
-        PalletClass = getattr(load_source(module_name, info[0]), class_name)
-
+    for pallet_location, PalletClass in pallet_infos:
         try:
             if pallet_arg is not None:
                 pallet = PalletClass(pallet_arg)
@@ -104,7 +99,7 @@ def start_lift(file_path=None, pallet_arg=None):
                 pallet = PalletClass()
 
             all_pallets.append(pallet)
-            if info[0] == file_path or file_path is None:
+            if pallet_location == file_path or file_path is None:
                 pallets_to_lift.append(pallet)
         except Exception as e:
             log.error('error creating pallet class: %s. %s', class_name, e.message, exc_info=True)
@@ -212,9 +207,6 @@ def _get_pallets_in_file(file_path):
         sys.path.append(folder)
 
     try:
-        if name in sys.modules.keys():
-            del(sys.modules[name])
-
         mod = load_source(name, file_path)
     except Exception as e:
         # skip modules that fail to import
@@ -225,7 +217,7 @@ def _get_pallets_in_file(file_path):
         try:
             potential_class = getattr(mod, member)
             if issubclass(potential_class, Pallet) and potential_class != Pallet:
-                pallets.append((file_path, member))
+                pallets.append((file_path, potential_class))
         except:
             #: member was likely not a class
             pass

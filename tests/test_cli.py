@@ -121,8 +121,8 @@ class TestListPallets(unittest.TestCase):
 
         self.assertEqual(len(pallets), 4)
         self.assertEqual(pallets[0][0], join(test_pallets_folder, 'multiple_pallets.py'))
-        self.assertEqual(pallets[0][1], 'PalletOne')
-        self.assertEqual(pallets[3][1], 'NestedPallet')
+        self.assertEqual(pallets[0][1].__name__, 'PalletOne')
+        self.assertEqual(pallets[3][1].__name__, 'NestedPallet')
 
     def test_list_pallets_from_config(self):
         config.set_config_prop('warehouse', test_pallets_folder, override=True)
@@ -130,14 +130,14 @@ class TestListPallets(unittest.TestCase):
 
         self.assertEqual(len(pallets), 4)
         self.assertEqual(pallets[0][0], join(test_pallets_folder, 'multiple_pallets.py'))
-        self.assertEqual(pallets[0][1], 'PalletOne')
+        self.assertEqual(pallets[0][1].__name__, 'PalletOne')
 
     def test_list_pallets_order(self):
         pallets = cli._get_pallets_in_file(join(test_data_folder, 'pallet_order.py'))
 
-        self.assertEqual(pallets[0][1], 'PalletA')
-        self.assertEqual(pallets[1][1], 'PalletB')
-        self.assertEqual(pallets[2][1], 'PalletC')
+        self.assertEqual(pallets[0][1].__name__, 'PalletA')
+        self.assertEqual(pallets[1][1].__name__, 'PalletB')
+        self.assertEqual(pallets[2][1].__name__, 'PalletC')
 
 
 @patch('forklift.lift.process_crates_for')

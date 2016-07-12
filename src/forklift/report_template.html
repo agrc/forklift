@@ -1,7 +1,9 @@
 <p><b>{{num_success_pallets}}</b> out of <b>{{total_pallets}}</b> pallets ran successfully in {{total_time}}.</p>
-
-<table >
+<table>
     <tbody>
+        {{#copy_results}}
+        <tr><td colspan='2' style='background-color: #fc7973'><strong>Error Restarting</strong>: {{copy_results}}</td></tr>
+        {{/copy_results}}
         {{#pallets}}
         <tr>
             <td colspan='2' style='background-color: {{#success}}#83ec8f{{/success}}

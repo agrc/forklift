@@ -103,13 +103,14 @@ def process_pallets(pallets):
                 log.error('error shipping pallet: %s for pallet: %r', e.message, pallet, exc_info=True)
 
 
-def create_report_object(pallets, elapsed_time):
+def create_report_object(pallets, elapsed_time, copy_results):
     reports = [pallet.get_report() for pallet in pallets]
 
     return {'total_pallets': len(reports),
             'num_success_pallets': len(filter(lambda p: p['success'], reports)),
             'pallets': reports,
-            'total_time': elapsed_time}
+            'total_time': elapsed_time,
+            'copy_results': copy_results}
 
 
 def _copy_with_overwrite(source, destination):
@@ -151,11 +152,13 @@ def copy_data(specific_pallets, all_pallets, config_copy_destinations):
 
     lightswitch = LightSwitch()
     services_affected, data_being_moved, destination_to_pallet = _hydrate_data_structures(specific_pallets, all_pallets)
+    results = ''
 
     log.info('stopping %s dependent services.', len(services_affected))
     ok, problem_children = lightswitch.ensure('off', services_affected)
 
     if not ok:
+        results += 'services will still not stop. this will affect data copy. {}'.format(problem_children)
         log.error('services will still not stop. this will affect data copy %s', problem_children)
 
     for source in data_being_moved:
@@ -206,7 +209,9 @@ def copy_data(specific_pallets, all_pallets, config_copy_destinations):
     ok, problem_children = lightswitch.ensure('on', services_affected)
 
     if not ok:
+        results += 'services will still not start. this will affect everyone: %s'.format(problem_children)
         log.error('services will still not start. this will affect everyone %s', affected_service, problem_children)
+
 
 
 def _hydrate_data_structures(specific_pallets, all_pallets):

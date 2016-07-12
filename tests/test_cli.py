@@ -179,6 +179,23 @@ class TestCliStartLift(unittest.TestCase):
         self.assertEqual(pallet.arg, None)
 
 
+class TestDuplicatePalletFilenames(unittest.TestCase):
+    def setUp(self):
+        if exists(config_location):
+            remove(config_location)
+
+    def test_does_not_pollute_globals(self):
+        dups_folder = join(test_data_folder, 'duplicate_pallet_file_names')
+
+        cli.init()
+        config.set_config_prop('warehouse', dups_folder, override=True)
+
+        lifted_pallets = cli.start_lift()
+
+        for pallet in lifted_pallets:
+            self.assertTrue(pallet.success[0])
+
+
 class TestCliGeneral(unittest.TestCase):
 
     def test_repo_to_url(self):

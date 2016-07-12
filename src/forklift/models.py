@@ -28,6 +28,9 @@ class Pallet(object):
 
     In order for a pallet to be recognized by forklift, the file within which it is defined needs to have
     `pallet` (case-insensitive) somewhere in the filename.
+
+    Multiple pallets with the same filename will cause issues so it's strongly recommended to keep them unique.
+    Appending the project name to the file name is the convention.
     '''
 
     def __init__(self, arg=None):

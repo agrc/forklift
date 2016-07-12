@@ -9,7 +9,8 @@ A module that tests arcgis.py
 import unittest
 from forklift import arcgis
 from forklift.arcgis import LightSwitch
-from mock import Mock, patch
+from mock import Mock
+from mock import patch
 from time import time
 
 
@@ -52,8 +53,9 @@ class TestLightSwitch(unittest.TestCase):
         fetch_mock.assert_called_once()
         fetch_mock.assert_called_with('http://host:6080/arcgis/admin/services/MyService.ServiceType/action')
 
+    @patch('forklift.arcgis.sleep')
     @patch('forklift.arcgis.requests')
-    def test_fetch_requests_token_when_expired(self, request):
+    def test_fetch_requests_token_when_expired(self, request, sleep):
         post_response_mock = Mock()
         post_response_mock.raise_for_status = Mock(return_value=False)
         post_response_mock.json = Mock(return_value={'token': 'token1', 'expires': '123'})
@@ -69,8 +71,9 @@ class TestLightSwitch(unittest.TestCase):
 
         request_token_mock.assert_called_once()
 
+    @patch('forklift.arcgis.sleep')
     @patch('forklift.arcgis.requests')
-    def test_fetch_requests_uses_exiting_token(self, request):
+    def test_fetch_requests_uses_exiting_token(self, request, sleep):
         post_response_mock = Mock()
         post_response_mock.raise_for_status = Mock(return_value=False)
         post_response_mock.json = Mock(return_value={'token': 'token1', 'expires': '123'})

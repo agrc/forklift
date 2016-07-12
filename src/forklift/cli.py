@@ -102,7 +102,7 @@ def start_lift(file_path=None, pallet_arg=None):
             if pallet_location == file_path or file_path is None:
                 pallets_to_lift.append(pallet)
         except Exception as e:
-            log.error('error creating pallet class: %s. %s', class_name, e.message, exc_info=True)
+            log.error('error creating pallet class: %s. %s', PalletClass.__name__, e.message, exc_info=True)
 
     start_process = clock()
     lift.process_crates_for(pallets_to_lift, core.update, config.get_config_prop('configuration'))

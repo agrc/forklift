@@ -226,6 +226,6 @@ class TestReport(unittest.TestCase):
         success = {'name': 'Successful Pallet', 'success': True, 'message': None, 'crates': [good_crate, good_crate]}
         fail = {'name': 'Fail Pallet', 'success': False, 'message': 'What Happened?!', 'crates': [bad_crate, good_crate]}
 
-        report = {'total_pallets': 2, 'num_success_pallets': 1, 'pallets': [success, fail], 'total_time': '5 minutes'}
+        report = {'total_pallets': 2, 'num_success_pallets': 1, 'pallets': [success, fail], 'total_time': '5 minutes', 'copy_results': []}
 
         print(cli._format_dictionary(report))

@@ -9,7 +9,9 @@ A module for testing lift.py
 import unittest
 from forklift import lift
 from forklift.models import Pallet, Crate
-from mock import Mock, patch
+from mock import Mock
+from mock import patch
+from mock import call
 
 fgd_describe = Mock()
 fgd_describe.workspaceFactoryProgID = 'esriDataSourcesGDB.FileGDBWorkspaceFactory'
@@ -97,7 +99,6 @@ class TestLift(unittest.TestCase):
         pallet3.ship.assert_called_once()
         pallet3.process.assert_called_once()
 
-    def test_process_pallets_handles_process_exception(self):
         pallet = self.PalletMock()
         pallet.process.side_effect = Exception('process error')
         pallet.success = (True,)
@@ -173,6 +174,7 @@ class TestLift(unittest.TestCase):
                                                  describe_mock, lightswitch_mock):
         describe_mock.side_effect = describe_side_effect
         exists_mock.return_value = True
+        lightswitch_mock().ensure.return_value = (True, [])
         three = 'C:\\MapData\\three.gdb'
         two = 'C:\\MapData\\two.gdb'
 
@@ -194,8 +196,7 @@ class TestLift(unittest.TestCase):
         self.assertEqual(copytree_mock.call_count, 6)
         self.assertEqual(rmtree_mock.call_count, 6)
         self.assertEqual(compact_mock.call_count, 3)
-        self.assertEqual(lightswitch_mock().turn_on.call_count, 1)
-        self.assertEqual(lightswitch_mock().turn_off.call_count, 1)
+        lightswitch_mock().ensure.assert_has_calls([call('off', set([('Pallet', 'MapServer')])), call('on', set([('Pallet', 'MapServer')]))])
 
     def test_create_report_object(self):
         p1 = Pallet()
@@ -204,7 +205,7 @@ class TestLift(unittest.TestCase):
         p2 = Pallet()
         p3 = Pallet()
 
-        report = lift.create_report_object([p1, p2, p3], 10)
+        report = lift.create_report_object([p1, p2, p3], 10, [])
 
         self.assertEqual(report['total_pallets'], 3)
         self.assertEqual(report['num_success_pallets'], 2)

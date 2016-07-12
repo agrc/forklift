@@ -92,10 +92,7 @@ def start_lift(file_path=None, pallet_arg=None):
     all_pallets = []
     pallets_to_lift = []
     for info in pallet_infos:
-        module_name = splitext(basename(info[0]))[0]
-        class_name = info[1]
-        log.debug('attempting to import %s from %s', info[1], info[0])
-        PalletClass = getattr(load_source(module_name, info[0]), class_name)
+        PalletClass = info[1]
 
         try:
             if pallet_arg is not None:
@@ -225,7 +222,7 @@ def _get_pallets_in_file(file_path):
         try:
             potential_class = getattr(mod, member)
             if issubclass(potential_class, Pallet) and potential_class != Pallet:
-                pallets.append((file_path, member))
+                pallets.append((file_path, potential_class))
         except:
             #: member was likely not a class
             pass

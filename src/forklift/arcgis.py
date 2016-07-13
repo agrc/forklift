@@ -50,7 +50,9 @@ class LightSwitch(object):
 
             tries -= 1
             affected_services = problem_child
-            log.debug('retrying to start %s',  ', '.join([name + '.' + service for name, service in affected_services]))
+            
+            if len(affected_services) > 0:
+                log.debug('retrying %s services: %s',  len(affected_services), ', '.join([name + '.' + service for name, service in affected_services]))
 
         return (len(affected_services) == 0, ', '.join([name + '.' + service for name, service in affected_services]))
 

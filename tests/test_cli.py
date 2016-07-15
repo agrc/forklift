@@ -154,20 +154,20 @@ class TestCliStartLift(unittest.TestCase):
         if exists(config_location):
             remove(config_location)
 
-    def test_lift_with_path(self, process_pallets, process_crates_for):
+    def test_start_lift_with_path(self, process_pallets, process_crates_for):
         cli.start_lift(join(test_pallets_folder, 'multiple_pallets.py'))
 
         self.assertEqual(len(process_crates_for.call_args[0][0]), 2)
         self.assertEqual(len(process_pallets.call_args[0][0]), 2)
 
-    def test_lift_with_out_path(self, process_pallets, process_crates_for):
+    def test_start_lift_with_out_path(self, process_pallets, process_crates_for):
         config.set_config_prop('warehouse', test_pallets_folder, override=True)
         cli.start_lift()
 
         self.assertEqual(len(process_crates_for.call_args[0][0]), 4)
         self.assertEqual(len(process_pallets.call_args[0][0]), 4)
 
-    def test_lift_pallet_arg(self, process_pallets, process_crates_for):
+    def test_start_lift_pallet_arg(self, process_pallets, process_crates_for):
         cli.start_lift(join(test_data_folder, 'pallet_argument.py'), 'test')
 
         pallet = process_crates_for.call_args[0][0][0]
@@ -177,6 +177,13 @@ class TestCliStartLift(unittest.TestCase):
 
         pallet = process_crates_for.call_args[0][0][0]
         self.assertEqual(pallet.arg, None)
+
+    def test_start_lift_alphebetical_order(self, process_pallets, process_crates_for):
+        cli.start_lift(join(test_data_folder, 'alphabetize', 'pallet.py'))
+
+        order = [p.__class__.__name__ for p in process_crates_for.call_args[0][0]]
+
+        self.assertEqual(order, ['Pallet1', 'Pallet2', 'Pallet3'])
 
 
 class TestCliGeneral(unittest.TestCase):

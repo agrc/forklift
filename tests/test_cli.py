@@ -139,6 +139,21 @@ class TestListPallets(unittest.TestCase):
         self.assertEqual(pallets[1][1].__name__, 'PalletB')
         self.assertEqual(pallets[2][1].__name__, 'PalletC')
 
+    def test_get_pallets_in_file_same_pallet_twice(self):
+        #: we should be able to import a pallet more than once from the same file
+        #: use case is when you run a specific pallet that is located in the warehouse
+        pallets = cli._get_pallets_in_file(join(test_data_folder, 'duplicate_import.py'))
+        pallets2 = cli._get_pallets_in_file(join(test_data_folder, 'duplicate_import.py'))
+
+        try:
+            #: does not raise
+            for info in pallets:
+                info[1]()
+            for info in pallets2:
+                info[1]()
+        except Exception as e:
+            self.fail(e)
+
 
 @patch('forklift.lift.process_crates_for')
 @patch('forklift.lift.process_pallets')

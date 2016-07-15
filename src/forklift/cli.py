@@ -209,7 +209,10 @@ def _get_pallets_in_file(file_path):
         sys.path.append(folder)
 
     try:
-        mod = load_source(name, file_path)
+        try:
+            mod = sys.modules[name]
+        except KeyError:
+            mod = load_source(name, file_path)
     except Exception as e:
         # skip modules that fail to import
         log.error('%s failed to import: %s', file_path, e.message, exc_info=True)

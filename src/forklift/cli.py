@@ -18,7 +18,7 @@ from messaging import send_email
 from git import Repo
 from imp import load_source
 from models import Pallet
-from os.path import abspath, exists, join, splitext, basename, dirname, isfile
+from os.path import abspath, exists, join, splitext, basename, dirname
 from os import walk
 from os import linesep
 from re import compile

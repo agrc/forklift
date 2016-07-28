@@ -15,7 +15,6 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from os.path import basename
 from os.path import isfile
-from os.path import join
 from smtplib import SMTP
 
 log = logging.getLogger('forklift')

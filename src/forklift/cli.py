@@ -15,8 +15,6 @@ import seat
 import sys
 from colorama import init as colorama_init, Fore
 from messaging import send_email
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 from git import Repo
 from imp import load_source
 from models import Pallet
@@ -131,17 +129,12 @@ def start_lift(file_path=None, pallet_arg=None):
 def _send_report_email(report_object):
     '''Create and send report email
     '''
+    log_file = join(dirname(config.config_location), 'forklift.log')
+
     with open(template, 'r') as template_file:
         email_content = pystache.render(template_file.read(), report_object)
 
-    message = MIMEMultipart()
-    message.attach(MIMEText(email_content, 'html'))
-
-    log_file = join(dirname(config.config_location), 'forklift.log')
-    if isfile(log_file):
-        message.attach(MIMEText(file(log_file).read()))
-
-    send_email(config.get_config_prop('notify'), 'Forklift Report', message)
+    send_email(config.get_config_prop('notify'), 'Forklift Report', email_content, log_file)
 
 
 def git_update():

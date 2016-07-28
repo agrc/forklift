@@ -10,23 +10,23 @@ import logging
 import secrets
 from config import get_config_prop
 from email import encoders
-from email import generator
 from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from os.path import basename
 from os.path import isfile
 from os.path import join
 from smtplib import SMTP
 
-
 log = logging.getLogger('forklift')
 
 
-def send_email(to, subject, body, attachment, save_to_file=False):
+def send_email(to, subject, body, attachment=''):
     '''
     to: string | string[]
     subject: string
     body: string | MIMEMultipart
+    attachment: string - the path to a text file to attach.
 
     Send an email.
     '''
@@ -47,24 +47,19 @@ def send_email(to, subject, body, attachment, save_to_file=False):
 
     if isfile(attachment):
         log_file_attachment = MIMEBase('application', 'octet-stream')
-        log_file_attachment.add_header('Content-Disposition', 'attachment; filename="forklift.log"')
+        log_file_attachment.add_header('Content-Disposition', 'attachment; filename="{}"'.format(basename(attachment)))
 
-        with(open(attachment, 'rb')) as log_file:
+        with (open(attachment, 'rb')) as log_file:
             log_file_attachment.set_payload(log_file.read())
 
         encoders.encode_base64(log_file_attachment)
         message.attach(log_file_attachment)
 
-    if save_to_file:
-        from uuid import uuid4
-        with open(join('C:\\Projects\\TestData\\EmailPickup', str(uuid4()) + '.eml'), 'w') as outfile:
-            gen = generator.Generator(outfile)
-            gen.flatten(message)
-    elif get_config_prop('sendEmails'):
+    if get_config_prop('sendEmails'):
         smtp = SMTP(secrets.smtp_server, secrets.smtp_port)
         smtp.sendmail(secrets.from_address, to, message.as_string())
         smtp.quit()
 
         return smtp
-    else:
-        log.info('sendEmails is False. No email sent.')
+
+    log.info('sendEmails is False. No email sent.')

@@ -228,7 +228,7 @@ def _format_dictionary(pallet_reports):
         pallet_reports['num_success_pallets'], len(pallet_reports['pallets']), Fore.RESET, linesep, Fore.GREEN,
         Fore.CYAN, pallet_reports['total_time'])
 
-    if pallet_reports['copy_results'] is not None:
+    if pallet_reports['copy_results'] not in [None, '']:
         str += '{}There was a problem restarting these services: {}{}{}'.format(Fore.RED, pallet_reports['copy_results'], Fore.RESET, linesep)
 
     for report in pallet_reports['pallets']:

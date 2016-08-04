@@ -1,21 +1,22 @@
-🚜 Forklift
+🚜📦✨ forklift
 ===================================
-A CLI tool for managing a plethora of scheduled task python scripts.
+A python CLI tool for managing and organizing the repetitive tasks involved with keeping remote geodatabases in sync with their sources.
 
 > The first rule of :tractor: is it does not work on any sabbath.   
 > The second rule of :tractor: is that it's out of your element Donny.
 
 ### Usage
-The work that forklift does is defined by plugins called [Pallets](src/forklift/models.py). `Pallet` is a base class that allows the user to define a job for forklift to perform by creating a new class that inherits from `Pallet`. Each pallet can have zero or more [Crates](src/forklift/models.py). A `Crate` is a class that defines data that needs to be moved from one location to another (reprojecting to web mercator by default). Crates are created by calling the `add_crates` (or `add_crate`) methods within `__init__` on the pallet. For example:
+The work that forklift does is defined by [Pallets](src/forklift/models.py). `forklift.models.Pallet` is a base class that allows the user to define a job for forklift to perform by creating a new class that inherits from `Pallet`. Each pallet should have `Pallet` in it's file name and be unique from it's other pallets. A Pallet can have zero or more [Crates](src/forklift/models.py). A `forklift.models.Crate` is a class that defines data that needs to be moved from one location to another (reprojecting to web mercator by default). Crates are created by calling the `add_crates` (or `add_crate`) methods within the `build` method on the pallet. For example:
 ```python
-class StringCratePallet(Pallet):
+class MyPallet(Pallet):
     def __init__(self):
         #: this call is required so that default properties are initialized
-        super(StringCratePallet, self).__init__()
+        super(MyPallet, self).__init__()
 
+    def build(self)
         destination_workspace = r'C:\\MapData'
         source_workspace = path.join(data_folder, 'agrc@sgid10.sde')
-
+        
         self.add_crate('Counties', {'source_workspace': source_workspace,
                                     'destination_workspace': destination_workspace})
 ```
@@ -47,6 +48,7 @@ If the property is a list then the value is appended to the existing list.
 2. `forklift config init`
 4. `forklift config set --key copyDestinations --value c:\\MapData` - This is where you want your output placed.
 3. `forklift repos --add agrc/parcels` - The agrc/parcesls is the user/repo to scan for Pallets.
+4. `forklift garage open` - Add all connection.sde files to the forklift garage.
 4. `forklift lift`
 
 ### Development Usage
@@ -55,7 +57,6 @@ If the property is a list then the value is appended to the existing list.
 1. from the `**/src**` directory execute `python -m forklift -h` for usage.
 
 ### Tests
-`pip install tox`
-`tox`
+`pip install tox && tox`
 
 Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) will automatically be skipped if it is not found on your system.

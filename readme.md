@@ -14,8 +14,8 @@ class MyPallet(Pallet):
         super(MyPallet, self).__init__()
 
     def build(self)
-        destination_workspace = 'C:\\MapData'
-        source_workspace = path.join(data_folder, 'agrc@sgid10.sde')
+        destination_workspace = r'C:\MapData'
+        source_workspace = path.join(self.garage, 'connection.sde')
         
         self.add_crate('Counties', {'source_workspace': source_workspace,
                                     'destination_workspace': destination_workspace})

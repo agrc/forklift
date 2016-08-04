@@ -279,12 +279,19 @@ def _has_changes(crate):
             log.debug('deleting %s', table)
             arcpy.Delete_management(table)
 
+    def reset_env_vars():
+        arcpy.env.outputCoordinateSystem = None
+        arcpy.env.geographicTransformations = None
+
     def is_almost_equal(arg, arg2):
         difference = fabs(arg - arg2)
 
         return difference <= 10.0
 
     if not is_table:
+        arcpy.env.outputCoordinateSystem = crate.destination_coordinate_system
+        arcpy.env.geographicTransformations = crate.geographic_transformation
+
         destination_describe = arcpy.Describe(crate.destination)
         shape_type = destination_describe.shapeType
 
@@ -314,26 +321,17 @@ def _has_changes(crate):
 
         #: support for reprojecting
         if arcpy.Describe(crate.source).spatialReference.name != destination_describe.spatialReference.name:
-            arcpy.env.outputCoordinateSystem = crate.destination_coordinate_system
-            arcpy.env.geographicTransformations = crate.geographic_transformation
-
             temp_compare_table = crate.destination + '_x'
             remove_temp_table(temp_compare_table)
 
             log.debug('creating %s', temp_compare_table)
             arcpy.CopyFeatures_management(crate.source, temp_compare_table)
 
-            arcpy.env.outputCoordinateSystem = None
-            arcpy.env.geographicTransformations = None
-
     if 'OBJECTID' in [f.name for f in arcpy.ListFields(crate.source)] and 'OBJECTID' in [f.name for f in arcpy.ListFields(crate.destination)]:
         #: compare each feature based on sorting by OBJECTID if both tables have that field
         sql_clause = (None, 'ORDER BY OBJECTID')
     else:
         sql_clause = None
-
-    arcpy.env.outputCoordinateSystem = crate.destination_coordinate_system
-    arcpy.env.geographicTransformations = crate.geographic_transformation
 
     with arcpy.da.SearchCursor(crate.destination, fields, sql_clause=sql_clause) as f_cursor, \
             arcpy.da.SearchCursor(temp_compare_table or crate.source, fields, sql_clause=sql_clause) as sde_cursor:
@@ -345,6 +343,7 @@ def _has_changes(crate):
                         #: for complex types always return true for now
                         log.info('complex type = always changes for now')
                         remove_temp_table(temp_compare_table)
+                        reset_env_vars()
 
                         return True
 
@@ -359,6 +358,7 @@ def _has_changes(crate):
                         log.info('changes found in a shape comparison')
                         log.debug('source shape: %s, destination shape: %s', source_row[-1], destination_row[-1])
                         remove_temp_table(temp_compare_table)
+                        reset_env_vars()
 
                         return True
 
@@ -383,10 +383,12 @@ def _has_changes(crate):
                     log.info('changes found in non-shape field comparison')
                     log.debug('source row: %s, destination row: %s', source_row[start_field_index:], destination_row[start_field_index:])
                     remove_temp_table(temp_compare_table)
+                    reset_env_vars()
 
                     return True
 
     remove_temp_table(temp_compare_table)
+    reset_env_vars()
     log.info('no changes found')
 
     return False

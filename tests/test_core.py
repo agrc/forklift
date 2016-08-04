@@ -146,6 +146,20 @@ class CoreTests(unittest.TestCase):
     def test_has_changes_shapefile(self):
         self.assertFalse(core._has_changes(Crate('shapefile.shp', path.join(current_folder, 'data'), check_for_changes_gdb, 'shapefile')))
 
+    def test_has_changes_env_vars(self):
+        arcpy.env.outputCoordinateSystem = None
+        arcpy.env.geographicTransformations = None
+
+        core._has_changes(Crate('ZipCodes',
+                                check_for_changes_gdb,
+                                check_for_changes_gdb,
+                                'ZipCodes_geoMod',
+                                destination_coordinate_system=arcpy.SpatialReference(3857),
+                                geographic_transformation='NAD_1983_To_WGS_1984_5'))
+
+        self.assertIsNone(arcpy.env.outputCoordinateSystem)
+        self.assertIsNone(arcpy.env.geographicTransformations)
+
     @patch('arcpy.Exists')
     def test_update_no_changes(self, arcpy_exists):
         arcpy_exists.return_value = True

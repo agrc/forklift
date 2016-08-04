@@ -10,11 +10,11 @@ The work that forklift does is defined by [Pallets](src/forklift/models.py). `fo
 ```python
 class MyPallet(Pallet):
     def __init__(self):
-        #: this call is required so that default properties are initialized
+        #: this is required to initialize the Pallet base class properties
         super(MyPallet, self).__init__()
 
     def build(self)
-        destination_workspace = r'C:\\MapData'
+        destination_workspace = 'C:\\MapData'
         source_workspace = path.join(data_folder, 'agrc@sgid10.sde')
         
         self.add_crate('Counties', {'source_workspace': source_workspace,

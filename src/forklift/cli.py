@@ -224,29 +224,29 @@ def _get_pallets_in_file(file_path):
 
 
 def _format_dictionary(pallet_reports):
-    str = '{3}{3}    {4}{0}{2} out of {5}{1}{2} pallets ran successfully in {6}.{3}'.format(
+    report_str = '{3}{3}    {4}{0}{2} out of {5}{1}{2} pallets ran successfully in {6}.{3}'.format(
         pallet_reports['num_success_pallets'], len(pallet_reports['pallets']), Fore.RESET, linesep, Fore.GREEN,
         Fore.CYAN, pallet_reports['total_time'])
 
     if pallet_reports['copy_results'] not in [None, '']:
-        str += '{}There was a problem restarting these services: {}{}{}'.format(Fore.RED, pallet_reports['copy_results'], Fore.RESET, linesep)
+        report_str += '{}There was a problem restarting these services: {}{}{}'.format(Fore.RED, pallet_reports['copy_results'], Fore.RESET, linesep)
 
     for report in pallet_reports['pallets']:
         color = Fore.GREEN
         if not report['success']:
             color = Fore.RED
 
-        str += '{}{}{}{}'.format(color, report['name'], Fore.RESET, linesep)
+        report_str += '{}{}{}{}'.format(color, report['name'], Fore.RESET, linesep)
 
         if report['message'] is not None:
-            str += 'pallet message: {}{}{}{}'.format(Fore.YELLOW, report['message'], Fore.RESET, linesep)
+            report_str += 'pallet message: {}{}{}{}'.format(Fore.YELLOW, report['message'], Fore.RESET, linesep)
 
         for crate in report['crates']:
-            str += '{0:>40}{3} - {1}{4}{2}'.format(crate['name'], crate['result'], linesep, Fore.CYAN, Fore.RESET)
+            report_str += '{0:>40}{3} - {1}{4}{2}'.format(crate['name'], crate['result'], linesep, Fore.CYAN, Fore.RESET)
 
             if crate['crate_message'] is None:
                 continue
 
-            str += 'crate message: {0}{1}{2}{3}'.format(Fore.MAGENTA, crate['crate_message'], Fore.RESET, linesep)
+            report_str += 'crate message: {0}{1}{2}{3}'.format(Fore.MAGENTA, crate['crate_message'], Fore.RESET, linesep)
 
-    return str
+    return report_str

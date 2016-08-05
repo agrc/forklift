@@ -2,6 +2,8 @@
     "num_success_pallets": 3,
     "total_pallets": 5,
     "copy_results": "1.MapServer, 2.GPServer, 3.GeocodeServer",
+    "total_time": "4.5 hours",
+    "git_errors": ["Git update error for agrc/oil-gas-mining: raise GitCommandError(self.args, status, errstr)\n', GitCommandError: 'git pull -v origin' returned with exit code 1"],
     "pallets": [
         {
             "name": "Z:\\forklift\\samples\\PalletSamples.py:StringCratePallet",

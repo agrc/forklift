@@ -199,16 +199,20 @@ class TestLift(unittest.TestCase):
         lightswitch_mock().ensure.assert_has_calls([call('off', set([('Pallet', 'MapServer')])), call('on', set([('Pallet', 'MapServer')]))])
 
     def test_create_report_object(self):
+        git_errors = ['a', 'b']
+        copy_results = ['c', 'd']
         p1 = Pallet()
         p1.success = (False, '')
 
         p2 = Pallet()
         p3 = Pallet()
 
-        report = lift.create_report_object([p1, p2, p3], 10, [])
+        report = lift.create_report_object([p1, p2, p3], 10, copy_results, git_errors)
 
         self.assertEqual(report['total_pallets'], 3)
         self.assertEqual(report['num_success_pallets'], 2)
+        self.assertEqual(report['git_errors'], git_errors)
+        self.assertEqual(report['copy_results'], copy_results)
 
     def test_hydrate_data_structures_with_empty_is_ok(self):
         pallets = [Pallet(), Pallet()]

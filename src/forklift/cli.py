@@ -78,7 +78,7 @@ def list_repos():
 def start_lift(file_path=None, pallet_arg=None):
     log.info('starting forklift')
 
-    git_update()
+    git_errors = git_update()
 
     start_seconds = clock()
 
@@ -117,7 +117,7 @@ def start_lift(file_path=None, pallet_arg=None):
     log.info('copy_data time: %s', seat.format_time(clock() - start_copy))
 
     elapsed_time = seat.format_time(clock() - start_seconds)
-    report_object = lift.create_report_object(pallets_to_lift, elapsed_time, copy_results)
+    report_object = lift.create_report_object(pallets_to_lift, elapsed_time, copy_results, git_errors)
 
     _send_report_email(report_object)
 
@@ -139,22 +139,28 @@ def _send_report_email(report_object):
 
 def git_update():
     warehouse = config.get_config_prop('warehouse')
+    errors = []
     for repo_name in config.get_config_prop('repositories'):
-        folder = join(warehouse, repo_name.split('/')[1])
-        if not exists(folder):
-            log.info('git cloning: {}'.format(repo_name))
-            Repo.clone_from(_repo_to_url(repo_name), join(warehouse, folder))
-        else:
-            log.info('git updating: {}'.format(repo_name))
-            repo = _get_repo(folder)
-            origin = repo.remotes[0]
-            fetch_infos = origin.pull()
+        try:
+            folder = join(warehouse, repo_name.split('/')[1])
+            if not exists(folder):
+                log.info('git cloning: {}'.format(repo_name))
+                Repo.clone_from(_repo_to_url(repo_name), join(warehouse, folder))
+            else:
+                log.info('git updating: {}'.format(repo_name))
+                repo = _get_repo(folder)
+                origin = repo.remotes[0]
+                fetch_infos = origin.pull()
 
-            if len(fetch_infos) > 0:
-                if fetch_infos[0].flags == 4:
-                    log.debug('no updates to pallet')
-                elif fetch_infos[0].flags in [32, 64]:
-                    log.info('updated to %s', fetch_infos[0].commit.name_rev)
+                if len(fetch_infos) > 0:
+                    if fetch_infos[0].flags == 4:
+                        log.debug('no updates to pallet')
+                    elif fetch_infos[0].flags in [32, 64]:
+                        log.info('updated to %s', fetch_infos[0].commit.name_rev)
+        except Exception as e:
+            errors.append('Git update error for {}: {}'.format(repo_name, e))
+
+    return errors
 
 
 def _get_repo(folder):
@@ -230,6 +236,10 @@ def _format_dictionary(pallet_reports):
 
     if pallet_reports['copy_results'] not in [None, '']:
         report_str += '{}There was a problem restarting these services: {}{}{}'.format(Fore.RED, pallet_reports['copy_results'], Fore.RESET, linesep)
+
+    if len(pallet_reports['git_errors']) > 0:
+        for git_error in pallet_reports['git_errors']:
+            report_str += '{}{}{}'.format(Fore.RED, git_error, linesep)
 
     for report in pallet_reports['pallets']:
         color = Fore.GREEN

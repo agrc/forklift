@@ -103,11 +103,12 @@ def process_pallets(pallets):
                 log.error('error shipping pallet: %s for pallet: %r', e.message, pallet, exc_info=True)
 
 
-def create_report_object(pallets, elapsed_time, copy_results):
+def create_report_object(pallets, elapsed_time, copy_results, git_errors):
     reports = [pallet.get_report() for pallet in pallets]
 
     return {'total_pallets': len(reports),
             'num_success_pallets': len(filter(lambda p: p['success'], reports)),
+            'git_errors': git_errors,
             'pallets': reports,
             'total_time': elapsed_time,
             'copy_results': copy_results}

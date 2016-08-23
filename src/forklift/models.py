@@ -174,11 +174,7 @@ class Pallet(object):
     def __repr__(self):
         '''Override for better logging. Use with %r
         '''
-        return pprinter.pformat({
-            'crate_count': len(self._crates),
-            'is_ready_to_ship': self.is_ready_to_ship(),
-            'requires_processing': self.requires_processing()
-        })
+        return self.name
 
 
 class Crate(object):

@@ -35,11 +35,10 @@ def process_crates_for(pallets, update_def, configuration='Production'):
     log.info('processing crates for %d pallets.', len(pallets))
 
     for pallet in pallets:
-        log.info('processing crates for pallet: %s', pallet.name)
-        log.debug('%r', pallet)
+        log.info('processing crates for pallet: %r', pallet)
 
         try:
-            log.debug('building pallet: %s', pallet.name)
+            log.debug('building pallet: %r', pallet)
             pallet.build(configuration)
         except Exception as e:
             pallet.success = (False, e.message)
@@ -78,8 +77,7 @@ def process_pallets(pallets):
     for pallet in pallets:
         if pallet.is_ready_to_ship():  #: checks for schema changes or errors
             if pallet.requires_processing() and pallet.success[0]:  #: checks for data that was updated
-                log.info('processing pallet: %s', pallet.name)
-                log.debug('%r', pallet)
+                log.info('processing pallet: %r', pallet)
                 start_seconds = clock()
 
                 try:
@@ -94,7 +92,7 @@ def process_pallets(pallets):
             start_seconds = clock()
 
             try:
-                log.info('shipping pallet: %s', pallet.name)
+                log.info('shipping pallet: %r', pallet)
                 pallet.ship()
                 log.debug('shipped pallet %s', seat.format_time(clock() - start_seconds))
             except Exception as e:

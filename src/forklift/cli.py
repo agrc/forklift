@@ -235,7 +235,7 @@ def _format_dictionary(pallet_reports):
         Fore.CYAN, pallet_reports['total_time'])
 
     if pallet_reports['copy_results'] not in [None, '']:
-        report_str += '{}There was a problem restarting these services: {}{}{}'.format(Fore.RED, pallet_reports['copy_results'], Fore.RESET, linesep)
+        report_str += '{}{}{}{}'.format(Fore.RED, pallet_reports['copy_results'], Fore.RESET, linesep)
 
     if len(pallet_reports['git_errors']) > 0:
         for git_error in pallet_reports['git_errors']:

@@ -156,10 +156,10 @@ def copy_data(specific_pallets, all_pallets, config_copy_destinations):
     log.info('stopping %s dependent services.', len(services_affected))
     ok, problem_children = lightswitch.ensure('off', services_affected)
 
-    service_msg = 'services will still not {}. this will affect data copy. {}'
+    service_msg = 'Service(s) will not {}: {}. '
     if not ok:
-        stop_msg = service_msg.format('stop', problem_children)
-        results += stop_msg
+        stop_msg = service_msg.format('stop', problem_children) + 'This will affect data copy.'
+        results = stop_msg
         log.error(stop_msg)
 
     for source in data_being_moved:
@@ -211,7 +211,7 @@ def copy_data(specific_pallets, all_pallets, config_copy_destinations):
 
     if not ok:
         start_msg = service_msg.format('start', problem_children)
-        results += start_msg
+        results += ' ' + start_msg
         log.error(start_msg)
 
     return results

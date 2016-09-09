@@ -16,7 +16,7 @@ class MyPallet(Pallet):
     def build(self)
         destination_workspace = r'C:\MapData'
         source_workspace = path.join(self.garage, 'connection.sde')
-        
+
         self.add_crate('Counties', {'source_workspace': source_workspace,
                                     'destination_workspace': destination_workspace})
 ```
@@ -43,16 +43,22 @@ forklift config set --key sendEmails --value False
 If the property is a list then the value is appended to the existing list.
 
 ### Install to First Successful Run
-1. Update `secrets.py` based on the [sample.](/src/forklift/secrets_sample.py).
 1. `pip install .\` from the directory containing `setup.py`.
-2. `forklift config init`
-4. `forklift config set --key copyDestinations --value c:\\MapData` - This is where you want your output placed.
-3. `forklift repos --add agrc/parcels` - The agrc/parcesls is the user/repo to scan for Pallets.
-4. `forklift garage open` - Add all connection.sde files to the forklift garage.
-4. `forklift lift`
+1. `forklift config init`
+1. `forklift config set --key copyDestinations --value c:\\MapData` - This is where you want your output placed.
+1. `forklift repos --add agrc/parcels` - The agrc/parcesls is the user/repo to scan for Pallets.
+1. `forklift garage open` - Add all connection.sde files to the forklift garage.
+1. `forklift lift`
+1. Set the following user environmental variables (required only for sending email reports and starting/stopping ArcGIS Services):
+    - `FORKLIFT_SMTP_SERVER` The SMTP server that you want to send emails with.
+    - `FORKLIFT_SMTP_PORT` The SMTP port number.
+    - `FORKLIFT_FROM_ADDRESS` The from email address for emails sent by forklift.
+    - `FORKLIFT_AGS_USERNAME` ArcGIS admin username.
+    - `FORKLIFT_AGS_PASSWORD` ArcGIS admin password.
+    - `FORKLIFT_AGS_SERVER_HOST` ArcGIS host address eg: http://ags_server_host:6080/arcgis
+
 
 ### Development Usage
-1. Update `secrets.py` based on the [sample.](/src/forklift/secrets_sample.py).
 1. `pip install .\` from the directory containing `setup.py`.
 1. from the `**/src**` directory execute `python -m forklift -h` for usage.
 

@@ -38,7 +38,5 @@ htmlcov
 .ve
 .bootstrap
 
-secrets.py
-
 *.lock
 src/forklift-garage/

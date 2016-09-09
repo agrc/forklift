@@ -55,7 +55,7 @@ If the property is a list then the value is appended to the existing list.
     - `FORKLIFT_FROM_ADDRESS` The from email address for emails sent by forklift.
     - `FORKLIFT_AGS_USERNAME` ArcGIS admin username.
     - `FORKLIFT_AGS_PASSWORD` ArcGIS admin password.
-    - `FORKLIFT_AGS_SERVER_HOST` ArcGIS host address eg: http://ags_server_host:6080/arcgis
+    - `FORKLIFT_AGS_SERVER_HOST` ArcGIS host address eg: `localhost`
 
 
 ### Development Usage

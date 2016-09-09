@@ -65,40 +65,52 @@ def process_crates_for(pallets, update_def, configuration='Production'):
                 crate.set_result(processed_crates[crate.destination])
 
 
-def process_pallets(pallets):
-    '''pallets: [Pallet]
+def process_pallets(pallets, is_post_copy=False):
+    '''
+    pallets: Pallet[]
+    is_post_copy: Boolean
 
-    Loop over all pallets, check if data has changed and determine whether to call process.
-    Finally, determine whether to call ship.
+    Loop over all pallets, check if data has changed and determine whether to process.
+    Call `process` if this is not the post copy. Otherwise call `post_copy_process`.
+    Finally, call ship.
     '''
 
-    log.info('processing and shipping pallets...')
+    if not is_post_copy:
+        verb = 'processing'
+    else:
+        verb = 'post copy processing'
+
+    log.info('%s pallets...', verb)
 
     for pallet in pallets:
         if pallet.is_ready_to_ship():  #: checks for schema changes or errors
             if pallet.requires_processing() and pallet.success[0]:  #: checks for data that was updated
-                log.info('processing pallet: %r', pallet)
+                log.info('%s pallet: %r', verb, pallet)
                 start_seconds = clock()
 
                 try:
-                    pallet.process()
+                    if not is_post_copy:
+                        pallet.process()
+                    else:
+                        pallet.post_copy_process()
                 except Exception as e:
                     pallet.success = (False, e.message)
-                    log.error('error proccessing pallet: %s for pallet: %r', e.message, pallet, exc_info=True)
+                    log.error('error %s pallet: %s for pallet: %r', verb, e.message, pallet, exc_info=True)
 
-                log.debug('processed pallet %s', seat.format_time(clock() - start_seconds))
+                log.debug('%s pallet %s', verb.replace('ing', 'ed'), seat.format_time(clock() - start_seconds))
 
-            log.debug('shipping pallet...')
-            start_seconds = clock()
+            if not is_post_copy:
+                log.debug('shipping pallet...')
+                start_seconds = clock()
 
-            try:
-                log.info('shipping pallet: %r', pallet)
-                pallet.ship()
-                log.debug('shipped pallet %s', seat.format_time(clock() - start_seconds))
-            except Exception as e:
-                pallet.success = (False, e.message)
+                try:
+                    log.info('shipping pallet: %r', pallet)
+                    pallet.ship()
+                    log.debug('shipped pallet %s', seat.format_time(clock() - start_seconds))
+                except Exception as e:
+                    pallet.success = (False, e.message)
 
-                log.error('error shipping pallet: %s for pallet: %r', e.message, pallet, exc_info=True)
+                    log.error('error shipping pallet: %s for pallet: %r', e.message, pallet, exc_info=True)
 
 
 def create_report_object(pallets, elapsed_time, copy_results, git_errors):

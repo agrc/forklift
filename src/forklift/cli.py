@@ -116,6 +116,10 @@ def start_lift(file_path=None, pallet_arg=None):
     copy_results = lift.copy_data(pallets_to_lift, all_pallets, config.get_config_prop('copyDestinations'))
     log.info('copy_data time: %s', seat.format_time(clock() - start_copy))
 
+    start_post_copy_process = clock()
+    lift.process_pallets(pallets_to_lift, is_post_copy=True)
+    log.info('post_copy_process time: %s', seat.format_time(clock() - start_post_copy_process))
+
     elapsed_time = seat.format_time(clock() - start_seconds)
     report_object = lift.create_report_object(pallets_to_lift, elapsed_time, copy_results, git_errors)
 

@@ -72,6 +72,11 @@ class Pallet(object):
         '''
         return NotImplemented
 
+    def post_copy_process(self):
+        '''Invoked after lift.copy_data has been called only if any crates have data updates.
+        '''
+        return NotImplemented
+
     def get_crates(self):
         '''Returns an array of crates affected by the pallet. This is a self documenting way to know what data an
         application is using.'''

@@ -116,6 +116,28 @@ class TestLift(unittest.TestCase):
 
         self.assertEqual(pallet.success, (False, 'ship error'))
 
+    def test_process_pallets_post_copy(self):
+        pallet1 = Mock(Pallet)('one')
+        pallet1.is_ready_to_ship = Mock(return_value=True)
+        pallet1.requires_processing = Mock(return_value=False)
+        pallet1.success = (True,)
+
+        pallet2 = Mock(Pallet)('two')
+        pallet2.is_ready_to_ship = Mock(return_value=False)
+        pallet2.requires_processing = Mock(return_value=False)
+        pallet2.success = (True,)
+
+        pallet3 = Mock(Pallet)('three')
+        pallet3.is_ready_to_ship = Mock(return_value=True)
+        pallet3.requires_processing = Mock(return_value=True)
+        pallet3.success = (True,)
+
+        lift.process_pallets([pallet1, pallet2, pallet3], is_post_copy=True)
+
+        pallet1.post_copy_process.assert_not_called()
+        pallet2.post_copy_process.assert_not_called()
+        pallet3.post_copy_process.assert_called_once()
+
     @patch('forklift.lift.Describe', autospec=True)
     @patch('forklift.lift.Compact_management', autospec=True)
     @patch('forklift.lift.path.exists', autospec=True)

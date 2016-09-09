@@ -11,11 +11,17 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from forklift.messaging import send_email
 from mock import patch
+from os import environ
 
 
 @patch('forklift.messaging.get_config_prop')
 @patch('forklift.messaging.SMTP', autospec=True)
 class SendEmail(unittest.TestCase):
+    def setUp(self):
+        environ['FORKLIFT_FROM_ADDRESS'] = 'test'
+        environ['FORKLIFT_SMTP_SERVER'] = 'test'
+        environ['FORKLIFT_SMTP_PORT'] = 'test'
+
     def test_to_addresses(self, SMTP_mock, get_config_prop_mock):
         get_config_prop_mock.return_value = True
         smtp = send_email(['one@utah.gov', 'two@utah.gov'], '', '', attachment='None')

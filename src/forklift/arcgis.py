@@ -8,7 +8,7 @@ A module that contains a class to control arcgis services.
 
 import logging
 import requests
-import secrets
+from os import environ
 from time import sleep
 from time import time
 
@@ -18,13 +18,13 @@ log = logging.getLogger('forklift')
 base_url = r'http://{}:6080/arcgis/admin/'
 token_url = r'{}generateToken'.format(base_url)
 services_url = r'{}services'.format(base_url)
-username = secrets.ags_username
-password = secrets.ags_password
-server = secrets.ags_server_host
 
 
 class LightSwitch(object):
     def __init__(self):
+        self.username = environ.get('FORKLIFT_AGS_USERNAME')
+        self.password = environ.get('FORKLIFT_AGS_PASSWORD')
+        self.server = environ.get('FORKLIFT_AGS_SERVER_HOST')
         self.token = None
         self.token_expire_milliseconds = 0
         self.payload = None
@@ -32,6 +32,11 @@ class LightSwitch(object):
     def ensure(self, what, affected_services):
         tries = 4
         wait = [8, 5, 3, 2, 1]
+
+        if None in [self.username, self.password, self.server]:
+            log.warn('Required environmental variables for connecting to ArcGIS Server do not exist. ' +
+                     'No services will be stopped or started. See README.md for more details.')
+            return (True, None)
 
         while len(affected_services) > 0 and tries >= 0:
             problem_child = []
@@ -63,7 +68,7 @@ class LightSwitch(object):
         return self._flip_switch(service, type, 'start')
 
     def _flip_switch(self, service, type, what):
-        url = '{}/{}.{}/{}'.format(services_url.format(server),
+        url = '{}/{}.{}/{}'.format(services_url.format(self.server),
                                    service,
                                    type,
                                    what)
@@ -97,13 +102,13 @@ class LightSwitch(object):
         return (True, None)
 
     def _request_token(self):
-        data = {'username': username,
-                'password': password,
+        data = {'username': self.username,
+                'password': self.password,
                 'client': 'requestip',
                 'expiration': 60,
                 'f': 'json'}
 
-        response = requests.post(token_url.format(server), data=data)
+        response = requests.post(token_url.format(self.server), data=data)
         response.raise_for_status()
 
         response_data = response.json()

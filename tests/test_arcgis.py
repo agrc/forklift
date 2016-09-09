@@ -7,7 +7,6 @@ A module that tests arcgis.py
 '''
 
 import unittest
-from forklift import arcgis
 from forklift.arcgis import LightSwitch
 from mock import Mock
 from mock import patch
@@ -18,11 +17,10 @@ from time import time
 class TestLightSwitch(unittest.TestCase):
 
     def setUp(self):
-        arcgis.username = 'name'
-        arcgis.password = 'password'
-        arcgis.server = 'host'
-
         self.patient = LightSwitch()
+        self.patient.username = 'name'
+        self.patient.password = 'password'
+        self.patient.server = 'host'
 
     def test_turn_on(self):
         flip_switch_mock = Mock()
@@ -160,3 +158,10 @@ class TestLightSwitch(unittest.TestCase):
         self.patient.turn_off.assert_not_called()
         self.assertEqual(self.patient.turn_on.call_count, 2)
         sleep.assert_has_calls([call(1)])
+
+    def test_missing_environ_vars(self):
+        self.patient.username = None
+        self.patient.password = None
+        self.patient.server = None
+
+        self.assertEqual((True, None), self.patient.ensure('on', []))

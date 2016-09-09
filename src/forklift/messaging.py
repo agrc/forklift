@@ -7,12 +7,12 @@ A module that contains a method for sending emails
 '''
 
 import logging
-import secrets
 from config import get_config_prop
 from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from os import environ
 from os.path import basename
 from os.path import isfile
 from smtplib import SMTP
@@ -29,6 +29,14 @@ def send_email(to, subject, body, attachment=''):
 
     Send an email.
     '''
+    from_address = environ.get('FORKLIFT_FROM_ADDRESS')
+    smtp_server = environ.get('FORKLIFT_SMTP_SERVER')
+    smtp_port = environ.get('FORKLIFT_SMTP_PORT')
+
+    if None in [from_address, smtp_server, smtp_port]:
+        log.warn('Required environment variables for sending emails do not exist. No emails sent. See README.md for more details.')
+        return
+
     if not isinstance(to, basestring):
         to_addresses = ','.join(to)
     else:
@@ -41,7 +49,7 @@ def send_email(to, subject, body, attachment=''):
         message = body
 
     message['Subject'] = subject
-    message['From'] = secrets.from_address
+    message['From'] = from_address
     message['To'] = to_addresses
 
     if isfile(attachment):
@@ -55,8 +63,8 @@ def send_email(to, subject, body, attachment=''):
         message.attach(log_file_attachment)
 
     if get_config_prop('sendEmails'):
-        smtp = SMTP(secrets.smtp_server, secrets.smtp_port)
-        smtp.sendmail(secrets.from_address, to, message.as_string())
+        smtp = SMTP(smtp_server, smtp_port)
+        smtp.sendmail(from_address, to, message.as_string())
         smtp.quit()
 
         return smtp

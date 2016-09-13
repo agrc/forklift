@@ -72,7 +72,7 @@ setup(
         'gitpython==2.0.4',
         'requests==2.10.0',
         #: pyopenssl, ndg-httpsclient, pyasn1 are there to disable ssl warnings in requests
-        'pyopenssl==16.0.0',
+        'pyopenssl>=16.0.0',
         'ndg-httpsclient==0.4.0',
         'pyasn1==0.1.9'
     ],

@@ -136,7 +136,8 @@ def _setup_logging(verbose):
     except:
         pass
 
-    file_handler = logging.handlers.TimedRotatingFileHandler(log_location, when='midnight', backupCount=7)
+    file_handler = logging.handlers.RotatingFileHandler(log_location, backupCount=18)
+    file_handler.doRollover()
     file_handler.setFormatter(detailed_formatter)
     file_handler.setLevel(debug)
 

@@ -38,6 +38,9 @@ def update(crate, validate_crate):
             log.debug('deleting %s', table)
             arcpy.Delete_management(table)
 
+    arcpy.env.outputCoordinateSystem = crate.destination_coordinate_system
+    arcpy.env.geographicTransformations = crate.geographic_transformation
+
     try:
         if not arcpy.Exists(crate.source):
             _try_to_find_data_source_by_name(crate)
@@ -69,14 +72,19 @@ def update(crate, validate_crate):
         if has_changes:
             _move_data(crate)
 
+            remove_temp_table(crate.destination + reproject_temp_suffix)
+
             return (Crate.UPDATED, None)
         else:
-            return (Crate.NO_CHANGES, None)
+            remove_temp_table(crate.destination + reproject_temp_suffix)
 
-        remove_temp_table(crate.destination + reproject_temp_suffix)
+            return (Crate.NO_CHANGES, None)
     except Exception as e:
         log.error('unhandled exception: %s for crate %r', e.message, crate, exc_info=True)
         return (Crate.UNHANDLED_EXCEPTION, e.message)
+    finally:
+        arcpy.env.outputCoordinateSystem = None
+        arcpy.env.geographicTransformations = None
 
 
 def _create_destination_data(crate):
@@ -135,8 +143,13 @@ def _move_data(crate):
     if not is_table:
         fields.append('SHAPE@')
         if arcpy.Describe(crate.source).spatialReference.name != arcpy.Describe(crate.destination).spatialReference.name:
-            #: data has already been projected in has_changes
-            source = crate.destination + '_x'
+            temp_table = crate.destination + reproject_temp_suffix
+            #: data may have already been projected in has_changes
+            if not arcpy.Exists(temp_table):
+                log.debug('creating %s', temp_table)
+                arcpy.CopyFeatures_management(crate.source, temp_table)
+
+            source = temp_table
 
     sql_clause = None
     if 'OBJECTID' in [f.name for f in arcpy.ListFields(crate.source)] and 'OBJECTID' in [f.name for f in arcpy.ListFields(crate.destination)]:
@@ -277,21 +290,14 @@ def _has_changes(crate):
     # filter out shape fields and other problematic fields
     fields = _filter_fields(fields)
 
-    temp_compare_table = None
-
-    def reset_env_vars():
-        arcpy.env.outputCoordinateSystem = None
-        arcpy.env.geographicTransformations = None
-
     def is_almost_equal(arg, arg2):
         difference = fabs(arg - arg2)
 
         return difference <= 10.0
 
-    if not is_table:
-        arcpy.env.outputCoordinateSystem = crate.destination_coordinate_system
-        arcpy.env.geographicTransformations = crate.geographic_transformation
+    temp_compare_table = None
 
+    if not is_table:
         destination_describe = arcpy.Describe(crate.destination)
         shape_type = destination_describe.shapeType
 
@@ -341,7 +347,6 @@ def _has_changes(crate):
                     if shape_type not in ['Polygon', 'Polyline', 'Point']:
                         #: for complex types always return true for now
                         log.info('complex type = always changes for now')
-                        reset_env_vars()
 
                         return True
 
@@ -355,7 +360,6 @@ def _has_changes(crate):
                     else:
                         log.info('changes found in a shape comparison')
                         log.debug('source shape: %s, destination shape: %s', source_row[-1], destination_row[-1])
-                        reset_env_vars()
 
                         return True
 
@@ -379,11 +383,9 @@ def _has_changes(crate):
                 if destination_row[start_field_index:] != source_row[start_field_index:]:
                     log.info('changes found in non-shape field comparison')
                     log.debug('source row: %s, destination row: %s', source_row[start_field_index:], destination_row[start_field_index:])
-                    reset_env_vars()
 
                     return True
 
-    reset_env_vars()
     log.info('no changes found')
 
     return False

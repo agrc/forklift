@@ -72,11 +72,13 @@ def update(crate, validate_crate):
         if has_changes:
             _move_data(crate)
 
+            remove_temp_table(crate.destination + reproject_temp_suffix)
+
             return (Crate.UPDATED, None)
         else:
-            return (Crate.NO_CHANGES, None)
+            remove_temp_table(crate.destination + reproject_temp_suffix)
 
-        remove_temp_table(crate.destination + reproject_temp_suffix)
+            return (Crate.NO_CHANGES, None)
     except Exception as e:
         log.error('unhandled exception: %s for crate %r', e.message, crate, exc_info=True)
         return (Crate.UNHANDLED_EXCEPTION, e.message)

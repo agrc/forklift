@@ -141,8 +141,13 @@ def _move_data(crate):
     if not is_table:
         fields.append('SHAPE@')
         if arcpy.Describe(crate.source).spatialReference.name != arcpy.Describe(crate.destination).spatialReference.name:
-            #: data has already been projected in has_changes
-            source = crate.destination + '_x'
+            temp_table = crate.destination + reproject_temp_suffix
+            #: data may have already been projected in has_changes
+            if not arcpy.Exists(temp_table):
+                log.debug('creating %s', temp_table)
+                arcpy.CopyFeatures_management(crate.source, temp_table)
+
+            source = temp_table
 
     sql_clause = None
     if 'OBJECTID' in [f.name for f in arcpy.ListFields(crate.source)] and 'OBJECTID' in [f.name for f in arcpy.ListFields(crate.destination)]:

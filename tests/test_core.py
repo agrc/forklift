@@ -236,6 +236,16 @@ class CoreTests(unittest.TestCase):
             row = cur.next()
             self.assertEqual('this is   ', row[1])
 
+    def test_move_data_skip_empty_geometry(self):
+        empty_geometry_gdb = path.join(current_folder, 'data', 'EmptyGeometry.gdb')
+        empty_points = 'EmptyPointTest'
+        arcpy.Copy_management(empty_geometry_gdb, test_gdb)
+
+        crate = Crate(empty_points, empty_geometry_gdb, test_gdb)
+        core._move_data(crate)
+
+        self.assertEqual(int(arcpy.GetCount_management(crate.destination).getOutput(0)), 4)
+
     def test_create_destination_data_feature_class(self):
         arcpy.CreateFileGDB_management(path.join(current_folder, 'data'), 'test.gdb')
 

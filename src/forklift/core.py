@@ -124,6 +124,7 @@ def _move_data(crate):
 
     move data from source to destination as defined by the crate
     '''
+    shape_token = 'SHAPE@'
     is_table = _is_table(crate)
 
     log.info('updating data...')
@@ -141,7 +142,7 @@ def _move_data(crate):
 
     source = crate.source
     if not is_table:
-        fields.append('SHAPE@')
+        fields.append(shape_token)
         if arcpy.Describe(crate.source).spatialReference.name != arcpy.Describe(crate.destination).spatialReference.name:
             temp_table = crate.destination + reproject_temp_suffix
             #: data may have already been projected in has_changes
@@ -159,7 +160,8 @@ def _move_data(crate):
         with arcpy.da.InsertCursor(crate.destination, fields) as icursor, \
                 arcpy.da.SearchCursor(source, fields, sql_clause=sql_clause) as cursor:
             for row in cursor:
-                icursor.insertRow(row)
+                if shape_token not in fields or row[-1] is not None:
+                    icursor.insertRow(row)
 
         edit_session.stopOperation()
         edit_session.stopEditing(True)

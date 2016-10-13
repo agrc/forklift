@@ -361,7 +361,7 @@ def _has_changes(crate):
                         source_row = list(source_row[:-1])
                     else:
                         log.info('changes found in a shape comparison')
-                        log.debug('source shape: %s, destination shape: %s', source_row[-1], destination_row[-1])
+                        log.debug('\nsource row: %s\ndest   row: %s', source_row, destination_row)
 
                         return True
 

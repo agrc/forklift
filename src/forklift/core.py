@@ -332,7 +332,7 @@ def _has_changes(crate):
             temp_compare_table = crate.destination + reproject_temp_suffix
 
             log.debug('creating %s', temp_compare_table)
-            arcpy.CopyFeatures_management(crate.source, temp_compare_table)
+            arcpy.Project_management(crate.source, temp_compare_table, destination_describe.spatialReference, crate.geographic_transformation)
 
     if 'OBJECTID' in [f.name for f in arcpy.ListFields(crate.source)] and 'OBJECTID' in [f.name for f in arcpy.ListFields(crate.destination)]:
         #: compare each feature based on sorting by OBJECTID if both tables have that field

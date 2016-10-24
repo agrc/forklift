@@ -43,7 +43,9 @@ def update(crate, validate_crate):
 
     try:
         if not arcpy.Exists(crate.source):
-            _try_to_find_data_source_by_name(crate)
+            status, message = _try_to_find_data_source_by_name(crate)
+            if not status:
+                return (Crate.INVALID_DATA, message)
 
         if not arcpy.Exists(crate.destination):
             log.debug('%s does not exist. creating', crate.destination)
@@ -420,6 +422,7 @@ def _try_to_find_data_source_by_name(crate):
         #: replace name with db.owner.name
         new_name = names[0]
         crate.set_source_name(new_name)
+        log.warn('Source name changed to %s', new_name)
 
         return (True, new_name)
 

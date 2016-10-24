@@ -49,10 +49,15 @@ class CoreTests(unittest.TestCase):
         delete_if_exists(test_gdb)
         delete_if_exists(test_folder)
 
+    def test_update_invalid_source(self):
+        crate = Crate('badname', 'nofolder', '')
+
+        self.assertEqual(core.update(crate, lambda x: True)[0], Crate.INVALID_DATA)
+
     def test_update_no_existing_destination(self):
         core._create_destination_data = Mock()
 
-        crate = Crate('badname', 'nofolder', '')
+        crate = Crate('ZipCodes', check_for_changes_gdb, test_gdb, 'ImNotHere')
 
         self.assertEqual(core.update(crate, lambda x: True)[0], Crate.CREATED)
         core._create_destination_data.assert_called_once()

@@ -90,6 +90,7 @@ def process_pallets(pallets, is_post_copy=False):
                 start_seconds = clock()
 
                 try:
+                    env.workspace = None
                     if not is_post_copy:
                         pallet.process()
                     else:
@@ -106,8 +107,8 @@ def process_pallets(pallets, is_post_copy=False):
 
                 try:
                     log.info('shipping pallet: %r', pallet)
-                    pallet.ship()
                     env.workspace = None
+                    pallet.ship()
                     log.debug('shipped pallet %s', seat.format_time(clock() - start_seconds))
                 except Exception as e:
                     pallet.success = (False, e.message)

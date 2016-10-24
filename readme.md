@@ -46,7 +46,7 @@ If the property is a list then the value is appended to the existing list.
 1. `pip install .\` from the directory containing `setup.py`.
 1. `forklift config init`
 1. `forklift config set --key copyDestinations --value c:\\MapData` - This is where you want your output placed.
-1. `forklift repos --add agrc/parcels` - The agrc/parcesls is the user/repo to scan for Pallets.
+1. `forklift repos --add agrc/parcels` - The agrc/parcels is the user/repo to scan for Pallets.
 1. `forklift garage open` - Add all connection.sde files to the forklift garage.
 1. `forklift lift`
 1. Set the following user environmental variables (required only for sending email reports and starting/stopping ArcGIS Services):

@@ -116,6 +116,26 @@ class TestLift(unittest.TestCase):
 
         self.assertEqual(pallet.success, (False, 'ship error'))
 
+    def test_process_pallets_resets_arcpy(self):
+        pallet = self.PalletMock()
+        pallet2 = Mock(Pallet)
+
+        import arcpy
+
+        def modify_workspace(value):
+            arcpy.env.workspace = value
+
+        pallet.ship.side_effect = modify_workspace('forklift')
+        pallet.success = (True,)
+
+        self.assertEqual(arcpy.env.workspace, 'forklift')
+
+        pallet2.success = (True,)
+
+        lift.process_pallets([pallet, pallet2])
+
+        self.assertEqual(arcpy.env.workspace, None)
+
     def test_process_pallets_post_copy(self):
         pallet1 = Mock(Pallet)('one')
         pallet1.is_ready_to_ship = Mock(return_value=True)

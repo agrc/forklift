@@ -10,9 +10,10 @@ import logging
 import seat
 import shutil
 from arcgis import LightSwitch
+from arcpy import ClearEnvironment
 from arcpy import Compact_management
 from arcpy import Describe
-from arcpy import env
+
 from forklift.models import Crate
 from os import makedirs
 from os import path
@@ -90,7 +91,7 @@ def process_pallets(pallets, is_post_copy=False):
                 start_seconds = clock()
 
                 try:
-                    env.workspace = None
+                    arcpy.ClearEnvironment('workspace')
                     if not is_post_copy:
                         pallet.process()
                     else:
@@ -107,7 +108,7 @@ def process_pallets(pallets, is_post_copy=False):
 
                 try:
                     log.info('shipping pallet: %r', pallet)
-                    env.workspace = None
+                    arcpy.ClearEnvironment('workspace')
                     pallet.ship()
                     log.debug('shipped pallet %s', seat.format_time(clock() - start_seconds))
                 except Exception as e:

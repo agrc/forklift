@@ -52,7 +52,7 @@ detailed_formatter = logging.Formatter(fmt='%(levelname)-7s %(asctime)s %(module
 
 
 def main():
-    args = docopt(__doc__, version='3.3.5')
+    args = docopt(__doc__, version='3.3.6')
     _setup_logging(args['--verbose'])
     _add_global_error_handler()
 

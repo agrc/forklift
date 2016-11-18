@@ -14,11 +14,15 @@ from itertools import izip
 from math import fabs
 from models import Crate
 from os import path
-import hashlib
+from hashlib import md5
 
 log = logging.getLogger('forklift')
 
 reproject_temp_suffix = '_fl'
+
+attribute_hash_field = 'att_hash'
+
+geometry_hash_field = 'geo_hash'
 
 
 def update(crate, validate_crate):
@@ -65,13 +69,7 @@ def update(crate, validate_crate):
                      crate,
                      exc_info=True)
             return (Crate.INVALID_DATA, e.message)
-
-        # try:
-        #     remove_temp_table(crate.destination + reproject_temp_suffix)
-        #     has_changes = _has_changes(crate)
-        # except:
-        #     log.warn('Exception thrown while checking for changes. Assuming that there are changes...', exc_info=True)
-        #     has_changes = True
+        # TODO separate change check from move_data, or remove has_changes and handle return value differently
         has_changes = True
         if has_changes:
             _move_data(crate)
@@ -116,8 +114,8 @@ def _create_destination_data(crate):
 
 
 def _add_hash_fields(crate):
-    arcpy.AddField_management(crate.destination, 'att_hash', 'TEXT', field_length=32)
-    arcpy.AddField_management(crate.destination, 'geo_hash', 'TEXT', field_length=32)
+    arcpy.AddField_management(crate.destination, attribute_hash_field, 'TEXT', field_length=32)
+    arcpy.AddField_management(crate.destination, geometry_hash_field, 'TEXT', field_length=32)
 
 
 def _is_table(crate):
@@ -130,7 +128,7 @@ def _is_table(crate):
 
 
 def _create_geo_hash(wkt, orderNum):
-    hasher = hashlib.md5(wkt)
+    hasher = md5(wkt)
     hasher.update(str(orderNum))
     return hasher.hexdigest()
 
@@ -138,8 +136,8 @@ def _create_geo_hash(wkt, orderNum):
 def _get_hash_lookups(dest):
     hashLookup = {}
     geoHashLookup = {}
-    attHashColumn = 'att_hash'
-    geoHashColumn = 'geo_hash'
+    attHashColumn = attribute_hash_field
+    geoHashColumn = geometry_hash_field
     with arcpy.da.SearchCursor(dest, ['OID@', attHashColumn, geoHashColumn]) as cursor:
         for row in cursor:
             oid, attHash, geoHash = row
@@ -157,16 +155,15 @@ def _move_data(crate):
     move data from source to destination as defined by the crate
     '''
     shape_token = 'SHAPE@'
-    attHashColumn = 'att_hash'
-    geoHashColumn = 'geo_hash'
+    attHashColumn = attribute_hash_field
+    geoHashColumn = geometry_hash_field
     is_table = _is_table(crate)
 
     log.info('checking for changes...')
     fields = set([fld.name for fld in arcpy.ListFields(crate.destination)]) & set([fld.name for fld in arcpy.ListFields(crate.source)])
     fields = _filter_fields(fields)
-    fields.remove(attHashColumn)
-    fields.remove(geoHashColumn)
     fields.sort()
+
     attHashSubIndex = None
     if 'OID@' in fields:
         fields.remove('OID@')
@@ -205,7 +202,7 @@ def _move_data(crate):
                     wkt = row[-1].WKT
                     geoHexDigest = _create_geo_hash(wkt, orderNum)
                 # Attribute hash
-                hasher = hashlib.md5()
+                hasher = md5()
                 hs = str(row[:attHashSubIndex]) + str(orderNum)
                 hasher.update(hs)
                 attHexDigest = hasher.hexdigest()
@@ -279,7 +276,7 @@ def check_schema(crate):
 
         for field in arcpy.ListFields(dataset):
             #: don't worry about comparing OBJECTID field
-            if not _is_naughty_field(field.name) and field.name != 'OBJECTID':
+            if not _is_naughty_field(field.name) and field.name != 'OBJECTID' and field.name != attribute_hash_field and field.name != geometry_hash_field:
                 field_dict[field.name.upper()] = field
 
         return field_dict
@@ -299,7 +296,6 @@ def check_schema(crate):
     for field_key in destination_fields.keys():
         # make sure that all fields from destination are in source
         # not sure that we care if there are fields in source that are not in destination
-        # TODO ignore hash fields in destination
         destination_fld = destination_fields[field_key]
         if field_key not in source_fields.keys():
             missing_fields.append(destination_fld.name)

@@ -10,6 +10,7 @@ A module that contains the model classes for forklift
 import logging
 import config
 from arcpy import env, SpatialReference, ValidateTableName as create_valid_table_name
+from hashlib import md5
 from inspect import getsourcefile
 from messaging import send_email
 from pprint import PrettyPrinter
@@ -232,6 +233,8 @@ class Crate(object):
         self.source = join(source_workspace, source_name)
         #: the full path to the destination data
         self.destination = join(self.destination_workspace, self.destination_name)
+        #: the hash table name of a crate
+        self.name = '{}_{}'.format(md5(self.destination).hexdigest(), self.destination_name)
 
     def set_source_name(self, value):
         '''Sets the source_name and updates the source property
@@ -280,3 +283,27 @@ class Crate(object):
             'destination_coordinate_system':  spatial_reference,
             'geographic_transformation': self.geographic_transformation
         })
+
+
+class Changes(object):
+    '''A module that contains the adds and deletes for when checking for changes.
+    '''
+
+    def __init__(self, fields):
+        self.adds = []
+        self._deletes = []
+        self.fields = fields
+
+    def has_adds(self):
+        return len(self.adds) > 0
+
+    def has_deletes(self):
+        return len(self._deletes) > 0
+
+    def get_delete_where_clause(self):
+        return 'OBJECTID in ({})'.format(','.join(self._deletes))
+
+    def determine_deletes(self, attribute_hashes, geometry_hashes):
+        self._deletes = set(attribute_hashes.values() + geometry_hashes.values())
+
+        return self._deletes

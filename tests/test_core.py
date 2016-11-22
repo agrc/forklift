@@ -105,8 +105,11 @@ class CoreTests(unittest.TestCase):
     def test_filter_shape_fields(self):
         self.assertEqual(core._filter_fields(['shape', 'test', 'Shape_length', 'Global_ID']), ['test'])
 
-    def test_filter_fields_makes_OID_first(self):
-        self.assertEqual(core._filter_fields(['test', 'OBJECTID', 'hello']), ['OID@', 'test', 'hello'])
+    def test_filter_fields_makes_OID_last(self):
+        self.assertEqual(core._filter_fields(['test', 'OBJECTID', 'hello']), ['hello', 'test', 'OID@'])
+
+    def test_filter_fields_sorts_fields(self):
+        self.assertEqual(core._filter_fields(['k', 's', 'g']), ['g', 'k', 's'])
 
     def test_has_changes_no_OBJECTID_in_source(self):
         skip_if_no_local_sde()

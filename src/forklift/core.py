@@ -188,12 +188,12 @@ def _create_destination_data(crate):
 
     log.warn('creating new feature class: %s', crate.destination)
 
-    shape_type = arcpy.Describe(crate.source).shapeType.upper()
+    source_describe = arcpy.Describe(crate.source)
     arcpy.CreateFeatureclass_management(crate.destination_workspace,
                                         crate.destination_name,
-                                        shape_type,
+                                        source_describe.shapeType.upper(),
                                         crate.source,
-                                        spatial_reference=crate.destination_coordinate_system)
+                                        spatial_reference=crate.destination_coordinate_system or source_describe.spatialReference)
 
 
 def _hash(crate, hash_path):

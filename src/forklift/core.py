@@ -245,7 +245,7 @@ def _hash(crate, hash_path):
                 geom_hash_digest = _create_hash(wkt, unique_salt)
 
             #: create attribute hash
-            attribute_hash_digest = _create_hash(row[:att_hash_sub_index], unique_salt)
+            attribute_hash_digest = _create_hash(str(row[:att_hash_sub_index]), unique_salt)
 
             #: check for new feature
             if attribute_hash_digest not in attribute_hashes:

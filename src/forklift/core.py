@@ -161,7 +161,7 @@ def update(crate, validate_crate):
                 for row in changes.adds:
                     id = cursor.insertRow(row[:-2])
                     #: update/store hash lookup
-                    hash_cursor.insertRow((id) + row[-2:])
+                    hash_cursor.insertRow((id,) + row[-2:])
 
             edit_session.stopOperation()
             edit_session.stopEditing(True)

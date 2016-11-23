@@ -34,6 +34,13 @@ _hash_gdb = 'hashes.gdb'
 hash_gdb_path = path.join(garage, _hash_gdb)
 
 
+def init():
+    #: create gdb if needed
+    if not arcpy.Exists(hash_gdb_path):
+        log.info('%s does not exist. creating', hash_gdb_path)
+        arcpy.CreateFileGDB_management(garage, _hash_gdb)
+
+
 def update(crate, validate_crate):
     '''
     crate: models.Crate
@@ -57,10 +64,6 @@ def update(crate, validate_crate):
     change_status = (Crate.NO_CHANGES, None)
 
     try:
-        if not arcpy.Exists(hash_gdb_path):
-            log.debug('%s does not exist. creating', hash_gdb_path)
-            arcpy.CreateFileGDB_management(garage, _hash_gdb)
-
         if not arcpy.Exists(crate.source):
             status, message = _try_to_find_data_source_by_name(crate)
             if not status:

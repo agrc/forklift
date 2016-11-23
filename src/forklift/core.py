@@ -250,8 +250,12 @@ def _hash(crate, hash_path):
             #: create shape hash
             geom_hash_digest = None
             if not is_table:
-                wkt = row[-1].WKT
-                geom_hash_digest = _create_hash(wkt, unique_salt)
+                shape = row[-1]
+
+                #: skip features with empty geometry
+                if shape is None:
+                    continue
+                geom_hash_digest = _create_hash(shape.WKT, unique_salt)
 
             #: create attribute hash
             attribute_hash_digest = _create_hash(str(row[:att_hash_sub_index]), unique_salt)

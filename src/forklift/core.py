@@ -179,7 +179,7 @@ def _create_destination_data(crate):
 
     log.warn('creating new feature class: %s', crate.destination)
 
-    shape_type = arcpy.Describe(crate.source).shapeType
+    shape_type = arcpy.Describe(crate.source).shapeType.upper()
     arcpy.CreateFeatureclass_management(crate.destination_workspace,
                                         crate.destination_name,
                                         shape_type,

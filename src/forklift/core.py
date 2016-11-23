@@ -9,10 +9,7 @@ Tools for updating the data associated with a models.Crate
 import arcpy
 import logging
 from config import config_location
-from datetime import datetime
 from exceptions import ValidationException
-from itertools import izip
-from math import fabs
 from models import Changes, Crate
 from os import path
 from hashlib import md5

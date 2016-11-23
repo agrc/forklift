@@ -37,6 +37,15 @@ def init():
         log.info('%s does not exist. creating', hash_gdb_path)
         arcpy.CreateFileGDB_management(garage, _hash_gdb)
 
+    #: clear out scratchGDB
+    arcpy.env.workspace = arcpy.env.scratchGDB
+    log.info('clearing out scratchGDB')
+    for featureClass in arcpy.ListFeatureClasses():
+        log.debug('deleting: %s', featureClass)
+        arcpy.Delete_management(featureClass)
+
+    arcpy.ClearEnvironment('workspace')
+
 
 def update(crate, validate_crate):
     '''

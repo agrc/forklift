@@ -126,10 +126,10 @@ def update(crate, validate_crate):
             source_describe = arcpy.Describe(crate.source)
             if source_describe.spatialReference.name != arcpy.Describe(crate.destination).spatialReference.name:
                 #: create a temp table with hash fields
-                temp_table = arcpy.CreateFeatureClass_managment(arcpy.env.scratchGDB,
-                                                                crate.name,
-                                                                crate.source,
-                                                                spatial_reference=source_describe.spatialReference)
+                temp_table = arcpy.CreateFeatureclass_management(arcpy.env.scratchGDB,
+                                                                 crate.name,
+                                                                 crate.source,
+                                                                 spatial_reference=source_describe.spatialReference)
                 arcpy.AddField_management(temp_table, hash_att_field, 'TEXT', field_length=32)
                 arcpy.AddField_management(temp_table, hash_geom_field, 'TEXT', field_length=32)
 
@@ -182,11 +182,11 @@ def _create_destination_data(crate):
     log.warn('creating new feature class: %s', crate.destination)
 
     shape_type = arcpy.Describe(crate.source).shapeType
-    arcpy.CreateFeatureClass_managment(crate.destination_workspace,
-                                       crate.destination_name,
-                                       shape_type,
-                                       crate.source,
-                                       spatial_reference=crate.destination_coordinate_system)
+    arcpy.CreateFeatureclass_management(crate.destination_workspace,
+                                        crate.destination_name,
+                                        shape_type,
+                                        crate.source,
+                                        spatial_reference=crate.destination_coordinate_system)
 
 
 def _hash(crate, hash_path):

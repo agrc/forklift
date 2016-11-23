@@ -301,7 +301,10 @@ class Changes(object):
         return len(self._deletes) > 0
 
     def get_delete_where_clause(self):
-        return 'OBJECTID in ({})'.format(','.join(self._deletes))
+        if len(self._deletes) < 1:
+            return ''
+
+        return 'OBJECTID in ({})'.format(','.join([str(id) for id in self._deletes]))
 
     def determine_deletes(self, attribute_hashes, geometry_hashes):
         self._deletes = set(attribute_hashes.values() + geometry_hashes.values())

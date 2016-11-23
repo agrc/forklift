@@ -125,6 +125,7 @@ def update(crate, validate_crate):
                 #: create a temp table with hash fields
                 temp_table = arcpy.CreateFeatureclass_management(arcpy.env.scratchGDB,
                                                                  crate.name,
+                                                                 source_describe.shapeType.upper(),
                                                                  crate.source,
                                                                  spatial_reference=source_describe.spatialReference)
                 arcpy.AddField_management(temp_table, hash_att_field, 'TEXT', field_length=32)

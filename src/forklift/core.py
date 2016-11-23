@@ -34,7 +34,7 @@ _hash_gdb = 'hashes.gdb'
 hash_gdb_path = path.join(garage, _hash_gdb)
 
 
-def update(crate, validate_crate, change_detection):
+def update(crate, validate_crate):
     '''
     crate: models.Crate
     validate_crate: models.Pallet.validate_crate

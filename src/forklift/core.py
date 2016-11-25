@@ -258,17 +258,14 @@ def _hash(crate, hash_path):
             attribute_hash_digest = _create_hash(str(row[:att_hash_sub_index]), unique_salt)
 
             #: check for new feature
-            if attribute_hash_digest not in attribute_hashes:
+            if attribute_hash_digest not in attribute_hashes or (geom_hash_digest is not None and geom_hash_digest not in geometry_hashes):
                 #: update or add
                 changes.adds.append(row + (attribute_hash_digest, geom_hash_digest))
-
+            else:
                 #: remove not modified hash from hashes
                 del attribute_hashes[attribute_hash_digest]
-            elif geom_hash_digest is not None and geom_hash_digest not in geometry_hashes:
-                changes.adds.append(row + (attribute_hash_digest, geom_hash_digest))
-
-                #: remove not modified hash from hashes
-                del geometry_hashes[geom_hash_digest]
+                if geom_hash_digest is not None:
+                    del geometry_hashes[geom_hash_digest]
 
     changes.determine_deletes(attribute_hashes, geometry_hashes)
 

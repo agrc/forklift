@@ -234,7 +234,7 @@ class Crate(object):
         #: the full path to the destination data
         self.destination = join(self.destination_workspace, self.destination_name)
         #: the hash table name of a crate
-        self.name = 'hash_{}_{}'.format(md5(self.destination).hexdigest(), self.destination_name)
+        self.name = 'hash_{}_{}'.format(md5(self.destination).hexdigest(), self.destination_name).replace('.', '_')
 
     def set_source_name(self, value):
         '''Sets the source_name and updates the source property

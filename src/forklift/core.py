@@ -227,21 +227,14 @@ def _hash(crate, hash_path):
     att_hash_sub_index = None
     if 'OID@' in fields:
         att_hash_sub_index = -1
+        source_describe = arcpy.Describe(crate.source)
+        sql_clause = (None, 'ORDER BY {}'.format(source_describe.OIDFieldName))
 
     if not is_table:
         fields.append(shape_token)
         att_hash_sub_index = -2
 
     sql_clause = None
-    source_describe = arcpy.Describe(crate.source)
-
-    #: OIDFieldName is not an attr if the dataset doesn't have one
-    if hasattr(source_describe, 'OIDFieldName'):
-        object_id_field = source_describe.OIDFieldName
-
-        #: order by OID if it contains one
-        if object_id_field in [f.name for f in arcpy.ListFields(crate.source)]:
-            sql_clause = (None, 'ORDER BY {}'.format(object_id_field))
 
     changes = Changes(fields)
     #: TODO update to use with pickle or geodatabase

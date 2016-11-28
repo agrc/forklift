@@ -138,7 +138,7 @@ def update(crate, validate_crate):
                                                                      crate.name,
                                                                      source_describe.shapeType.upper(),
                                                                      crate.source,
-                                                                     spatial_reference=source_describe.spatialReference).getOutput(0)
+                                                                     spatial_reference=source_describe.spatialReference)[0]
                     arcpy.AddField_management(temp_table, hash_att_field, 'TEXT', field_length=32)
                     arcpy.AddField_management(temp_table, hash_geom_field, 'TEXT', field_length=32)
 

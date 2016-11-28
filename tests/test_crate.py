@@ -93,7 +93,7 @@ class TestCrate(unittest.TestCase):
         destination_name = 'dn'
         crate = Crate('sourceName', 'source', destination_workspace, destination_name)
 
-        hash = md5(join(destination_workspace, destination_name)).hexdigest() + '_' + destination_name
+        hash = 'hash_' + md5(join(destination_workspace, destination_name)).hexdigest() + '_' + destination_name
 
         self.assertEqual(crate.name, hash)
 
@@ -102,6 +102,6 @@ class TestCrate(unittest.TestCase):
         source_name = 'sn'
         crate = Crate(source_name, 'source', destination_workspace)
 
-        hash = md5(join(destination_workspace, source_name)).hexdigest() + '_' + source_name
+        hash = 'hash_' + md5(join(destination_workspace, source_name)).hexdigest() + '_' + source_name
 
         self.assertEqual(crate.name, hash)

@@ -38,6 +38,7 @@ class Tox(TestCommand):
         errno = tox.cmdline(args=shlex.split(self.tox_args))
         sys.exit(errno)
 
+
 setup(
     name="forklift",
     version="3.3.6",

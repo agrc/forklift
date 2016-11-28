@@ -9,10 +9,7 @@ Tools for updating the data associated with a models.Crate
 import arcpy
 import logging
 from config import config_location
-from datetime import datetime
 from exceptions import ValidationException
-from itertools import izip
-from math import fabs
 from models import Changes, Crate
 from os import path
 from hashlib import md5
@@ -32,6 +29,22 @@ garage = path.dirname(config_location)
 _hash_gdb = 'hashes.gdb'
 
 hash_gdb_path = path.join(garage, _hash_gdb)
+
+
+def init():
+    #: create gdb if needed
+    if not arcpy.Exists(hash_gdb_path):
+        log.info('%s does not exist. creating', hash_gdb_path)
+        arcpy.CreateFileGDB_management(garage, _hash_gdb)
+
+    #: clear out scratchGDB
+    arcpy.env.workspace = arcpy.env.scratchGDB
+    log.info('clearing out scratchGDB')
+    for featureClass in arcpy.ListFeatureClasses():
+        log.debug('deleting: %s', featureClass)
+        arcpy.Delete_management(featureClass)
+
+    arcpy.ClearEnvironment('workspace')
 
 
 def update(crate, validate_crate):
@@ -57,10 +70,6 @@ def update(crate, validate_crate):
     change_status = (Crate.NO_CHANGES, None)
 
     try:
-        if not arcpy.Exists(hash_gdb_path):
-            log.debug('%s does not exist. creating', hash_gdb_path)
-            arcpy.CreateFileGDB_management(garage, _hash_gdb)
-
         if not arcpy.Exists(crate.source):
             status, message = _try_to_find_data_source_by_name(crate)
             if not status:
@@ -121,35 +130,38 @@ def update(crate, validate_crate):
             #: reproject data if source is different than destination
             projected_table = None
             source_describe = arcpy.Describe(crate.source)
-            if source_describe.spatialReference.name != arcpy.Describe(crate.destination).spatialReference.name:
-                #: create a temp table with hash fields
-                temp_table = arcpy.CreateFeatureClass_managment(arcpy.env.scratchGDB,
-                                                                crate.name,
-                                                                crate.source,
-                                                                spatial_reference=source_describe.spatialReference)
-                arcpy.AddField_management(temp_table, hash_att_field, 'TEXT', field_length=32)
-                arcpy.AddField_management(temp_table, hash_geom_field, 'TEXT', field_length=32)
 
-                #: insert row plus hashes temporarily
-                with arcpy.da.InsertCursor(temp_table, changes.fields + [hash_att_field, hash_geom_field]) as cursor:
-                    for row in changes.adds:
-                        cursor.insertRow(row)
+            if not _is_table(crate):
+                if source_describe.spatialReference.name != arcpy.Describe(crate.destination).spatialReference.name:
+                    #: create a temp table with hash fields
+                    temp_table = arcpy.CreateFeatureclass_management(arcpy.env.scratchGDB,
+                                                                     crate.name,
+                                                                     source_describe.shapeType.upper(),
+                                                                     crate.source,
+                                                                     spatial_reference=source_describe.spatialReference)[0]
+                    arcpy.AddField_management(temp_table, hash_att_field, 'TEXT', field_length=32)
+                    arcpy.AddField_management(temp_table, hash_geom_field, 'TEXT', field_length=32)
 
-                projected_table = arcpy.Project_management(temp_table, temp_table + '_projected', crate.destination_coordinate_system,
-                                                           crate.geographic_transformation)
+                    #: insert row plus hashes temporarily
+                    with arcpy.da.InsertCursor(temp_table, changes.fields + [hash_att_field, hash_geom_field]) as cursor:
+                        for row in changes.adds:
+                            cursor.insertRow(row)
 
-                with arcpy.da.SearchCursor(projected_table, changes.fields + [hash_att_field, hash_geom_field]) as cursor:
-                    changes.adds = [row for row in cursor]
+                    projected_table = arcpy.Project_management(temp_table, temp_table + '_projected', crate.destination_coordinate_system,
+                                                               crate.geographic_transformation)
 
-                arcpy.Delete_management(temp_table)
-                arcpy.Delete_management(projected_table)
+                    with arcpy.da.SearchCursor(projected_table, changes.fields + [hash_att_field, hash_geom_field]) as cursor:
+                        changes.adds = [row for row in cursor]
+
+                    arcpy.Delete_management(temp_table)
+                    arcpy.Delete_management(projected_table)
 
             with arcpy.da.InsertCursor(crate.destination, changes.fields) as cursor, \
                     arcpy.da.InsertCursor(hash_gdb, [hash_id_field, hash_att_field, hash_geom_field]) as hash_cursor:
                 for row in changes.adds:
                     id = cursor.insertRow(row[:-2])
                     #: update/store hash lookup
-                    hash_cursor.insertRow((id) + row[-2:])
+                    hash_cursor.insertRow((id,) + row[-2:])
 
             edit_session.stopOperation()
             edit_session.stopEditing(True)
@@ -178,12 +190,12 @@ def _create_destination_data(crate):
 
     log.warn('creating new feature class: %s', crate.destination)
 
-    shape_type = arcpy.Describe(crate.source).shapeType
-    arcpy.CreateFeatureClass_managment(crate.destination_workspace,
-                                       crate.destination_name,
-                                       shape_type,
-                                       crate.source,
-                                       spatial_reference=crate.destination_coordinate_system)
+    source_describe = arcpy.Describe(crate.source)
+    arcpy.CreateFeatureclass_management(crate.destination_workspace,
+                                        crate.destination_name,
+                                        source_describe.shapeType.upper(),
+                                        crate.source,
+                                        spatial_reference=crate.destination_coordinate_system or source_describe.spatialReference)
 
 
 def _hash(crate, hash_path):
@@ -215,17 +227,14 @@ def _hash(crate, hash_path):
     att_hash_sub_index = None
     if 'OID@' in fields:
         att_hash_sub_index = -1
+        source_describe = arcpy.Describe(crate.source)
+        sql_clause = (None, 'ORDER BY {}'.format(source_describe.OIDFieldName))
 
     if not is_table:
         fields.append(shape_token)
         att_hash_sub_index = -2
 
     sql_clause = None
-    object_id_field = arcpy.Describe(crate.source).OIDFieldName
-
-    #: order by OID if it contains one
-    if object_id_field in [f.name for f in arcpy.ListFields(crate.source)]:
-        sql_clause = (None, 'ORDER BY {}'.format(object_id_field))
 
     changes = Changes(fields)
     #: TODO update to use with pickle or geodatabase
@@ -238,24 +247,25 @@ def _hash(crate, hash_path):
             #: create shape hash
             geom_hash_digest = None
             if not is_table:
-                wkt = row[-1].WKT
-                geom_hash_digest = _create_hash(wkt, unique_salt)
+                shape = row[-1]
+
+                #: skip features with empty geometry
+                if shape is None:
+                    continue
+                geom_hash_digest = _create_hash(shape.WKT, unique_salt)
 
             #: create attribute hash
-            attribute_hash_digest = _create_hash(row[:att_hash_sub_index], unique_salt)
+            attribute_hash_digest = _create_hash(str(row[:att_hash_sub_index]), unique_salt)
 
             #: check for new feature
-            if attribute_hash_digest not in attribute_hashes:
+            if attribute_hash_digest not in attribute_hashes or (geom_hash_digest is not None and geom_hash_digest not in geometry_hashes):
                 #: update or add
                 changes.adds.append(row + (attribute_hash_digest, geom_hash_digest))
-
+            else:
                 #: remove not modified hash from hashes
                 del attribute_hashes[attribute_hash_digest]
-            elif geom_hash_digest is not None and geom_hash_digest not in geometry_hashes:
-                changes.adds.append(row + (attribute_hash_digest, geom_hash_digest))
-
-                #: remove not modified hash from hashes
-                del geometry_hashes[geom_hash_digest]
+                if geom_hash_digest is not None:
+                    del geometry_hashes[geom_hash_digest]
 
     changes.determine_deletes(attribute_hashes, geometry_hashes)
 

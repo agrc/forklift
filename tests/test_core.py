@@ -44,6 +44,8 @@ class CoreTests(unittest.TestCase):
     def setUp(self):
         delete_if_exists(test_gdb)
         delete_if_exists(test_folder)
+        delete_if_exists(core.hash_gdb_path)
+        core.init()
 
     def tearDown(self):
         delete_if_exists(test_gdb)
@@ -55,12 +57,10 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(core.update(crate, lambda x: True)[0], Crate.INVALID_DATA)
 
     def test_update_no_existing_destination(self):
-        core._create_destination_data = Mock()
-
         crate = Crate('ZipCodes', check_for_changes_gdb, test_gdb, 'ImNotHere')
 
         self.assertEqual(core.update(crate, lambda x: True)[0], Crate.CREATED)
-        core._create_destination_data.assert_called_once()
+        self.assertEqual(arcpy.Exists(crate.destination), True)
 
     @patch('arcpy.Exists')
     def test_update_custom_validation_that_fails(self, arcpy_exists):
@@ -83,24 +83,12 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(core.update(crate, custom)[0], Crate.INVALID_DATA)
 
     @patch('arcpy.Exists')
-    def test_update_successfully_updated(self, arcpy_exists):
-        arcpy_exists.return_value = True
-        core._has_changes = Mock(return_value=True)
-        core._move_data = Mock()
-
-        crate = Crate('', '', '')
-
-        self.assertEqual(core.update(crate, lambda c: True)[0], Crate.UPDATED)
-
-    @patch('arcpy.Exists')
     def test_update_error(self, arcpy_exists):
         arcpy_exists.return_value = True
-        core._has_changes = Mock(side_effect=Exception())
-        core._move_data = Mock(side_effect=Exception('error'))
 
         crate = Crate('', '', '')
 
-        self.assertEqual(core.update(crate, lambda c: True), (Crate.UNHANDLED_EXCEPTION, 'error'))
+        self.assertEqual(core.update(crate, lambda c: True)[0], Crate.UNHANDLED_EXCEPTION)
 
     def test_filter_shape_fields(self):
         self.assertEqual(core._filter_fields(['shape', 'test', 'Shape_length', 'Global_ID']), ['test'])
@@ -111,71 +99,56 @@ class CoreTests(unittest.TestCase):
     def test_filter_fields_sorts_fields(self):
         self.assertEqual(core._filter_fields(['k', 's', 'g']), ['g', 'k', 's'])
 
-    def test_has_changes_no_OBJECTID_in_source(self):
+    def test_hash_no_OBJECTID_in_source(self):
         skip_if_no_local_sde()
 
         tbl = 'NO_OBJECTID_TEST'
 
         #: has changes
-        self.assertTrue(core._has_changes(Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, check_for_changes_gdb, tbl)))
+        self.assertEqual(
+            len(core._hash(
+                Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, check_for_changes_gdb, tbl), core.hash_gdb_path).adds), 1)
 
         #: no changes
-        self.assertFalse(core._has_changes(Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, check_for_changes_gdb, '{}_NO_CHANGES'.format(tbl))))
+        self.assertEqual(
+            len(core._hash(
+                Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, check_for_changes_gdb, '{}_NO_CHANGES'.format(tbl)), core.hash_gdb_path).adds), 1)
 
-    def test_has_changes(self):
+    def test_hash(self):
 
-        def run_has_changes(fc1, fc2):
-            return core._has_changes(Crate(fc1, check_for_changes_gdb, check_for_changes_gdb, fc2))
+        def run_hash(fc1, fc2):
+            return core._hash(Crate(fc1, check_for_changes_gdb, check_for_changes_gdb, fc2), core.hash_gdb_path)
 
-        self.assertFalse(run_has_changes('ZipCodes', 'ZipCodes_same'))
-        self.assertTrue(run_has_changes('ZipCodes', 'ZipCodes_geoMod'))
-        self.assertTrue(run_has_changes('ZipCodes', 'ZipCodes_attMod'))
-        self.assertTrue(run_has_changes('ZipCodes', 'ZipCodes_newFeature'))
-        self.assertFalse(run_has_changes('DNROilGasWells', 'DNROilGasWells'))
-        self.assertFalse(run_has_changes('Line', 'Line'))
-        self.assertFalse(run_has_changes('NullShape', 'NullShape'))
-        self.assertFalse(run_has_changes('Providers', 'Providers'))
-        self.assertTrue(run_has_changes('NullDates', 'NullDates2'))
+        self.assertEqual(len(run_hash('ZipCodes', 'ZipCodes_same').adds), 299)
+        self.assertEqual(len(run_hash('DNROilGasWells', 'DNROilGasWells').adds), 4)
+        self.assertEqual(len(run_hash('Line', 'Line').adds), 0)
+        self.assertEqual(len(run_hash('NullShape', 'NullShape').adds), 1)
+        self.assertEqual(len(run_hash('Providers', 'Providers').adds), 56)
+        self.assertEqual(len(run_hash('NullDates', 'NullDates2').adds), 2)
 
-    def test_has_changes_sde(self):
+    def test_hash_sde(self):
         skip_if_no_local_sde()
         arcpy.Copy_management(check_for_changes_gdb, test_gdb)
 
         def run(name):
-            return core._has_changes(Crate(name,
-                                           update_tests_sde,
-                                           test_gdb,
-                                           destination_coordinate_system=arcpy.SpatialReference(3857),
-                                           geographic_transformation='NAD_1983_To_WGS_1984_5'))
+            return core._hash(
+                Crate(name,
+                      update_tests_sde,
+                      test_gdb,
+                      destination_coordinate_system=arcpy.SpatialReference(3857),
+                      geographic_transformation='NAD_1983_To_WGS_1984_5'),
+                core.hash_gdb_path)
 
-        self.assertFalse(run('Parcels_Morgan'))
-        self.assertFalse(run('RuralTelcomBoundaries'))  # different coordinate systems
+        self.assertEqual(len(run('Parcels_Morgan').adds), 4894)
+        #: different coordinate systems
+        self.assertEqual(len(run('RuralTelcomBoundaries').adds), 46)
 
-    def test_has_changes_shapefile(self):
-        self.assertFalse(core._has_changes(Crate('shapefile.shp', path.join(current_folder, 'data'), check_for_changes_gdb, 'shapefile')))
+    def test_hash_shapefile(self):
+        data_folder = path.join(current_folder, 'data')
+        crate = Crate('shapefile.shp', data_folder, check_for_changes_gdb, 'shapefile')
+        changes = core._hash(crate, core.hash_gdb_path)
 
-    def test_has_changes_env_vars(self):
-        arcpy.env.outputCoordinateSystem = None
-        arcpy.env.geographicTransformations = None
-
-        core._has_changes(Crate('ZipCodes',
-                                check_for_changes_gdb,
-                                check_for_changes_gdb,
-                                'ZipCodes_geoMod',
-                                destination_coordinate_system=arcpy.SpatialReference(3857),
-                                geographic_transformation='NAD_1983_To_WGS_1984_5'))
-
-        self.assertIsNone(arcpy.env.outputCoordinateSystem)
-        self.assertIsNone(arcpy.env.geographicTransformations)
-
-    @patch('arcpy.Exists')
-    def test_update_no_changes(self, arcpy_exists):
-        arcpy_exists.return_value = True
-        core._has_changes = Mock(return_value=False)
-
-        crate = Crate('', '', '')
-
-        self.assertEqual(core.update(crate, lambda c: True)[0], Crate.NO_CHANGES)
+        self.assertEqual(len(changes.adds), 1)
 
     def test_schema_changes(self):
         arcpy.Copy_management(check_for_changes_gdb, test_gdb)
@@ -220,7 +193,8 @@ class CoreTests(unittest.TestCase):
         arcpy.Copy_management(check_for_changes_gdb, test_gdb)
 
         crate = Crate('Providers', update_tests_sde, test_gdb)  #: table
-        core._move_data(crate)
+
+        core.update(crate, lambda x: True)
 
         self.assertEqual(int(arcpy.GetCount_management(crate.destination).getOutput(0)), 57)
 
@@ -229,7 +203,8 @@ class CoreTests(unittest.TestCase):
         arcpy.Copy_management(check_for_changes_gdb, test_gdb)
 
         crate = Crate('DNROilGasWells', update_tests_sde, test_gdb)  #: feature class
-        core._move_data(crate)
+
+        core.update(crate, lambda x: True)
 
         self.assertEqual(int(arcpy.GetCount_management(crate.destination).getOutput(0)), 5)
 
@@ -238,7 +213,8 @@ class CoreTests(unittest.TestCase):
         arcpy.Copy_management(check_for_changes_gdb, test_gdb)
 
         crate = Crate('NO_OBJECTID_TEST', update_tests_sde, test_gdb)
-        core._move_data(crate)
+
+        core.update(crate, lambda x: True)
 
         with arcpy.da.SearchCursor(crate.destination, '*') as cur:
             row = cur.next()
@@ -250,7 +226,8 @@ class CoreTests(unittest.TestCase):
         arcpy.Copy_management(empty_geometry_gdb, test_gdb)
 
         crate = Crate(empty_points, empty_geometry_gdb, test_gdb)
-        core._move_data(crate)
+
+        core.update(crate, lambda x: True)
 
         self.assertEqual(int(arcpy.GetCount_management(crate.destination).getOutput(0)), 4)
 

@@ -36,10 +36,7 @@ def update(crate, validate_crate):
     def remove_temp_table(table):
         if table is not None and table.endswith(reproject_temp_suffix) and arcpy.Exists(table):
             log.debug('deleting %s', table)
-            try:
-                arcpy.Delete_management(table)
-            except Exception as e:
-                log.error('could not delete %s', e.message)
+            arcpy.Delete_management(table)
 
     arcpy.env.outputCoordinateSystem = crate.destination_coordinate_system
     arcpy.env.geographicTransformations = crate.geographic_transformation
@@ -337,13 +334,7 @@ def _has_changes(crate):
             temp_compare_table = crate.destination + reproject_temp_suffix
 
             log.debug('creating %s', temp_compare_table)
-            try:
-                arcpy.Project_management(crate.source, temp_compare_table, destination_describe.spatialReference, crate.geographic_transformation)
-            except Exception as e:
-                #: not sure what happened? File name too long? default to update
-                log.error('error projecting default to has changes %s', e.message)
-
-                return True
+            arcpy.Project_management(crate.source, temp_compare_table, destination_describe.spatialReference, crate.geographic_transformation)
 
     if 'OBJECTID' in [f.name for f in arcpy.ListFields(crate.source)] and 'OBJECTID' in [f.name for f in arcpy.ListFields(crate.destination)]:
         #: compare each feature based on sorting by OBJECTID if both tables have that field

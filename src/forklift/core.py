@@ -17,7 +17,7 @@ from os import path
 
 log = logging.getLogger('forklift')
 
-reproject_temp_suffix = '__forklift'
+reproject_temp_suffix = '_fl'
 
 
 def update(crate, validate_crate):

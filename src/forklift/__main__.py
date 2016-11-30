@@ -36,6 +36,7 @@ Examples:
 
 import config
 import cli
+import faulthandler
 import logging.config
 import sys
 from docopt import docopt
@@ -148,6 +149,8 @@ def _setup_logging(verbose):
     log.addHandler(file_handler)
     log.addHandler(console_handler)
     log.setLevel(debug)
+
+    faulthandler.enable(file_handler.stream)
 
     return log
 

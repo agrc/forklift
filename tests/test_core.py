@@ -62,6 +62,14 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(core.update(crate, lambda x: True)[0], Crate.CREATED)
         self.assertEqual(arcpy.Exists(crate.destination), True)
 
+    def test_update_no_deleted_destination(self):
+        crate = Crate('ZipCodes', check_for_changes_gdb, test_gdb, 'ImNotHere')
+        core.update(crate, lambda x: True)
+        delete_if_exists(crate.destination)
+        self.assertEqual(core.update(crate, lambda x: True)[0], Crate.CREATED)
+        self.assertEqual(arcpy.Exists(crate.destination), True)
+        self.assertEqual(int(arcpy.GetCount_management(crate.destination).getOutput(0)), 299)
+
     @patch('arcpy.Exists')
     def test_update_custom_validation_that_fails(self, arcpy_exists):
         arcpy_exists.return_value = True

@@ -346,10 +346,25 @@ class CoreTests(unittest.TestCase):
     # For basic change detection and update tests the destination data and hash
     # should be in a state of core.update being run previously
     def test_source_row_deleted(self):
-        # The destination should end up with one less row
-        # The hash table should also have one less row
-        # length of changes._deletes is non-zero
-        self.assertTrue(False)
+        arcpy.Copy_management(check_for_changes_gdb, test_gdb)
+        crate = Crate('RowDelete', test_gdb, test_gdb, 'RowDelete_Dest')
+
+        core.update(crate, lambda x: True)
+        with arcpy.da.UpdateCursor(crate.source, '*') as cur:
+            cur.next()
+            cur.deleteRow()
+
+        changes = core._hash(crate, core.hash_gdb_path)
+
+        #: all features hashes are invalid since we deleted the first row
+        #: which changes the salt for all following rows
+        self.assertEqual(len(changes.adds), 4)
+        self.assertEqual(len(changes._deletes), 5)
+
+        core.update(crate, lambda x: True)
+
+        self.assertEqual(arcpy.GetCount_management(path.join(core.hash_gdb_path, crate.name))[0], '4')
+        self.assertEqual(arcpy.GetCount_management(crate.destination)[0], '4')
 
     def test_source_row_added(self):
         arcpy.Copy_management(check_for_changes_gdb, test_gdb)

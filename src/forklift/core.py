@@ -124,7 +124,7 @@ def update(crate, validate_crate):
             if status != Crate.CREATED:
                 change_status = (Crate.UPDATED, None)
 
-            hash_gdb = path.join(hash_gdb_path, crate.name)
+            hash_table = path.join(hash_gdb_path, crate.name)
 
             log.debug('starting edit session...')
             edit_session = arcpy.da.Editor(crate.destination_workspace)
@@ -161,7 +161,7 @@ def update(crate, validate_crate):
                     arcpy.Delete_management(projected_table)
 
             with arcpy.da.InsertCursor(crate.destination, changes.fields) as cursor, \
-                    arcpy.da.InsertCursor(hash_gdb, [hash_id_field, hash_att_field, hash_geom_field]) as hash_cursor:
+                    arcpy.da.InsertCursor(hash_table, [hash_id_field, hash_att_field, hash_geom_field]) as hash_cursor:
                 for row in changes.adds:
                     id = cursor.insertRow(row[:-2])
                     #: update/store hash lookup

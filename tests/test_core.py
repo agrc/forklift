@@ -337,7 +337,7 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(crate.destination_name, 'Counties')
         self.assertEqual(crate.source, path.join(crate.source_workspace, crate.source_name))
 
-    def test_destitnation_exists_hash_not_exist(self):
+    def test_destination_exists_hash_not_exist(self):
         # If the destination data exists, and the hash does not exist, the destination data will need to be truncated before the normal update process
         # Hash table will be created
         # Length of changes.adds will equal the number of source rows
@@ -352,11 +352,22 @@ class CoreTests(unittest.TestCase):
         self.assertTrue(False)
 
     def test_source_row_added(self):
-        # The destination should end up with one more row
-        # The hash table should also have one more row
-        # Length changes.adds should be 1
-        # Test conditions assume rows can only be added to the end of a table
-        self.assertTrue(False)
+        arcpy.Copy_management(check_for_changes_gdb, test_gdb)
+        crate = Crate('RowAdd', test_gdb, test_gdb, 'RowAdd_Dest')
+
+        core.update(crate, lambda x: True)
+        with arcpy.da.InsertCursor(crate.source, 'URL') as cur:
+            cur.insertRow(('newrow',))
+
+        changes = core._hash(crate, core.hash_gdb_path)
+
+        self.assertEqual(len(changes.adds), 1)
+        self.assertEqual(len(changes._deletes), 0)
+
+        core.update(crate, lambda x: True)
+
+        self.assertEqual(arcpy.GetCount_management(path.join(core.hash_gdb_path, crate.name))[0], '6')
+        self.assertEqual(arcpy.GetCount_management(crate.destination)[0], '6')
 
     def test_source_row_attribute_changed(self):
         name = 'MALTA'

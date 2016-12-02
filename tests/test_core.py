@@ -429,8 +429,20 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(list(changes._deletes)[0], 3)
 
     def test_source_row_geometry_changed_to_none(self):
-        # The destination should end up with one less row
-        # The hash table should also have one less row
-        # Length changes._deletes should be 1
-        # I don't know if this ever happens
-        self.assertTrue(False)
+        arcpy.Copy_management(check_for_changes_gdb, test_gdb)
+        crate = Crate('GeometryToNull', test_gdb, test_gdb, 'GeometryToNull_Dest')
+
+        core.update(crate, lambda x: True)
+        with arcpy.da.UpdateCursor(crate.source, 'Shape@XY') as cur:
+            row = cur.next()
+            row[0] = None
+            cur.updateRow(row)
+
+        changes = core._hash(crate, core.hash_gdb_path)
+
+        self.assertEqual(len(changes._deletes), 1)
+
+        core.update(crate, lambda x: True)
+
+        self.assertEqual(arcpy.GetCount_management(path.join(core.hash_gdb_path, crate.name))[0], '3')
+        self.assertEqual(arcpy.GetCount_management(crate.destination)[0], '3')

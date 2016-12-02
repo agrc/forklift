@@ -359,9 +359,23 @@ class CoreTests(unittest.TestCase):
         self.assertTrue(False)
 
     def test_source_row_attribute_changed(self):
-        # Length changes.adds should be 1
-        # Length changes._deletes should be 1
-        self.assertTrue(False)
+        name = 'MALTA'
+        arcpy.Copy_management(check_for_changes_gdb, test_gdb)
+        crate = Crate('AttributeChange', test_gdb, test_gdb, 'AttributeChange_Dest')
+
+        core.update(crate, lambda x: True)
+        with arcpy.da.UpdateCursor(crate.source, 'SYMBOL', 'NAME = \'{}\''.format(name)) as cur:
+            row = cur.next()
+            row[0] = 99
+            cur.updateRow(row)
+
+        changes = core._hash(crate, core.hash_gdb_path)
+
+        self.assertEqual(len(changes.adds), 1)
+        self.assertEqual(changes.adds[0][1], name)
+
+        self.assertEqual(len(changes._deletes), 1)
+        self.assertEqual(list(changes._deletes)[0], 4)
 
     def test_source_row_geometry_changed(self):
         api = '4300311427'

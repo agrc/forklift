@@ -219,6 +219,9 @@ def _hash(crate, hash_path):
         arcpy.AddField_management(table, hash_att_field, 'TEXT', field_length=32)
         arcpy.AddField_management(table, hash_geom_field, 'TEXT', field_length=32)
 
+        #: truncate destination table since we are hashing for the first time
+        arcpy.TruncateTable_management(crate.destination)
+
     shape_token = 'SHAPE@'
     is_table = _is_table(crate)
 

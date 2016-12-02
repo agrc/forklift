@@ -109,23 +109,25 @@ class CoreTests(unittest.TestCase):
 
     def test_hash_no_OBJECTID_in_source(self):
         skip_if_no_local_sde()
+        arcpy.Copy_management(check_for_changes_gdb, test_gdb)
 
         tbl = 'NO_OBJECTID_TEST'
 
         #: has changes
         self.assertEqual(
             len(core._hash(
-                Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, check_for_changes_gdb, tbl), core.hash_gdb_path).adds), 1)
+                Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, test_gdb, tbl), core.hash_gdb_path).adds), 1)
 
         #: no changes
         self.assertEqual(
             len(core._hash(
-                Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, check_for_changes_gdb, '{}_NO_CHANGES'.format(tbl)), core.hash_gdb_path).adds), 1)
+                Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, test_gdb, '{}_NO_CHANGES'.format(tbl)), core.hash_gdb_path).adds), 1)
 
     def test_hash(self):
+        arcpy.Copy_management(check_for_changes_gdb, test_gdb)
 
         def run_hash(fc1, fc2):
-            return core._hash(Crate(fc1, check_for_changes_gdb, check_for_changes_gdb, fc2), core.hash_gdb_path)
+            return core._hash(Crate(fc1, check_for_changes_gdb, test_gdb, fc2), core.hash_gdb_path)
 
         self.assertEqual(len(run_hash('ZipCodes', 'ZipCodes_same').adds), 299)
         self.assertEqual(len(run_hash('DNROilGasWells', 'DNROilGasWells').adds), 4)
@@ -152,8 +154,9 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(len(run('RuralTelcomBoundaries').adds), 46)
 
     def test_hash_shapefile(self):
+        arcpy.Copy_management(check_for_changes_gdb, test_gdb)
         data_folder = path.join(current_folder, 'data')
-        crate = Crate('shapefile.shp', data_folder, check_for_changes_gdb, 'shapefile')
+        crate = Crate('shapefile.shp', data_folder, test_gdb, 'shapefile')
         changes = core._hash(crate, core.hash_gdb_path)
 
         self.assertEqual(len(changes.adds), 1)

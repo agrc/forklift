@@ -167,12 +167,20 @@ def update(crate, validate_crate):
                     #: update/store hash lookup
                     hash_cursor.insertRow((id,) + row[-2:])
 
+            log.debug('stopping edit session (saving edits)')
             edit_session.stopOperation()
             edit_session.stopEditing(True)
 
         return change_status
     except Exception as e:
         log.error('unhandled exception: %s for crate %r', e.message, crate, exc_info=True)
+        try:
+            log.warn('stopping edit session (not saving edits)')
+            edit_session.stopOperation()
+            edit_session.stopEditing(False)
+        except:
+            pass
+
         return (Crate.UNHANDLED_EXCEPTION, e.message)
     finally:
         arcpy.ResetEnvironments()

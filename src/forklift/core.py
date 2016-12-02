@@ -14,10 +14,15 @@ from itertools import izip
 from math import fabs
 from models import Crate
 from os import path
+from hashlib import md5
 
 log = logging.getLogger('forklift')
 
 reproject_temp_suffix = '_fl'
+
+attribute_hash_field = 'att_hash'
+
+geometry_hash_field = 'geo_hash'
 
 
 def update(crate, validate_crate):
@@ -64,13 +69,8 @@ def update(crate, validate_crate):
                      crate,
                      exc_info=True)
             return (Crate.INVALID_DATA, e.message)
-
-        try:
-            remove_temp_table(crate.destination + reproject_temp_suffix)
-            has_changes = _has_changes(crate)
-        except:
-            log.warn('Exception thrown while checking for changes. Assuming that there are changes...', exc_info=True)
-            has_changes = True
+        # TODO separate change check from move_data, or remove has_changes and handle return value differently
+        has_changes = True
         if has_changes:
             _move_data(crate)
 
@@ -109,6 +109,13 @@ def _create_destination_data(crate):
         #: prevent the stepping on of toes in any other scripts
         arcpy.env.outputCoordinateSystem = None
         arcpy.env.geographicTransformations = None
+    # add hash fields to destination data
+    _add_hash_fields(crate)
+
+
+def _add_hash_fields(crate):
+    arcpy.AddField_management(crate.destination, attribute_hash_field, 'TEXT', field_length=32)
+    arcpy.AddField_management(crate.destination, geometry_hash_field, 'TEXT', field_length=32)
 
 
 def _is_table(crate):
@@ -120,6 +127,27 @@ def _is_table(crate):
     return arcpy.Describe(crate.source).datasetType == 'Table'
 
 
+def _create_geo_hash(wkt, orderNum):
+    hasher = md5(wkt)
+    hasher.update(str(orderNum))
+    return hasher.hexdigest()
+
+
+def _get_hash_lookups(dest):
+    hashLookup = {}
+    geoHashLookup = {}
+    attHashColumn = attribute_hash_field
+    geoHashColumn = geometry_hash_field
+    with arcpy.da.SearchCursor(dest, ['OID@', attHashColumn, geoHashColumn]) as cursor:
+        for row in cursor:
+            oid, attHash, geoHash = row
+            if attHash is not None:
+                hashLookup[str(attHash)] = 0
+            if geoHash is not None:
+                geoHashLookup[str(geoHash)] = 0
+    return (hashLookup, geoHashLookup)
+
+
 def _move_data(crate):
     '''
     crate: Crate
@@ -127,24 +155,25 @@ def _move_data(crate):
     move data from source to destination as defined by the crate
     '''
     shape_token = 'SHAPE@'
+    attHashColumn = attribute_hash_field
+    geoHashColumn = geometry_hash_field
     is_table = _is_table(crate)
 
-    log.info('updating data...')
-    log.debug('trucating data for %s', crate.destination_name)
-    arcpy.TruncateTable_management(crate.destination)
-
-    # edit session required for data that participates in relationships
-    log.debug('starting edit session...')
-    edit_session = arcpy.da.Editor(crate.destination_workspace)
-    edit_session.startEditing(False, False)
-    edit_session.startOperation()
-
+    log.info('checking for changes...')
     fields = set([fld.name for fld in arcpy.ListFields(crate.destination)]) & set([fld.name for fld in arcpy.ListFields(crate.source)])
     fields = _filter_fields(fields)
+    fields.sort()
+
+    attHashSubIndex = None
+    if 'OID@' in fields:
+        fields.remove('OID@')
+        fields.append('OID@')
+        attHashSubIndex = -1
 
     source = crate.source
     if not is_table:
         fields.append(shape_token)
+        attHashSubIndex = -2
         if arcpy.Describe(crate.source).spatialReference.name != arcpy.Describe(crate.destination).spatialReference.name:
             temp_table = crate.destination + reproject_temp_suffix
             #: data may have already been projected in has_changes
@@ -155,26 +184,83 @@ def _move_data(crate):
             source = temp_table
 
     sql_clause = None
-    if 'OBJECTID' in [f.name for f in arcpy.ListFields(crate.source)] and 'OBJECTID' in [f.name for f in arcpy.ListFields(crate.destination)]:
-        sql_clause = (None, 'ORDER BY OBJECTID')
+    objectIdField = 'OBJECTID'  # arcpy.Describe(source).OIDFieldName
+    if objectIdField in [f.name for f in arcpy.ListFields(crate.source)]:
+        sql_clause = (None, 'ORDER BY {}'.format(objectIdField))
 
     try:
-        with arcpy.da.InsertCursor(crate.destination, fields) as icursor, \
-                arcpy.da.SearchCursor(source, fields, sql_clause=sql_clause) as cursor:
-            for row in cursor:
-                if shape_token not in fields or row[-1] is not None:
-                    icursor.insertRow(row)
+        newRows = []
+        hashLookup, geoHashLookup = _get_hash_lookups(crate.destination)
+        orderNum = 0
+        atthashCount = 0
+        with arcpy.da.SearchCursor(source, fields, sql_clause=sql_clause) as srcCursor:
+            for row in srcCursor:
+                orderNum += 1
+                # Shape hash
+                geoHexDigest = None
+                if not is_table:
+                    wkt = row[-1].WKT
+                    geoHexDigest = _create_geo_hash(wkt, orderNum)
+                # Attribute hash
+                hasher = md5()
+                hs = str(row[:attHashSubIndex]) + str(orderNum)
+                hasher.update(hs)
+                attHexDigest = hasher.hexdigest()
+                # Check for new feature
+                if attHexDigest not in hashLookup:
+                    listRow = list(row)
+                    listRow.extend([geoHexDigest, attHexDigest])
+                    newRows.append(listRow)
+                    atthashCount += 1
+                elif geoHexDigest not in geoHashLookup:
+                    listRow = list(row)
+                    listRow.extend([geoHexDigest, attHexDigest])
+                    newRows.append(listRow)
+                else:  # TODO: make specific to each hash or just use one
+                    hashLookup[attHexDigest] = 1
+                    geoHashLookup[geoHexDigest] = 1
+        # Find hashes from hashLookup that were never accessed
+        oldGeoHashes = [h for h in geoHashLookup if geoHashLookup[h] == 0]
+        oldHashes = [h for h in hashLookup if hashLookup[h] == 0]
+        oldGeoHashCount = len(oldGeoHashes)
+        oldHashCount = len(oldHashes)
+        newRowCount = len(newRows)
+        if oldGeoHashCount + oldHashCount + newRowCount > 0:
+            log.info('updating data...')
+            # edit session required for data that participates in relationships
+            log.debug('starting edit session...')
+            edit_session = arcpy.da.Editor(crate.destination_workspace)
+            edit_session.startEditing(False, False)
+            edit_session.startOperation()
 
-        edit_session.stopOperation()
-        edit_session.stopEditing(True)
-        log.debug('edit session stopped')
+            if oldGeoHashCount > 0 or oldHashCount > 0:
+                whereSelection = """{} IN ('{}')""".format(attHashColumn,
+                                                           "','".join(oldHashes))
+                log.debug('removed rows: {}'.format(oldHashCount))
+                with arcpy.da.UpdateCursor(crate.destination, [attHashColumn], whereSelection) as uCursor:
+                    for row in uCursor:
+                        uCursor.deleteRow()
+
+            if newRowCount > 0:
+                fields.extend([geoHashColumn, attHashColumn])
+                log.debug('inserted rows: {}'.format(newRowCount))
+                with arcpy.da.InsertCursor(crate.destination, fields) as iCursor:
+                    for row in newRows:
+                        iCursor.insertRow(row)
+
+            edit_session.stopOperation()
+            edit_session.stopEditing(True)
+            log.debug('edit session stopped')
+        else:
+            log.info('no changes found')
     except:
         log.warn('Error while trying to update data via InsertCursor. Falling back to Append tool...', exc_info=True)
 
         edit_session.stopOperation()
         edit_session.stopEditing(False)
         log.debug('edit session stopped without saving changes')
-
+        log.debug('truncating data for %s', crate.destination_name)
+        arcpy.TruncateTable_management(crate.destination)
         arcpy.Append_management(source, crate.destination, 'NO_TEST')
 
 
@@ -190,7 +276,7 @@ def check_schema(crate):
 
         for field in arcpy.ListFields(dataset):
             #: don't worry about comparing OBJECTID field
-            if not _is_naughty_field(field.name) and field.name != 'OBJECTID':
+            if not _is_naughty_field(field.name) and field.name != 'OBJECTID' and field.name != attribute_hash_field and field.name != geometry_hash_field:
                 field_dict[field.name.upper()] = field
 
         return field_dict

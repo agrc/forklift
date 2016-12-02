@@ -62,6 +62,14 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(core.update(crate, lambda x: True)[0], Crate.CREATED)
         self.assertEqual(arcpy.Exists(crate.destination), True)
 
+    def test_deleted_destination_between_updates(self):
+        crate = Crate('ZipCodes', check_for_changes_gdb, test_gdb, 'ImNotHere')
+        core.update(crate, lambda x: True)
+        delete_if_exists(crate.destination)
+        self.assertEqual(core.update(crate, lambda x: True)[0], Crate.CREATED)
+        self.assertEqual(arcpy.Exists(crate.destination), True)
+        self.assertEqual(int(arcpy.GetCount_management(crate.destination).getOutput(0)), 299)
+
     @patch('arcpy.Exists')
     def test_update_custom_validation_that_fails(self, arcpy_exists):
         arcpy_exists.return_value = True
@@ -223,7 +231,6 @@ class CoreTests(unittest.TestCase):
     def test_move_data_skip_empty_geometry(self):
         empty_geometry_gdb = path.join(current_folder, 'data', 'EmptyGeometry.gdb')
         empty_points = 'EmptyPointTest'
-        arcpy.Copy_management(empty_geometry_gdb, test_gdb)
 
         crate = Crate(empty_points, empty_geometry_gdb, test_gdb)
 
@@ -326,3 +333,41 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(crate.source_name, name)
         self.assertEqual(crate.destination_name, 'Counties')
         self.assertEqual(crate.source, path.join(crate.source_workspace, crate.source_name))
+
+    def test_destitnation_exists_hash_not_exist(self):
+        # If the destination data exists, and the hash does not exist, the destination data will need to be truncated before the normal update process
+        # Hash table will be created
+        # Length of changes.adds will equal the number of source rows
+        self.assertTrue(False)
+
+    # For basic change detection and update tests the destination data and hash
+    # should be in a state of core.update being run previously
+    def test_source_row_deleted(self):
+        # The destination should end up with one less row
+        # The hash table should also have one less row
+        # length of changes._deletes is non-zero
+        self.assertTrue(False)
+
+    def test_source_row_added(self):
+        # The destination should end up with one more row
+        # The hash table should also have one more row
+        # Length changes.adds should be 1
+        # Test conditions assume rows can only be added to the end of a table
+        self.assertTrue(False)
+
+    def test_source_row_attribute_changed(self):
+        # Length changes.adds should be 1
+        # Length changes._deletes should be 1
+        self.assertTrue(False)
+
+    def test_source_row_geometry_changed(self):
+        # Length changes.adds should be 1
+        # Length changes._deletes should be 1
+        self.assertTrue(False)
+
+    def test_source_row_geometry_changed_to_none(self):
+        # The destination should end up with one less row
+        # The hash table should also have one less row
+        # Length changes._deletes should be 1
+        # I don't know if this ever happens
+        self.assertTrue(False)

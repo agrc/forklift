@@ -78,6 +78,8 @@ def update(crate, validate_crate):
         if not arcpy.Exists(crate.destination):
             log.debug('%s does not exist. creating', crate.destination)
             _create_destination_data(crate)
+            if arcpy.Exists(path.join(hash_gdb_path, crate.name)):
+                arcpy.Delete_management(path.join(hash_gdb_path, crate.name))
 
             change_status = (Crate.CREATED, None)
 
@@ -94,7 +96,8 @@ def update(crate, validate_crate):
         changes = _hash(crate, hash_gdb_path)
 
         #: delete unaccessed hashes
-        if changes.has_deletes:
+        if changes.has_deletes():
+            log.debug('Number of rows deleted: %d', len(changes._deletes))
             status, message = change_status
             if status != Crate.CREATED:
                 change_status = (Crate.UPDATED, None)
@@ -115,7 +118,8 @@ def update(crate, validate_crate):
                     cursor.deleteRow()
 
         #: add new/updated rows
-        if changes.has_adds:
+        if changes.has_adds():
+            log.debug('Number of rows added: %d', len(changes.adds))
             status, message = change_status
             if status != Crate.CREATED:
                 change_status = (Crate.UPDATED, None)

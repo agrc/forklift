@@ -364,9 +364,23 @@ class CoreTests(unittest.TestCase):
         self.assertTrue(False)
 
     def test_source_row_geometry_changed(self):
-        # Length changes.adds should be 1
-        # Length changes._deletes should be 1
-        self.assertTrue(False)
+        api = '4300311427'
+        arcpy.Copy_management(check_for_changes_gdb, test_gdb)
+        crate = Crate('GeometryChange', test_gdb, test_gdb, 'GeometryChange_Dest')
+
+        core.update(crate, lambda x: True)
+        with arcpy.da.UpdateCursor(crate.source, 'Shape@XY', 'API = \'{}\''.format(api)) as cur:
+            row = cur.next()
+            row[0] = (row[0][0] + 10, row[0][1] + 10)
+            cur.updateRow(row)
+
+        changes = core._hash(crate, core.hash_gdb_path)
+
+        self.assertEqual(len(changes.adds), 1)
+        self.assertEqual(changes.adds[0][2], api)
+
+        self.assertEqual(len(changes._deletes), 1)
+        self.assertEqual(list(changes._deletes)[0], 3)
 
     def test_source_row_geometry_changed_to_none(self):
         # The destination should end up with one less row

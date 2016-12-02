@@ -338,13 +338,19 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(crate.source, path.join(crate.source_workspace, crate.source_name))
 
     def test_destination_exists_hash_not_exist(self):
-        # If the destination data exists, and the hash does not exist, the destination data will need to be truncated before the normal update process
-        # Hash table will be created
-        # Length of changes.adds will equal the number of source rows
-        self.assertTrue(False)
+        #: If there is no existing hash then the dest table should be truncated
+        #: and all feature should be added as new.
+        arcpy.Copy_management(check_for_changes_gdb, test_gdb)
+        crate = Crate('ExistingDest', test_gdb, test_gdb, 'ExistingDest_Dest')
 
-    # For basic change detection and update tests the destination data and hash
-    # should be in a state of core.update being run previously
+        changes = core._hash(crate, core.hash_gdb_path)
+
+        self.assertTrue(arcpy.Exists(path.join(core.hash_gdb_path, crate.name)))
+        self.assertEqual(len(changes.adds), 4)
+
+        core.update(crate, lambda x: True)
+        self.assertEqual(arcpy.GetCount_management(crate.destination)[0], '4')
+
     def test_source_row_deleted(self):
         arcpy.Copy_management(check_for_changes_gdb, test_gdb)
         crate = Crate('RowDelete', test_gdb, test_gdb, 'RowDelete_Dest')

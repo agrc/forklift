@@ -303,9 +303,6 @@ def speedtest(pallet_location):
     #: clean up so git state is unchanged
     if arcpy.Exists(join(speedtest_destination, 'DestinationData.gdb')):
         arcpy.Delete_management(join(speedtest_destination, 'DestinationData.gdb'))
-    else:
-        arcpy.CreateFileGDB_management(speedtest_destination, 'DestinationData.gdb')
-
     if arcpy.Exists(core.hash_gdb_path):
         arcpy.Delete_management(core.hash_gdb_path)
 

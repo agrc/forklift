@@ -126,11 +126,6 @@ def update(crate, validate_crate):
 
             hash_table = path.join(hash_gdb_path, crate.name)
 
-            log.debug('starting edit session...')
-            edit_session = arcpy.da.Editor(crate.destination_workspace)
-            edit_session.startEditing(False, False)
-            edit_session.startOperation()
-
             #: reproject data if source is different than destination
             projected_table = None
             source_describe = arcpy.Describe(crate.source)
@@ -140,9 +135,10 @@ def update(crate, validate_crate):
                     #: create a temp table with hash fields
                     temp_table = arcpy.CreateFeatureclass_management(arcpy.env.scratchGDB,
                                                                      crate.name,
-                                                                     source_describe.shapeType.upper(),
-                                                                     crate.source,
+                                                                     geometry_type=source_describe.shapeType.upper(),
+                                                                     template=crate.source,
                                                                      spatial_reference=source_describe.spatialReference)[0]
+
                     arcpy.AddField_management(temp_table, hash_att_field, 'TEXT', field_length=32)
                     arcpy.AddField_management(temp_table, hash_geom_field, 'TEXT', field_length=32)
 
@@ -150,7 +146,6 @@ def update(crate, validate_crate):
                     with arcpy.da.InsertCursor(temp_table, changes.fields + [hash_att_field, hash_geom_field]) as cursor:
                         for row in changes.adds:
                             cursor.insertRow(row)
-
                     projected_table = arcpy.Project_management(temp_table, temp_table + '_projected', crate.destination_coordinate_system,
                                                                crate.geographic_transformation)
 
@@ -159,6 +154,11 @@ def update(crate, validate_crate):
 
                     arcpy.Delete_management(temp_table)
                     arcpy.Delete_management(projected_table)
+
+            log.debug('starting edit session...')
+            edit_session = arcpy.da.Editor(crate.destination_workspace)
+            edit_session.startEditing(False, False)
+            edit_session.startOperation()
 
             with arcpy.da.InsertCursor(crate.destination, changes.fields) as cursor, \
                     arcpy.da.InsertCursor(hash_table, [hash_id_field, hash_att_field, hash_geom_field]) as hash_cursor:
@@ -176,7 +176,7 @@ def update(crate, validate_crate):
         log.error('unhandled exception: %s for crate %r', e.message, crate, exc_info=True)
         try:
             log.warn('stopping edit session (not saving edits)')
-            edit_session.stopOperation()
+            edit_session.abortOperation()
             edit_session.stopEditing(False)
         except:
             pass

@@ -300,4 +300,13 @@ def speedtest(pallet_location):
     start_lift(pallet_location)
     repeat = seat.format_time(clock() - start_seconds)
 
+    #: clean up so git state is unchanged
+    if arcpy.Exists(join(speedtest_destination, 'DestinationData.gdb')):
+        arcpy.Delete_management(join(speedtest_destination, 'DestinationData.gdb'))
+    else:
+        arcpy.CreateFileGDB_management(speedtest_destination, 'DestinationData.gdb')
+
+    if arcpy.Exists(core.hash_gdb_path):
+        arcpy.Delete_management(core.hash_gdb_path)
+
     print('{3}{0}{1}Speed Test Results{3}{0}{2}Dry Run:{0} {4}{3}{2}Repeat:{0} {5}'.format(Fore.RESET, Fore.GREEN, Fore.CYAN, linesep, dry_run, repeat))

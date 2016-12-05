@@ -300,6 +300,9 @@ class Changes(object):
     def has_deletes(self):
         return len(self._deletes) > 0
 
+    def has_changes(self):
+        return self.has_adds() or self.has_deletes()
+
     def get_delete_where_clause(self):
         if len(self._deletes) < 1:
             return ''

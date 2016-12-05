@@ -95,6 +95,9 @@ def update(crate, validate_crate):
         #: create source hash and store
         changes = _hash(crate, hash_gdb_path)
 
+        if not changes.has_changes():
+            log.debug('No changes found.')
+
         #: delete unaccessed hashes
         if changes.has_deletes():
             log.debug('Number of rows deleted: %d', len(changes._deletes))

@@ -109,23 +109,25 @@ class CoreTests(unittest.TestCase):
 
     def test_hash_no_OBJECTID_in_source(self):
         skip_if_no_local_sde()
+        arcpy.Copy_management(check_for_changes_gdb, test_gdb)
 
         tbl = 'NO_OBJECTID_TEST'
 
         #: has changes
         self.assertEqual(
             len(core._hash(
-                Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, check_for_changes_gdb, tbl), core.hash_gdb_path).adds), 1)
+                Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, test_gdb, tbl), core.hash_gdb_path).adds), 1)
 
         #: no changes
         self.assertEqual(
             len(core._hash(
-                Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, check_for_changes_gdb, '{}_NO_CHANGES'.format(tbl)), core.hash_gdb_path).adds), 1)
+                Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, test_gdb, '{}_NO_CHANGES'.format(tbl)), core.hash_gdb_path).adds), 1)
 
     def test_hash(self):
+        arcpy.Copy_management(check_for_changes_gdb, test_gdb)
 
         def run_hash(fc1, fc2):
-            return core._hash(Crate(fc1, check_for_changes_gdb, check_for_changes_gdb, fc2), core.hash_gdb_path)
+            return core._hash(Crate(fc1, check_for_changes_gdb, test_gdb, fc2), core.hash_gdb_path)
 
         self.assertEqual(len(run_hash('ZipCodes', 'ZipCodes_same').adds), 299)
         self.assertEqual(len(run_hash('DNROilGasWells', 'DNROilGasWells').adds), 4)
@@ -152,8 +154,9 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(len(run('RuralTelcomBoundaries').adds), 46)
 
     def test_hash_shapefile(self):
+        arcpy.Copy_management(check_for_changes_gdb, test_gdb)
         data_folder = path.join(current_folder, 'data')
-        crate = Crate('shapefile.shp', data_folder, check_for_changes_gdb, 'shapefile')
+        crate = Crate('shapefile.shp', data_folder, test_gdb, 'shapefile')
         changes = core._hash(crate, core.hash_gdb_path)
 
         self.assertEqual(len(changes.adds), 1)
@@ -334,40 +337,112 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(crate.destination_name, 'Counties')
         self.assertEqual(crate.source, path.join(crate.source_workspace, crate.source_name))
 
-    def test_destitnation_exists_hash_not_exist(self):
-        # If the destination data exists, and the hash does not exist, the destination data will need to be truncated before the normal update process
-        # Hash table will be created
-        # Length of changes.adds will equal the number of source rows
-        self.assertTrue(False)
+    def test_destination_exists_hash_not_exist(self):
+        #: If there is no existing hash then the dest table should be truncated
+        #: and all feature should be added as new.
+        arcpy.Copy_management(check_for_changes_gdb, test_gdb)
+        crate = Crate('ExistingDest', test_gdb, test_gdb, 'ExistingDest_Dest')
 
-    # For basic change detection and update tests the destination data and hash
-    # should be in a state of core.update being run previously
+        changes = core._hash(crate, core.hash_gdb_path)
+
+        self.assertTrue(arcpy.Exists(path.join(core.hash_gdb_path, crate.name)))
+        self.assertEqual(len(changes.adds), 4)
+
+        core.update(crate, lambda x: True)
+        self.assertEqual(arcpy.GetCount_management(crate.destination)[0], '4')
+
     def test_source_row_deleted(self):
-        # The destination should end up with one less row
-        # The hash table should also have one less row
-        # length of changes._deletes is non-zero
-        self.assertTrue(False)
+        arcpy.Copy_management(check_for_changes_gdb, test_gdb)
+        crate = Crate('RowDelete', test_gdb, test_gdb, 'RowDelete_Dest')
+
+        core.update(crate, lambda x: True)
+        with arcpy.da.UpdateCursor(crate.source, '*') as cur:
+            cur.next()
+            cur.deleteRow()
+
+        changes = core._hash(crate, core.hash_gdb_path)
+
+        #: all features hashes are invalid since we deleted the first row
+        #: which changes the salt for all following rows
+        self.assertEqual(len(changes.adds), 4)
+        self.assertEqual(len(changes._deletes), 5)
+
+        core.update(crate, lambda x: True)
+
+        self.assertEqual(arcpy.GetCount_management(path.join(core.hash_gdb_path, crate.name))[0], '4')
+        self.assertEqual(arcpy.GetCount_management(crate.destination)[0], '4')
 
     def test_source_row_added(self):
-        # The destination should end up with one more row
-        # The hash table should also have one more row
-        # Length changes.adds should be 1
-        # Test conditions assume rows can only be added to the end of a table
-        self.assertTrue(False)
+        arcpy.Copy_management(check_for_changes_gdb, test_gdb)
+        crate = Crate('RowAdd', test_gdb, test_gdb, 'RowAdd_Dest')
+
+        core.update(crate, lambda x: True)
+        with arcpy.da.InsertCursor(crate.source, 'URL') as cur:
+            cur.insertRow(('newrow',))
+
+        changes = core._hash(crate, core.hash_gdb_path)
+
+        self.assertEqual(len(changes.adds), 1)
+        self.assertEqual(len(changes._deletes), 0)
+
+        core.update(crate, lambda x: True)
+
+        self.assertEqual(arcpy.GetCount_management(path.join(core.hash_gdb_path, crate.name))[0], '6')
+        self.assertEqual(arcpy.GetCount_management(crate.destination)[0], '6')
 
     def test_source_row_attribute_changed(self):
-        # Length changes.adds should be 1
-        # Length changes._deletes should be 1
-        self.assertTrue(False)
+        name = 'MALTA'
+        arcpy.Copy_management(check_for_changes_gdb, test_gdb)
+        crate = Crate('AttributeChange', test_gdb, test_gdb, 'AttributeChange_Dest')
+
+        core.update(crate, lambda x: True)
+        with arcpy.da.UpdateCursor(crate.source, 'SYMBOL', 'NAME = \'{}\''.format(name)) as cur:
+            row = cur.next()
+            row[0] = 99
+            cur.updateRow(row)
+
+        changes = core._hash(crate, core.hash_gdb_path)
+
+        self.assertEqual(len(changes.adds), 1)
+        self.assertEqual(changes.adds[0][1], name)
+
+        self.assertEqual(len(changes._deletes), 1)
+        self.assertEqual(list(changes._deletes)[0], 4)
 
     def test_source_row_geometry_changed(self):
-        # Length changes.adds should be 1
-        # Length changes._deletes should be 1
-        self.assertTrue(False)
+        api = '4300311427'
+        arcpy.Copy_management(check_for_changes_gdb, test_gdb)
+        crate = Crate('GeometryChange', test_gdb, test_gdb, 'GeometryChange_Dest')
+
+        core.update(crate, lambda x: True)
+        with arcpy.da.UpdateCursor(crate.source, 'Shape@XY', 'API = \'{}\''.format(api)) as cur:
+            row = cur.next()
+            row[0] = (row[0][0] + 10, row[0][1] + 10)
+            cur.updateRow(row)
+
+        changes = core._hash(crate, core.hash_gdb_path)
+
+        self.assertEqual(len(changes.adds), 1)
+        self.assertEqual(changes.adds[0][2], api)
+
+        self.assertEqual(len(changes._deletes), 1)
+        self.assertEqual(list(changes._deletes)[0], 3)
 
     def test_source_row_geometry_changed_to_none(self):
-        # The destination should end up with one less row
-        # The hash table should also have one less row
-        # Length changes._deletes should be 1
-        # I don't know if this ever happens
-        self.assertTrue(False)
+        arcpy.Copy_management(check_for_changes_gdb, test_gdb)
+        crate = Crate('GeometryToNull', test_gdb, test_gdb, 'GeometryToNull_Dest')
+
+        core.update(crate, lambda x: True)
+        with arcpy.da.UpdateCursor(crate.source, 'Shape@XY') as cur:
+            row = cur.next()
+            row[0] = None
+            cur.updateRow(row)
+
+        changes = core._hash(crate, core.hash_gdb_path)
+
+        self.assertEqual(len(changes._deletes), 1)
+
+        core.update(crate, lambda x: True)
+
+        self.assertEqual(arcpy.GetCount_management(path.join(core.hash_gdb_path, crate.name))[0], '3')
+        self.assertEqual(arcpy.GetCount_management(crate.destination)[0], '3')

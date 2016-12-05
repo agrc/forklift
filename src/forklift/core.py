@@ -124,7 +124,7 @@ def update(crate, validate_crate):
             if status != Crate.CREATED:
                 change_status = (Crate.UPDATED, None)
 
-            hash_gdb = path.join(hash_gdb_path, crate.name)
+            hash_table = path.join(hash_gdb_path, crate.name)
 
             log.debug('starting edit session...')
             edit_session = arcpy.da.Editor(crate.destination_workspace)
@@ -161,18 +161,26 @@ def update(crate, validate_crate):
                     arcpy.Delete_management(projected_table)
 
             with arcpy.da.InsertCursor(crate.destination, changes.fields) as cursor, \
-                    arcpy.da.InsertCursor(hash_gdb, [hash_id_field, hash_att_field, hash_geom_field]) as hash_cursor:
+                    arcpy.da.InsertCursor(hash_table, [hash_id_field, hash_att_field, hash_geom_field]) as hash_cursor:
                 for row in changes.adds:
                     id = cursor.insertRow(row[:-2])
                     #: update/store hash lookup
                     hash_cursor.insertRow((id,) + row[-2:])
 
+            log.debug('stopping edit session (saving edits)')
             edit_session.stopOperation()
             edit_session.stopEditing(True)
 
         return change_status
     except Exception as e:
         log.error('unhandled exception: %s for crate %r', e.message, crate, exc_info=True)
+        try:
+            log.warn('stopping edit session (not saving edits)')
+            edit_session.stopOperation()
+            edit_session.stopEditing(False)
+        except:
+            pass
+
         return (Crate.UNHANDLED_EXCEPTION, e.message)
     finally:
         arcpy.ResetEnvironments()
@@ -218,6 +226,9 @@ def _hash(crate, hash_path):
         arcpy.AddField_management(table, hash_id_field, 'LONG', field_length=32)
         arcpy.AddField_management(table, hash_att_field, 'TEXT', field_length=32)
         arcpy.AddField_management(table, hash_geom_field, 'TEXT', field_length=32)
+
+        #: truncate destination table since we are hashing for the first time
+        arcpy.TruncateTable_management(crate.destination)
 
     shape_token = 'SHAPE@'
     is_table = _is_table(crate)

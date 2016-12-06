@@ -241,6 +241,8 @@ def _hash(crate, hash_path):
     fields = set([fld.name for fld in arcpy.ListFields(crate.destination)]) & set([fld.name for fld in arcpy.ListFields(crate.source)])
     fields = _filter_fields(fields)
 
+    sql_clause = None
+
     #: keep track of OID token in order to remove from hashing
     att_hash_sub_index = None
     if 'OID@' in fields:
@@ -251,8 +253,6 @@ def _hash(crate, hash_path):
     if not is_table:
         fields.append(shape_token)
         att_hash_sub_index = -2
-
-    sql_clause = None
 
     changes = Changes(fields)
     #: TODO update to use with pickle or geodatabase

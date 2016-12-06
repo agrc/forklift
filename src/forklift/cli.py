@@ -129,7 +129,10 @@ def start_lift(file_path=None, pallet_arg=None):
 
     log.info('Finished in {}.'.format(elapsed_time))
 
-    log.info('%s', _format_dictionary(report_object))
+    report = _format_dictionary(report_object)
+    log.info('%s', report)
+
+    return report
 
 
 def _send_report_email(report_object):
@@ -292,12 +295,12 @@ def speedtest(pallet_location):
     print('{0}{1}Tests ready starting dry run...{0}'.format(Fore.RESET, Fore.MAGENTA))
 
     start_seconds = clock()
-    start_lift(pallet_location)
+    dry_report = start_lift(pallet_location)
     dry_run = seat.format_time(clock() - start_seconds)
 
     print('{0}{1}Repeating test...{0}'.format(Fore.RESET, Fore.MAGENTA))
     start_seconds = clock()
-    start_lift(pallet_location)
+    repeat_report = start_lift(pallet_location)
     repeat = seat.format_time(clock() - start_seconds)
 
     #: clean up so git state is unchanged
@@ -307,3 +310,5 @@ def speedtest(pallet_location):
         arcpy.Delete_management(core.hash_gdb_path)
 
     print('{3}{0}{1}Speed Test Results{3}{0}{2}Dry Run:{0} {4}{3}{2}Repeat:{0} {5}'.format(Fore.RESET, Fore.GREEN, Fore.CYAN, linesep, dry_run, repeat))
+    print('{1}Dry Run Output{0}{2}{3}'.format(Fore.RESET, Fore.CYAN, linesep, dry_report))
+    print('{1}Repeat Run Output{0}{2}{3}'.format(Fore.RESET, Fore.CYAN, linesep, repeat_report))

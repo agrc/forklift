@@ -281,9 +281,9 @@ def _hash(crate, hash_path):
                 changes.adds.append(row + (attribute_hash_digest, geom_hash_digest))
             else:
                 #: remove not modified hash from hashes
-                del attribute_hashes[attribute_hash_digest]
+                attribute_hashes.pop(attribute_hash_digest)
                 if geom_hash_digest is not None:
-                    del geometry_hashes[geom_hash_digest]
+                    geometry_hashes.pop(geom_hash_digest)
 
     changes.determine_deletes(attribute_hashes, geometry_hashes)
 

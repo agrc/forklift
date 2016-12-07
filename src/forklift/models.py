@@ -9,7 +9,7 @@ A module that contains the model classes for forklift
 
 import logging
 import config
-from arcpy import env, SpatialReference, ValidateTableName as create_valid_table_name
+from arcpy import Describe, env, SpatialReference, ValidateTableName as create_valid_table_name
 from hashlib import md5
 from inspect import getsourcefile
 from messaging import send_email
@@ -201,7 +201,8 @@ class Crate(object):
                  destination_workspace,
                  destination_name=None,
                  destination_coordinate_system=None,
-                 geographic_transformation=None):
+                 geographic_transformation=None,
+                 source_primary_key=None):
         #: the name of the source data table
         self.source_name = source_name
         #: the name of the source database
@@ -235,6 +236,12 @@ class Crate(object):
         self.destination = join(self.destination_workspace, self.destination_name)
         #: the hash table name of a crate
         self.name = '{1}_{0}'.format(md5(self.destination).hexdigest(), self.destination_name).replace('.', '_')
+
+        self.source_describe = Describe(self.source)
+        if not self.source_describe.hasOID and source_primary_key is None:
+            self.result = (Crate.INVALID_DATA, 'Source dataset has no OID and source_primary_key defined')
+        else:
+            self.source_primary_key = source_primary_key or self.source_describe.OIDFieldName
 
     def set_source_name(self, value):
         '''Sets the source_name and updates the source property

@@ -29,3 +29,4 @@ class SmallDataPallet(Pallet):
         super(SmallDataPallet, self).__init__()
 
         self.add_crate('Counties', {'source_workspace': source_workspace, 'destination_workspace': destination_workspace})
+        self.destination_coordinate_system = 26912

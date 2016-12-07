@@ -293,6 +293,7 @@ class Changes(object):
         self.adds = []
         self._deletes = []
         self.fields = fields
+        self.table = 'source_table'
 
     def has_adds(self):
         return len(self.adds) > 0

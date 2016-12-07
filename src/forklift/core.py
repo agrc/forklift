@@ -92,8 +92,10 @@ def update(crate, validate_crate):
             log.warn('validation error: %s for crate %r', e.message, crate, exc_info=True)
             return (Crate.INVALID_DATA, e.message)
 
+        source_describe = arcpy.Describe(crate.source)
+        needs_reproject = source_describe.spatialReference.name != arcpy.Describe(crate.destination).spatialReference.name
         #: create source hash and store
-        changes = _hash(crate, hash_gdb_path)
+        changes = _hash(crate, hash_gdb_path, needs_reproject)
 
         if not changes.has_changes():
             log.debug('No changes found.')
@@ -189,35 +191,13 @@ def update(crate, validate_crate):
         arcpy.ResetEnvironments()
 
 
-def _create_destination_data(crate):
-    if not path.exists(crate.destination_workspace):
-        if crate.destination_workspace.endswith('.gdb'):
-            log.warning('destination not found; creating %s', crate.destination_workspace)
-            arcpy.CreateFileGDB_management(path.dirname(crate.destination_workspace), path.basename(crate.destination_workspace))
-        else:
-            raise Exception('destination_workspace does not exist! {}'.format(crate.destination_workspace))
-
-    if _is_table(crate):
-        log.warn('creating new table: %s', crate.destination)
-        arcpy.CreateTable_management(crate.destination_workspace, crate.destination_name, crate.source)
-
-        return
-
-    log.warn('creating new feature class: %s', crate.destination)
-
-    source_describe = arcpy.Describe(crate.source)
-    arcpy.CreateFeatureclass_management(crate.destination_workspace,
-                                        crate.destination_name,
-                                        source_describe.shapeType.upper(),
-                                        crate.source,
-                                        spatial_reference=crate.destination_coordinate_system or source_describe.spatialReference)
-
-
-def _hash(crate, hash_path):
+def _hash(crate, hash_path, needs_reproject):
     '''
     crate: Crate
 
     hash_path: string path to hash gdb
+
+    needs_reproject: bool true if the dataset needs to be reprojected
 
     returns a Changes model with deltas for the source
     '''
@@ -259,7 +239,18 @@ def _hash(crate, hash_path):
     attribute_hashes, geometry_hashes = _get_hash_lookups(crate.name, hash_gdb_path)
     unique_salt = 0
 
-    with arcpy.da.SearchCursor(crate.source, fields, sql_clause=sql_clause) as cursor:
+    #: TODO is there a way to not create the temp table and nested insert cursor if it doesn't need reprojecting and stay DRY
+    changes.table = temp_table = arcpy.CreateFeatureclass_management(arcpy.env.scratchGDB,
+                                                                     crate.name,
+                                                                     geometry_type=source_describe.shapeType.upper(),
+                                                                     template=crate.source,
+                                                                     spatial_reference=source_describe.spatialReference)[0]
+
+    arcpy.AddField_management(temp_table, hash_att_field, 'TEXT', field_length=32)
+    arcpy.AddField_management(temp_table, hash_geom_field, 'TEXT', field_length=32)
+
+    with arcpy.da.InsertCursor(temp_table, changes.fields) as insert_cursor, \
+            arcpy.da.SearchCursor(crate.source, fields, sql_clause=sql_clause) as cursor:
         for row in cursor:
             unique_salt += 1
             #: create shape hash
@@ -278,7 +269,13 @@ def _hash(crate, hash_path):
             #: check for new feature
             if attribute_hash_digest not in attribute_hashes or (geom_hash_digest is not None and geom_hash_digest not in geometry_hashes):
                 #: update or add
-                changes.adds.append(row + (attribute_hash_digest, geom_hash_digest))
+                #: if reprojecting insert into temp table
+                id = row[att_hash_sub_index]
+                if needs_reproject:
+                    id = insert_cursor.insertRow(id + (attribute_hash_digest, geom_hash_digest))
+
+                #: add to adds
+                changes.adds[id] = (attribute_hash_digest, geom_hash_digest)
             else:
                 #: remove not modified hash from hashes
                 attribute_hashes.pop(attribute_hash_digest)
@@ -288,6 +285,30 @@ def _hash(crate, hash_path):
     changes.determine_deletes(attribute_hashes, geometry_hashes)
 
     return changes
+
+
+def _create_destination_data(crate):
+    if not path.exists(crate.destination_workspace):
+        if crate.destination_workspace.endswith('.gdb'):
+            log.warning('destination not found; creating %s', crate.destination_workspace)
+            arcpy.CreateFileGDB_management(path.dirname(crate.destination_workspace), path.basename(crate.destination_workspace))
+        else:
+            raise Exception('destination_workspace does not exist! {}'.format(crate.destination_workspace))
+
+    if _is_table(crate):
+        log.warn('creating new table: %s', crate.destination)
+        arcpy.CreateTable_management(crate.destination_workspace, crate.destination_name, crate.source)
+
+        return
+
+    log.warn('creating new feature class: %s', crate.destination)
+
+    source_describe = arcpy.Describe(crate.source)
+    arcpy.CreateFeatureclass_management(crate.destination_workspace,
+                                        crate.destination_name,
+                                        source_describe.shapeType.upper(),
+                                        crate.source,
+                                        spatial_reference=crate.destination_coordinate_system or source_describe.spatialReference)
 
 
 def _is_table(crate):

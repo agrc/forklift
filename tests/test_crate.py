@@ -9,6 +9,7 @@ A module for testing crate.py
 import unittest
 from arcpy import env, SpatialReference
 from forklift.models import Crate
+from hashlib import md5
 from os.path import join
 
 
@@ -86,3 +87,21 @@ class TestCrate(unittest.TestCase):
         self.assertEqual(crate.destination_workspace, 'baz')
         self.assertEqual(crate.destination_name, 'qux')
         self.assertIsInstance(crate.destination_coordinate_system, SpatialReference)
+
+    def test_create_name_is_combined_hash_and_table_four_values(self):
+        destination_workspace = 'dw'
+        destination_name = 'dn'
+        crate = Crate('sourceName', 'source', destination_workspace, destination_name)
+
+        hash = destination_name + '_' + md5(join(destination_workspace, destination_name)).hexdigest()
+
+        self.assertEqual(crate.name, hash)
+
+    def test_create_name_is_combined_hash_and_table_three_values(self):
+        destination_workspace = 'dw'
+        source_name = 'sn'
+        crate = Crate(source_name, 'source', destination_workspace)
+
+        hash = source_name + '_' + md5(join(destination_workspace, source_name)).hexdigest()
+
+        self.assertEqual(crate.name, hash)

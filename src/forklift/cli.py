@@ -18,7 +18,7 @@ from messaging import send_email
 from git import Repo
 from imp import load_source
 from models import Pallet
-from os.path import abspath, exists, join, splitext, basename, dirname
+from os.path import abspath, basename, dirname, exists, join, splitext, realpath
 from os import walk
 from os import linesep
 from re import compile
@@ -27,6 +27,7 @@ from time import clock
 
 log = logging.getLogger('forklift')
 template = join(abspath(dirname(__file__)), 'report_template.html')
+speedtest_destination = join(dirname(realpath(__file__)), '..', '..', 'speedtest', 'data')
 colorama_init()
 
 pallet_file_regex = compile(ur'pallet.*\.py$')
@@ -105,6 +106,7 @@ def start_lift(file_path=None, pallet_arg=None):
     pallets_to_lift.sort(key=lambda p: p.__class__.__name__)
 
     start_process = clock()
+    core.init()
     lift.process_crates_for(pallets_to_lift, core.update, config.get_config_prop('configuration'))
     log.info('process_crates time: %s', seat.format_time(clock() - start_process))
 
@@ -125,9 +127,12 @@ def start_lift(file_path=None, pallet_arg=None):
 
     _send_report_email(report_object)
 
-    print('Finished in {}.'.format(elapsed_time))
+    log.info('Finished in {}.'.format(elapsed_time))
 
-    log.info('%s', _format_dictionary(report_object))
+    report = _format_dictionary(report_object)
+    log.info('%s', report)
+
+    return report
 
 
 def _send_report_email(report_object):
@@ -264,3 +269,46 @@ def _format_dictionary(pallet_reports):
             report_str += 'crate message: {0}{1}{2}{3}'.format(Fore.MAGENTA, crate['crate_message'], Fore.RESET, linesep)
 
     return report_str
+
+
+def speedtest(pallet_location):
+    print('{0}{1}Setting up speed test...{0}'.format(Fore.RESET, Fore.MAGENTA))
+
+    #: remove logging
+    log.handlers = [logging.NullHandler()]
+
+    #: spoof hashes location so there is no caching
+    core.garage = speedtest_destination
+    core.hash_gdb_path = join(core.garage, core._hash_gdb)
+
+    #: delete destination and other artifacts form prior runs
+    import arcpy
+    if arcpy.Exists(join(speedtest_destination, 'DestinationData.gdb')):
+        arcpy.Delete_management(join(speedtest_destination, 'DestinationData.gdb'))
+        arcpy.CreateFileGDB_management(speedtest_destination, 'DestinationData.gdb')
+    else:
+        arcpy.CreateFileGDB_management(speedtest_destination, 'DestinationData.gdb')
+
+    if arcpy.Exists(core.hash_gdb_path):
+        arcpy.Delete_management(core.hash_gdb_path)
+
+    print('{0}{1}Tests ready starting dry run...{0}'.format(Fore.RESET, Fore.MAGENTA))
+
+    start_seconds = clock()
+    dry_report = start_lift(pallet_location)
+    dry_run = seat.format_time(clock() - start_seconds)
+
+    print('{0}{1}Repeating test...{0}'.format(Fore.RESET, Fore.MAGENTA))
+    start_seconds = clock()
+    repeat_report = start_lift(pallet_location)
+    repeat = seat.format_time(clock() - start_seconds)
+
+    #: clean up so git state is unchanged
+    if arcpy.Exists(join(speedtest_destination, 'DestinationData.gdb')):
+        arcpy.Delete_management(join(speedtest_destination, 'DestinationData.gdb'))
+    if arcpy.Exists(core.hash_gdb_path):
+        arcpy.Delete_management(core.hash_gdb_path)
+
+    print('{1}Dry Run Output{0}{2}{3}'.format(Fore.RESET, Fore.CYAN, linesep, dry_report))
+    print('{1}Repeat Run Output{0}{2}{3}'.format(Fore.RESET, Fore.CYAN, linesep, repeat_report))
+    print('{3}{0}{1}Speed Test Results{3}{0}{2}Dry Run:{0} {4}{3}{2}Repeat:{0} {5}'.format(Fore.RESET, Fore.GREEN, Fore.CYAN, linesep, dry_run, repeat))

@@ -13,6 +13,7 @@ Usage:
     forklift list-pallets
     forklift git-update
     forklift lift [<file-path>] [--pallet-arg <arg>] [--verbose]
+    forklift speedtest
 
 Arguments:
     repo            The name of a GitHub repository in <owner>/<name> format.
@@ -32,6 +33,7 @@ Examples:
     forklift lift --verbose                            Print DEBUG statements to the console.
     forklift lift path/to/file                         Run a specific pallet.
     forklift lift path/to/file --pallet-arg arg        Run a specific pallet with "arg" as an initialization parameter.
+    forklift speedtest                                 Test the speed on a predefined pallet.
 '''
 
 import config
@@ -46,10 +48,12 @@ from os import startfile
 from os.path import abspath
 from os.path import dirname
 from os.path import join
+from os.path import realpath
 
 log_location = join(abspath(dirname(__file__)), '..', 'forklift-garage', 'forklift.log')
 detailed_formatter = logging.Formatter(fmt='%(levelname)-7s %(asctime)s %(module)10s:%(lineno)5s %(message)s',
                                        datefmt='%m-%d %H:%M:%S')
+speedtest = join(dirname(realpath(__file__)), '..', '..', 'speedtest', 'SpeedTestPallet.py')
 
 
 def main():
@@ -99,6 +103,8 @@ def main():
                 cli.start_lift(args['<file-path>'])
         else:
             cli.start_lift()
+    elif args['speedtest']:
+        cli.speedtest(speedtest)
 
     shutdown()
 

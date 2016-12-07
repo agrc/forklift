@@ -93,7 +93,8 @@ def update(crate, validate_crate):
             return (Crate.INVALID_DATA, e.message)
 
         source_describe = arcpy.Describe(crate.source)
-        needs_reproject = source_describe.spatialReference.name != arcpy.Describe(crate.destination).spatialReference.name
+        is_table = _is_table(crate)
+        needs_reproject = not is_table and (source_describe.spatialReference.name != arcpy.Describe(crate.destination).spatialReference.name)
         #: create source hash and store
         changes = _hash(crate, hash_gdb_path, needs_reproject)
 
@@ -132,45 +133,23 @@ def update(crate, validate_crate):
             hash_table = path.join(hash_gdb_path, crate.name)
 
             #: reproject data if source is different than destination
-            projected_table = None
             source_describe = arcpy.Describe(crate.source)
-
-            if not _is_table(crate):
-                if source_describe.spatialReference.name != arcpy.Describe(crate.destination).spatialReference.name:
-                    #: create a temp table with hash fields
-                    temp_table = arcpy.CreateFeatureclass_management(arcpy.env.scratchGDB,
-                                                                     crate.name,
-                                                                     geometry_type=source_describe.shapeType.upper(),
-                                                                     template=crate.source,
-                                                                     spatial_reference=source_describe.spatialReference)[0]
-
-                    arcpy.AddField_management(temp_table, hash_att_field, 'TEXT', field_length=32)
-                    arcpy.AddField_management(temp_table, hash_geom_field, 'TEXT', field_length=32)
-
-                    #: insert row plus hashes temporarily
-                    with arcpy.da.InsertCursor(temp_table, changes.fields + [hash_att_field, hash_geom_field]) as cursor:
-                        for row in changes.adds:
-                            cursor.insertRow(row)
-                    projected_table = arcpy.Project_management(temp_table, temp_table + '_projected', crate.destination_coordinate_system,
-                                                               crate.geographic_transformation)
-
-                    with arcpy.da.SearchCursor(projected_table, changes.fields + [hash_att_field, hash_geom_field]) as cursor:
-                        changes.adds = [row for row in cursor]
-
-                    arcpy.Delete_management(temp_table)
-                    arcpy.Delete_management(projected_table)
+            if needs_reproject:
+                changes.table = arcpy.Project_management(changes.table, changes.table + '_projected', crate.destination_coordinate_system,
+                                                         crate.geographic_transformation)[0]
 
             log.debug('starting edit session...')
             edit_session = arcpy.da.Editor(crate.destination_workspace)
             edit_session.startEditing(False, False)
             edit_session.startOperation()
-
-            with arcpy.da.InsertCursor(crate.destination, changes.fields) as cursor, \
+            with arcpy.da.SearchCursor(changes.table, changes.fields) as addCursor,\
+                    arcpy.da.InsertCursor(crate.destination, changes.fields[:-1]) as cursor, \
                     arcpy.da.InsertCursor(hash_table, [hash_id_field, hash_att_field, hash_geom_field]) as hash_cursor:
-                for row in changes.adds:
-                    id = cursor.insertRow(row[:-2])
+                for row in addCursor:
+                    primary_key = row[-1]
+                    dest_id = cursor.insertRow(row[:-1])
                     #: update/store hash lookup
-                    hash_cursor.insertRow((id,) + row[-2:])
+                    hash_cursor.insertRow((dest_id,) + changes.adds[primary_key])
 
             log.debug('stopping edit session (saving edits)')
             edit_session.stopOperation()
@@ -215,6 +194,7 @@ def _hash(crate, hash_path, needs_reproject):
 
     shape_token = 'SHAPE@'
     is_table = _is_table(crate)
+    src_id_field = 'src_id'
 
     log.info('checking for changes...')
     #: finding and filtering common fields between source and destination
@@ -234,23 +214,25 @@ def _hash(crate, hash_path, needs_reproject):
         fields.append(shape_token)
         att_hash_sub_index = -2
 
-    changes = Changes(fields)
+    changes = Changes(list(fields))
+    changes.table = crate.source
+    changes.fields.append('OID@')
     #: TODO update to use with pickle or geodatabase
     attribute_hashes, geometry_hashes = _get_hash_lookups(crate.name, hash_gdb_path)
     unique_salt = 0
 
-    #: TODO is there a way to not create the temp table and nested insert cursor if it doesn't need reprojecting and stay DRY
-    changes.table = temp_table = arcpy.CreateFeatureclass_management(arcpy.env.scratchGDB,
-                                                                     crate.name,
-                                                                     geometry_type=source_describe.shapeType.upper(),
-                                                                     template=crate.source,
-                                                                     spatial_reference=source_describe.spatialReference)[0]
+    insert_cursor = None
+    if needs_reproject:
+        changes.table = temp_table = arcpy.CreateFeatureclass_management(arcpy.env.scratchGDB,
+                                                                         crate.name,
+                                                                         geometry_type=source_describe.shapeType.upper(),
+                                                                         template=crate.source,
+                                                                         spatial_reference=source_describe.spatialReference)[0]
+        arcpy.AddField_management(temp_table, src_id_field, 'LONG')
+        changes.fields[-1] = src_id_field
+        insert_cursor = arcpy.da.InsertCursor(temp_table, changes.fields)
 
-    arcpy.AddField_management(temp_table, hash_att_field, 'TEXT', field_length=32)
-    arcpy.AddField_management(temp_table, hash_geom_field, 'TEXT', field_length=32)
-
-    with arcpy.da.InsertCursor(temp_table, changes.fields) as insert_cursor, \
-            arcpy.da.SearchCursor(crate.source, fields, sql_clause=sql_clause) as cursor:
+    with arcpy.da.SearchCursor(crate.source, fields, sql_clause=sql_clause) as cursor:
         for row in cursor:
             unique_salt += 1
             #: create shape hash
@@ -270,12 +252,11 @@ def _hash(crate, hash_path, needs_reproject):
             if attribute_hash_digest not in attribute_hashes or (geom_hash_digest is not None and geom_hash_digest not in geometry_hashes):
                 #: update or add
                 #: if reprojecting insert into temp table
-                id = row[att_hash_sub_index]
+                src_id = row[att_hash_sub_index]
                 if needs_reproject:
-                    id = insert_cursor.insertRow(id + (attribute_hash_digest, geom_hash_digest))
-
+                    insert_cursor.insertRow(row + (src_id,))
                 #: add to adds
-                changes.adds[id] = (attribute_hash_digest, geom_hash_digest)
+                changes.adds[src_id] = (attribute_hash_digest, geom_hash_digest)
             else:
                 #: remove not modified hash from hashes
                 attribute_hashes.pop(attribute_hash_digest)

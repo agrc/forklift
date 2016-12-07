@@ -290,7 +290,7 @@ class Changes(object):
     '''
 
     def __init__(self, fields):
-        self.adds = []
+        self.adds = {}
         self._deletes = []
         self.fields = fields
         self.table = 'source_table'

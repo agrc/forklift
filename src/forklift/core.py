@@ -192,7 +192,7 @@ def _hash(crate, hash_path, needs_reproject):
         #: truncate destination table since we are hashing for the first time
         arcpy.TruncateTable_management(crate.destination)
 
-    shape_token = 'SHAPE@'
+    shape_token = 'SHAPE@WKT'
     is_table = _is_table(crate)
     src_id_field = 'src_id'
 
@@ -238,12 +238,12 @@ def _hash(crate, hash_path, needs_reproject):
             #: create shape hash
             geom_hash_digest = None
             if not is_table:
-                shape = row[-1]
+                shape_wkt = row[-1]
 
                 #: skip features with empty geometry
-                if shape is None:
+                if shape_wkt is None:
                     continue
-                geom_hash_digest = _create_hash(shape.WKT, unique_salt)
+                geom_hash_digest = _create_hash(shape_wkt, unique_salt)
 
             #: create attribute hash
             attribute_hash_digest = _create_hash(str(row[:att_hash_sub_index]), unique_salt)
@@ -264,7 +264,7 @@ def _hash(crate, hash_path, needs_reproject):
                     geometry_hashes.pop(geom_hash_digest)
 
     changes.determine_deletes(attribute_hashes, geometry_hashes)
-
+    del insert_cursor
     return changes
 
 

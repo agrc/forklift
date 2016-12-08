@@ -135,8 +135,10 @@ def update(crate, validate_crate):
             edit_session.startEditing(False, False)
             edit_session.startOperation()
 
-            with arcpy.da.SearchCursor(changes.table, changes.fields) as addCursor,\
-                    arcpy.da.InsertCursor(crate.destination, changes.fields[:-1]) as cursor, \
+            #: strip off duplicated primary key added during hashing since it's no longer necessary
+            fields = changes.fields[:-1]
+            with arcpy.da.SearchCursor(changes.table, changes.fields, where_clause=changes.get_adds_where_clause(crate, reproject_temp_suffix)) as addCursor,\
+                    arcpy.da.InsertCursor(crate.destination, fields) as cursor, \
                     arcpy.da.InsertCursor(hash_table, [hash_id_field, hash_att_field, hash_geom_field]) as hash_cursor:
                 for row in addCursor:
                     primary_key = row[-1]

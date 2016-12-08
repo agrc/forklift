@@ -102,8 +102,9 @@ class Pallet(object):
         If a tuple has 3 values, the first value is set to `source_name` and `destination_name`. The second value sets
         the `source_workspace`. The third value sets `destination_workspace`. `defaults` is unused.
         If a tuple has 4 values, the first value is set to `source_name`. The second value sets `source_workspace`.
-        The third value sets `destination_workspace`. The fourth value sets `destination_name`. `defaults` is unused.'''
-        crate_param_names = ['source_name', 'source_workspace', 'destination_workspace', 'destination_name']
+        The third value sets `destination_workspace`. The fourth value sets `destination_name`. `defaults` is unused.
+        If a tuple has 5 values, it is the same as 4 with the addition of `source_primary_key` as the fifth value.'''
+        crate_param_names = ['source_name', 'source_workspace', 'destination_workspace', 'destination_name', 'source_primary_key']
 
         for info in crate_infos:
             params = defaults.copy()

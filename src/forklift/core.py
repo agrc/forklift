@@ -72,6 +72,8 @@ def update(crate, validate_crate):
         if not arcpy.Exists(crate.destination):
             log.debug('%s does not exist. creating', crate.destination)
             _create_destination_data(crate)
+
+            #: remove hash table entry for destination that doers not exist
             if arcpy.Exists(path.join(hash_gdb_path, crate.name)):
                 arcpy.Delete_management(path.join(hash_gdb_path, crate.name))
 
@@ -219,8 +221,12 @@ def _hash(crate, hash_path, needs_reproject):
     if needs_reproject:
         changes.table = arcpy.CreateFeatureclass_management(arcpy.env.scratchGDB,
                                                             crate.name + reproject_temp_suffix,
+                                                            geometry_type=crate.source_describe.shapeType.upper(),
+                                                            template=crate.source,
+                                                            spatial_reference=crate.source_describe.spatialReference)[0]
+        arcpy.AddField_management(changes.table, src_id_field, 'LONG')
+        #: reset duplicated key because wtf
         changes.fields[-1] = src_id_field
-        insert_cursor = arcpy.da.InsertCursor(temp_table, changes.fields)
         insert_cursor = arcpy.da.InsertCursor(changes.table, changes.fields)
 
     with arcpy.da.SearchCursor(crate.source, fields, sql_clause=sql_clause) as cursor:
@@ -317,6 +323,7 @@ def check_schema(crate):
     crate: Crate
 
     returns: Boolean - True if the schemas match, raises ValidationException if no match'''
+
     def get_fields(dataset):
         field_dict = {}
 

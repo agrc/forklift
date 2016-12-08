@@ -271,6 +271,11 @@ class Crate(object):
                 'result': self.result[0],
                 'crate_message': self.result[1] or ''}
 
+    def is_table(self):
+        '''returns True if the crate defines a table
+        '''
+        return self.source_describe.datasetType.lower() == 'table'
+
     def __repr__(self):
         '''Override for better logging. Use with %r
         '''

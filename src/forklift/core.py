@@ -191,7 +191,6 @@ def _hash(crate, hash_path, needs_reproject):
         arcpy.TruncateTable_management(crate.destination)
 
     shape_token = 'SHAPE@WKT'
-    is_table = _is_table(crate)
     src_id_field = 'src_id'
 
     log.info('checking for changes...')
@@ -203,14 +202,14 @@ def _hash(crate, hash_path, needs_reproject):
     primary_key_index = -1
     sql_clause = (None, 'ORDER BY {}'.format(crate.source_primary_key))
 
-    if not is_table:
+    if not crate.is_table():
         fields.append(shape_token)
         att_hash_sub_index = -2
 
     changes = Changes(list(fields))
     changes.table = crate.source
     changes.fields.append('OID@')
-    #: TODO update to use with pickle or geodatabase
+
     attribute_hashes, geometry_hashes = _get_hash_lookups(crate.name, hash_gdb_path)
     unique_salt = 0
 
@@ -230,7 +229,7 @@ def _hash(crate, hash_path, needs_reproject):
             unique_salt += 1
             #: create shape hash
             geom_hash_digest = None
-            if not is_table:
+            if not crate.is_table():
                 shape_wkt = row[-1]
 
                 #: skip features with empty geometry
@@ -270,7 +269,7 @@ def _create_destination_data(crate):
         else:
             raise Exception('destination_workspace does not exist! {}'.format(crate.destination_workspace))
 
-    if _is_table(crate):
+    if crate.is_table():
         log.warn('creating new table: %s', crate.destination)
         arcpy.CreateTable_management(crate.destination_workspace, crate.destination_name, crate.source)
 
@@ -284,15 +283,6 @@ def _create_destination_data(crate):
                                         source_describe.shapeType.upper(),
                                         crate.source,
                                         spatial_reference=crate.destination_coordinate_system or source_describe.spatialReference)
-
-
-def _is_table(crate):
-    '''
-    crate: Crate
-
-    returns True if the crate defines a table
-    '''
-    return arcpy.Describe(crate.source).datasetType == 'Table'
 
 
 def _create_hash(string, salt):

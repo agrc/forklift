@@ -127,7 +127,7 @@ def update(crate, validate_crate):
 
             #: reproject data if source is different than destination
             if needs_reproject:
-                changes.table = arcpy.Project_management(changes.table, changes.table + '_projected', crate.destination_coordinate_system,
+                changes.table = arcpy.Project_management(changes.table, changes.table + reproject_temp_suffix, crate.destination_coordinate_system,
                                                          crate.geographic_transformation)[0]
 
             log.debug('starting edit session...')
@@ -192,7 +192,7 @@ def _hash(crate, hash_path, needs_reproject):
         arcpy.TruncateTable_management(crate.destination)
 
     shape_token = 'SHAPE@WKT'
-    src_id_field = 'src_id'
+    src_id_field = 'src_id' + reproject_temp_suffix
 
     log.info('checking for changes...')
     #: finding and filtering common fields between source and destination
@@ -216,14 +216,11 @@ def _hash(crate, hash_path, needs_reproject):
 
     insert_cursor = None
     if needs_reproject:
-        changes.table = temp_table = arcpy.CreateFeatureclass_management(arcpy.env.scratchGDB,
-                                                                         crate.name,
-                                                                         geometry_type=crate.source_describe.shapeType.upper(),
-                                                                         template=crate.source,
-                                                                         spatial_reference=crate.source_describe.spatialReference)[0]
-        arcpy.AddField_management(temp_table, src_id_field, 'LONG')
+        changes.table = arcpy.CreateFeatureclass_management(arcpy.env.scratchGDB,
+                                                            crate.name + reproject_temp_suffix,
         changes.fields[-1] = src_id_field
         insert_cursor = arcpy.da.InsertCursor(temp_table, changes.fields)
+        insert_cursor = arcpy.da.InsertCursor(changes.table, changes.fields)
 
     with arcpy.da.SearchCursor(crate.source, fields, sql_clause=sql_clause) as cursor:
         for row in cursor:

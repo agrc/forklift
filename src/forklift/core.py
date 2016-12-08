@@ -105,7 +105,7 @@ def update(crate, validate_crate):
             edit_session.startEditing(False, False)
             edit_session.startOperation()
 
-            with arcpy.da.UpdateCursor(crate.destination, ['OID@'], changes.get_delete_where_clause(crate)) as cursor:
+            with arcpy.da.UpdateCursor(crate.destination, [crate.source_primary_key], changes.get_delete_where_clause(crate)) as cursor:
                 for row in cursor:
                     cursor.deleteRow()
 
@@ -209,7 +209,8 @@ def _hash(crate, hash_path, needs_reproject):
 
     changes = Changes(list(fields))
     changes.table = crate.source
-    changes.fields.append('OID@')
+    #: duplicate primary key so we can relate the hashes in the change model adds back to the source
+    changes.fields.append(crate.primary_key_index)
 
     attribute_hashes, geometry_hashes = _get_hash_lookups(crate.name, hash_gdb_path)
     unique_salt = 0

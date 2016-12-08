@@ -61,12 +61,6 @@ def update(crate, validate_crate):
     within the pallet) or check_schema otherwise. If the crate is valid it
     then updates the data.'''
     arcpy.env.geographicTransformations = crate.geographic_transformation
-
-    def remove_temp_table(table):
-        if table is not None and table.endswith(reproject_temp_suffix) and arcpy.Exists(table):
-            log.debug('deleting %s', table)
-            arcpy.Delete_management(table)
-
     change_status = (Crate.NO_CHANGES, None)
 
     try:
@@ -153,6 +147,11 @@ def update(crate, validate_crate):
             log.debug('stopping edit session (saving edits)')
             edit_session.stopOperation()
             edit_session.stopEditing(True)
+
+            #: remove temporarily projected table
+            if changes.table is not None and changes.table.endswith(reproject_temp_suffix) and arcpy.Exists(changes.table):
+                log.debug('deleting %s', changes.table)
+                arcpy.Delete_management(changes.table)
 
         return change_status
     except Exception as e:

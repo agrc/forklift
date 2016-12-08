@@ -316,11 +316,15 @@ class Changes(object):
         '''
         return self.has_adds() or self.has_deletes()
 
-    def get_delete_where_clause(self):
+    def get_delete_where_clause(self, crate):
+        '''
+        crate: Crate
+
+        returns the sql statement for identifiying the deleted records'''
         if len(self._deletes) < 1:
             return ''
 
-        return 'OBJECTID in ({})'.format(','.join([str(id) for id in self._deletes]))
+        return '{} in ({})'.format(crate.source_primary_key, ','.join([str(id) for id in self._deletes]))
 
     def determine_deletes(self, attribute_hashes, geometry_hashes):
         '''

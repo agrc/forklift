@@ -92,9 +92,8 @@ def update(crate, validate_crate):
             log.warn('validation error: %s for crate %r', e.message, crate, exc_info=True)
             return (Crate.INVALID_DATA, e.message)
 
-        source_describe = arcpy.Describe(crate.source)
-        is_table = _is_table(crate)
-        needs_reproject = not is_table and (source_describe.spatialReference.name != arcpy.Describe(crate.destination).spatialReference.name)
+        destination_describe = arcpy.Describe(crate.destination)
+        needs_reproject = not crate.is_table() and (crate.source_describe.spatialReference.name != destination_describe.spatialReference.name)
         #: create source hash and store
         changes = _hash(crate, hash_gdb_path, needs_reproject)
 
@@ -112,14 +111,14 @@ def update(crate, validate_crate):
             edit_session.startEditing(False, False)
             edit_session.startOperation()
 
-            with arcpy.da.UpdateCursor(crate.destination, ['OID@'], changes.get_delete_where_clause()) as cursor:
+            with arcpy.da.UpdateCursor(crate.destination, ['OID@'], changes.get_delete_where_clause(crate)) as cursor:
                 for row in cursor:
                     cursor.deleteRow()
 
             edit_session.stopOperation()
             edit_session.stopEditing(True)
 
-            with arcpy.da.UpdateCursor(path.join(hash_gdb_path, crate.name), [hash_id_field], changes.get_delete_where_clause()) as cursor:
+            with arcpy.da.UpdateCursor(path.join(hash_gdb_path, crate.name), [hash_id_field], changes.get_delete_where_clause(crate)) as cursor:
                 for row in cursor:
                     cursor.deleteRow()
 
@@ -133,7 +132,6 @@ def update(crate, validate_crate):
             hash_table = path.join(hash_gdb_path, crate.name)
 
             #: reproject data if source is different than destination
-            source_describe = arcpy.Describe(crate.source)
             if needs_reproject:
                 changes.table = arcpy.Project_management(changes.table, changes.table + '_projected', crate.destination_coordinate_system,
                                                          crate.geographic_transformation)[0]
@@ -199,16 +197,11 @@ def _hash(crate, hash_path, needs_reproject):
     log.info('checking for changes...')
     #: finding and filtering common fields between source and destination
     fields = set([fld.name for fld in arcpy.ListFields(crate.destination)]) & set([fld.name for fld in arcpy.ListFields(crate.source)])
-    fields = _filter_fields(fields)
-
-    sql_clause = None
+    fields = _filter_fields(fields, crate)
 
     #: keep track of OID token in order to remove from hashing
-    att_hash_sub_index = None
-    if 'OID@' in fields:
-        att_hash_sub_index = -1
-        source_describe = arcpy.Describe(crate.source)
-        sql_clause = (None, 'ORDER BY {}'.format(source_describe.OIDFieldName))
+    primary_key_index = -1
+    sql_clause = (None, 'ORDER BY {}'.format(crate.source_primary_key))
 
     if not is_table:
         fields.append(shape_token)
@@ -225,9 +218,9 @@ def _hash(crate, hash_path, needs_reproject):
     if needs_reproject:
         changes.table = temp_table = arcpy.CreateFeatureclass_management(arcpy.env.scratchGDB,
                                                                          crate.name,
-                                                                         geometry_type=source_describe.shapeType.upper(),
+                                                                         geometry_type=crate.source_describe.shapeType.upper(),
                                                                          template=crate.source,
-                                                                         spatial_reference=source_describe.spatialReference)[0]
+                                                                         spatial_reference=crate.source_describe.spatialReference)[0]
         arcpy.AddField_management(temp_table, src_id_field, 'LONG')
         changes.fields[-1] = src_id_field
         insert_cursor = arcpy.da.InsertCursor(temp_table, changes.fields)
@@ -397,22 +390,20 @@ def check_schema(crate):
         return True
 
 
-def _filter_fields(fields):
+def _filter_fields(fields, crate):
     '''
     fields: String[]
+    crate: model.Crate
 
     returns: String[]
 
-    Filters out fields that mess up the update logic.
-    '''
-
+    Filters out fields that mess up the update logic
+    and move the primary be the last field so that we can filter it out of the hash.'''
     new_fields = [field for field in fields if not _is_naughty_field(field)]
     new_fields.sort()
 
-    # TODO: use arcpy.Describe().OIDFieldName
-    if 'OBJECTID' in new_fields:
-        new_fields.remove('OBJECTID')
-        new_fields.append('OID@')
+    new_fields.remove(crate.source_primary_key)
+    new_fields.append(crate.source_primary_key)
 
     return new_fields
 

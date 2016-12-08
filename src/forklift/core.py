@@ -141,10 +141,10 @@ def update(crate, validate_crate):
             #: strip off duplicated primary key added during hashing since it's no longer necessary
             fields = changes.fields[:-1]
             clause = changes.get_adds_where_clause(crate.source_primary_key, reproject_temp_suffix)
-            with arcpy.da.SearchCursor(changes.table, changes.fields, where_clause=clause) as addCursor,\
+            with arcpy.da.SearchCursor(changes.table, changes.fields, where_clause=clause) as add_cursor,\
                     arcpy.da.InsertCursor(crate.destination, fields) as cursor, \
                     arcpy.da.InsertCursor(hash_table, [hash_id_field, hash_att_field, hash_geom_field]) as hash_cursor:
-                for row in addCursor:
+                for row in add_cursor:
                     primary_key = row[-1]
                     dest_id = cursor.insertRow(row[:-1])
                     #: update/store hash lookup

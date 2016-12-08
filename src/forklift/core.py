@@ -204,7 +204,7 @@ def _hash(crate, hash_path, needs_reproject):
 
     if not crate.is_table():
         fields.append(shape_token)
-        att_hash_sub_index = -2
+        primary_key_index = -2
 
     changes = Changes(list(fields))
     changes.table = crate.source
@@ -238,13 +238,13 @@ def _hash(crate, hash_path, needs_reproject):
                 geom_hash_digest = _create_hash(shape_wkt, unique_salt)
 
             #: create attribute hash
-            attribute_hash_digest = _create_hash(str(row[:att_hash_sub_index]), unique_salt)
+            attribute_hash_digest = _create_hash(str(row[:primary_key_index]), unique_salt)
 
             #: check for new feature
             if attribute_hash_digest not in attribute_hashes or (geom_hash_digest is not None and geom_hash_digest not in geometry_hashes):
                 #: update or add
                 #: if reprojecting insert into temp table
-                src_id = row[att_hash_sub_index]
+                src_id = row[primary_key_index]
                 if needs_reproject:
                     insert_cursor.insertRow(row + (src_id,))
                 #: add to adds

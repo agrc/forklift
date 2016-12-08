@@ -107,14 +107,15 @@ def update(crate, validate_crate):
             edit_session.startEditing(False, False)
             edit_session.startOperation()
 
-            with arcpy.da.UpdateCursor(crate.destination, [crate.source_primary_key], changes.get_delete_where_clause(crate)) as cursor:
+            with arcpy.da.UpdateCursor(crate.destination, [crate.source_primary_key], changes.get_delete_where_clause(crate.source_primary_key)) as cursor:
                 for row in cursor:
                     cursor.deleteRow()
 
             edit_session.stopOperation()
             edit_session.stopEditing(True)
 
-            with arcpy.da.UpdateCursor(path.join(hash_gdb_path, crate.name), [hash_id_field], changes.get_delete_where_clause(crate)) as cursor:
+            with arcpy.da.UpdateCursor(
+                    path.join(hash_gdb_path, crate.name), [hash_id_field], changes.get_delete_where_clause(crate.source_primary_key)) as cursor:
                 for row in cursor:
                     cursor.deleteRow()
 
@@ -386,10 +387,10 @@ def check_schema(crate):
         return True
 
 
-def _filter_fields(fields, crate):
+def _filter_fields(fields, source_primary_key):
     '''
     fields: String[]
-    crate: model.Crate
+    source_primary_key: string
 
     returns: String[]
 
@@ -398,8 +399,8 @@ def _filter_fields(fields, crate):
     new_fields = [field for field in fields if not _is_naughty_field(field)]
     new_fields.sort()
 
-    new_fields.remove(crate.source_primary_key)
-    new_fields.append(crate.source_primary_key)
+    new_fields.remove(source_primary_key)
+    new_fields.append(source_primary_key)
 
     return new_fields
 

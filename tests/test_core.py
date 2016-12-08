@@ -53,7 +53,6 @@ class CoreTests(unittest.TestCase):
 
     def test_update_invalid_source(self):
         crate = Crate('badname', 'nofolder', '')
-
         self.assertEqual(core.update(crate, lambda x: True)[0], Crate.INVALID_DATA)
 
     def test_update_no_existing_destination(self):
@@ -70,17 +69,12 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(arcpy.Exists(crate.destination), True)
         self.assertEqual(int(arcpy.GetCount_management(crate.destination).getOutput(0)), 299)
 
-    @patch('arcpy.Exists')
-    def test_update_custom_validation_that_fails(self, arcpy_exists):
-        arcpy_exists.return_value = True
-
+    def test_update_custom_validation_that_fails(self):
         crate = Crate('', '', '')
 
         self.assertEqual(core.update(crate, raise_validation_exception)[0], Crate.INVALID_DATA)
 
-    @patch('arcpy.Exists')
-    def test_update_default_validation_that_fails(self, arcpy_exists):
-        arcpy_exists.return_value = True
+    def test_update_default_validation_that_fails(self):
         core.check_schema = Mock(side_effect=ValidationException())
 
         def custom(crate):
@@ -99,13 +93,17 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(core.update(crate, lambda c: True)[0], Crate.UNHANDLED_EXCEPTION)
 
     def test_filter_shape_fields(self):
-        self.assertEqual(core._filter_fields(['shape', 'test', 'Shape_length', 'Global_ID']), ['test'])
+        source_primary_key = 'primary_key'
+        self.assertEqual(
+            core._filter_fields([source_primary_key, 'shape', 'test', 'Shape_length', 'Global_ID'], source_primary_key), ['test', source_primary_key])
 
     def test_filter_fields_makes_OID_last(self):
-        self.assertEqual(core._filter_fields(['test', 'OBJECTID', 'hello']), ['hello', 'test', 'OID@'])
+        source_primary_key = 'primary_key'
+        self.assertEqual(core._filter_fields(['test', source_primary_key, 'hello'], source_primary_key), ['hello', 'test', source_primary_key])
 
     def test_filter_fields_sorts_fields(self):
-        self.assertEqual(core._filter_fields(['k', 's', 'g']), ['g', 'k', 's'])
+        source_primary_key = 'primary_key'
+        self.assertEqual(core._filter_fields(['k', source_primary_key, 's', 'g'], source_primary_key), ['g', 'k', 's', source_primary_key])
 
     def test_hash_no_OBJECTID_in_source(self):
         skip_if_no_local_sde()
@@ -114,20 +112,18 @@ class CoreTests(unittest.TestCase):
         tbl = 'NO_OBJECTID_TEST'
 
         #: has changes
-        self.assertEqual(
-            len(core._hash(
-                Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, test_gdb, tbl), core.hash_gdb_path).adds), 1)
+        self.assertEqual(len(core._hash(Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, test_gdb, tbl), core.hash_gdb_path, False).adds), 1)
 
         #: no changes
         self.assertEqual(
             len(core._hash(
-                Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, test_gdb, '{}_NO_CHANGES'.format(tbl)), core.hash_gdb_path).adds), 1)
+                Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, test_gdb, '{}_NO_CHANGES'.format(tbl)), core.hash_gdb_path, False).adds), 1)
 
     def test_hash(self):
         arcpy.Copy_management(check_for_changes_gdb, test_gdb)
 
         def run_hash(fc1, fc2):
-            return core._hash(Crate(fc1, check_for_changes_gdb, test_gdb, fc2), core.hash_gdb_path)
+            return core._hash(Crate(fc1, check_for_changes_gdb, test_gdb, fc2), core.hash_gdb_path, False)
 
         self.assertEqual(len(run_hash('ZipCodes', 'ZipCodes_same').adds), 299)
         self.assertEqual(len(run_hash('DNROilGasWells', 'DNROilGasWells').adds), 4)
@@ -147,7 +143,8 @@ class CoreTests(unittest.TestCase):
                       test_gdb,
                       destination_coordinate_system=arcpy.SpatialReference(3857),
                       geographic_transformation='NAD_1983_To_WGS_1984_5'),
-                core.hash_gdb_path)
+                core.hash_gdb_path,
+                True)
 
         self.assertEqual(len(run('Parcels_Morgan').adds), 4894)
         #: different coordinate systems
@@ -157,7 +154,7 @@ class CoreTests(unittest.TestCase):
         arcpy.Copy_management(check_for_changes_gdb, test_gdb)
         data_folder = path.join(current_folder, 'data')
         crate = Crate('shapefile.shp', data_folder, test_gdb, 'shapefile')
-        changes = core._hash(crate, core.hash_gdb_path)
+        changes = core._hash(crate, core.hash_gdb_path, False)
 
         self.assertEqual(len(changes.adds), 1)
 
@@ -343,7 +340,7 @@ class CoreTests(unittest.TestCase):
         arcpy.Copy_management(check_for_changes_gdb, test_gdb)
         crate = Crate('ExistingDest', test_gdb, test_gdb, 'ExistingDest_Dest')
 
-        changes = core._hash(crate, core.hash_gdb_path)
+        changes = core._hash(crate, core.hash_gdb_path, False)
 
         self.assertTrue(arcpy.Exists(path.join(core.hash_gdb_path, crate.name)))
         self.assertEqual(len(changes.adds), 4)
@@ -360,7 +357,7 @@ class CoreTests(unittest.TestCase):
             cur.next()
             cur.deleteRow()
 
-        changes = core._hash(crate, core.hash_gdb_path)
+        changes = core._hash(crate, core.hash_gdb_path, False)
 
         #: all features hashes are invalid since we deleted the first row
         #: which changes the salt for all following rows
@@ -380,7 +377,7 @@ class CoreTests(unittest.TestCase):
         with arcpy.da.InsertCursor(crate.source, 'URL') as cur:
             cur.insertRow(('newrow',))
 
-        changes = core._hash(crate, core.hash_gdb_path)
+        changes = core._hash(crate, core.hash_gdb_path, False)
 
         self.assertEqual(len(changes.adds), 1)
         self.assertEqual(len(changes._deletes), 0)
@@ -401,7 +398,7 @@ class CoreTests(unittest.TestCase):
             row[0] = 99
             cur.updateRow(row)
 
-        changes = core._hash(crate, core.hash_gdb_path)
+        changes = core._hash(crate, core.hash_gdb_path, False)
 
         self.assertEqual(len(changes.adds), 1)
         self.assertEqual(changes.adds[0][1], name)
@@ -420,7 +417,7 @@ class CoreTests(unittest.TestCase):
             row[0] = (row[0][0] + 10, row[0][1] + 10)
             cur.updateRow(row)
 
-        changes = core._hash(crate, core.hash_gdb_path)
+        changes = core._hash(crate, core.hash_gdb_path, False)
 
         self.assertEqual(len(changes.adds), 1)
         self.assertEqual(changes.adds[0][2], api)
@@ -438,7 +435,7 @@ class CoreTests(unittest.TestCase):
             row[0] = None
             cur.updateRow(row)
 
-        changes = core._hash(crate, core.hash_gdb_path)
+        changes = core._hash(crate, core.hash_gdb_path, False)
 
         self.assertEqual(len(changes._deletes), 1)
 

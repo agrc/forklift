@@ -321,23 +321,27 @@ class Changes(object):
         '''
         return self.has_adds() or self.has_deletes()
 
-    def get_delete_where_clause(self, crate):
+    def get_delete_where_clause(self, source_primary_key):
         '''
-        crate: Crate
+        source_primary_key: string the primary key
 
         returns the sql statement for identifiying the deleted records'''
         if len(self._deletes) < 1:
             return ''
 
-        return '{} in ({})'.format(crate.source_primary_key, ','.join([str(id) for id in self._deletes]))
+        return '{} in ({})'.format(source_primary_key, ','.join([str(id) for id in self._deletes]))
 
-    def get_adds_where_clause(self, crate, temp_suffix):
-        '''return sql in clause if table is source table or return None if temp table
+    def get_adds_where_clause(self, source_primary_key, temp_suffix):
+        '''
+        source_primary_key string of the primary key id
+        temp_suffix string the suffix appended to forklift temp data
+
+        return sql in clause if table is source table or return None if temp table
         '''
         if self.table.endswith(temp_suffix):
             return None
 
-        return '{} in ({})'.format(crate.source_primary_key, ','.join([str(id) for id in self.adds.keys()]))
+        return '{} in ({})'.format(source_primary_key, ','.join([str(id) for id in self.adds.keys()]))
 
     def determine_deletes(self, attribute_hashes, geometry_hashes):
         '''

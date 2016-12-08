@@ -47,10 +47,10 @@ class TestChanges(unittest.TestCase):
 
         self.patient.determine_deletes(attribute_hashes, geometry_hashes)
 
-        self.assertEqual(self.patient.get_delete_where_clause(), 'OBJECTID in (1,2,3,4,5)')
+        self.assertEqual(self.patient.get_delete_where_clause('OBJECTID'), 'OBJECTID in (1,2,3,4,5)')
 
     def test_get_delete_where_caluse_is_empty_when_no_changes(self):
-        self.assertEqual(self.patient.get_delete_where_clause(), '')
+        self.assertEqual(self.patient.get_delete_where_clause('OBJECTID'), '')
 
     def test_has_adds_is_false_when_emtpy(self):
         self.assertFalse(self.patient.has_adds())
@@ -80,3 +80,9 @@ class TestChanges(unittest.TestCase):
         self.patient.determine_deletes(attribute_hashes, geometry_hashes)
 
         self.assertTrue(self.patient.has_deletes())
+
+    def test_adds_where_clause_is_empty_when_table_ends_with_prefix(self):
+        self.assertTrue(False)
+
+    def test_adds_where_clause_is_in_clause_when_table_is_source(self):
+        self.assertTrue(False)

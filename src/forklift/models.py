@@ -200,7 +200,8 @@ class Crate(object):
                  destination_name=None,
                  destination_coordinate_system=None,
                  geographic_transformation=None,
-                 source_primary_key=None):
+                 source_primary_key=None,
+                 describer=Describe):
         #: the name of the source data table
         self.source_name = source_name
         #: the name of the source database
@@ -235,7 +236,12 @@ class Crate(object):
         #: the hash table name of a crate
         self.name = '{1}_{0}'.format(md5(self.destination).hexdigest(), self.destination_name).replace('.', '_')
 
-        self.source_describe = Describe(self.source)
+        try:
+            self.source_describe = describer(self.source)
+        except IOError as e:
+            self.result = (Crate.INVALID_DATA, e.message)
+            return
+
         if not self.source_describe.hasOID and source_primary_key is None:
             self.result = (Crate.INVALID_DATA, 'Source dataset has no OID and source_primary_key defined')
         else:

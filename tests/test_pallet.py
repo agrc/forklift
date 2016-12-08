@@ -7,7 +7,9 @@ A module that contains tests for the pallet module.
 '''
 
 import unittest
+from arcpy_mock import Describe
 from forklift.models import Pallet, Crate
+from mock import patch
 
 
 class TestPallet(unittest.TestCase):
@@ -18,7 +20,10 @@ class TestPallet(unittest.TestCase):
     def test_can_use_logging(self):
         self.patient.log.info('this works')
 
-    def test_name_prop(self):
+    @patch('arcpy.Describe')
+    def test_name_prop(self, describe):
+        describe.return_value = Describe
+
         class NamePallet(Pallet):
             def __init__(self):
                 super(NamePallet, self).__init__()

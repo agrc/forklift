@@ -304,7 +304,7 @@ class Changes(object):
         self.adds = {}
         self._deletes = []
         self.fields = fields
-        self.table = 'source_table'
+        self.table = None
 
     def has_adds(self):
         '''returns true if the source table has new rows
@@ -330,6 +330,14 @@ class Changes(object):
             return ''
 
         return '{} in ({})'.format(crate.source_primary_key, ','.join([str(id) for id in self._deletes]))
+
+    def get_adds_where_clause(self, crate, temp_suffix):
+        '''return sql in clause if table is source table or return None if temp table
+        '''
+        if self.table.endswith(temp_suffix):
+            return None
+
+        return '{} in ({})'.format(crate.source_primary_key, ','.join([str(id) for id in self.adds.keys()]))
 
     def determine_deletes(self, attribute_hashes, geometry_hashes):
         '''

@@ -6,6 +6,7 @@ test_crate.py
 A module for testing crate.py
 '''
 
+import arcpy_mocks
 import unittest
 from arcpy import env, SpatialReference
 from forklift.models import Crate
@@ -27,11 +28,11 @@ class TestCrate(unittest.TestCase):
         self.assertEqual(crate.destination_name, crate.source_name)
 
     def test_bad_destination_name(self):
-        crate = Crate('sourceName', 'source', 'destination_workspace', 'destination.Name')
+        crate = Crate('sourceName', 'source', 'destination_workspace', 'destination.Name', describer=arcpy_mocks.Describe)
         self.assertEqual(crate.result, (Crate.INVALID_DATA, 'Validation error with destination_name: destination.Name != destination_Name'))
 
     def test_good_destination_name(self):
-        crate = Crate('sourceName', 'source', 'destination_workspace', 'destinationName')
+        crate = Crate('sourceName', 'source', 'destination_workspace', 'destinationName', describer=arcpy_mocks.Describe)
         self.assertEqual(crate.result, (Crate.UNINITIALIZED, None))
 
     def test_set_result_with_valid_result_returns_result(self):

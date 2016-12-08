@@ -6,6 +6,7 @@ test_forklift.py
 A module for testing lift.py
 '''
 
+import arcpy_mocks
 import unittest
 from forklift import lift
 from forklift.models import Pallet, Crate
@@ -32,8 +33,8 @@ class TestLift(unittest.TestCase):
         self.PalletMock = Mock(Pallet)
 
     def test_process_crate_for_set_results(self):
-        crate1 = Crate('', '', 'a', '')
-        crate2 = Crate('', '', 'b', '')
+        crate1 = Crate('', '', 'a', '', describer=arcpy_mocks.Describe)
+        crate2 = Crate('', '', 'b', '', describer=arcpy_mocks.Describe)
         pallet = Pallet()
         pallet._crates = [crate1, crate2]
         update_def = Mock(return_value=(Crate.UPDATED, 'message'))
@@ -44,8 +45,8 @@ class TestLift(unittest.TestCase):
         self.assertEqual(crate2.result[0], Crate.UPDATED)
 
     def test_process_crate_doesnt_call_update_def_on_duplicate_crates(self):
-        crate1 = Crate('', '', 'a', '')
-        crate2 = Crate('', '', 'a', '')
+        crate1 = Crate('', '', 'a', '', describer=arcpy_mocks.Describe)
+        crate2 = Crate('', '', 'a', '', describer=arcpy_mocks.Describe)
         pallet = Pallet()
         pallet._crates = [crate1, crate2]
         update_def = Mock(return_value=(Crate.UPDATED, 'message'))

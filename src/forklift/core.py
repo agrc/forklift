@@ -140,7 +140,8 @@ def update(crate, validate_crate):
 
             #: strip off duplicated primary key added during hashing since it's no longer necessary
             fields = changes.fields[:-1]
-            with arcpy.da.SearchCursor(changes.table, changes.fields, where_clause=changes.get_adds_where_clause(crate, reproject_temp_suffix)) as addCursor,\
+            clause = changes.get_adds_where_clause(crate.source_primary_key, reproject_temp_suffix)
+            with arcpy.da.SearchCursor(changes.table, changes.fields, where_clause=clause) as addCursor,\
                     arcpy.da.InsertCursor(crate.destination, fields) as cursor, \
                     arcpy.da.InsertCursor(hash_table, [hash_id_field, hash_att_field, hash_geom_field]) as hash_cursor:
                 for row in addCursor:
@@ -200,7 +201,7 @@ def _hash(crate, hash_path, needs_reproject):
     log.info('checking for changes...')
     #: finding and filtering common fields between source and destination
     fields = set([fld.name for fld in arcpy.ListFields(crate.destination)]) & set([fld.name for fld in arcpy.ListFields(crate.source)])
-    fields = _filter_fields(fields, crate)
+    fields = _filter_fields(fields, crate.source_primary_key)
 
     #: keep track of OID token in order to remove from hashing
     primary_key_index = -1
@@ -399,7 +400,12 @@ def _filter_fields(fields, source_primary_key):
     new_fields = [field for field in fields if not _is_naughty_field(field)]
     new_fields.sort()
 
-    new_fields.remove(source_primary_key)
+    try:
+        new_fields.remove(source_primary_key)
+    except ValueError:
+        #: key not common to both source and destination. add it anyway
+        pass
+
     new_fields.append(source_primary_key)
 
     return new_fields

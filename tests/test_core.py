@@ -7,6 +7,7 @@ Tests for the core.py module
 '''
 
 import arcpy
+import arcpy_mocks
 import unittest
 from forklift import core
 from forklift.models import Crate
@@ -70,7 +71,7 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(int(arcpy.GetCount_management(crate.destination).getOutput(0)), 299)
 
     def test_update_custom_validation_that_fails(self):
-        crate = Crate('', '', '')
+        crate = Crate('', '', '', describer=arcpy_mocks.Describe)
 
         self.assertEqual(core.update(crate, raise_validation_exception)[0], Crate.INVALID_DATA)
 
@@ -80,7 +81,7 @@ class CoreTests(unittest.TestCase):
         def custom(crate):
             return NotImplemented
 
-        crate = Crate('', '', '')
+        crate = Crate('', '', '', describer=arcpy_mocks.Describe)
 
         self.assertEqual(core.update(crate, custom)[0], Crate.INVALID_DATA)
 
@@ -388,12 +389,13 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(arcpy.GetCount_management(crate.destination)[0], '6')
 
     def test_source_row_attribute_changed(self):
-        name = 'MALTA'
+        row_name = 'MALTA'
+        row_id = 588
         arcpy.Copy_management(check_for_changes_gdb, test_gdb)
         crate = Crate('AttributeChange', test_gdb, test_gdb, 'AttributeChange_Dest')
 
         core.update(crate, lambda x: True)
-        with arcpy.da.UpdateCursor(crate.source, 'SYMBOL', 'NAME = \'{}\''.format(name)) as cur:
+        with arcpy.da.UpdateCursor(crate.source, 'SYMBOL', 'NAME = \'{}\''.format(row_name)) as cur:
             row = cur.next()
             row[0] = 99
             cur.updateRow(row)
@@ -401,26 +403,26 @@ class CoreTests(unittest.TestCase):
         changes = core._hash(crate, core.hash_gdb_path, False)
 
         self.assertEqual(len(changes.adds), 1)
-        self.assertEqual(changes.adds[0][1], name)
+        self.assertEqual(changes.adds.keys()[0], row_id)
 
         self.assertEqual(len(changes._deletes), 1)
         self.assertEqual(list(changes._deletes)[0], 4)
 
     def test_source_row_geometry_changed(self):
-        api = '4300311427'
+        row_api = '4300311427'
+        row_id = 4164826
         arcpy.Copy_management(check_for_changes_gdb, test_gdb)
         crate = Crate('GeometryChange', test_gdb, test_gdb, 'GeometryChange_Dest')
 
         core.update(crate, lambda x: True)
-        with arcpy.da.UpdateCursor(crate.source, 'Shape@XY', 'API = \'{}\''.format(api)) as cur:
+        with arcpy.da.UpdateCursor(crate.source, 'Shape@XY', 'API = \'{}\''.format(row_api)) as cur:
             row = cur.next()
             row[0] = (row[0][0] + 10, row[0][1] + 10)
             cur.updateRow(row)
 
         changes = core._hash(crate, core.hash_gdb_path, False)
-
         self.assertEqual(len(changes.adds), 1)
-        self.assertEqual(changes.adds[0][2], api)
+        self.assertEqual(changes.adds.keys()[0], row_id)
 
         self.assertEqual(len(changes._deletes), 1)
         self.assertEqual(list(changes._deletes)[0], 3)

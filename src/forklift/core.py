@@ -32,6 +32,8 @@ hash_gdb_path = path.join(garage, _hash_gdb)
 
 
 def init():
+    '''make sure forklift is ready to run. create the hashing gdb and clear out the scratch geodatabase
+    '''
     #: create gdb if needed
     if not arcpy.Exists(hash_gdb_path):
         log.info('%s does not exist. creating', hash_gdb_path)
@@ -57,9 +59,7 @@ def update(crate, validate_crate):
 
     Checks to see if a crate can be updated by using validate_crate (if implemented
     within the pallet) or check_schema otherwise. If the crate is valid it
-    then updates the data.
-    '''
-
+    then updates the data.'''
     arcpy.env.geographicTransformations = crate.geographic_transformation
 
     def remove_temp_table(table):
@@ -142,6 +142,7 @@ def update(crate, validate_crate):
             edit_session = arcpy.da.Editor(crate.destination_workspace)
             edit_session.startEditing(False, False)
             edit_session.startOperation()
+
             with arcpy.da.SearchCursor(changes.table, changes.fields) as addCursor,\
                     arcpy.da.InsertCursor(crate.destination, changes.fields[:-1]) as cursor, \
                     arcpy.da.InsertCursor(hash_table, [hash_id_field, hash_att_field, hash_geom_field]) as hash_cursor:
@@ -178,8 +179,7 @@ def _hash(crate, hash_path, needs_reproject):
 
     needs_reproject: bool true if the dataset needs to be reprojected
 
-    returns a Changes model with deltas for the source
-    '''
+    returns a Changes model with deltas for the source'''
     #: TODO cache lookup table for repeat offenders
     #: create hash lookup table for source data
     if not arcpy.Exists(path.join(hash_path, crate.name)):
@@ -265,6 +265,7 @@ def _hash(crate, hash_path, needs_reproject):
 
     changes.determine_deletes(attribute_hashes, geometry_hashes)
     del insert_cursor
+
     return changes
 
 
@@ -314,8 +315,7 @@ def _get_hash_lookups(name, hash_path):
 
     hash_path: string path to hash gdb
 
-    returns a tuple with the hash lookups for attributes and geometries
-    '''
+    returns a tuple with the hash lookups for attributes and geometries'''
     hash_lookup = {}
     geo_hash_lookup = {}
     fields = [hash_id_field, hash_att_field, hash_geom_field]
@@ -334,9 +334,7 @@ def check_schema(crate):
     '''
     crate: Crate
 
-    returns: Boolean - True if the schemas match, raises ValidationException if no match
-    '''
-
+    returns: Boolean - True if the schemas match, raises ValidationException if no match'''
     def get_fields(dataset):
         field_dict = {}
 
@@ -423,6 +421,7 @@ def _is_naughty_field(fld):
     #: global id's do not export to file geodatabase
     #: removes shape, shape_length etc
     #: removes objectid_ which is created by geoprocessing tasks and wouldn't be in destination source
+    #: TODO: Deal with possibility of OBJECTID_* being the OIDFieldName
     return 'SHAPE' in fld.upper() or fld.upper() in ['GLOBAL_ID', 'GLOBALID'] or fld.startswith('OBJECTID_')
 
 

@@ -31,8 +31,7 @@ class Pallet(object):
     `pallet` (case-insensitive) somewhere in the filename.
 
     Multiple pallets with the same filename will cause issues so it's strongly recommended to keep them unique.
-    Appending the project name to the file name is the convention.
-    '''
+    Appending the project name to the file name is the convention.'''
 
     def __init__(self, arg=None):
         #: the logging module to keep track of the pallet
@@ -59,8 +58,7 @@ class Pallet(object):
         '''Invoked before process and ship. Any logic that could cause a pallet to error
         should be placed in here instead of the `__init__` method.
 
-        configuration: string `Production`, `Staging`, or `Dev`
-        '''
+        configuration: string `Production`, `Staging`, or `Dev`'''
         return
 
     def process(self):
@@ -267,7 +265,8 @@ class Crate(object):
         return value
 
     def get_report(self):
-        '''Returns the relavant info related to this crate that is shown on the report as a dictionary'''
+        '''Returns the relavant info related to this crate that is shown on the report as a dictionary
+        '''
         return {'name': self.destination_name,
                 'result': self.result[0],
                 'crate_message': self.result[1] or ''}
@@ -303,12 +302,18 @@ class Changes(object):
         self.table = 'source_table'
 
     def has_adds(self):
+        '''returns true if the source table has new rows
+        '''
         return len(self.adds) > 0
 
     def has_deletes(self):
+        '''returns true if the destination has rows that are not in the source
+        '''
         return len(self._deletes) > 0
 
     def has_changes(self):
+        '''returns true if has_adds or has_deletes return true
+        '''
         return self.has_adds() or self.has_deletes()
 
     def get_delete_where_clause(self):
@@ -318,6 +323,11 @@ class Changes(object):
         return 'OBJECTID in ({})'.format(','.join([str(id) for id in self._deletes]))
 
     def determine_deletes(self, attribute_hashes, geometry_hashes):
+        '''
+        attribute_hashes: Dictionary<string, hash> of id's and hashes that were not accessed
+        geometry_hashes: Dictionary<string, hash> of id's and hashes that were not accessed
+
+        returns the union of the two dictionary values'''
         self._deletes = set(attribute_hashes.values() + geometry_hashes.values())
 
         return self._deletes

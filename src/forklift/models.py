@@ -312,6 +312,8 @@ class Crate(object):
             'result': self.result,
             'source_name': self.source_name,
             'source_workspace': self.source_workspace,
+            'source_primary_key': self.source_primary_key,
+            'source_primary_key_type': self.source_primary_key_type,
             'destination_name': self.destination_name,
             'destination_workspace': self.destination_workspace,
             'destination_coordinate_system':  spatial_reference,

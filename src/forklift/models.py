@@ -7,9 +7,9 @@ A module that contains the model classes for forklift
 '''
 
 
+import arcpy
 import logging
 import config
-from arcpy import Describe, env, SpatialReference, ValidateTableName as create_valid_table_name
 from hashlib import md5
 from inspect import getsourcefile
 from messaging import send_email
@@ -46,7 +46,7 @@ class Pallet(object):
         #: a list of arcgis server services that should be shut down before copying data in `copy_data`
         self.arcgis_services = []
         #: default output coordinate system and transformation
-        self.destination_coordinate_system = SpatialReference(3857)
+        self.destination_coordinate_system = arcpy.SpatialReference(3857)
         self.geographic_transformation = 'NAD_1983_To_WGS_1984_5'
         #: a unique name for this pallet
         self.name = '{}:{}'.format(getsourcefile(self.__class__), self.__class__.__name__)
@@ -202,7 +202,7 @@ class Crate(object):
                  destination_coordinate_system=None,
                  geographic_transformation=None,
                  source_primary_key=None,
-                 describer=Describe):
+                 describer=arcpy.Describe):
         #: the name of the source data table
         self.source_name = source_name
         #: the name of the source database
@@ -215,17 +215,17 @@ class Crate(object):
         self.destination_name = destination_name or source_name
 
         #: crate_valid_table_name using env.workspace for the rules
-        temp = env.workspace
-        env.workspace = destination_workspace
-        valid_destination_name = create_valid_table_name(self.destination_name)
-        env.workspace = temp
+        temp = arcpy.env.workspace
+        arcpy.env.workspace = destination_workspace
+        valid_destination_name = arcpy.ValidateTableName(self.destination_name)
+        arcpy.env.workspace = temp
 
         if valid_destination_name != self.destination_name:
             self.result = (Crate.INVALID_DATA, 'Validation error with destination_name: {} != {}'.format(self.destination_name, valid_destination_name))
 
         #: optional definition of destination coordinate system to support reprojecting
         if destination_coordinate_system is not None and isinstance(destination_coordinate_system, int):
-            destination_coordinate_system = SpatialReference(destination_coordinate_system)
+            destination_coordinate_system = arcpy.SpatialReference(destination_coordinate_system)
 
         self.destination_coordinate_system = destination_coordinate_system
         #: optional geographic transformation to support reprojecting

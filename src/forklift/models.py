@@ -243,6 +243,10 @@ class Crate(object):
             self.result = (Crate.INVALID_DATA, e.message)
             return
 
+        #: optional name of the primary key field in the table
+        self.source_primary_key = None
+
+        self.source_primary_key_type = None
         if not self.source_describe.hasOID and source_primary_key is None:
             self.result = (Crate.INVALID_DATA, 'Source dataset has no OID and source_primary_key defined')
         else:
@@ -255,6 +259,10 @@ class Crate(object):
                         self.source_primary_key_type = str
                     else:
                         self.source_primary_key_type = int
+                    break
+
+            if self.source_primary_key_type is None:
+                self.result = (Crate.INVALID_DATA, 'source_primary_key does not appear to be a valid field name')
 
     def set_source_name(self, value):
         '''Sets the source_name and updates the source property

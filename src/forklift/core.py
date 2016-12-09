@@ -98,7 +98,7 @@ def update(crate, validate_crate):
 
         #: delete unaccessed hashes
         if changes.has_deletes():
-            log.debug('Number of rows deleted: %d', len(changes._deletes))
+            log.debug('Number of rows to be deleted: %d', len(changes._deletes))
             status, message = change_status
             if status != Crate.CREATED:
                 change_status = (Crate.UPDATED, None)
@@ -121,7 +121,7 @@ def update(crate, validate_crate):
 
         #: add new/updated rows
         if changes.has_adds():
-            log.debug('Number of rows added: %d', len(changes.adds))
+            log.debug('Number of rows to be added: %d', len(changes.adds))
             status, message = change_status
             if status != Crate.CREATED:
                 change_status = (Crate.UPDATED, None)

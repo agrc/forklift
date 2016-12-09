@@ -141,3 +141,9 @@ class TestCrate(unittest.TestCase):
 
         self.assertEqual(crate.source_primary_key, 'FID')
         self.assertEqual(crate.source_primary_key_type, int)
+
+    def test_invalid_source_primary_key_name(self):
+        skip_if_no_local_sde()
+
+        crate = Crate('NO_OBJECTID_TEST', update_tests_sde, '', '', source_primary_key='NOTAFIELD')
+        self.assertEqual(crate.result[0], Crate.INVALID_DATA)

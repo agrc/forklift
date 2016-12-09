@@ -11,7 +11,18 @@ import unittest
 from arcpy import env, SpatialReference
 from forklift.models import Crate
 from hashlib import md5
-from os.path import join
+from nose import SkipTest
+from os import path
+
+
+current_folder = path.dirname(path.abspath(__file__))
+check_for_changes_fgdb = path.join(current_folder, 'data', 'checkForChanges.gdb')
+update_tests_sde = path.join(current_folder, 'data', 'UPDATE_TESTS.sde')
+
+
+def skip_if_no_local_sde():
+    if not arcpy.Exists(path.join(update_tests_sde, 'ZipCodes')):
+        raise SkipTest('No test SDE dectected, skipping test')
 
 
 class TestCrate(unittest.TestCase):
@@ -24,7 +35,7 @@ class TestCrate(unittest.TestCase):
         self.assertEqual(crate.destination_name, 'blur')
 
     def test_destination_name_defaults_to_source(self):
-        crate = Crate('sourceName', 'source', 'destination')
+        crate = Crate('DNROilGasWells', check_for_changes_fgdb, check_for_changes_fgdb)
         self.assertEqual(crate.destination_name, crate.source_name)
 
     def test_bad_destination_name(self):
@@ -53,7 +64,7 @@ class TestCrate(unittest.TestCase):
         crate.set_source_name('oof')
 
         self.assertEqual(crate.source_name, 'oof')
-        self.assertEqual(crate.source, join('bar', 'oof'))
+        self.assertEqual(crate.source, path.join('bar', 'oof'))
 
     def test_set_source_name_updates_source_if_not_none(self):
         crate = Crate('foo', 'bar', 'baz', 'goo')
@@ -61,7 +72,7 @@ class TestCrate(unittest.TestCase):
         crate.set_source_name(None)
 
         self.assertEqual(crate.source_name, 'foo')
-        self.assertEqual(crate.source, join('bar', 'foo'))
+        self.assertEqual(crate.source, path.join('bar', 'foo'))
 
     def test_crate_ctor_doesnt_alter_destination_name(self):
         source_name = 'name'
@@ -94,7 +105,7 @@ class TestCrate(unittest.TestCase):
         destination_name = 'dn'
         crate = Crate('sourceName', 'source', destination_workspace, destination_name)
 
-        hash = destination_name + '_' + md5(join(destination_workspace, destination_name)).hexdigest()
+        hash = destination_name + '_' + md5(path.join(destination_workspace, destination_name)).hexdigest()
 
         self.assertEqual(crate.name, hash)
 
@@ -103,6 +114,30 @@ class TestCrate(unittest.TestCase):
         source_name = 'sn'
         crate = Crate(source_name, 'source', destination_workspace)
 
-        hash = source_name + '_' + md5(join(destination_workspace, source_name)).hexdigest()
+        hash = source_name + '_' + md5(path.join(destination_workspace, source_name)).hexdigest()
 
         self.assertEqual(crate.name, hash)
+
+    def test_source_primary_type_type_is_correctly_identified(self):
+        skip_if_no_local_sde()
+
+        check_for_changes_fgdb = path.join(current_folder, 'data', 'checkForChanges.gdb')
+
+        # feature class with OBJECTID field
+        crate = Crate('DNROilGasWells', check_for_changes_fgdb, '')
+
+        self.assertEqual(crate.source_primary_key, 'OBJECTID')
+        self.assertEqual(crate.source_primary_key_type, int)
+
+        # table without OBJECTID field
+        crate = Crate('NO_OBJECTID_TEST', update_tests_sde, '', '', source_primary_key='TEST')
+
+        self.assertEqual(crate.source_primary_key, 'TEST')
+        self.assertEqual(crate.source_primary_key_type, str)
+
+        # shapefile
+        data_folder = path.join(current_folder, 'data')
+        crate = Crate('shapefile.shp', data_folder, '')
+
+        self.assertEqual(crate.source_primary_key, 'FID')
+        self.assertEqual(crate.source_primary_key_type, int)

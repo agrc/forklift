@@ -248,6 +248,14 @@ class Crate(object):
         else:
             self.source_primary_key = source_primary_key or self.source_describe.OIDFieldName
 
+            #: get the type of the primary key field so that we can generate valid sql statements
+            for field in self.source_describe.fields:
+                if field.name == self.source_primary_key:
+                    if field.type == 'String':
+                        self.source_primary_key_type = str
+                    else:
+                        self.source_primary_key_type = int
+
     def set_source_name(self, value):
         '''Sets the source_name and updates the source property
         '''
@@ -328,27 +336,57 @@ class Changes(object):
         '''
         return self.has_adds() or self.has_deletes()
 
-    def get_delete_where_clause(self, source_primary_key):
+    def get_delete_where_clause(self, source_primary_key, key_type):
         '''
         source_primary_key: string the primary key
+        key_type: int or str the type of the primary key field
 
         returns the sql statement for identifiying the deleted records'''
         if len(self._deletes) < 1:
             return ''
 
-        return '{} in ({})'.format(source_primary_key, ','.join([str(id) for id in self._deletes]))
+        return self._get_where_clause(self._deletes, source_primary_key, key_type)
 
-    def get_adds_where_clause(self, source_primary_key, temp_suffix):
+    def get_adds_where_clause(self, source_primary_key, key_type, temp_suffix):
         '''
         source_primary_key string of the primary key id
+        key_type int or str the type of the primary key field
         temp_suffix string the suffix appended to forklift temp data
 
-        return sql in clause if table is source table or return None if temp table
-        '''
+        return sql in clause if table is source table or return None if temp table'''
         if self.table.endswith(temp_suffix):
             return None
 
-        return '{} in ({})'.format(source_primary_key, ','.join([str(id) for id in self.adds.keys()]))
+        return self._get_where_clause(self.adds.keys(), source_primary_key, key_type)
+
+    def _get_where_clause(self, ids, field, field_type):
+        '''
+        ids number[] or string[]
+        field string name of the field
+        field_type int or str the type of the field to control quoting of values
+
+        return sql in clause build from the ids and field name split up so that no more than 1000 items
+        are in each IN statement (workaround for Oracle ORA-01795: maximum number of expressions in a list is 1000 error)'''
+        in_statements = []
+        if field_type == str:
+            quote = '\''
+        else:
+            quote = ''
+
+        def build_in():
+            if i + 1000 < len(ids):
+                end = i + 1000
+            else:
+                end = len(ids)
+            statement = '{0} IN ({1}{2}{1})'.format(field, quote, '{0},{0}'.format(quote).join([str(id) for id in ids[i:end]]))
+            in_statements.append(statement)
+            return i + 1000
+
+        i = 0
+        while i < len(ids):
+            i = build_in()
+
+        return ' OR '.join(in_statements)
 
     def determine_deletes(self, attribute_hashes, geometry_hashes):
         '''
@@ -356,6 +394,6 @@ class Changes(object):
         geometry_hashes: Dictionary<string, hash> of id's and hashes that were not accessed
 
         returns the union of the two dictionary values'''
-        self._deletes = set(attribute_hashes.values() + geometry_hashes.values())
+        self._deletes = list(set(attribute_hashes.values() + geometry_hashes.values()))
 
         return self._deletes

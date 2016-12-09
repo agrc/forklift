@@ -151,7 +151,7 @@ def update(crate, validate_crate):
                     primary_key = row[-1]
                     dest_id = cursor.insertRow(row[:-1])
                     #: update/store hash lookup
-                    hash_cursor.insertRow((dest_id,) + changes.adds[primary_key])
+                    hash_cursor.insertRow((dest_id,) + changes.adds[str(primary_key)])
 
             log.debug('stopping edit session (saving edits)')
             edit_session.stopOperation()
@@ -191,7 +191,7 @@ def _hash(crate, hash_path, needs_reproject):
     if not arcpy.Exists(path.join(hash_path, crate.name)):
         log.debug('%s does not exist. creating', crate.name)
         table = arcpy.CreateTable_management(hash_path, crate.name)
-        arcpy.AddField_management(table, hash_id_field, 'LONG', field_length=32)
+        arcpy.AddField_management(table, hash_id_field, 'TEXT', field_length=32)
         arcpy.AddField_management(table, hash_att_field, 'TEXT', field_length=32)
         arcpy.AddField_management(table, hash_geom_field, 'TEXT', field_length=32)
 
@@ -258,7 +258,7 @@ def _hash(crate, hash_path, needs_reproject):
                 if needs_reproject:
                     insert_cursor.insertRow(row + (src_id,))
                 #: add to adds
-                changes.adds[src_id] = (attribute_hash_digest, geom_hash_digest)
+                changes.adds[str(src_id)] = (attribute_hash_digest, geom_hash_digest)
             else:
                 #: remove not modified hash from hashes
                 attribute_hashes.pop(attribute_hash_digest)
@@ -316,9 +316,9 @@ def _get_hash_lookups(name, hash_path):
     with arcpy.da.SearchCursor(path.join(hash_path, name), fields) as cursor:
         for id, att_hash, geo_hash in cursor:
             if att_hash is not None:
-                hash_lookup[str(att_hash)] = id
+                hash_lookup[str(att_hash)] = str(id)
             if geo_hash is not None:
-                geo_hash_lookup[str(geo_hash)] = id
+                geo_hash_lookup[str(geo_hash)] = str(id)
 
     return (hash_lookup, geo_hash_lookup)
 

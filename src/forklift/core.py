@@ -107,7 +107,8 @@ def update(crate, validate_crate):
             edit_session.startEditing(False, False)
             edit_session.startOperation()
 
-            with arcpy.da.UpdateCursor(crate.destination, [crate.source_primary_key], changes.get_delete_where_clause(crate.source_primary_key)) as cursor:
+            with arcpy.da.UpdateCursor(crate.destination, [crate.source_primary_key],
+                                       changes.get_delete_where_clause(crate.source_primary_key, crate.source_primary_key_type)) as cursor:
                 for row in cursor:
                     cursor.deleteRow()
 
@@ -115,7 +116,8 @@ def update(crate, validate_crate):
             edit_session.stopEditing(True)
 
             with arcpy.da.UpdateCursor(
-                    path.join(hash_gdb_path, crate.name), [hash_id_field], changes.get_delete_where_clause(crate.source_primary_key)) as cursor:
+                    path.join(hash_gdb_path, crate.name), [hash_id_field],
+                    changes.get_delete_where_clause(crate.source_primary_key, crate.source_primary_key_type)) as cursor:
                 for row in cursor:
                     cursor.deleteRow()
 
@@ -140,7 +142,8 @@ def update(crate, validate_crate):
 
             #: strip off duplicated primary key added during hashing since it's no longer necessary
             fields = changes.fields[:-1]
-            clause = changes.get_adds_where_clause(crate.source_primary_key, reproject_temp_suffix)
+            clause = changes.get_adds_where_clause(crate.source_primary_key, crate.source_primary_key_type, reproject_temp_suffix)
+
             with arcpy.da.SearchCursor(changes.table, changes.fields, where_clause=clause) as add_cursor,\
                     arcpy.da.InsertCursor(crate.destination, fields) as cursor, \
                     arcpy.da.InsertCursor(hash_table, [hash_id_field, hash_att_field, hash_geom_field]) as hash_cursor:

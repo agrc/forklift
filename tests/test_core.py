@@ -113,12 +113,12 @@ class CoreTests(unittest.TestCase):
         tbl = 'NO_OBJECTID_TEST'
 
         #: has changes
-        self.assertEqual(len(core._hash(Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, test_gdb, tbl), core.hash_gdb_path, False).adds), 1)
+        crate = Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, test_gdb, tbl, source_primary_key='TEST')
+        self.assertEqual(len(core._hash(crate, core.hash_gdb_path, False).adds), 1)
 
         #: no changes
-        self.assertEqual(
-            len(core._hash(
-                Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, test_gdb, '{}_NO_CHANGES'.format(tbl)), core.hash_gdb_path, False).adds), 1)
+        crate = Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, test_gdb, '{}_NO_CHANGES'.format(tbl), source_primary_key='TEST')
+        self.assertEqual(len(core._hash(crate, core.hash_gdb_path, False).adds), 1)
 
     def test_hash(self):
         arcpy.Copy_management(check_for_changes_gdb, test_gdb)
@@ -221,7 +221,7 @@ class CoreTests(unittest.TestCase):
         skip_if_no_local_sde()
         arcpy.Copy_management(check_for_changes_gdb, test_gdb)
 
-        crate = Crate('NO_OBJECTID_TEST', update_tests_sde, test_gdb)
+        crate = Crate('NO_OBJECTID_TEST', update_tests_sde, test_gdb, source_primary_key='TEST')
 
         core.update(crate, lambda x: True)
 

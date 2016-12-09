@@ -224,12 +224,16 @@ def _hash(crate, hash_path, needs_reproject):
 
     insert_cursor = None
     if needs_reproject:
-        changes.table = arcpy.CreateFeatureclass_management(arcpy.env.scratchGDB,
-                                                            crate.name + reproject_temp_suffix,
-                                                            geometry_type=crate.source_describe.shapeType.upper(),
-                                                            template=crate.source,
-                                                            spatial_reference=crate.source_describe.spatialReference)[0]
-        arcpy.AddField_management(changes.table, src_id_field, 'LONG')
+        changes.table = arcpy.CreateFeatureclass_management(
+            arcpy.env.scratchGDB,
+            crate.name + reproject_temp_suffix,
+            geometry_type=crate.source_describe.shapeType.upper(),
+            template=crate.source,
+            spatial_reference=crate.source_describe.spatialReference)[0]
+        arcpy.AddField_management(changes.table, src_id_field, 'TEXT')
+        if crate.source_describe.dataType == 'ShapeFile':
+            log.info('adding FID field for shapefile comparison')
+            arcpy.AddField_management(changes.table, 'FID', 'LONG')
         #: reset duplicated key because wtf
         changes.fields[-1] = src_id_field
         insert_cursor = arcpy.da.InsertCursor(changes.table, changes.fields)
@@ -294,6 +298,10 @@ def _create_destination_data(crate):
                                         crate.source,
                                         spatial_reference=crate.destination_coordinate_system or source_describe.spatialReference)
 
+    if crate.source_describe.dataType == 'ShapeFile':
+        log.info('adding FID field for shapefile comparison')
+        arcpy.AddField_management(crate.destination, 'FID', 'LONG')
+
 
 def _create_hash(string, salt):
     hasher = md5(string)
@@ -333,8 +341,8 @@ def check_schema(crate):
         field_dict = {}
 
         for field in arcpy.ListFields(dataset):
-            #: don't worry about comparing OBJECTID field
-            if not _is_naughty_field(field.name) and field.name != 'OBJECTID':
+            #: don't worry about comparing managed fields
+            if not _is_naughty_field(field.name) and field.name not in ['OBJECTID', 'FID']:
                 field_dict[field.name.upper()] = field
 
         return field_dict

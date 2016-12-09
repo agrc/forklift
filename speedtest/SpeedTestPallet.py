@@ -38,3 +38,11 @@ class TablePallet(Pallet):
         super(TablePallet, self).__init__()
 
         self.add_crate('SchoolInfo', {'source_workspace': source_workspace, 'destination_workspace': destination_workspace})
+
+
+class ShapefilePallet(Pallet):
+
+    def __init__(self):
+        super(ShapefilePallet, self).__init__()
+
+        self.add_crate(('Counties.shp', data_folder, destination_workspace, 'CountiesFromShapefile'))

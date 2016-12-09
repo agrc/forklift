@@ -230,13 +230,24 @@ class Crate(object):
         self.destination_coordinate_system = destination_coordinate_system
         #: optional geographic transformation to support reprojecting
         self.geographic_transformation = geographic_transformation
-        #: the full path to the source data
-        self.source = join(source_workspace, source_name)
         #: the full path to the destination data
         self.destination = join(self.destination_workspace, self.destination_name)
         #: the hash table name of a crate
         self.name = '{1}_{0}'.format(md5(self.destination).hexdigest(), self.destination_name).replace('.', '_')
 
+        if not arcpy.Exists(join(source_workspace, source_name)):
+            #: try to get a valid source name
+            temp = arcpy.env.workspace
+            arcpy.env.workspace = self.source_workspace
+            #: TODO: cache the returns from the list methods so that they are not called on every crate
+            for table in arcpy.ListFeatureClasses('*' + self.source_name) + arcpy.ListTables('*' + self.source_name):
+                if table.split('.')[-1] == self.source_name:
+                    self.source_name = table
+                    break
+            arcpy.env.workspace = temp
+
+        #: the full path to the source data
+        self.source = join(source_workspace, source_name)
         try:
             self.source_describe = describer(self.source)
         except IOError as e:

@@ -6,18 +6,20 @@ test_forklift.py
 A module for testing lift.py
 '''
 
-import arcpy_mocks
 import unittest
 from forklift import lift
 from forklift.models import Pallet, Crate
 from mock import Mock
 from mock import patch
 from mock import call
+from os import path
 
 fgd_describe = Mock()
 fgd_describe.workspaceFactoryProgID = 'esriDataSourcesGDB.FileGDBWorkspaceFactory'
 non_fgd_describe = Mock()
 non_fgd_describe.workspaceFactoryProgID = 'not a fgd'
+current_folder = path.dirname(path.abspath(__file__))
+check_for_changes_gdb = path.join(current_folder, 'data', 'checkForChanges.gdb')
 
 
 def describe_side_effect(workspace):
@@ -33,8 +35,8 @@ class TestLift(unittest.TestCase):
         self.PalletMock = Mock(Pallet)
 
     def test_process_crate_for_set_results(self):
-        crate1 = Crate('', '', 'a', '', describer=arcpy_mocks.Describe)
-        crate2 = Crate('', '', 'b', '', describer=arcpy_mocks.Describe)
+        crate1 = Crate('DNROilGasWells', check_for_changes_gdb, check_for_changes_gdb, 'a')
+        crate2 = Crate('DNROilGasWells', check_for_changes_gdb, check_for_changes_gdb, 'b')
         pallet = Pallet()
         pallet._crates = [crate1, crate2]
         update_def = Mock(return_value=(Crate.UPDATED, 'message'))
@@ -45,8 +47,8 @@ class TestLift(unittest.TestCase):
         self.assertEqual(crate2.result[0], Crate.UPDATED)
 
     def test_process_crate_doesnt_call_update_def_on_duplicate_crates(self):
-        crate1 = Crate('', '', 'a', '', describer=arcpy_mocks.Describe)
-        crate2 = Crate('', '', 'a', '', describer=arcpy_mocks.Describe)
+        crate1 = Crate('DNROilGasWells', check_for_changes_gdb, check_for_changes_gdb, 'a')
+        crate2 = Crate('DNROilGasWells', check_for_changes_gdb, check_for_changes_gdb, 'a')
         pallet = Pallet()
         pallet._crates = [crate1, crate2]
         update_def = Mock(return_value=(Crate.UPDATED, 'message'))

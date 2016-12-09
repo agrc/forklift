@@ -7,7 +7,6 @@ Tests for the core.py module
 '''
 
 import arcpy
-import arcpy_mocks
 import unittest
 from forklift import core
 from forklift.models import Crate
@@ -71,7 +70,7 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(int(arcpy.GetCount_management(crate.destination).getOutput(0)), 299)
 
     def test_update_custom_validation_that_fails(self):
-        crate = Crate('', '', '', describer=arcpy_mocks.Describe)
+        crate = Crate('', '', '')
 
         self.assertEqual(core.update(crate, raise_validation_exception)[0], Crate.INVALID_DATA)
 
@@ -81,7 +80,7 @@ class CoreTests(unittest.TestCase):
         def custom(crate):
             return NotImplemented
 
-        crate = Crate('', '', '', describer=arcpy_mocks.Describe)
+        crate = Crate('', '', '')
 
         self.assertEqual(core.update(crate, custom)[0], Crate.INVALID_DATA)
 

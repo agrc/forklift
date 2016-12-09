@@ -138,11 +138,12 @@ class CoreTests(unittest.TestCase):
 
         def run(name):
             return core._hash(
-                Crate(name,
-                      update_tests_sde,
-                      test_gdb,
-                      destination_coordinate_system=arcpy.SpatialReference(3857),
-                      geographic_transformation='NAD_1983_To_WGS_1984_5'),
+                Crate(
+                    name,
+                    update_tests_sde,
+                    test_gdb,
+                    destination_coordinate_system=arcpy.SpatialReference(3857),
+                    geographic_transformation='NAD_1983_To_WGS_1984_5'),
                 core.hash_gdb_path,
                 True)
 
@@ -256,11 +257,12 @@ class CoreTests(unittest.TestCase):
         arcpy.CreateFileGDB_management(path.join(current_folder, 'data'), 'test.gdb')
 
         spatial_reference = arcpy.SpatialReference(3857)
-        fc_crate = Crate('DNROilGasWells',
-                         check_for_changes_gdb,
-                         test_gdb,
-                         destination_coordinate_system=spatial_reference,
-                         geographic_transformation='NAD_1983_To_WGS_1984_5')
+        fc_crate = Crate(
+            'DNROilGasWells',
+            check_for_changes_gdb,
+            test_gdb,
+            destination_coordinate_system=spatial_reference,
+            geographic_transformation='NAD_1983_To_WGS_1984_5')
         core._create_destination_data(fc_crate)
         self.assertTrue(arcpy.Exists(fc_crate.destination))
         self.assertEqual(arcpy.Describe(fc_crate.destination).spatialReference.name, spatial_reference.name)
@@ -284,10 +286,11 @@ class CoreTests(unittest.TestCase):
     def test_try_to_find_data_source_by_name_returns_and_updates_feature_name(self, walk):
         walk.return_value = chain([(None, None, ['db.owner.Counties'])])
 
-        crate = Crate(source_name='Counties',
-                      source_workspace='Database Connections\\something.sde',
-                      destination_workspace='c:\\temp\\something.gdb',
-                      destination_name='Counties')
+        crate = Crate(
+            source_name='Counties',
+            source_workspace='Database Connections\\something.sde',
+            destination_workspace='c:\\temp\\something.gdb',
+            destination_name='Counties')
 
         result = core._try_to_find_data_source_by_name(crate)
         ok = result[0]
@@ -308,10 +311,11 @@ class CoreTests(unittest.TestCase):
     def test_try_to_find_data_source_by_name_returns_False_if_duplicate(self, walk):
         walk.return_value = chain([(None, None, ['db.owner.Counties', 'db.owner2.Counties'])])
 
-        crate = Crate(source_name='duplicate',
-                      source_workspace='Database Connections\\something.sde',
-                      destination_workspace='c:\\something.gdb',
-                      destination_name='Counties')
+        crate = Crate(
+            source_name='duplicate',
+            source_workspace='Database Connections\\something.sde',
+            destination_workspace='c:\\something.gdb',
+            destination_name='Counties')
 
         self.assertFalse(core._try_to_find_data_source_by_name(crate)[0])
 
@@ -319,10 +323,11 @@ class CoreTests(unittest.TestCase):
     def test_try_to_find_data_source_by_name_filters_common_duplicates(self, walk):
         walk.return_value = chain([(None, None, ['db.owner.Counties', 'db.owner.duplicateCounties'])])
 
-        crate = Crate(source_name='Counties',
-                      source_workspace='Database Connections\\something.sde',
-                      destination_workspace='c:\\something.gdb',
-                      destination_name='Counties')
+        crate = Crate(
+            source_name='Counties',
+            source_workspace='Database Connections\\something.sde',
+            destination_workspace='c:\\something.gdb',
+            destination_name='Counties')
 
         result = core._try_to_find_data_source_by_name(crate)
         ok = result[0]

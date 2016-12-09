@@ -117,7 +117,7 @@ def update(crate, validate_crate):
 
             with arcpy.da.UpdateCursor(
                     path.join(hash_gdb_path, crate.name), [hash_id_field],
-                    changes.get_delete_where_clause(crate.source_primary_key, crate.source_primary_key_type)) as cursor:
+                    changes.get_delete_where_clause(hash_id_field, str)) as cursor:
                 for row in cursor:
                     cursor.deleteRow()
 

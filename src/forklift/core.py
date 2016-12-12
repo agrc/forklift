@@ -103,7 +103,7 @@ def update(crate, validate_crate):
             edit_session.startOperation()
 
             with arcpy.da.UpdateCursor(crate.destination, [crate.source_primary_key],
-                                       changes.get_delete_where_clause(crate.source_primary_key, crate.source_primary_key_type)) as cursor:
+                                       changes.get_deletes_where_clause(crate.source_primary_key, crate.source_primary_key_type)) as cursor:
                 for row in cursor:
                     cursor.deleteRow()
 
@@ -112,7 +112,7 @@ def update(crate, validate_crate):
 
             with arcpy.da.UpdateCursor(
                     path.join(hash_gdb_path, crate.name), [hash_id_field],
-                    changes.get_delete_where_clause(hash_id_field, str)) as cursor:
+                    changes.get_deletes_where_clause(hash_id_field, str)) as cursor:
                 for row in cursor:
                     cursor.deleteRow()
 
@@ -215,7 +215,7 @@ def _hash(crate, hash_path, needs_reproject):
     changes.fields.append(crate.source_primary_key)
 
     attribute_hashes, geometry_hashes = _get_hash_lookups(crate.name, hash_gdb_path)
-    unique_salt = 0
+    total_rows = 0
 
     insert_cursor = None
     if needs_reproject:
@@ -235,7 +235,7 @@ def _hash(crate, hash_path, needs_reproject):
 
     with arcpy.da.SearchCursor(crate.source, fields, sql_clause=sql_clause) as cursor:
         for row in cursor:
-            unique_salt += 1
+            total_rows += 1
             #: create shape hash
             geom_hash_digest = None
             if not crate.is_table():
@@ -244,10 +244,10 @@ def _hash(crate, hash_path, needs_reproject):
                 #: skip features with empty geometry
                 if shape_wkt is None:
                     continue
-                geom_hash_digest = _create_hash(shape_wkt, unique_salt)
+                geom_hash_digest = _create_hash(shape_wkt, total_rows)
 
             #: create attribute hash
-            attribute_hash_digest = _create_hash(str(row[:primary_key_index]), unique_salt)
+            attribute_hash_digest = _create_hash(str(row[:primary_key_index]), total_rows)
 
             #: check for new feature
             if attribute_hash_digest not in attribute_hashes or (geom_hash_digest is not None and geom_hash_digest not in geometry_hashes):
@@ -265,6 +265,7 @@ def _hash(crate, hash_path, needs_reproject):
                     geometry_hashes.pop(geom_hash_digest)
 
     changes.determine_deletes(attribute_hashes, geometry_hashes)
+    changes.total_rows = total_rows
     del insert_cursor
 
     return changes

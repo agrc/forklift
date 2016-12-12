@@ -374,6 +374,7 @@ class Changes(object):
     def __init__(self, fields):
         self.adds = {}
         self._deletes = []
+        self.unchanged = {}
         self.fields = fields
         self.table = ''
         self.total_rows = 0

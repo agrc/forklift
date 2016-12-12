@@ -147,7 +147,10 @@ def update(crate, validate_crate):
                     primary_key = row[-1]
                     dest_id = cursor.insertRow(row[:-1])
                     #: update/store hash lookup
-                    hash_cursor.insertRow((dest_id,) + changes.adds[str(primary_key)])
+                    try:
+                        hash_cursor.insertRow((dest_id,) + changes.adds[str(primary_key)])
+                    except KeyError:
+                        hash_cursor.insertRow((dest_id,) + changes.unchanged[str(primary_key)])
                     count += 1
                     if count % 100 == 0:
                         log.debug('%d records inserted', count)
@@ -270,6 +273,7 @@ def _hash(crate, hash_path, needs_reproject):
                 attribute_hashes.pop(attribute_hash_digest)
                 if geom_hash_digest is not None:
                     geometry_hashes.pop(geom_hash_digest)
+                changes.unchanged[str(src_id)] = (attribute_hash_digest, geom_hash_digest)
 
     changes.determine_deletes(attribute_hashes, geometry_hashes)
     changes.total_rows = total_rows

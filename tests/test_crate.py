@@ -11,6 +11,8 @@ import unittest
 from arcpy import env, SpatialReference
 from forklift.models import Crate
 from hashlib import md5
+from itertools import chain
+from mock import patch
 from nose import SkipTest
 from os import path
 
@@ -147,3 +149,60 @@ class TestCrate(unittest.TestCase):
 
         crate = Crate('NO_OBJECTID_TEST', update_tests_sde, '', '', source_primary_key='NOTAFIELD')
         self.assertEqual(crate.result[0], Crate.INVALID_DATA)
+
+    @patch('arcpy.da.Walk')
+    def test_try_to_find_data_source_by_name_returns_and_updates_feature_name(self, walk):
+        walk.return_value = chain([(None, None, ['db.owner.Counties'])])
+
+        crate = Crate(
+            source_name='Counties',
+            source_workspace='Database Connections\\something.sde',
+            destination_workspace='c:\\temp\\something.gdb',
+            destination_name='Counties')
+
+        result = crate._try_to_find_data_source_by_name()
+        ok = result[0]
+        name = result[1]
+
+        self.assertTrue(ok)
+        self.assertEqual(name, 'db.owner.Counties')
+        self.assertEqual(crate.source_name, name)
+        self.assertEqual(crate.destination_name, 'Counties')
+        self.assertEqual(crate.source, path.join(crate.source_workspace, crate.source_name))
+
+    def test_try_to_find_data_source_by_name_returns_None_if_not_sde(self):
+        crate = Crate(source_name='something.shp', source_workspace='c:\\temp', destination_workspace='c:\\something.gdb', destination_name='Counties')
+
+        self.assertIsNone(crate._try_to_find_data_source_by_name()[0])
+
+    @patch('arcpy.da.Walk')
+    def test_try_to_find_data_source_by_name_returns_False_if_duplicate(self, walk):
+        walk.return_value = chain([(None, None, ['db.owner.Counties', 'db.owner2.Counties'])])
+
+        crate = Crate(
+            source_name='duplicate',
+            source_workspace='Database Connections\\something.sde',
+            destination_workspace='c:\\something.gdb',
+            destination_name='Counties')
+
+        self.assertFalse(crate._try_to_find_data_source_by_name()[0])
+
+    @patch('arcpy.da.Walk')
+    def test_try_to_find_data_source_by_name_filters_common_duplicates(self, walk):
+        walk.return_value = chain([(None, None, ['db.owner.Counties', 'db.owner.duplicateCounties'])])
+
+        crate = Crate(
+            source_name='Counties',
+            source_workspace='Database Connections\\something.sde',
+            destination_workspace='c:\\something.gdb',
+            destination_name='Counties')
+
+        result = crate._try_to_find_data_source_by_name()
+        ok = result[0]
+        name = result[1]
+
+        self.assertTrue(ok)
+        self.assertEqual(name, 'db.owner.Counties')
+        self.assertEqual(crate.source_name, name)
+        self.assertEqual(crate.destination_name, 'Counties')
+        self.assertEqual(crate.source, path.join(crate.source_workspace, crate.source_name))

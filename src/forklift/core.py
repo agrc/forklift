@@ -151,10 +151,8 @@ def update(crate, validate_crate):
                 for row in add_cursor:
                     primary_key = row[-1]
 
-                    try:
+                    if crate.is_table() or row[shape_field_index] is not None:
                         dest_id = cursor.insertRow(row[:-1])
-                    except ValueError:
-                        continue
 
                     #: update/store hash lookup
                     try:

@@ -144,6 +144,9 @@ def update(crate, validate_crate):
 
             fields = changes.fields[:-1]
 
+            #: cache this so we don't have to call it for every record
+            is_table = crate.is_table()
+
             with arcpy.da.SearchCursor(changes.table, changes.fields, where_clause=clause) as add_cursor,\
                     arcpy.da.InsertCursor(crate.destination, fields) as cursor, \
                     arcpy.da.InsertCursor(hash_table, [hash_id_field, hash_att_field, hash_geom_field]) as hash_cursor:
@@ -151,7 +154,7 @@ def update(crate, validate_crate):
                     primary_key = row[-1]
 
                     #: skip null geometries
-                    if not crate.is_table() and row[shape_field_index] is None:
+                    if not is_table and row[shape_field_index] is None:
                         continue
 
                     dest_id = cursor.insertRow(row[:-1])

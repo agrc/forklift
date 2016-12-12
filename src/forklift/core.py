@@ -145,7 +145,12 @@ def update(crate, validate_crate):
                     arcpy.da.InsertCursor(hash_table, [hash_id_field, hash_att_field, hash_geom_field]) as hash_cursor:
                 for row in add_cursor:
                     primary_key = row[-1]
-                    dest_id = cursor.insertRow(row[:-1])
+
+                    try:
+                        dest_id = cursor.insertRow(row[:-1])
+                    except Exception:
+                        import pdb; pdb.set_trace()
+
                     #: update/store hash lookup
                     try:
                         hash_cursor.insertRow((dest_id,) + changes.adds[str(primary_key)])

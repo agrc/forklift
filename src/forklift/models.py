@@ -203,6 +203,8 @@ class Crate(object):
                  geographic_transformation=None,
                  source_primary_key=None,
                  describer=arcpy.Describe):
+        #: the logging module to keep track of the crate
+        self.log = logging.getLogger('forklift')
         #: the name of the source data table
         self.source_name = source_name
         #: the name of the source database
@@ -235,19 +237,15 @@ class Crate(object):
         #: the hash table name of a crate
         self.name = '{1}_{0}'.format(md5(self.destination).hexdigest(), self.destination_name).replace('.', '_')
 
-        if not arcpy.Exists(join(source_workspace, source_name)):
-            #: try to get a valid source name
-            temp = arcpy.env.workspace
-            arcpy.env.workspace = self.source_workspace
-            #: TODO: cache the returns from the list methods so that they are not called on every crate
-            for table in arcpy.ListFeatureClasses('*' + self.source_name) + arcpy.ListTables('*' + self.source_name):
-                if table.split('.')[-1] == self.source_name:
-                    self.source_name = table
-                    break
-            arcpy.env.workspace = temp
-
         #: the full path to the source data
         self.source = join(source_workspace, source_name)
+
+        if not arcpy.Exists(self.source):
+            status, message = self._try_to_find_data_source_by_name()
+            if not status:
+                self.result = (Crate.INVALID_DATA, message)
+                return
+
         try:
             self.source_describe = describer(self.source)
         except IOError as e:
@@ -256,8 +254,8 @@ class Crate(object):
 
         #: optional name of the primary key field in the table
         self.source_primary_key = None
-
         self.source_primary_key_type = None
+
         if not self.source_describe.hasOID and source_primary_key is None:
             self.result = (Crate.INVALID_DATA, 'Source dataset has no OID and source_primary_key defined')
         else:
@@ -265,8 +263,8 @@ class Crate(object):
 
             #: get the type of the primary key field so that we can generate valid sql statements
             for field in self.source_describe.fields:
-                if field.name == self.source_primary_key:
-                    if field.type == 'String':
+                if field.name.lower() == self.source_primary_key.lower():
+                    if field.type.lower() == 'string':
                         self.source_primary_key_type = str
                     else:
                         self.source_primary_key_type = int
@@ -309,6 +307,40 @@ class Crate(object):
         '''returns True if the crate defines a table
         '''
         return self.source_describe.datasetType.lower() == 'table'
+
+    def _try_to_find_data_source_by_name(self):
+        '''try to find the source name in the source workspace.
+        if it is found, update the crate name so subsequent uses do not fail.
+
+        returns a tuple (bool, message) describing the outcome'''
+        if '.sde' not in self.source.lower():
+            return (None, 'Can\'t find data outside of sde')
+
+        def filter_filenames(workspace, name):
+            names = []
+            walk = arcpy.da.Walk(workspace, followlinks=True)
+
+            for dirpath, dirnames, filenames in walk:
+                names = filenames
+
+            #: could get a value like db.owner.***name and db.owner.name so filter on name
+            return [fc for fc in names if fc.split('.')[2] == self.source_name]
+
+        names = filter_filenames(self.source_workspace, self.source_name)
+
+        if names is None or len(names) < 1:
+            return (False, 'No source data found for {}'.format(self.source))
+
+        if len(names) == 1:
+            #: replace name with db.owner.name
+            new_name = names[0]
+            self.set_source_name(new_name)
+            self.log.warn('Source name changed to %s', new_name)
+
+            return (True, new_name)
+
+        if len(names) > 1:
+            return (False, 'Duplcate names: {}'.format(','.join(names)))
 
     def __repr__(self):
         '''Override for better logging. Use with %r

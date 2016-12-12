@@ -144,7 +144,6 @@ def update(crate, validate_crate):
 
             fields = changes.fields[:-1]
 
-            count = 0
             with arcpy.da.SearchCursor(changes.table, changes.fields, where_clause=clause) as add_cursor,\
                     arcpy.da.InsertCursor(crate.destination, fields) as cursor, \
                     arcpy.da.InsertCursor(hash_table, [hash_id_field, hash_att_field, hash_geom_field]) as hash_cursor:
@@ -159,9 +158,6 @@ def update(crate, validate_crate):
                         hash_cursor.insertRow((dest_id,) + changes.adds[str(primary_key)])
                     except KeyError:
                         hash_cursor.insertRow((dest_id,) + changes.unchanged[str(primary_key)])
-                    count += 1
-                    if count % 100 == 0:
-                        log.debug('%d records inserted', count)
 
             log.debug('stopping edit session (saving edits)')
             edit_session.stopOperation()

@@ -7,6 +7,7 @@ Tests for the core.py module
 '''
 
 import arcpy
+import arcpy_mocks
 import unittest
 from forklift import core
 from forklift.models import Crate
@@ -28,7 +29,7 @@ def raise_validation_exception(crate):
     raise ValidationException()
 
 
-def delete_if_exists(data):
+def delete_if_arcpy_exists(data):
     if arcpy.Exists(data):
         arcpy.Delete_management(data)
 
@@ -51,7 +52,7 @@ class CoreTests(unittest.TestCase):
         delete_if_exists(test_folder)
 
     def test_update_invalid_source(self):
-        crate = Crate('badname', 'nofolder', '')
+        crate = Crate('badname', 'nofolder', '', describer=arcpy_mocks.Describe)
         self.assertEqual(core.update(crate, lambda x: True)[0], Crate.INVALID_DATA)
 
     def test_update_no_existing_destination(self):
@@ -68,18 +69,22 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(arcpy.Exists(crate.destination), True)
         self.assertEqual(int(arcpy.GetCount_management(crate.destination).getOutput(0)), 299)
 
-    def test_update_custom_validation_that_fails(self):
-        crate = Crate('', '', '')
+    @patch('arcpy.Exists')
+    def test_update_custom_validation_that_fails(self, arcpy_exists):
+        arcpy_exists.return_value = True
+        crate = Crate('', '', '', describer=arcpy_mocks.Describe)
 
         self.assertEqual(core.update(crate, raise_validation_exception)[0], Crate.INVALID_DATA)
 
-    def test_update_default_validation_that_fails(self):
+    @patch('arcpy.Exists')
+    def test_update_default_validation_that_fails(self, arcpy_exists):
+        arcpy_exists.return_value = True
         core.check_schema = Mock(side_effect=ValidationException())
 
         def custom(crate):
             return NotImplemented
 
-        crate = Crate('', '', '')
+        crate = Crate('', '', '', describer=arcpy_mocks.Describe)
 
         self.assertEqual(core.update(crate, custom)[0], Crate.INVALID_DATA)
 
@@ -87,7 +92,7 @@ class CoreTests(unittest.TestCase):
     def test_update_error(self, arcpy_exists):
         arcpy_exists.return_value = True
 
-        crate = Crate('', '', '')
+        crate = Crate('', '', '', describer=arcpy_mocks.Describe)
 
         self.assertEqual(core.update(crate, lambda c: True)[0], Crate.UNHANDLED_EXCEPTION)
 

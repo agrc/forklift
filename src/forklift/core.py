@@ -139,11 +139,6 @@ def update(crate, validate_crate):
             clause = changes.get_adds_where_clause(crate.source_primary_key, crate.source_primary_key_type, reproject_temp_suffix)
 
             if not crate.is_table():
-                shape_clause = 'Shape IS NOT NULL'
-                if clause is not None:
-                    clause = ' AND ' + shape_clause
-                else:
-                    clause = shape_clause
                 shape_field_index = -2
                 changes.fields[shape_field_index] = changes.fields[shape_field_index].rstrip('WKT')
 
@@ -156,7 +151,10 @@ def update(crate, validate_crate):
                 for row in add_cursor:
                     primary_key = row[-1]
 
-                    dest_id = cursor.insertRow(row[:-1])
+                    try:
+                        dest_id = cursor.insertRow(row[:-1])
+                    except ValueError:
+                        continue
 
                     #: update/store hash lookup
                     try:

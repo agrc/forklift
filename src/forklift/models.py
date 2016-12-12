@@ -399,7 +399,7 @@ class Changes(object):
         key_type: int or str the type of the primary key field
 
         returns the sql statement for identifiying the deleted records'''
-        if len(self._deletes) < 1 or len(self._deletes) == self.total_rows:
+        if len(self._deletes) < 1 or len(self._deletes) > 10000:
             return None
 
         return self._get_where_clause(self._deletes, source_primary_key, key_type)
@@ -411,7 +411,7 @@ class Changes(object):
         temp_suffix string the suffix appended to forklift temp data
 
         return sql in clause if table is source table or return None if temp table'''
-        if self.table.endswith(temp_suffix) or len(self.adds) == self.total_rows:
+        if self.table.endswith(temp_suffix) or len(self.adds) > 10000:
             return None
 
         return self._get_where_clause(self.adds.keys(), source_primary_key, key_type)

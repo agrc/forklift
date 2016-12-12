@@ -152,11 +152,7 @@ def update(crate, validate_crate):
                 for row in add_cursor:
                     primary_key = row[-1]
 
-                    try:
-                        dest_id = cursor.insertRow(row[:-1])
-                    except Exception as ex:
-                        import pdb; pdb.set_trace()
-                        continue
+                    dest_id = cursor.insertRow(row[:-1])
 
                     #: update/store hash lookup
                     try:

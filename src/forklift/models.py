@@ -240,6 +240,10 @@ class Crate(object):
         #: the full path to the source data
         self.source = join(source_workspace, source_name)
 
+        #: optional name of the primary key field in the table
+        self.source_primary_key = None
+        self.source_primary_key_type = None
+
         if not arcpy.Exists(self.source):
             status, message = self._try_to_find_data_source_by_name()
             if not status:
@@ -251,10 +255,6 @@ class Crate(object):
         except IOError as e:
             self.result = (Crate.INVALID_DATA, e.message)
             return
-
-        #: optional name of the primary key field in the table
-        self.source_primary_key = None
-        self.source_primary_key_type = None
 
         if not self.source_describe.hasOID and source_primary_key is None:
             self.result = (Crate.INVALID_DATA, 'Source dataset has no OID and source_primary_key defined')

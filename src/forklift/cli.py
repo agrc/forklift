@@ -83,27 +83,7 @@ def start_lift(file_path=None, pallet_arg=None):
 
     start_seconds = clock()
 
-    if file_path is not None:
-        pallet_infos = set(_get_pallets_in_file(file_path) + list_pallets())
-    else:
-        pallet_infos = list_pallets()
-
-    all_pallets = []
-    pallets_to_lift = []
-    for pallet_location, PalletClass in pallet_infos:
-        try:
-            if pallet_arg is not None:
-                pallet = PalletClass(pallet_arg)
-            else:
-                pallet = PalletClass()
-
-            all_pallets.append(pallet)
-            if pallet_location == file_path or file_path is None:
-                pallets_to_lift.append(pallet)
-        except Exception as e:
-            log.error('error creating pallet class: %s. %s', PalletClass.__name__, e.message, exc_info=True)
-
-    pallets_to_lift.sort(key=lambda p: p.__class__.__name__)
+    pallets_to_lift, all_pallets = _sort_pallets(file_path, pallet_arg)
 
     start_process = clock()
     core.init()
@@ -133,6 +113,32 @@ def start_lift(file_path=None, pallet_arg=None):
     log.info('%s', report)
 
     return report
+
+
+def _sort_pallets(file_path, pallet_arg):
+    if file_path is not None:
+        pallet_infos = set(_get_pallets_in_file(file_path) + list_pallets())
+    else:
+        pallet_infos = list_pallets()
+
+    all_pallets = []
+    sorted_pallets = []
+    for pallet_location, PalletClass in pallet_infos:
+        try:
+            if pallet_arg is not None:
+                pallet = PalletClass(pallet_arg)
+            else:
+                pallet = PalletClass()
+
+            all_pallets.append(pallet)
+            if pallet_location == file_path or file_path is None:
+                sorted_pallets.append(pallet)
+        except Exception as e:
+            log.error('error creating pallet class: %s. %s', PalletClass.__name__, e.message, exc_info=True)
+
+    sorted_pallets.sort(key=lambda p: p.__class__.__name__)
+
+    return (sorted_pallets, all_pallets)
 
 
 def _send_report_email(report_object):

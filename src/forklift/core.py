@@ -83,8 +83,7 @@ def update(crate, validate_crate):
             log.warn('validation error: %s for crate %r', e.message, crate, exc_info=True)
             return (Crate.INVALID_DATA, e.message)
 
-        destination_describe = arcpy.Describe(crate.destination)
-        needs_reproject = not crate.is_table() and (crate.source_describe.spatialReference.name != destination_describe.spatialReference.name)
+        needs_reproject = crate.needs_reproject()
         #: create source hash and store
         changes = _hash(crate, hash_gdb_path, needs_reproject)
 

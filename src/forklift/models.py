@@ -308,6 +308,9 @@ class Crate(object):
         '''
         return self.source_describe.datasetType.lower() == 'table'
 
+    def needs_reproject(self):
+        return not self.is_table() and self.destination_coordinate_system.name != self.source_describe.spatialReference.name
+
     def _try_to_find_data_source_by_name(self):
         '''try to find the source name in the source workspace.
         if it is found, update the crate name so subsequent uses do not fail.

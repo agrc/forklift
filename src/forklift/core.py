@@ -247,7 +247,10 @@ def _hash(crate, hash_path, needs_reproject):
 
                 #: skip features with empty geometry
                 if shape_wkt is None:
+                    log.warn('Empty geometry found in %s: %s', crate.source_primary_key, row[primary_key_index])
+                    total_rows -= 1
                     continue
+
                 geom_hash_digest = _create_hash(shape_wkt, total_rows)
 
             #: create attribute hash

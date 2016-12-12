@@ -136,8 +136,14 @@ def update(crate, validate_crate):
             log.debug('edit session and operation started')
 
             #: strip off duplicated primary key added during hashing since it's no longer necessary
-            fields = changes.fields[:-1]
             clause = changes.get_adds_where_clause(crate.source_primary_key, crate.source_primary_key_type, reproject_temp_suffix)
+
+            if not crate.is_table():
+                clause += ' AND Shape IS NOT NULL'
+                shape_field_index = -2
+                changes.fields[shape_field_index] = changes.fields[shape_field_index].rstrip('WKT')
+
+            fields = changes.fields[:-1]
 
             count = 0
             with arcpy.da.SearchCursor(changes.table, changes.fields, where_clause=clause) as add_cursor,\

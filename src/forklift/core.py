@@ -139,11 +139,11 @@ def update(crate, validate_crate):
             clause = changes.get_adds_where_clause(crate.source_primary_key, crate.source_primary_key_type, reproject_temp_suffix)
 
             if not crate.is_table():
+                shape_clause = 'Shape IS NOT NULL'
                 if clause is not None:
-                    prefix = ' AND '
+                    clause = ' AND ' + shape_clause
                 else:
-                    prefix = ''
-                clause += prefix + 'Shape IS NOT NULL'
+                    clause = shape_clause
                 shape_field_index = -2
                 changes.fields[shape_field_index] = changes.fields[shape_field_index].rstrip('WKT')
 

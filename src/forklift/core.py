@@ -148,8 +148,9 @@ def update(crate, validate_crate):
 
                     try:
                         dest_id = cursor.insertRow(row[:-1])
-                    except Exception:
+                    except Exception ex:
                         import pdb; pdb.set_trace()
+                        continue
 
                     #: update/store hash lookup
                     try:

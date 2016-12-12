@@ -133,11 +133,13 @@ def update(crate, validate_crate):
             edit_session = arcpy.da.Editor(crate.destination_workspace)
             edit_session.startEditing(False, False)
             edit_session.startOperation()
+            log.debug('edit session and operation started')
 
             #: strip off duplicated primary key added during hashing since it's no longer necessary
             fields = changes.fields[:-1]
             clause = changes.get_adds_where_clause(crate.source_primary_key, crate.source_primary_key_type, reproject_temp_suffix)
 
+            count = 0
             with arcpy.da.SearchCursor(changes.table, changes.fields, where_clause=clause) as add_cursor,\
                     arcpy.da.InsertCursor(crate.destination, fields) as cursor, \
                     arcpy.da.InsertCursor(hash_table, [hash_id_field, hash_att_field, hash_geom_field]) as hash_cursor:
@@ -146,6 +148,9 @@ def update(crate, validate_crate):
                     dest_id = cursor.insertRow(row[:-1])
                     #: update/store hash lookup
                     hash_cursor.insertRow((dest_id,) + changes.adds[str(primary_key)])
+                    count += 1
+                    if count % 100 == 0:
+                        log.debug('%d records inserted', count)
 
             log.debug('stopping edit session (saving edits)')
             edit_session.stopOperation()

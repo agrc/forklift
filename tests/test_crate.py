@@ -11,7 +11,6 @@ import unittest
 from arcpy import env, SpatialReference
 from forklift.models import Crate
 from hashlib import md5
-from itertools import chain
 from mock import patch
 from nose import SkipTest
 from os import path
@@ -152,7 +151,7 @@ class TestCrate(unittest.TestCase):
 
     @patch('arcpy.da.Walk')
     def test_try_to_find_data_source_by_name_returns_and_updates_feature_name(self, walk):
-        walk.return_value = chain([(None, None, ['db.owner.Counties'])])
+        walk.return_value = [(None, None, ['db.owner.Counties'])]
 
         crate = Crate(
             source_name='Counties',
@@ -160,9 +159,10 @@ class TestCrate(unittest.TestCase):
             destination_workspace='c:\\temp\\something.gdb',
             destination_name='Counties')
 
-        result = crate._try_to_find_data_source_by_name()
-        ok = result[0]
-        name = result[1]
+        #: reset values because _try_to_find_data_source_by_name is called in the init
+        crate.set_source_name('Counties')
+
+        ok, name = crate._try_to_find_data_source_by_name()
 
         self.assertTrue(ok)
         self.assertEqual(name, 'db.owner.Counties')
@@ -177,7 +177,7 @@ class TestCrate(unittest.TestCase):
 
     @patch('arcpy.da.Walk')
     def test_try_to_find_data_source_by_name_returns_False_if_duplicate(self, walk):
-        walk.return_value = chain([(None, None, ['db.owner.Counties', 'db.owner2.Counties'])])
+        walk.return_value = [(None, None, ['db.owner.Counties', 'db.owner2.Counties'])]
 
         crate = Crate(
             source_name='duplicate',
@@ -189,7 +189,7 @@ class TestCrate(unittest.TestCase):
 
     @patch('arcpy.da.Walk')
     def test_try_to_find_data_source_by_name_filters_common_duplicates(self, walk):
-        walk.return_value = chain([(None, None, ['db.owner.Counties', 'db.owner.duplicateCounties'])])
+        walk.return_value = [(None, None, ['db.owner.Counties', 'db.owner.duplicateCounties'])]
 
         crate = Crate(
             source_name='Counties',
@@ -197,9 +197,10 @@ class TestCrate(unittest.TestCase):
             destination_workspace='c:\\something.gdb',
             destination_name='Counties')
 
-        result = crate._try_to_find_data_source_by_name()
-        ok = result[0]
-        name = result[1]
+        #: reset values because _try_to_find_data_source_by_name is called in the init
+        crate.set_source_name('Counties')
+
+        ok, name = crate._try_to_find_data_source_by_name()
 
         self.assertTrue(ok)
         self.assertEqual(name, 'db.owner.Counties')

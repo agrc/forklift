@@ -42,18 +42,14 @@ def skip_if_no_local_sde():
 class CoreTests(unittest.TestCase):
 
     def setUp(self):
-        delete_if_exists(test_gdb)
-        delete_if_exists(test_folder)
-        delete_if_exists(core.hash_gdb_path)
+        delete_if_arcpy_exists(test_gdb)
+        delete_if_arcpy_exists(test_folder)
+        delete_if_arcpy_exists(core.hash_gdb_path)
         core.init()
 
     def tearDown(self):
-        delete_if_exists(test_gdb)
-        delete_if_exists(test_folder)
-
-    def test_update_invalid_source(self):
-        crate = Crate('badname', 'nofolder', '', describer=arcpy_mocks.Describe)
-        self.assertEqual(core.update(crate, lambda x: True)[0], Crate.INVALID_DATA)
+        delete_if_arcpy_exists(test_gdb)
+        delete_if_arcpy_exists(test_folder)
 
     def test_update_no_existing_destination(self):
         crate = Crate('ZipCodes', check_for_changes_gdb, test_gdb, 'ImNotHere')
@@ -64,7 +60,7 @@ class CoreTests(unittest.TestCase):
     def test_deleted_destination_between_updates(self):
         crate = Crate('ZipCodes', check_for_changes_gdb, test_gdb, 'ImNotHere')
         core.update(crate, lambda x: True)
-        delete_if_exists(crate.destination)
+        delete_if_arcpy_exists(crate.destination)
         self.assertEqual(core.update(crate, lambda x: True)[0], Crate.CREATED)
         self.assertEqual(arcpy.Exists(crate.destination), True)
         self.assertEqual(int(arcpy.GetCount_management(crate.destination).getOutput(0)), 299)

@@ -372,7 +372,8 @@ class Changes(object):
         self.adds = {}
         self._deletes = []
         self.fields = fields
-        self.table = None
+        self.table = ''
+        self.total_rows = 0
 
     def has_adds(self):
         '''returns true if the source table has new rows
@@ -389,14 +390,14 @@ class Changes(object):
         '''
         return self.has_adds() or self.has_deletes()
 
-    def get_delete_where_clause(self, source_primary_key, key_type):
+    def get_deletes_where_clause(self, source_primary_key, key_type):
         '''
         source_primary_key: string the primary key
         key_type: int or str the type of the primary key field
 
         returns the sql statement for identifiying the deleted records'''
-        if len(self._deletes) < 1:
-            return ''
+        if len(self._deletes) < 1 or len(self._deletes) == self.total_rows:
+            return None
 
         return self._get_where_clause(self._deletes, source_primary_key, key_type)
 
@@ -407,7 +408,7 @@ class Changes(object):
         temp_suffix string the suffix appended to forklift temp data
 
         return sql in clause if table is source table or return None if temp table'''
-        if self.table.endswith(temp_suffix):
+        if self.table.endswith(temp_suffix) or len(self.adds) == self.total_rows:
             return None
 
         return self._get_where_clause(self.adds.keys(), source_primary_key, key_type)

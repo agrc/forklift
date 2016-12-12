@@ -258,12 +258,12 @@ def _hash(crate, hash_path, needs_reproject):
 
             #: create attribute hash
             attribute_hash_digest = _create_hash(str(row[:primary_key_index]), total_rows)
+            src_id = row[primary_key_index]
 
             #: check for new feature
             if attribute_hash_digest not in attribute_hashes or (geom_hash_digest is not None and geom_hash_digest not in geometry_hashes):
                 #: update or add
                 #: if reprojecting insert into temp table
-                src_id = row[primary_key_index]
                 if needs_reproject:
                     insert_cursor.insertRow(row + (src_id,))
                 #: add to adds
@@ -273,6 +273,7 @@ def _hash(crate, hash_path, needs_reproject):
                 attribute_hashes.pop(attribute_hash_digest)
                 if geom_hash_digest is not None:
                     geometry_hashes.pop(geom_hash_digest)
+
                 changes.unchanged[str(src_id)] = (attribute_hash_digest, geom_hash_digest)
 
     changes.determine_deletes(attribute_hashes, geometry_hashes)

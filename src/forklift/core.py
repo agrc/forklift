@@ -233,6 +233,7 @@ def _hash(crate, hash_path, needs_reproject):
 
     attribute_hashes, geometry_hashes = _get_hash_lookups(crate.name, hash_gdb_path)
     total_rows = 0
+    unique_salty_id = 0
 
     insert_cursor = None
     if needs_reproject:
@@ -253,6 +254,7 @@ def _hash(crate, hash_path, needs_reproject):
     with arcpy.da.SearchCursor(crate.source, fields, sql_clause=sql_clause) as cursor:
         for row in cursor:
             total_rows += 1
+            unique_salty_id += 1
             #: create shape hash
             geom_hash_digest = None
             if not crate.is_table():
@@ -264,10 +266,10 @@ def _hash(crate, hash_path, needs_reproject):
                     total_rows -= 1
                     continue
 
-                geom_hash_digest = _create_hash(shape_wkt, total_rows)
+                geom_hash_digest = _create_hash(shape_wkt, unique_salty_id)
 
             #: create attribute hash
-            attribute_hash_digest = _create_hash(str(row[:primary_key_index]), total_rows)
+            attribute_hash_digest = _create_hash(str(row[:primary_key_index]), unique_salty_id)
             src_id = row[primary_key_index]
 
             #: check for new feature

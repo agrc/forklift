@@ -61,6 +61,7 @@ class CoreTests(unittest.TestCase):
         crate = Crate('ZipCodes', check_for_changes_gdb, test_gdb, 'ImNotHere')
         core.update(crate, lambda x: True)
         delete_if_arcpy_exists(crate.destination)
+
         self.assertEqual(core.update(crate, lambda x: True)[0], Crate.CREATED)
         self.assertEqual(arcpy.Exists(crate.destination), True)
         self.assertEqual(int(arcpy.GetCount_management(crate.destination).getOutput(0)), 299)

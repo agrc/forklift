@@ -286,6 +286,7 @@ def speedtest(pallet_location):
     #: spoof hashes location so there is no caching
     core.garage = speedtest_destination
     core.hash_gdb_path = join(core.garage, core._hash_gdb)
+    core.scratch_gdb_path = join(core.garage, core._scratch_gdb)
 
     #: delete destination and other artifacts form prior runs
     import arcpy
@@ -297,6 +298,8 @@ def speedtest(pallet_location):
 
     if arcpy.Exists(core.hash_gdb_path):
         arcpy.Delete_management(core.hash_gdb_path)
+    if arcpy.Exists(core.scratch_gdb_path):
+        arcpy.Delete_management(core.scratch_gdb_path)
 
     print('{0}{1}Tests ready starting dry run...{0}'.format(Fore.RESET, Fore.MAGENTA))
 
@@ -314,6 +317,8 @@ def speedtest(pallet_location):
         arcpy.Delete_management(join(speedtest_destination, 'DestinationData.gdb'))
     if arcpy.Exists(core.hash_gdb_path):
         arcpy.Delete_management(core.hash_gdb_path)
+    if arcpy.Exists(core.scratch_gdb_path):
+        arcpy.Delete_management(core.scratch_gdb_path)
 
     print('{1}Dry Run Output{0}{2}{3}'.format(Fore.RESET, Fore.CYAN, linesep, dry_report))
     print('{1}Repeat Run Output{0}{2}{3}'.format(Fore.RESET, Fore.CYAN, linesep, repeat_report))

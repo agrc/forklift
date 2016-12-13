@@ -309,7 +309,12 @@ class Crate(object):
         return self.source_describe.datasetType.lower() == 'table'
 
     def needs_reproject(self):
-        return not self.is_table() and self.destination_coordinate_system.name != self.source_describe.spatialReference.name
+        if self.destination_coordinate_system is None:
+            needs_reproject = False
+        else:
+            needs_reproject = self.destination_coordinate_system.name != self.source_describe.spatialReference.name
+
+        return not self.is_table() and needs_reproject
 
     def _try_to_find_data_source_by_name(self):
         '''try to find the source name in the source workspace.
@@ -400,7 +405,7 @@ class Changes(object):
         key_type: int or str the type of the primary key field
 
         returns the sql statement for identifiying the deleted records'''
-        if len(self._deletes) < 1 or len(self._deletes) > 10000:
+        if len(self._deletes) < 1 or len(self._deletes) == self.total_rows or len(self._deletes) > 10000:
             return None
 
         return self._get_where_clause(self._deletes, source_primary_key, key_type)
@@ -412,7 +417,7 @@ class Changes(object):
         temp_suffix string the suffix appended to forklift temp data
 
         return sql in clause if table is source table or return None if temp table'''
-        if self.table.endswith(temp_suffix) or len(self.adds) > 10000:
+        if self.table.endswith(temp_suffix) or len(self.adds) == self.total_rows or len(self.adds) > 10000:
             return None
 
         return self._get_where_clause(self.adds.keys(), source_primary_key, key_type)

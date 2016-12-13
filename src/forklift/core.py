@@ -41,9 +41,8 @@ def init():
         log.info('%s does not exist. creating', hash_gdb_path)
         arcpy.CreateFileGDB_management(garage, _hash_gdb)
 
-    #: create gdb if needed
     if arcpy.Exists(scratch_gdb_path):
-        log.info('%s exist. recreating', hash_gdb_path)
+        log.info('%s exist. recreating', scratch_gdb_path)
         arcpy.Delete_management(scratch_gdb_path)
 
     arcpy.CreateFileGDB_management(garage, _scratch_gdb)

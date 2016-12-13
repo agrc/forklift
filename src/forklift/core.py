@@ -27,7 +27,9 @@ hash_id_field = 'Id'
 garage = path.dirname(config_location)
 
 _hash_gdb = 'hashes.gdb'
+_scratch_gdb = 'scratch.gdb'
 
+scratch_gdb_path = path.join(garage, _scratch_gdb)
 hash_gdb_path = path.join(garage, _hash_gdb)
 
 
@@ -39,12 +41,12 @@ def init():
         log.info('%s does not exist. creating', hash_gdb_path)
         arcpy.CreateFileGDB_management(garage, _hash_gdb)
 
-    #: clear out scratchGDB
-    arcpy.env.workspace = arcpy.env.scratchGDB
-    log.info('clearing out scratchGDB')
-    for featureClass in arcpy.ListFeatureClasses():
-        log.debug('deleting: %s', featureClass)
-        arcpy.Delete_management(featureClass)
+    #: create gdb if needed
+    if arcpy.Exists(scratch_gdb_path):
+        log.info('%s exist. recreating', hash_gdb_path)
+        arcpy.Delete_management(scratch_gdb_path)
+
+    arcpy.CreateFileGDB_management(garage, _scratch_gdb)
 
     arcpy.ClearEnvironment('workspace')
 
@@ -238,7 +240,7 @@ def _hash(crate, hash_path, needs_reproject):
     insert_cursor = None
     if needs_reproject:
         changes.table = arcpy.CreateFeatureclass_management(
-            arcpy.env.scratchGDB,
+            scratch_gdb_path,
             crate.name + reproject_temp_suffix,
             geometry_type=crate.source_describe.shapeType.upper(),
             template=crate.source,

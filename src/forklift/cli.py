@@ -86,7 +86,7 @@ def start_lift(file_path=None, pallet_arg=None):
     pallets_to_lift, all_pallets = _sort_pallets(file_path, pallet_arg)
 
     start_process = clock()
-    core.init()
+    core.init(log)
     lift.process_crates_for(pallets_to_lift, core.update, config.get_config_prop('configuration'))
     log.info('process_crates time: %s', seat.format_time(clock() - start_process))
 

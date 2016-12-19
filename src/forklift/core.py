@@ -7,14 +7,13 @@ Tools for updating the data associated with a models.Crate
 '''
 
 import arcpy
-import logging
 from config import config_location
 from exceptions import ValidationException
 from models import Changes, Crate
 from os import path
 from hashlib import md5
 
-log = logging.getLogger('forklift')
+log = None
 
 reproject_temp_suffix = '_fl'
 
@@ -33,9 +32,15 @@ scratch_gdb_path = path.join(garage, _scratch_gdb)
 hash_gdb_path = path.join(garage, _hash_gdb)
 
 
-def init():
-    '''make sure forklift is ready to run. create the hashing gdb and clear out the scratch geodatabase
+def init(logger):
     '''
+    make sure forklift is ready to run. create the hashing gdb and clear out the scratch geodatabase
+    logger is passed in from cli.py (rather than just setting it via `log = logging.getLogger('forklift')`)
+    to enable other projects to use this module without colliding with the same logger
+    '''
+    global log
+    log = logger
+
     #: create gdb if needed
     if not arcpy.Exists(hash_gdb_path):
         log.info('%s does not exist. creating', hash_gdb_path)

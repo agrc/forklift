@@ -9,6 +9,7 @@ Tests for the core.py module
 import arcpy
 import arcpy_mocks
 import unittest
+from forklift import cli
 from forklift import core
 from forklift.models import Crate
 from forklift.exceptions import ValidationException
@@ -45,7 +46,7 @@ class CoreTests(unittest.TestCase):
         delete_if_arcpy_exists(test_gdb)
         delete_if_arcpy_exists(test_folder)
         delete_if_arcpy_exists(core.hash_gdb_path)
-        core.init()
+        core.init(cli.log)
 
     def tearDown(self):
         delete_if_arcpy_exists(test_gdb)

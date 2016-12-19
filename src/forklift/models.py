@@ -264,7 +264,7 @@ class Crate(object):
             #: get the type of the primary key field so that we can generate valid sql statements
             for field in self.source_describe.fields:
                 if field.name.lower() == self.source_primary_key.lower():
-                    if field.type.lower() == 'string':
+                    if field.type.lower() in ['string', 'guid']:
                         self.source_primary_key_type = str
                     else:
                         self.source_primary_key_type = int

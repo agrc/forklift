@@ -41,9 +41,8 @@ def init():
         log.info('%s does not exist. creating', hash_gdb_path)
         arcpy.CreateFileGDB_management(garage, _hash_gdb)
 
-    #: create gdb if needed
     if arcpy.Exists(scratch_gdb_path):
-        log.info('%s exist. recreating', hash_gdb_path)
+        log.info('%s exist. recreating', scratch_gdb_path)
         arcpy.Delete_management(scratch_gdb_path)
 
     arcpy.CreateFileGDB_management(garage, _scratch_gdb)
@@ -259,12 +258,13 @@ def _hash(crate, hash_path, needs_reproject):
             unique_salty_id += 1
             #: create shape hash
             geom_hash_digest = None
+            src_id = row[primary_key_index]
             if not crate.is_table():
                 shape_wkt = row[-1]
 
                 #: skip features with empty geometry
                 if shape_wkt is None:
-                    log.warn('Empty geometry found in %s: %s', crate.source_primary_key, row[primary_key_index])
+                    log.warn('Empty geometry found in %s: %s', crate.source_primary_key, src_id)
                     total_rows -= 1
                     continue
 
@@ -272,7 +272,6 @@ def _hash(crate, hash_path, needs_reproject):
 
             #: create attribute hash
             attribute_hash_digest = _create_hash(str(row[:primary_key_index]), unique_salty_id)
-            src_id = row[primary_key_index]
 
             #: check for new feature
             if attribute_hash_digest not in attribute_hashes or (geom_hash_digest is not None and geom_hash_digest not in geometry_hashes):

@@ -69,6 +69,13 @@ def update(crate, validate_crate):
     arcpy.env.geographicTransformations = crate.geographic_transformation
     change_status = (Crate.NO_CHANGES, None)
 
+    def truncate_where_clause(txt):
+        max = 100
+        if txt is not None and len(txt) > max:
+            return txt[:max - 1] + '...'
+        else:
+            return txt
+
     try:
         if not arcpy.Exists(crate.destination):
             log.debug('%s does not exist. creating', crate.destination)
@@ -107,17 +114,21 @@ def update(crate, validate_crate):
             edit_session.startEditing(False, False)
             edit_session.startOperation()
 
+            destination_deletes_where_clause = changes.get_deletes_where_clause(crate.source_primary_key, crate.source_primary_key_type)
+            log.debug('destination deletes where clause: %s', truncate_where_clause(destination_deletes_where_clause))
             with arcpy.da.UpdateCursor(crate.destination, [crate.source_primary_key],
-                                       changes.get_deletes_where_clause(crate.source_primary_key, crate.source_primary_key_type)) as cursor:
+                                       destination_deletes_where_clause) as cursor:
                 for row in cursor:
                     cursor.deleteRow()
 
             edit_session.stopOperation()
             edit_session.stopEditing(True)
 
+            hash_deletes_where_clause = changes.get_deletes_where_clause(hash_id_field, str)
+            log.debug('hash deletes where clause: %s', truncate_where_clause(hash_deletes_where_clause))
             with arcpy.da.UpdateCursor(
                     path.join(hash_gdb_path, crate.name), [hash_id_field],
-                    changes.get_deletes_where_clause(hash_id_field, str)) as cursor:
+                    hash_deletes_where_clause) as cursor:
                 for row in cursor:
                     cursor.deleteRow()
 
@@ -142,7 +153,8 @@ def update(crate, validate_crate):
             log.debug('edit session and operation started')
 
             #: strip off duplicated primary key added during hashing since it's no longer necessary
-            clause = changes.get_adds_where_clause(crate.source_primary_key, crate.source_primary_key_type, reproject_temp_suffix)
+            adds_clause = changes.get_adds_where_clause(crate.source_primary_key, crate.source_primary_key_type, reproject_temp_suffix)
+            log.debug('adds where clause: %s', truncate_where_clause(adds_clause))
 
             if not crate.is_table():
                 shape_field_index = -2
@@ -153,7 +165,7 @@ def update(crate, validate_crate):
             #: cache this so we don't have to call it for every record
             is_table = crate.is_table()
 
-            with arcpy.da.SearchCursor(changes.table, changes.fields, where_clause=clause) as add_cursor,\
+            with arcpy.da.SearchCursor(changes.table, changes.fields, where_clause=adds_clause) as add_cursor,\
                     arcpy.da.InsertCursor(crate.destination, fields) as cursor, \
                     arcpy.da.InsertCursor(hash_table, [hash_id_field, hash_att_field, hash_geom_field]) as hash_cursor:
                 for row in add_cursor:

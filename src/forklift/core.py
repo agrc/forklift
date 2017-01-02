@@ -176,12 +176,16 @@ def update(crate, validate_crate):
                         continue
 
                     dest_id = cursor.insertRow(row[:-1])
+                    if crate.source_describe.hasOID and crate.source_describe.OIDFieldName == crate.source_primary_key:
+                        hash_key = dest_id
+                    else:
+                        hash_key = primary_key
 
                     #: update/store hash lookup
                     try:
-                        hash_cursor.insertRow((dest_id,) + changes.adds[str(primary_key)])
+                        hash_cursor.insertRow((hash_key,) + changes.adds[str(primary_key)])
                     except KeyError:
-                        hash_cursor.insertRow((dest_id,) + changes.unchanged[str(primary_key)])
+                        hash_cursor.insertRow((hash_key,) + changes.unchanged[str(primary_key)])
 
             log.debug('stopping edit session (saving edits)')
             edit_session.stopOperation()

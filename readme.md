@@ -55,6 +55,7 @@ If the property is a list then the value is appended to the existing list.
     - `FORKLIFT_AGS_USERNAME` ArcGIS admin username.
     - `FORKLIFT_AGS_PASSWORD` ArcGIS admin password.
     - `FORKLIFT_AGS_SERVER_HOST` ArcGIS host address eg: `localhost`
+1. Install [git](https://git-scm.com/)
 1. `forklift lift`
 
 

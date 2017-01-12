@@ -332,18 +332,32 @@ class TestLift(unittest.TestCase):
         pallets = [Pallet(), Pallet(), Pallet()]
 
         pallets[0].requires_processing = Mock(return_value=True)
-        pallets[0].copy_data = ['location']
+        pallets[0].copy_data = ['C:\location']
         pallets[0].arcgis_services = ['service1']
 
-        pallets[1].copy_data = ['Location']
+        pallets[1].copy_data = ['C:\Location']
         pallets[1].arcgis_services = ['service2']
 
-        pallets[2].copy_data = ['location2']
+        pallets[2].copy_data = ['C:\location2']
 
         affected_services, data_being_moved, destination_to_pallet = lift._hydrate_data_structures(pallets[:1], pallets)
         data_being_moved = list(data_being_moved)
 
-        self.assertEqual(data_being_moved[0], 'location')
+        self.assertEqual(data_being_moved[0], 'c:\location')
         self.assertEqual(len(data_being_moved), 1)
-        self.assertEqual(destination_to_pallet['location'], [pallets[0], pallets[1]])
+        self.assertEqual(destination_to_pallet['c:\\location'], [pallets[0], pallets[1]])
+        self.assertEqual(affected_services, set(['service2', 'service1']))
+
+    def test_hydrate_data_structures_normalizes_paths(self):
+        pallets = [Pallet(), Pallet()]
+
+        pallets[0].requires_processing = Mock(return_value=True)
+        pallets[0].copy_data = ['C:\\\\Scheduled\\staging\\political_utm.gdb']
+        pallets[0].arcgis_services = ['service1']
+
+        pallets[1].copy_data = ['C:\\Scheduled\\staging\\political_utm.gdb']
+        pallets[1].arcgis_services = ['service2']
+
+        affected_services, data_being_moved, destination_to_pallet = lift._hydrate_data_structures(pallets[:1], pallets)
+
         self.assertEqual(affected_services, set(['service2', 'service1']))

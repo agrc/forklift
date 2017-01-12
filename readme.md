@@ -48,7 +48,6 @@ If the property is a list then the value is appended to the existing list.
 1. `forklift config set --key copyDestinations --value c:\\MapData` - This is where you want your output placed.
 1. `forklift repos --add agrc/parcels` - The agrc/parcels is the user/repo to scan for Pallets.
 1. `forklift garage open` - Add all connection.sde files to the forklift garage.
-1. `forklift lift`
 1. Set the following user environmental variables (required only for sending email reports and starting/stopping ArcGIS Services):
     - `FORKLIFT_SMTP_SERVER` The SMTP server that you want to send emails with.
     - `FORKLIFT_SMTP_PORT` The SMTP port number.
@@ -56,6 +55,7 @@ If the property is a list then the value is appended to the existing list.
     - `FORKLIFT_AGS_USERNAME` ArcGIS admin username.
     - `FORKLIFT_AGS_PASSWORD` ArcGIS admin password.
     - `FORKLIFT_AGS_SERVER_HOST` ArcGIS host address eg: `localhost`
+1. `forklift lift`
 
 
 ### Development Usage

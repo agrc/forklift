@@ -7,7 +7,7 @@ A module that contains the tests for the changes model
 '''
 
 import unittest
-from forklift.models import Changes
+from forklift.models import Changes, QUERY_LIMIT
 
 
 class TestChanges(unittest.TestCase):
@@ -51,6 +51,19 @@ class TestChanges(unittest.TestCase):
 
     def test_get_delete_where_caluse_is_empty_when_no_changes(self):
         self.assertIsNone(self.patient.get_deletes_where_clause('OBJECTID', int))
+
+    def test_get_where_clauses_are_empty_when_either_is_more_than_limit(self):
+        delete_limit = Changes([])
+        delete_limit._deletes = range(0, QUERY_LIMIT + 1)
+
+        self.assertIsNone(delete_limit.get_deletes_where_clause('OBJECTID', int))
+        self.assertIsNone(delete_limit.get_adds_where_clause('OBJECTID', int, '_suffix'))
+
+        add_limit = Changes([])
+        add_limit.adds = range(0, QUERY_LIMIT + 1)
+
+        self.assertIsNone(add_limit.get_deletes_where_clause('OBJECTID', int))
+        self.assertIsNone(add_limit.get_adds_where_clause('OBJECTID', int, '_suffix'))
 
     def test_has_adds_is_false_when_emtpy(self):
         self.assertFalse(self.patient.has_adds())

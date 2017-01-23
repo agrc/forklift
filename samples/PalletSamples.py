@@ -10,9 +10,8 @@ We should be able to run them twice without errors. Once to create, and once to 
 from forklift.models import Pallet
 from os import path
 
-
 data_folder = path.join(path.dirname(path.realpath(__file__)), 'data')
-destination_workspace = path.join(data_folder, 'SampleDestination')
+destination_workspace = path.join(data_folder, 'SampleDestination.gdb')
 
 
 class StringCratePallet(Pallet):
@@ -22,8 +21,7 @@ class StringCratePallet(Pallet):
 
         source_workspace = path.join(data_folder, 'agrc@sgid10.sde')
 
-        self.add_crate('Counties', {'source_workspace': source_workspace,
-                                    'destination_workspace': destination_workspace})
+        self.add_crate('Counties', {'source_workspace': source_workspace, 'destination_workspace': destination_workspace})
 
         self.copy_data = [destination_workspace]
 
@@ -35,7 +33,7 @@ class ExplicitCratePallet(Pallet):
 
         source_workspace = path.join(data_folder, 'agrc@sgid10.sde')
 
-        crate_info = ('SGID10.GEOSCIENCE.AvalanchePaths', source_workspace, destination_workspace, 'AvyPaths')
+        crate_info = ('AvalanchePaths', source_workspace, destination_workspace, 'AvyPaths')
         self.add_crate(crate_info)
 
         self.copy_data = [destination_workspace]
@@ -48,9 +46,8 @@ class OneValueTupleCratePallet(Pallet):
 
         source_workspace = path.join(data_folder, 'agrc@sgid10.sde')
 
-        crate_info = ('SGID10.GEOSCIENCE.AvalanchePaths')
-        self.add_crate(crate_info, {'source_workspace': source_workspace,
-                                    'destination_workspace': destination_workspace})
+        crate_info = ('AvalanchePaths')
+        self.add_crate(crate_info, {'source_workspace': source_workspace, 'destination_workspace': destination_workspace})
 
 
 class ShapefileCratePallet(Pallet):
@@ -60,8 +57,7 @@ class ShapefileCratePallet(Pallet):
 
         source_workspace = path.join(data_folder, 'myshape.shp')
 
-        self.add_crate('myshape', {'source_workspace': source_workspace,
-                                   'destination_workspace': destination_workspace})
+        self.add_crate('myshape', {'source_workspace': source_workspace, 'destination_workspace': destination_workspace})
 
     def ship(self):
         self.send_email('stdavis@utah.gov', 'test email', 'hello')
@@ -75,5 +71,4 @@ class SdeCratePallet(Pallet):
         destination_workspace = path.join(data_folder, 'UPDATE_TESTS.sde')
         source_workspace = path.join(data_folder, 'agrc@sgid10.sde')
 
-        self.add_crate('SGID10.Boundaries.Counties', {'source_workspace': source_workspace,
-                                                      'destination_workspace': destination_workspace})
+        self.add_crate('Counties', {'source_workspace': source_workspace, 'destination_workspace': destination_workspace})

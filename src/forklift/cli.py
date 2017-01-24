@@ -263,7 +263,7 @@ def _format_dictionary(pallet_reports):
 
         report_str += '{}{}{}{}'.format(color, report['name'], Fore.RESET, linesep)
 
-        if report['message'] is not None:
+        if report['message']:
             report_str += 'pallet message: {}{}{}{}'.format(Fore.YELLOW, report['message'], Fore.RESET, linesep)
 
         for crate in report['crates']:

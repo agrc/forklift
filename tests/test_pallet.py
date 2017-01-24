@@ -292,11 +292,11 @@ class TestPalletGetReport(unittest.TestCase):
         pallet._crates[0].result = (Crate.CREATED, None)
         pallet._crates[1].result = (Crate.UPDATED, None)
         pallet._crates[2].result = (Crate.NO_CHANGES, None)
-
         report = pallet.get_report()
 
         self.assertEqual(report['name'], 'name')
         self.assertEqual(report['success'], True)
+        self.assertEqual(len(report['crates']), 2)
         self.assertEqual(report['crates'][0]['result'], Crate.CREATED, None)
         self.assertEqual(report['crates'][0]['name'], 'fc1')
 
@@ -313,5 +313,6 @@ class TestPalletGetReport(unittest.TestCase):
 
         self.assertEqual(report['success'], False)
         self.assertEqual(report['message'], 'Failed message')
+        self.assertEqual(len(report['crates']), 3)
         self.assertEqual(report['crates'][1]['result'], Crate.INVALID_DATA)
         self.assertEqual(report['crates'][1]['crate_message'], 'Invalid data message')

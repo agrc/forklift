@@ -413,10 +413,12 @@ class Changes(object):
         key_type: int or str the type of the primary key field
 
         returns the sql statement for identifiying the deleted records'''
-        if len(self._deletes) < 1 or len(self._deletes) == self.total_rows or len(self._deletes) > QUERY_LIMIT or len(self.adds) > QUERY_LIMIT:
+        if len(self._deletes) == self.total_rows or len(self.adds) == self.total_rows:
+            self._deletes = []
             return None
-
-        return self._get_where_clause(self._deletes, source_primary_key, key_type)
+        deletes = self._deletes[:QUERY_LIMIT]
+        self._deletes = self._deletes[QUERY_LIMIT:]
+        return self._get_where_clause(deletes, source_primary_key, key_type)
 
     def get_adds_where_clause(self, source_primary_key, key_type, temp_suffix):
         '''
@@ -425,10 +427,10 @@ class Changes(object):
         temp_suffix string the suffix appended to forklift temp data
 
         return sql in clause if table is source table or return None if temp table'''
-        if self.table.endswith(temp_suffix) or len(self.adds) == self.total_rows or len(self.adds) > QUERY_LIMIT or len(self._deletes) > QUERY_LIMIT:
+        if len(self.adds) == self.total_rows or len(self._deletes) == self.total_rows:
             return None
 
-        return self._get_where_clause(self.adds.keys(), source_primary_key, key_type)
+        return self._get_where_clause(self.adds.keys()[:QUERY_LIMIT], source_primary_key, key_type)
 
     def _get_where_clause(self, ids, field, field_type):
         '''

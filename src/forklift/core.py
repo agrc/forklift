@@ -114,23 +114,25 @@ def update(crate, validate_crate):
             edit_session.startEditing(False, False)
             edit_session.startOperation()
 
-            destination_deletes_where_clause = changes.get_deletes_where_clause(crate.source_primary_key, crate.source_primary_key_type)
-            log.debug('destination deletes where clause: %s', truncate_where_clause(destination_deletes_where_clause))
-            with arcpy.da.UpdateCursor(crate.destination, [crate.source_primary_key],
-                                       destination_deletes_where_clause) as cursor:
-                for row in cursor:
-                    cursor.deleteRow()
+            while changes.has_deletes():
+                destination_deletes_where_clause = hash_deletes_where_clause = changes.get_deletes_where_clause('OBJECTID', int)
+                log.debug('destination deletes where clause: %s', truncate_where_clause(destination_deletes_where_clause))
+                with arcpy.da.UpdateCursor(crate.destination, [crate.source_primary_key],
+                                           destination_deletes_where_clause) as cursor:
+                    for row in cursor:
+                        cursor.deleteRow()
+
+                if destination_deletes_where_clause is not None:
+                    hash_deletes_where_clause = destination_deletes_where_clause.replace('OBJECTID', 'Id')
+                log.debug('hash deletes where clause: %s', truncate_where_clause(hash_deletes_where_clause))
+                with arcpy.da.UpdateCursor(
+                        path.join(hash_gdb_path, crate.name), [hash_id_field],
+                        hash_deletes_where_clause) as cursor:
+                    for row in cursor:
+                        cursor.deleteRow()
 
             edit_session.stopOperation()
             edit_session.stopEditing(True)
-
-            hash_deletes_where_clause = changes.get_deletes_where_clause(hash_id_field, str)
-            log.debug('hash deletes where clause: %s', truncate_where_clause(hash_deletes_where_clause))
-            with arcpy.da.UpdateCursor(
-                    path.join(hash_gdb_path, crate.name), [hash_id_field],
-                    hash_deletes_where_clause) as cursor:
-                for row in cursor:
-                    cursor.deleteRow()
 
         #: add new/updated rows
         if changes.has_adds():
@@ -142,9 +144,13 @@ def update(crate, validate_crate):
             hash_table = path.join(hash_gdb_path, crate.name)
 
             #: reproject data if source is different than destination
+            add_clause_key = crate.source_primary_key
+            add_clause_key_type = crate.source_primary_key_type
             if needs_reproject:
                 changes.table = arcpy.Project_management(changes.table, changes.table + reproject_temp_suffix, crate.destination_coordinate_system,
                                                          crate.geographic_transformation)[0]
+                add_clause_key = 'src_id_fl'
+                add_clause_key_type = str
 
             log.debug('starting edit session...')
             edit_session = arcpy.da.Editor(crate.destination_workspace)
@@ -152,40 +158,44 @@ def update(crate, validate_crate):
             edit_session.startOperation()
             log.debug('edit session and operation started')
 
-            #: strip off duplicated primary key added during hashing since it's no longer necessary
-            adds_clause = changes.get_adds_where_clause(crate.source_primary_key, crate.source_primary_key_type, reproject_temp_suffix)
-            log.debug('adds where clause: %s', truncate_where_clause(adds_clause))
+            while changes.has_adds():
+                #: strip off duplicated primary key added during hashing since it's no longer necessary
+                adds_clause = changes.get_adds_where_clause(add_clause_key, add_clause_key_type, reproject_temp_suffix)
+                log.debug('adds where clause: %s', truncate_where_clause(adds_clause))
 
-            if not crate.is_table():
-                shape_field_index = -2
-                changes.fields[shape_field_index] = changes.fields[shape_field_index].rstrip('WKT')
+                if not crate.is_table():
+                    shape_field_index = -2
+                    changes.fields[shape_field_index] = changes.fields[shape_field_index].rstrip('WKT')
 
-            fields = changes.fields[:-1]
+                fields = changes.fields[:-1]
 
-            #: cache this so we don't have to call it for every record
-            is_table = crate.is_table()
+                #: cache this so we don't have to call it for every record
+                is_table = crate.is_table()
 
-            with arcpy.da.SearchCursor(changes.table, changes.fields, where_clause=adds_clause) as add_cursor,\
-                    arcpy.da.InsertCursor(crate.destination, fields) as cursor, \
-                    arcpy.da.InsertCursor(hash_table, [hash_id_field, hash_att_field, hash_geom_field]) as hash_cursor:
-                for row in add_cursor:
-                    primary_key = row[-1]
+                with arcpy.da.SearchCursor(changes.table, changes.fields, where_clause=adds_clause) as add_cursor,\
+                        arcpy.da.InsertCursor(crate.destination, fields) as cursor, \
+                        arcpy.da.InsertCursor(hash_table, [hash_id_field, hash_att_field, hash_geom_field]) as hash_cursor:
+                    for row in add_cursor:
+                        primary_key = row[-1]
 
-                    #: skip null geometries
-                    if not is_table and row[shape_field_index] is None:
-                        continue
+                        #: skip null geometries
+                        if not is_table and row[shape_field_index] is None:
+                            continue
 
-                    dest_id = cursor.insertRow(row[:-1])
-                    if crate.source_describe.hasOID and crate.source_describe.OIDFieldName == crate.source_primary_key:
-                        hash_key = dest_id
-                    else:
-                        hash_key = primary_key
+                        dest_id = cursor.insertRow(row[:-1])
+                        if crate.source_describe.hasOID and crate.source_describe.OIDFieldName == crate.source_primary_key:
+                            hash_key = dest_id
+                        else:
+                            hash_key = primary_key
 
-                    #: update/store hash lookup
-                    try:
+                        #: update/store hash lookup
                         hash_cursor.insertRow((hash_key,) + changes.adds[str(primary_key)])
-                    except KeyError:
-                        hash_cursor.insertRow((hash_key,) + changes.unchanged[str(primary_key)])
+                        changes.adds.pop(str(primary_key))
+                        # try:
+                        #     hash_cursor.insertRow((hash_key,) + changes.adds[str(primary_key)])
+                        #     changes.adds.pop(str(primary_key))
+                        # except KeyError:
+                        #     hash_cursor.insertRow((hash_key,) + changes.unchanged[str(primary_key)])
 
             log.debug('stopping edit session (saving edits)')
             edit_session.stopOperation()
@@ -225,7 +235,7 @@ def _hash(crate, hash_path, needs_reproject):
     if not arcpy.Exists(path.join(hash_path, crate.name)):
         log.debug('%s does not exist. creating', crate.name)
         table = arcpy.CreateTable_management(hash_path, crate.name)
-        arcpy.AddField_management(table, hash_id_field, 'TEXT', field_length=50)
+        arcpy.AddField_management(table, hash_id_field, 'LONG')
         arcpy.AddField_management(table, hash_att_field, 'TEXT', field_length=32)
         arcpy.AddField_management(table, hash_geom_field, 'TEXT', field_length=32)
 
@@ -366,9 +376,9 @@ def _get_hash_lookups(name, hash_path):
     with arcpy.da.SearchCursor(path.join(hash_path, name), fields) as cursor:
         for id, att_hash, geo_hash in cursor:
             if att_hash is not None:
-                hash_lookup[str(att_hash)] = str(id)
+                hash_lookup[str(att_hash)] = id
             if geo_hash is not None:
-                geo_hash_lookup[str(geo_hash)] = str(id)
+                geo_hash_lookup[str(geo_hash)] = id
 
     return (hash_lookup, geo_hash_lookup)
 

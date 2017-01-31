@@ -48,22 +48,22 @@ class TestChanges(unittest.TestCase):
         self.patient.determine_deletes(attribute_hashes, geometry_hashes)
         self.patient.adds = {1: '1'}
 
-        self.assertEqual(self.patient.get_deletes_where_clause('OBJECTID', int), 'OBJECTID IN (1,2,3,4,5)')
+        self.assertEqual(self.patient.get_deletes_where_clause(), 'OBJECTID IN (1,2,3,4,5)')
 
     def test_get_delete_where_caluse_is_empty_when_no_changes(self):
-        self.assertIsNone(self.patient.get_deletes_where_clause('OBJECTID', int))
+        self.assertIsNone(self.patient.get_deletes_where_clause())
 
     def test_get_where_clauses_are_empty_when_either_is_more_than_limit(self):
         delete_limit = Changes([])
         delete_limit._deletes = range(0, QUERY_LIMIT + 1)
 
-        self.assertIsNone(delete_limit.get_deletes_where_clause('OBJECTID', int))
+        self.assertIsNone(delete_limit.get_deletes_where_clause())
         self.assertIsNone(delete_limit.get_adds_where_clause('OBJECTID', int, '_suffix'))
 
         add_limit = Changes([])
         add_limit.adds = range(0, QUERY_LIMIT + 1)
 
-        self.assertIsNone(add_limit.get_deletes_where_clause('OBJECTID', int))
+        self.assertIsNone(add_limit.get_deletes_where_clause())
         self.assertIsNone(add_limit.get_adds_where_clause('OBJECTID', int, '_suffix'))
 
     def test_has_adds_is_false_when_emtpy(self):
@@ -160,6 +160,6 @@ class TestChanges(unittest.TestCase):
 
         self.patient._deletes = ['1', '2', '3']
         self.patient.total_rows = 3
-        clause = self.patient.get_deletes_where_clause('primary', int)
+        clause = self.patient.get_deletes_where_clause()
 
         self.assertIsNone(clause)

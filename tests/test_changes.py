@@ -46,6 +46,7 @@ class TestChanges(unittest.TestCase):
         }
 
         self.patient.determine_deletes(attribute_hashes, geometry_hashes)
+        self.patient.adds = {1: '1'}
 
         self.assertEqual(self.patient.get_deletes_where_clause('OBJECTID', int), 'OBJECTID IN (1,2,3,4,5)')
 
@@ -69,7 +70,7 @@ class TestChanges(unittest.TestCase):
         self.assertFalse(self.patient.has_adds())
 
     def test_has_adds_is_true_with_values(self):
-        self.patient.adds = {'1': 'a', '2': 'b'}
+        self.patient.adds = {1: 'a', 2: 'b'}
 
         self.assertTrue(self.patient.has_adds())
 
@@ -96,14 +97,15 @@ class TestChanges(unittest.TestCase):
 
     def test_adds_where_clause_is_empty_when_table_ends_with_prefix(self):
         self.patient.table = 'table_suffix'
-        self.patient.adds = {'1': 'a', '2': 'b'}
+        self.patient.adds = {1: 'a', 2: 'b'}
         clause = self.patient.get_adds_where_clause('primary', str, '_suffix')
 
         self.assertIsNone(clause)
 
     def test_adds_where_clause_is_in_clause_when_table_is_source(self):
         self.patient.table = 'table_nosuffixmatch'
-        self.patient.adds = {'1': 'a', '2': 'b'}
+        self.patient.adds = {1: 'a', 2: 'b'}
+        self.patient._deletes = [1]
         clause = self.patient.get_adds_where_clause('primary', int, '_suffix')
 
         #: use a regex since order of adds dictionary isn't guaranteed
@@ -112,7 +114,7 @@ class TestChanges(unittest.TestCase):
     def test_has_changes(self):
         self.assertFalse(self.patient.has_changes())
 
-        self.patient.adds = {'1': 'a', '2': 'b'}
+        self.patient.adds = {1: 'a', 2: 'b'}
 
         self.assertTrue(self.patient.has_changes())
 
@@ -134,7 +136,7 @@ class TestChanges(unittest.TestCase):
 
         self.assertTrue(self.patient.has_changes())
 
-        self.patient.adds = {'1': 'a', '2': 'b'}
+        self.patient.adds = {1: 'a', 2: 'b'}
 
         self.assertTrue(self.patient.has_changes())
 
@@ -150,7 +152,7 @@ class TestChanges(unittest.TestCase):
         self.assertRegexpMatches(where, r'IN \([\d,]*\d\) OR NAME IN \([\d,]*\d\)')
 
     def test_get_where_clause_is_empty_when_changes_equals_total_rows(self):
-        self.patient.adds = {'1': 'a', '2': 'b'}
+        self.patient.adds = {1: 'a', 2: 'b'}
         self.patient.total_rows = 2
         clause = self.patient.get_adds_where_clause('primary', int, '_suffix')
 

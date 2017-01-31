@@ -188,11 +188,6 @@ def update(crate, validate_crate):
                         #: update/store hash lookup
                         hash_cursor.insertRow((hash_key,) + changes.adds[str(primary_key)])
                         changes.adds.pop(str(primary_key))
-                        # try:
-                        #     hash_cursor.insertRow((hash_key,) + changes.adds[str(primary_key)])
-                        #     changes.adds.pop(str(primary_key))
-                        # except KeyError:
-                        #     hash_cursor.insertRow((hash_key,) + changes.unchanged[str(primary_key)])
 
             log.debug('stopping edit session (saving edits)')
             edit_session.stopOperation()

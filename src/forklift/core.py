@@ -117,17 +117,14 @@ def update(crate, validate_crate):
             while changes.has_deletes():
                 destination_deletes_where_clause = hash_deletes_where_clause = changes.get_deletes_where_clause('OBJECTID', int)
                 log.debug('destination deletes where clause: %s', truncate_where_clause(destination_deletes_where_clause))
-                with arcpy.da.UpdateCursor(crate.destination, [crate.source_primary_key],
-                                           destination_deletes_where_clause) as cursor:
+                with arcpy.da.UpdateCursor(crate.destination, [crate.source_primary_key], destination_deletes_where_clause) as cursor:
                     for row in cursor:
                         cursor.deleteRow()
 
                 if destination_deletes_where_clause is not None:
                     hash_deletes_where_clause = destination_deletes_where_clause.replace('OBJECTID', 'Id')
                 log.debug('hash deletes where clause: %s', truncate_where_clause(hash_deletes_where_clause))
-                with arcpy.da.UpdateCursor(
-                        path.join(hash_gdb_path, crate.name), [hash_id_field],
-                        hash_deletes_where_clause) as cursor:
+                with arcpy.da.UpdateCursor(path.join(hash_gdb_path, crate.name), [hash_id_field], hash_deletes_where_clause) as cursor:
                     for row in cursor:
                         cursor.deleteRow()
 
@@ -269,12 +266,11 @@ def _hash(crate, hash_path, needs_reproject):
 
     insert_cursor = None
     if needs_reproject:
-        changes.table = arcpy.CreateFeatureclass_management(
-            scratch_gdb_path,
-            crate.name + reproject_temp_suffix,
-            geometry_type=crate.source_describe.shapeType.upper(),
-            template=crate.source,
-            spatial_reference=crate.source_describe.spatialReference)[0]
+        changes.table = arcpy.CreateFeatureclass_management(scratch_gdb_path,
+                                                            crate.name + reproject_temp_suffix,
+                                                            geometry_type=crate.source_describe.shapeType.upper(),
+                                                            template=crate.source,
+                                                            spatial_reference=crate.source_describe.spatialReference)[0]
         arcpy.AddField_management(changes.table, src_id_field, 'TEXT')
         if crate.source_describe.dataType == 'ShapeFile':
             log.info('adding FID field for shapefile comparison')

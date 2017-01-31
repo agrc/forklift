@@ -42,3 +42,4 @@ htmlcov
 src/forklift-garage/
 speedtest/data/DestinationData.gdb/*
 speedtest/data/hashes.gdb/*
+speedtest/data/scratch.gdb/*

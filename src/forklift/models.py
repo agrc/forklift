@@ -6,7 +6,6 @@ models.py
 A module that contains the model classes for forklift
 '''
 
-
 import arcpy
 import logging
 import config
@@ -16,7 +15,6 @@ from messaging import send_email
 from pprint import PrettyPrinter
 from os.path import dirname
 from os.path import join
-
 
 pprinter = PrettyPrinter(indent=4, width=40)
 QUERY_LIMIT = 10000
@@ -109,8 +107,7 @@ class Pallet(object):
 
         for info in crate_infos:
             params = defaults.copy()
-            params.update({'destination_coordinate_system': self.destination_coordinate_system,
-                           'geographic_transformation': self.geographic_transformation})
+            params.update({'destination_coordinate_system': self.destination_coordinate_system, 'geographic_transformation': self.geographic_transformation})
 
             #: info can be a table name here instead of a tuple
             if isinstance(info, basestring):
@@ -303,9 +300,7 @@ class Crate(object):
         if self.result[0] == self.NO_CHANGES:
             return None
 
-        return {'name': self.destination_name,
-                'result': self.result[0],
-                'crate_message': self.result[1] or ''}
+        return {'name': self.destination_name, 'result': self.result[0], 'crate_message': self.result[1] or ''}
 
     def is_table(self):
         '''returns True if the crate defines a table
@@ -375,7 +370,7 @@ class Crate(object):
             'source_primary_key_type': self.source_primary_key_type,
             'destination_name': self.destination_name,
             'destination_workspace': self.destination_workspace,
-            'destination_coordinate_system':  spatial_reference,
+            'destination_coordinate_system': spatial_reference,
             'geographic_transformation': self.geographic_transformation
         })
 
@@ -407,16 +402,19 @@ class Changes(object):
         '''
         return self.has_adds() or self.has_deletes()
 
-    def get_deletes_where_clause(self, source_primary_key, key_type):
+    def get_deletes_where_clause(self):
+        '''returns the sql statement for identifiying the deleted records
         '''
-        source_primary_key: string the primary key
-        key_type: int or str the type of the primary key field
+        if len(self._deletes) == self.total_rows or len(self.adds) == self.total_rows:
+            self._deletes = []
 
-        returns the sql statement for identifiying the deleted records'''
-        if len(self._deletes) < 1 or len(self._deletes) == self.total_rows or len(self._deletes) > QUERY_LIMIT or len(self.adds) > QUERY_LIMIT:
             return None
 
-        return self._get_where_clause(self._deletes, source_primary_key, key_type)
+        #: All ids added to the where clause are removed from self._deletes
+        deletes = self._deletes[:QUERY_LIMIT]
+        self._deletes = self._deletes[QUERY_LIMIT:]
+
+        return self._get_where_clause(deletes, 'OBJECTID', int)
 
     def get_adds_where_clause(self, source_primary_key, key_type, temp_suffix):
         '''
@@ -425,10 +423,10 @@ class Changes(object):
         temp_suffix string the suffix appended to forklift temp data
 
         return sql in clause if table is source table or return None if temp table'''
-        if self.table.endswith(temp_suffix) or len(self.adds) == self.total_rows or len(self.adds) > QUERY_LIMIT or len(self._deletes) > QUERY_LIMIT:
+        if self.table.endswith(temp_suffix) or len(self.adds) == self.total_rows or len(self._deletes) == self.total_rows:
             return None
 
-        return self._get_where_clause(self.adds.keys(), source_primary_key, key_type)
+        return self._get_where_clause(self.adds.keys()[:QUERY_LIMIT], source_primary_key, key_type)
 
     def _get_where_clause(self, ids, field, field_type):
         '''
@@ -451,6 +449,7 @@ class Changes(object):
                 end = len(ids)
             statement = '{0} IN ({1}{2}{1})'.format(field, quote, '{0},{0}'.format(quote).join([str(id) for id in ids[i:end]]))
             in_statements.append(statement)
+
             return i + 1000
 
         i = 0

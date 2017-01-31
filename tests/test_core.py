@@ -355,7 +355,7 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(changes.adds.keys()[0], row_id)
 
         self.assertEqual(len(changes._deletes), 1)
-        self.assertEqual(list(changes._deletes)[0], '4')
+        self.assertEqual(list(changes._deletes)[0], 4)
 
     def test_source_row_geometry_changed(self):
         row_api = '4300311427'
@@ -374,7 +374,7 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(changes.adds.keys()[0], row_id)
 
         self.assertEqual(len(changes._deletes), 1)
-        self.assertEqual(list(changes._deletes)[0], '3')
+        self.assertEqual(list(changes._deletes)[0], 3)
 
     def test_source_row_geometry_changed_to_none(self):
         arcpy.Copy_management(check_for_changes_gdb, test_gdb)

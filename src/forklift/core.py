@@ -202,11 +202,8 @@ def update(crate, validate_crate):
                         if not is_table and row[shape_field_index] is None:
                             continue
 
-                        dest_id = cursor.insertRow(row[:-1])
-
-                        #: update/store hash lookup
-                        hash_cursor.insertRow((dest_id, ) + changes.adds[str(
-                            primary_key)])
+                        #: update/store hash lookup using oid from insert into destination
+                        hash_cursor.insertRow((cursor.insertRow(row[:-1]),) + changes.adds[str(primary_key)])
                         changes.adds.pop(str(primary_key))
 
             log.debug('stopping edit session (saving edits)')

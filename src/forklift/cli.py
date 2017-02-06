@@ -109,6 +109,8 @@ def start_lift(file_path=None, pallet_arg=None):
 
     log.info('Finished in {}.'.format(elapsed_time))
 
+    lift.optimize_internal_gdbs()
+
     report = _format_dictionary(report_object)
     log.info('%s', report)
 

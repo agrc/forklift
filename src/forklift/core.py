@@ -38,8 +38,7 @@ def init(logger):
     '''
     make sure forklift is ready to run. create the hashing gdb and clear out the scratch geodatabase
     logger is passed in from cli.py (rather than just setting it via `log = logging.getLogger('forklift')`)
-    to enable other projects to use this module without colliding with the same logger
-    '''
+    to enable other projects to use this module without colliding with the same logger'''
     global log
     log = logger
 
@@ -55,6 +54,16 @@ def init(logger):
     arcpy.CreateFileGDB_management(garage, _scratch_gdb)
 
     arcpy.ClearEnvironment('workspace')
+
+
+def optimize_internal_gdbs():
+    if arcpy.Exists(hash_gdb_path):
+        log.info('%s compacting', hash_gdb_path)
+        arcpy.Compact_management(hash_gdb_path)
+
+    if arcpy.Exists(scratch_gdb_path):
+        log.info('%s compacting', scratch_gdb_path)
+        arcpy.Compact_management(scratch_gdb_path)
 
 
 def update(crate, validate_crate):

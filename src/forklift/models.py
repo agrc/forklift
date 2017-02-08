@@ -381,7 +381,7 @@ class Changes(object):
 
     def __init__(self, fields):
         self.adds = {}
-        self._deletes = []
+        self._deletes = {}
         self.unchanged = {}
         self.fields = fields
         self.table = ''
@@ -450,6 +450,6 @@ class Changes(object):
         geometry_hashes: Dictionary<string, hash> of id's and hashes that were not accessed
 
         returns the union of the two dictionary values'''
-        self._deletes = list(set(attribute_hashes.values() + geometry_hashes.values()))
+        self._deletes = dict.fromkeys(set(attribute_hashes.values() + geometry_hashes.values()), None)
 
         return self._deletes

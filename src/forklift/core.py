@@ -162,32 +162,30 @@ def update(crate, validate_crate):
             edit_session.startOperation()
             log.debug('edit session and operation started')
 
-            while changes.has_adds():
-                #: strip off duplicated primary key added during hashing since it's no longer necessary
-                log.debug('adds features')
+            #: strip off duplicated primary key added during hashing since it's no longer necessary
+            log.debug('adds features')
 
-                if not crate.is_table():
-                    shape_field_index = -2
-                    changes.fields[shape_field_index] = changes.fields[shape_field_index].rstrip('WKT')
+            if not crate.is_table():
+                shape_field_index = -2
+                changes.fields[shape_field_index] = changes.fields[shape_field_index].rstrip('WKT')
 
-                fields = changes.fields[:-1]
+            fields = changes.fields[:-1]
 
-                #: cache this so we don't have to call it for every record
-                is_table = crate.is_table()
-                hash_fields = [hash_id_field, hash_att_field, hash_geom_field]
-                with arcpy.da.SearchCursor(changes.table, changes.fields) as add_cursor,\
-                        arcpy.da.InsertCursor(crate.destination, fields) as cursor, \
-                        arcpy.da.InsertCursor(hash_table, hash_fields) as hash_cursor:
-                    for row in add_cursor:
-                        primary_key = row[-1]
+            #: cache this so we don't have to call it for every record
+            is_table = crate.is_table()
+            hash_fields = [hash_id_field, hash_att_field, hash_geom_field]
+            with arcpy.da.SearchCursor(changes.table, changes.fields) as add_cursor,\
+                    arcpy.da.InsertCursor(crate.destination, fields) as cursor, \
+                    arcpy.da.InsertCursor(hash_table, hash_fields) as hash_cursor:
+                for row in add_cursor:
+                    primary_key = row[-1]
 
-                        #: skip null geometries
-                        if not is_table and row[shape_field_index] is None:
-                            continue
+                    #: skip null geometries
+                    if not is_table and row[shape_field_index] is None:
+                        continue
 
-                        #: update/store hash lookup using oid from insert into destination
-                        hash_cursor.insertRow((cursor.insertRow(row[:-1]),) + changes.adds[str(primary_key)])
-                        changes.adds.pop(str(primary_key))
+                    #: update/store hash lookup using oid from insert into destination
+                    hash_cursor.insertRow((cursor.insertRow(row[:-1]),) + changes.adds[str(primary_key)])
 
             log.debug('stopping edit session (saving edits)')
             edit_session.stopOperation()

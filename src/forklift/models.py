@@ -17,7 +17,6 @@ from os.path import dirname
 from os.path import join
 
 pprinter = PrettyPrinter(indent=4, width=40)
-QUERY_LIMIT = 10000
 
 
 class Pallet(object):
@@ -401,48 +400,6 @@ class Changes(object):
         '''returns true if has_adds or has_deletes return true
         '''
         return self.has_adds() or self.has_deletes()
-
-    def get_adds_where_clause(self, source_primary_key, key_type, temp_suffix):
-        '''
-        source_primary_key string of the primary key id
-        key_type int or str the type of the primary key field
-        temp_suffix string the suffix appended to forklift temp data
-
-        return sql in clause if table is source table or return None if temp table'''
-        if self.table.endswith(temp_suffix) or len(self.adds) == self.total_rows or len(self._deletes) == self.total_rows:
-            return None
-
-        return self._get_where_clause(self.adds.keys()[:QUERY_LIMIT], source_primary_key, key_type)
-
-    def _get_where_clause(self, ids, field, field_type):
-        '''
-        ids number[] or string[]
-        field string name of the field
-        field_type int or str the type of the field to control quoting of values
-
-        return sql in clause build from the ids and field name split up so that no more than 1000 items
-        are in each IN statement (workaround for Oracle ORA-01795: maximum number of expressions in a list is 1000 error)'''
-        in_statements = []
-        if field_type == str:
-            quote = '\''
-        else:
-            quote = ''
-
-        def build_in():
-            if i + 1000 < len(ids):
-                end = i + 1000
-            else:
-                end = len(ids)
-            statement = '{0} IN ({1}{2}{1})'.format(field, quote, '{0},{0}'.format(quote).join([str(id) for id in ids[i:end]]))
-            in_statements.append(statement)
-
-            return i + 1000
-
-        i = 0
-        while i < len(ids):
-            i = build_in()
-
-        return ' OR '.join(in_statements)
 
     def determine_deletes(self, attribute_hashes, geometry_hashes):
         '''

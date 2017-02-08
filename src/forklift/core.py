@@ -127,7 +127,6 @@ def update(crate, validate_crate):
 
             while changes.has_deletes():
                 destination_key = arcpy.Describe(crate.destination).OIDFieldName
-                destination_deletes_where_clause = hash_deletes_where_clause = changes.get_deletes_where_clause()
                 log.debug('destination deletes where clause: %s', truncate_where_clause(destination_deletes_where_clause))
                 with arcpy.da.UpdateCursor(crate.destination, [crate.source_primary_key], destination_deletes_where_clause) as cursor:
                     for row in cursor:

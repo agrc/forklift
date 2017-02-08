@@ -402,20 +402,6 @@ class Changes(object):
         '''
         return self.has_adds() or self.has_deletes()
 
-    def get_deletes_where_clause(self):
-        '''returns the sql statement for identifiying the deleted records
-        '''
-        if len(self._deletes) == self.total_rows or len(self.adds) == self.total_rows:
-            self._deletes = []
-
-            return None
-
-        #: All ids added to the where clause are removed from self._deletes
-        deletes = self._deletes[:QUERY_LIMIT]
-        self._deletes = self._deletes[QUERY_LIMIT:]
-
-        return self._get_where_clause(deletes, 'OBJECTID', int)
-
     def get_adds_where_clause(self, source_primary_key, key_type, temp_suffix):
         '''
         source_primary_key string of the primary key id

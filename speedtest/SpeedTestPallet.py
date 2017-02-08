@@ -13,6 +13,7 @@ from os import path
 data_folder = path.join(path.dirname(path.realpath(__file__)), 'data')
 destination_workspace = path.join(data_folder, 'DestinationData.gdb')
 source_workspace = path.join(data_folder, 'SourceData.gdb')
+writable_source_workspace = path.join(data_folder, 'ChangeSourceData.gdb')
 
 
 class LargeDataPallet(Pallet):
@@ -21,6 +22,14 @@ class LargeDataPallet(Pallet):
         super(LargeDataPallet, self).__init__()
 
         self.add_crate('AddressPoints', {'source_workspace': source_workspace, 'destination_workspace': destination_workspace})
+
+
+class LargeDataPalletNoReproject(Pallet):
+
+    def __init__(self):
+        super(LargeDataPalletNoReproject, self).__init__()
+        self.add_crate(('AddressPoints', writable_source_workspace, destination_workspace, 'AddressPointsNoProject'))
+        self.destination_coordinate_system = 26912
 
 
 class SmallDataPallet(Pallet):

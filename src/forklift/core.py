@@ -125,18 +125,18 @@ def update(crate, validate_crate):
             edit_session.startEditing(False, False)
             edit_session.startOperation()
 
-            while changes.has_deletes():
-                destination_key = arcpy.Describe(crate.destination).OIDFieldName
-                log.debug('destination deletes where clause: %s', truncate_where_clause(destination_deletes_where_clause))
-                with arcpy.da.UpdateCursor(crate.destination, [crate.source_primary_key], destination_deletes_where_clause) as cursor:
-                    for row in cursor:
+            destination_key = arcpy.Describe(crate.destination).OIDFieldName
+
+            log.debug('deleting from destintation table')
+            with arcpy.da.UpdateCursor(crate.destination, destination_key) as cursor:
+                for row in cursor:
+                    if row[0] in changes._deletes:
                         cursor.deleteRow()
 
-                if destination_deletes_where_clause is not None:
-                    hash_deletes_where_clause = destination_deletes_where_clause.replace(destination_key, hash_id_field)
-                log.debug('hash deletes where clause: %s', truncate_where_clause(hash_deletes_where_clause))
-                with arcpy.da.UpdateCursor(path.join(hash_gdb_path, crate.name), [hash_id_field], hash_deletes_where_clause) as cursor:
-                    for row in cursor:
+            log.debug('deleting from hash table')
+            with arcpy.da.UpdateCursor(path.join(hash_gdb_path, crate.name), hash_id_field) as cursor:
+                for row in cursor:
+                    if row[0] in changes._deletes:
                         cursor.deleteRow()
 
             edit_session.stopOperation()
@@ -152,13 +152,9 @@ def update(crate, validate_crate):
             hash_table = path.join(hash_gdb_path, crate.name)
 
             #: reproject data if source is different than destination
-            add_clause_key = crate.source_primary_key
-            add_clause_key_type = crate.source_primary_key_type
             if needs_reproject:
                 changes.table = arcpy.Project_management(changes.table, changes.table + reproject_temp_suffix, crate.destination_coordinate_system,
                                                          crate.geographic_transformation)[0]
-                add_clause_key = src_id_field
-                add_clause_key_type = str
 
             log.debug('starting edit session...')
             edit_session = arcpy.da.Editor(crate.destination_workspace)
@@ -168,8 +164,7 @@ def update(crate, validate_crate):
 
             while changes.has_adds():
                 #: strip off duplicated primary key added during hashing since it's no longer necessary
-                adds_clause = changes.get_adds_where_clause(add_clause_key, add_clause_key_type, reproject_temp_suffix)
-                log.debug('adds where clause: %s', truncate_where_clause(adds_clause))
+                log.debug('adds features')
 
                 if not crate.is_table():
                     shape_field_index = -2
@@ -180,7 +175,7 @@ def update(crate, validate_crate):
                 #: cache this so we don't have to call it for every record
                 is_table = crate.is_table()
                 hash_fields = [hash_id_field, hash_att_field, hash_geom_field]
-                with arcpy.da.SearchCursor(changes.table, changes.fields, where_clause=adds_clause) as add_cursor,\
+                with arcpy.da.SearchCursor(changes.table, changes.fields) as add_cursor,\
                         arcpy.da.InsertCursor(crate.destination, fields) as cursor, \
                         arcpy.da.InsertCursor(hash_table, hash_fields) as hash_cursor:
                     for row in add_cursor:

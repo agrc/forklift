@@ -279,11 +279,50 @@ def _format_dictionary(pallet_reports):
     return report_str
 
 
+def _change_data(data_path):
+    import arcpy
+
+    field_changers = {'UTAddPtID': lambda value: value[:-1] + 'X' if value else 'X'}
+    change_field = 'FieldToChange'
+    fields = field_changers.keys() + [change_field]
+
+    with arcpy.da.UpdateCursor(data_path, fields) as cursor:
+        for row in cursor:
+            field_to_change = row[fields.index(change_field)]
+            if field_to_change in field_changers:
+                field_index = fields.index(field_to_change)
+                value = row[field_index]
+                row[field_index] = field_changers[field_to_change](value)
+                cursor.updateRow(row)
+            else:
+                if field_to_change == 'DeleteRow':
+                    cursor.deleteRow()
+                elif field_to_change == 'UnchangedRow' or field_to_change is None:
+                    continue
+                else:
+                    print 'Uknown field to change: {}'.format(field_to_change)
+
+
+def _prep_change_data(data_path):
+    import arcpy
+    change_field = 'FieldToChange'
+    value_field = 'UTAddPtID'
+
+    arcpy.AddField_management(data_path, change_field, 'TEXT', field_length=50)
+    where = 'OBJECTID >= 879389 and OBJECTID <= 899388'
+    arcpy.MakeFeatureLayer_management(data_path, 'CalcLayer', where)
+    arcpy.CalculateField_management('CalcLayer',
+                                    change_field,
+                                    "'{}'".format(value_field),
+                                    'PYTHON_9.3')
+    arcpy.Delete_management('CalcLayer')
+
+
 def speedtest(pallet_location):
     print('{0}{1}Setting up speed test...{0}'.format(Fore.RESET, Fore.MAGENTA))
 
     #: remove logging
-    log.handlers = [logging.NullHandler()]
+    # log.handlers = [logging.NullHandler()]
 
     #: spoof hashes location so there is no caching
     core.garage = speedtest_destination
@@ -298,6 +337,16 @@ def speedtest(pallet_location):
     else:
         arcpy.CreateFileGDB_management(speedtest_destination, 'DestinationData.gdb')
 
+    if arcpy.Exists(join(speedtest_destination, 'ChangeSourceData.gdb')):
+        arcpy.Delete_management(join(speedtest_destination, 'ChangeSourceData.gdb'))
+        arcpy.Copy_management(join(speedtest_destination, 'SourceData.gdb'),
+                              join(speedtest_destination, 'ChangeSourceData.gdb'))
+        _prep_change_data(join(speedtest_destination, 'ChangeSourceData.gdb', 'AddressPoints'))
+    else:
+        arcpy.Copy_management(join(speedtest_destination, 'SourceData.gdb'),
+                              join(speedtest_destination, 'ChangeSourceData.gdb'))
+        _prep_change_data(join(speedtest_destination, 'ChangeSourceData.gdb', 'AddressPoints'))
+
     if arcpy.Exists(core.hash_gdb_path):
         arcpy.Delete_management(core.hash_gdb_path)
     if arcpy.Exists(core.scratch_gdb_path):
@@ -309,6 +358,9 @@ def speedtest(pallet_location):
     dry_report = start_lift(pallet_location)
     dry_run = seat.format_time(clock() - start_seconds)
 
+    print('{0}{1}Changing data...{0}'.format(Fore.RESET, Fore.MAGENTA))
+    _change_data(join(speedtest_destination, 'ChangeSourceData.gdb', 'AddressPoints'))
+
     print('{0}{1}Repeating test...{0}'.format(Fore.RESET, Fore.MAGENTA))
     start_seconds = clock()
     repeat_report = start_lift(pallet_location)
@@ -317,6 +369,8 @@ def speedtest(pallet_location):
     #: clean up so git state is unchanged
     if arcpy.Exists(join(speedtest_destination, 'DestinationData.gdb')):
         arcpy.Delete_management(join(speedtest_destination, 'DestinationData.gdb'))
+    if arcpy.Exists(join(speedtest_destination, 'ChangeSourceData.gdb')):
+        arcpy.Delete_management(join(speedtest_destination, 'ChangeSourceData.gdb'))
     if arcpy.Exists(core.hash_gdb_path):
         arcpy.Delete_management(core.hash_gdb_path)
     if arcpy.Exists(core.scratch_gdb_path):

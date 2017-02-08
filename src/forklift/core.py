@@ -270,7 +270,7 @@ def _hash(crate, hash_path, needs_reproject):
     else:
         changes.table = arcpy.CreateTable_management(scratch_gdb_path,
                                                      crate.name + reproject_temp_suffix,
-                                                     template=crate.source)
+                                                     template=crate.source)[0]
 
     arcpy.AddField_management(changes.table, src_id_field, 'TEXT')
     if crate.source_describe.dataType == 'ShapeFile':

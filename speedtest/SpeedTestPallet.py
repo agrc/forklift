@@ -28,8 +28,10 @@ class LargeDataPalletNoReproject(Pallet):
 
     def __init__(self):
         super(LargeDataPalletNoReproject, self).__init__()
-        self.add_crate(('AddressPoints', writable_source_workspace, destination_workspace, 'AddressPointsNoProject'))
+
         self.destination_coordinate_system = 26912
+        self.geographic_transformation = None
+        self.add_crate(('AddressPoints', writable_source_workspace, destination_workspace, 'AddressPointsNoProject'))
 
 
 class SmallDataPallet(Pallet):

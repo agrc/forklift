@@ -322,7 +322,7 @@ def speedtest(pallet_location):
     print('{0}{1}Setting up speed test...{0}'.format(Fore.RESET, Fore.MAGENTA))
 
     #: remove logging
-    # log.handlers = [logging.NullHandler()]
+    log.handlers = [logging.NullHandler()]
 
     #: spoof hashes location so there is no caching
     core.garage = speedtest_destination

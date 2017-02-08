@@ -257,19 +257,28 @@ def _hash(crate, hash_path, needs_reproject):
     unique_salty_id = 0
 
     insert_cursor = None
-    if needs_reproject:
+    temp_table = path.join(scratch_gdb_path, crate.name) + reproject_temp_suffix
+    if arcpy.Exists(temp_table):
+        arcpy.Delete_management(temp_table)
+
+    if not crate.is_table():
         changes.table = arcpy.CreateFeatureclass_management(scratch_gdb_path,
                                                             crate.name + reproject_temp_suffix,
                                                             geometry_type=crate.source_describe.shapeType.upper(),
                                                             template=crate.source,
                                                             spatial_reference=crate.source_describe.spatialReference)[0]
-        arcpy.AddField_management(changes.table, src_id_field, 'TEXT')
-        if crate.source_describe.dataType == 'ShapeFile':
-            log.info('adding FID field for shapefile comparison')
-            arcpy.AddField_management(changes.table, 'FID', 'LONG')
-        #: reset duplicated key because wtf
-        changes.fields[-1] = src_id_field
-        insert_cursor = arcpy.da.InsertCursor(changes.table, changes.fields)
+    else:
+        changes.table = arcpy.CreateTable_management(scratch_gdb_path,
+                                                     crate.name + reproject_temp_suffix,
+                                                     template=crate.source)
+
+    arcpy.AddField_management(changes.table, src_id_field, 'TEXT')
+    if crate.source_describe.dataType == 'ShapeFile':
+        log.info('adding FID field for shapefile comparison')
+        arcpy.AddField_management(changes.table, 'FID', 'LONG')
+    #: reset duplicated key because wtf
+    changes.fields[-1] = src_id_field
+    insert_cursor = arcpy.da.InsertCursor(changes.table, changes.fields)
 
     with arcpy.da.SearchCursor(crate.source, fields, sql_clause=sql_clause) as cursor:
         for row in cursor:
@@ -296,8 +305,7 @@ def _hash(crate, hash_path, needs_reproject):
             if attribute_hash_digest not in attribute_hashes or (geom_hash_digest is not None and geom_hash_digest not in geometry_hashes):
                 #: update or add
                 #: if reprojecting insert into temp table
-                if needs_reproject:
-                    insert_cursor.insertRow(row + (src_id,))
+                insert_cursor.insertRow(row + (src_id,))
                 #: add to adds
                 changes.adds[str(src_id)] = (attribute_hash_digest, geom_hash_digest)
             else:

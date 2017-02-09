@@ -107,7 +107,7 @@ class CoreTests(unittest.TestCase):
         source_primary_key = 'primary_key'
         self.assertEqual(core._filter_fields(['k', source_primary_key, 's', 'g'], source_primary_key), ['g', 'k', 's', source_primary_key])
 
-    def test_hash_no_OBJECTID_in_source(self):
+    def test_hash_custom_source_key_text(self):
         skip_if_no_local_sde()
         arcpy.Copy_management(check_for_changes_gdb, test_gdb)
 
@@ -120,6 +120,18 @@ class CoreTests(unittest.TestCase):
         #: no changes
         crate = Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, test_gdb, '{}_NO_CHANGES'.format(tbl), source_primary_key='TEST')
         self.assertEqual(len(core._hash(crate, core.hash_gdb_path).adds), 1)
+
+    def test_hash_custom_source_key_float(self):
+        skip_if_no_local_sde()
+        arcpy.Copy_management(check_for_changes_gdb, test_gdb)
+
+        tbl = 'FLOAT_ID'
+
+        #: has changes
+        crate = Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, test_gdb, tbl, source_primary_key='TEST')
+        changes = core._hash(crate, core.hash_gdb_path)
+        self.assertEqual(len(changes.adds), 1)
+        self.assertEqual(changes.adds.keys()[0], '1')
 
     def test_hash(self):
         arcpy.Copy_management(check_for_changes_gdb, test_gdb)

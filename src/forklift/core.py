@@ -184,7 +184,7 @@ def update(crate, validate_crate):
                         continue
 
                     #: update/store hash lookup using oid from insert into destination
-                    hash_cursor.insertRow((cursor.insertRow(row[:-1]),) + changes.adds[str(primary_key)])
+                    hash_cursor.insertRow((cursor.insertRow(row[:-1]),) + changes.adds[primary_key])
 
             log.debug('stopping edit session (saving edits)')
             edit_session.stopOperation()
@@ -273,12 +273,23 @@ def _hash(crate, hash_path):
     insert_cursor = arcpy.da.InsertCursor(changes.table, changes.fields)
 
     with arcpy.da.SearchCursor(crate.source, fields, sql_clause=sql_clause) as cursor:
+        def parse_id_as_int(id):
+            return str(int(id))
+
+        def parse_id_as_string(id):
+            return str(id)
+
+        if crate.source_primary_key_type == int:
+            id_parser = parse_id_as_int
+        else:
+            id_parser = parse_id_as_string
+
         for row in cursor:
             total_rows += 1
             unique_salty_id += 1
             #: create shape hash
             geom_hash_digest = None
-            src_id = row[primary_key_index]
+            src_id = id_parser(row[primary_key_index])
             if not crate.is_table():
                 shape_wkt = row[-1]
 
@@ -299,14 +310,14 @@ def _hash(crate, hash_path):
                 #: insert into temp table
                 insert_cursor.insertRow(row + (src_id,))
                 #: add to adds
-                changes.adds[str(src_id)] = (attribute_hash_digest, geom_hash_digest)
+                changes.adds[src_id] = (attribute_hash_digest, geom_hash_digest)
             else:
                 #: remove not modified hash from hashes
                 attribute_hashes.pop(attribute_hash_digest)
                 if geom_hash_digest is not None:
                     geometry_hashes.pop(geom_hash_digest)
 
-                changes.unchanged[str(src_id)] = (attribute_hash_digest, geom_hash_digest)
+                changes.unchanged[src_id] = (attribute_hash_digest, geom_hash_digest)
 
     changes.determine_deletes(attribute_hashes, geometry_hashes)
     changes.total_rows = total_rows

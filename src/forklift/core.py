@@ -296,7 +296,7 @@ def _hash(crate, hash_path):
             #: check for new feature
             if attribute_hash_digest not in attribute_hashes or (geom_hash_digest is not None and geom_hash_digest not in geometry_hashes):
                 #: update or add
-                #: if reprojecting insert into temp table
+                #: insert into temp table
                 insert_cursor.insertRow(row + (src_id,))
                 #: add to adds
                 changes.adds[str(src_id)] = (attribute_hash_digest, geom_hash_digest)

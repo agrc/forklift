@@ -280,6 +280,10 @@ def _hash(crate, hash_path):
             return str(id)
 
         if crate.source_primary_key_type == int:
+            #: We are parsing as int because this could be any type of number
+            #: including a float which causes issues by adding a ".0".
+            #: Forklift assumes that all source_primary_key values can be parsed
+            #: as whole numbers.
             id_parser = parse_id_as_int
         else:
             id_parser = parse_id_as_string

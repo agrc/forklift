@@ -254,19 +254,19 @@ def _hash(crate, hash_path):
     unique_salty_id = 0
 
     insert_cursor = None
-    temp_table = path.join(scratch_gdb_path, crate.name) + reproject_temp_suffix
+    temp_table = path.join(scratch_gdb_path, crate.name)
     if arcpy.Exists(temp_table):
         arcpy.Delete_management(temp_table)
 
     if not crate.is_table():
         changes.table = arcpy.CreateFeatureclass_management(scratch_gdb_path,
-                                                            crate.name + reproject_temp_suffix,
+                                                            crate.name,
                                                             geometry_type=crate.source_describe.shapeType.upper(),
                                                             template=crate.source,
                                                             spatial_reference=crate.source_describe.spatialReference)[0]
     else:
         changes.table = arcpy.CreateTable_management(scratch_gdb_path,
-                                                     crate.name + reproject_temp_suffix,
+                                                     crate.name,
                                                      template=crate.source)[0]
 
     arcpy.AddField_management(changes.table, src_id_field, 'TEXT')

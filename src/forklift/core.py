@@ -107,9 +107,8 @@ def update(crate, validate_crate):
             log.warn('validation error: %s for crate %r', e.message, crate, exc_info=True)
             return (Crate.INVALID_DATA, e.message)
 
-        needs_reproject = crate.needs_reproject()
         #: create source hash and store
-        changes = _hash(crate, hash_gdb_path, needs_reproject)
+        changes = _hash(crate, hash_gdb_path)
 
         if not changes.has_changes():
             log.debug('No changes found.')
@@ -152,7 +151,7 @@ def update(crate, validate_crate):
             hash_table = path.join(hash_gdb_path, crate.name)
 
             #: reproject data if source is different than destination
-            if needs_reproject:
+            if crate.needs_reproject():
                 changes.table = arcpy.Project_management(changes.table, changes.table + reproject_temp_suffix, crate.destination_coordinate_system,
                                                          crate.geographic_transformation)[0]
 
@@ -211,13 +210,11 @@ def update(crate, validate_crate):
         arcpy.ResetEnvironments()
 
 
-def _hash(crate, hash_path, needs_reproject):
+def _hash(crate, hash_path):
     '''
     crate: Crate
 
     hash_path: string path to hash gdb
-
-    needs_reproject: bool true if the dataset needs to be reprojected
 
     returns a Changes model with deltas for the source'''
     #: TODO cache lookup table for repeat offenders

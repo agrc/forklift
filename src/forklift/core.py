@@ -190,11 +190,6 @@ def update(crate, validate_crate):
             edit_session.stopOperation()
             edit_session.stopEditing(True)
 
-            #: remove temporarily projected table
-            if changes.table is not None and changes.table.endswith(reproject_temp_suffix) and arcpy.Exists(changes.table):
-                log.debug('deleting %s', changes.table)
-                arcpy.Delete_management(changes.table)
-
         return change_status
     except Exception as e:
         log.error('unhandled exception: %s for crate %r', e.message, crate, exc_info=True)

@@ -62,8 +62,8 @@ def optimize_internal_gdbs():
         arcpy.Compact_management(hash_gdb_path)
 
     if arcpy.Exists(scratch_gdb_path):
-        log.info('%s compacting', scratch_gdb_path)
-        arcpy.Compact_management(scratch_gdb_path)
+        log.info('%s deleting', scratch_gdb_path)
+        arcpy.Delete_management(scratch_gdb_path)
 
 
 def update(crate, validate_crate):

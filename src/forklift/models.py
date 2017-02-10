@@ -237,7 +237,7 @@ class Crate(object):
         #: the full path to the source data
         self.source = join(source_workspace, source_name)
 
-        #: optional name of the primary key field in the table
+        #: optional name of the primary key field in the table (all numeric field types will be parsed as whole numbers)
         self.source_primary_key = None
         self.source_primary_key_type = None
 

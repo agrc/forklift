@@ -62,8 +62,8 @@ def optimize_internal_gdbs():
         arcpy.Compact_management(hash_gdb_path)
 
     if arcpy.Exists(scratch_gdb_path):
-        log.info('%s compacting', scratch_gdb_path)
-        arcpy.Compact_management(scratch_gdb_path)
+        log.info('%s deleting', scratch_gdb_path)
+        arcpy.Delete_management(scratch_gdb_path)
 
 
 def update(crate, validate_crate):
@@ -107,9 +107,8 @@ def update(crate, validate_crate):
             log.warn('validation error: %s for crate %r', e.message, crate, exc_info=True)
             return (Crate.INVALID_DATA, e.message)
 
-        needs_reproject = crate.needs_reproject()
         #: create source hash and store
-        changes = _hash(crate, hash_gdb_path, needs_reproject)
+        changes = _hash(crate, hash_gdb_path)
 
         if not changes.has_changes():
             log.debug('No changes found.')
@@ -152,7 +151,7 @@ def update(crate, validate_crate):
             hash_table = path.join(hash_gdb_path, crate.name)
 
             #: reproject data if source is different than destination
-            if needs_reproject:
+            if crate.needs_reproject():
                 changes.table = arcpy.Project_management(changes.table, changes.table + reproject_temp_suffix, crate.destination_coordinate_system,
                                                          crate.geographic_transformation)[0]
 
@@ -185,16 +184,11 @@ def update(crate, validate_crate):
                         continue
 
                     #: update/store hash lookup using oid from insert into destination
-                    hash_cursor.insertRow((cursor.insertRow(row[:-1]),) + changes.adds[str(primary_key)])
+                    hash_cursor.insertRow((cursor.insertRow(row[:-1]),) + changes.adds[primary_key])
 
             log.debug('stopping edit session (saving edits)')
             edit_session.stopOperation()
             edit_session.stopEditing(True)
-
-            #: remove temporarily projected table
-            if changes.table is not None and changes.table.endswith(reproject_temp_suffix) and arcpy.Exists(changes.table):
-                log.debug('deleting %s', changes.table)
-                arcpy.Delete_management(changes.table)
 
         return change_status
     except Exception as e:
@@ -211,13 +205,11 @@ def update(crate, validate_crate):
         arcpy.ResetEnvironments()
 
 
-def _hash(crate, hash_path, needs_reproject):
+def _hash(crate, hash_path):
     '''
     crate: Crate
 
     hash_path: string path to hash gdb
-
-    needs_reproject: bool true if the dataset needs to be reprojected
 
     returns a Changes model with deltas for the source'''
     #: TODO cache lookup table for repeat offenders
@@ -257,19 +249,19 @@ def _hash(crate, hash_path, needs_reproject):
     unique_salty_id = 0
 
     insert_cursor = None
-    temp_table = path.join(scratch_gdb_path, crate.name) + reproject_temp_suffix
+    temp_table = path.join(scratch_gdb_path, crate.name)
     if arcpy.Exists(temp_table):
         arcpy.Delete_management(temp_table)
 
     if not crate.is_table():
         changes.table = arcpy.CreateFeatureclass_management(scratch_gdb_path,
-                                                            crate.name + reproject_temp_suffix,
+                                                            crate.name,
                                                             geometry_type=crate.source_describe.shapeType.upper(),
                                                             template=crate.source,
                                                             spatial_reference=crate.source_describe.spatialReference)[0]
     else:
         changes.table = arcpy.CreateTable_management(scratch_gdb_path,
-                                                     crate.name + reproject_temp_suffix,
+                                                     crate.name,
                                                      template=crate.source)[0]
 
     arcpy.AddField_management(changes.table, src_id_field, 'TEXT')
@@ -281,12 +273,27 @@ def _hash(crate, hash_path, needs_reproject):
     insert_cursor = arcpy.da.InsertCursor(changes.table, changes.fields)
 
     with arcpy.da.SearchCursor(crate.source, fields, sql_clause=sql_clause) as cursor:
+        def parse_id_as_int(id):
+            return str(int(id))
+
+        def parse_id_as_string(id):
+            return str(id)
+
+        if crate.source_primary_key_type == int:
+            #: We are parsing as int because this could be any type of number
+            #: including a float which causes issues by adding a ".0".
+            #: Forklift assumes that all source_primary_key values can be parsed
+            #: as whole numbers.
+            id_parser = parse_id_as_int
+        else:
+            id_parser = parse_id_as_string
+
         for row in cursor:
             total_rows += 1
             unique_salty_id += 1
             #: create shape hash
             geom_hash_digest = None
-            src_id = row[primary_key_index]
+            src_id = id_parser(row[primary_key_index])
             if not crate.is_table():
                 shape_wkt = row[-1]
 
@@ -304,17 +311,17 @@ def _hash(crate, hash_path, needs_reproject):
             #: check for new feature
             if attribute_hash_digest not in attribute_hashes or (geom_hash_digest is not None and geom_hash_digest not in geometry_hashes):
                 #: update or add
-                #: if reprojecting insert into temp table
+                #: insert into temp table
                 insert_cursor.insertRow(row + (src_id,))
                 #: add to adds
-                changes.adds[str(src_id)] = (attribute_hash_digest, geom_hash_digest)
+                changes.adds[src_id] = (attribute_hash_digest, geom_hash_digest)
             else:
                 #: remove not modified hash from hashes
                 attribute_hashes.pop(attribute_hash_digest)
                 if geom_hash_digest is not None:
                     geometry_hashes.pop(geom_hash_digest)
 
-                changes.unchanged[str(src_id)] = (attribute_hash_digest, geom_hash_digest)
+                changes.unchanged[src_id] = (attribute_hash_digest, geom_hash_digest)
 
     changes.determine_deletes(attribute_hashes, geometry_hashes)
     changes.total_rows = total_rows

@@ -346,12 +346,11 @@ def _create_destination_data(crate):
 
     log.warn('creating new feature class: %s', crate.destination)
 
-    source_describe = arcpy.Describe(crate.source)
     arcpy.CreateFeatureclass_management(crate.destination_workspace,
                                         crate.destination_name,
-                                        source_describe.shapeType.upper(),
+                                        crate.source_describe.shapeType.upper(),
                                         crate.source,
-                                        spatial_reference=crate.destination_coordinate_system or source_describe.spatialReference)
+                                        spatial_reference=crate.destination_coordinate_system or crate.source_describe.spatialReference)
 
     if crate.source_describe.dataType == 'ShapeFile':
         log.info('adding FID field for shapefile comparison')

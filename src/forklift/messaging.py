@@ -6,10 +6,11 @@ email.py
 A module that contains a method for sending emails
 '''
 
+import gzip
 import logging
+import io
 from config import get_config_prop
-from email import encoders
-from email.mime.base import MIMEBase
+from email.mime.application import MIMEApplication
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from os import environ
@@ -53,14 +54,15 @@ def send_email(to, subject, body, attachment=''):
     message['To'] = to_addresses
 
     if isfile(attachment):
-        log_file_attachment = MIMEBase('application', 'octet-stream')
-        log_file_attachment.add_header('Content-Disposition', 'attachment; filename="{}"'.format(basename(attachment)))
+        with (open(attachment, 'rb')) as log_file, io.BytesIO() as encoded_log:
+            gzipper = gzip.GzipFile(mode='wb', fileobj=encoded_log)
+            gzipper.writelines(log_file)
+            gzipper.close()
 
-        with (open(attachment, 'rb')) as log_file:
-            log_file_attachment.set_payload(log_file.read())
+            log_file_attachment = MIMEApplication(encoded_log.getvalue(), 'x-gzip')
+            log_file_attachment.add_header('Content-Disposition', 'attachment; filename="{}"'.format(basename(attachment + '.gz')))
 
-        encoders.encode_base64(log_file_attachment)
-        message.attach(log_file_attachment)
+            message.attach(log_file_attachment)
 
     if get_config_prop('sendEmails'):
         smtp = SMTP(smtp_server, smtp_port)

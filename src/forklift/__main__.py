@@ -42,6 +42,7 @@ import faulthandler
 import logging.config
 import sys
 from docopt import docopt
+from messaging import send_email
 from logging import shutdown
 from os import makedirs
 from os import startfile
@@ -117,9 +118,13 @@ def global_exception_handler(ex_cls, ex, tb):
     last_traceback = (traceback.extract_tb(tb))[-1]
     line_number = last_traceback[1]
     file_name = last_traceback[0].split(".")[0]
+    error = traceback.format_exception(ex_cls, ex, tb)
 
     log.error(('global error handler line: %s (%s)' % (line_number, file_name)))
-    log.error(traceback.format_exception(ex_cls, ex, tb))
+    log.error(error)
+
+    log_file = join(dirname(config.config_location), 'forklift.log')
+    send_email(config.get_config_prop('notify'), 'Forklift Error', error, log_file)
 
 
 def _add_global_error_handler():

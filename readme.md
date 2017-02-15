@@ -13,7 +13,7 @@ class MyPallet(Pallet):
         #: this is required to initialize the Pallet base class properties
         super(MyPallet, self).__init__()
 
-    def build(self)
+    def build(self, configuration)
         destination_workspace = r'C:\MapData'
         source_workspace = path.join(self.garage, 'connection.sde')
 

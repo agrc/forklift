@@ -18,6 +18,10 @@ writable_source_workspace = path.join(data_folder, 'ChangeSourceData.gdb')
 
 class LargeDataPallet(Pallet):
 
+    def __init__(self):
+        #: this is required to initialize the Pallet base class properties
+        super(LargeDataPallet, self).__init__()
+
     def build(self, configuration):
         self.add_crate('AddressPoints', {'source_workspace': source_workspace, 'destination_workspace': destination_workspace})
 
@@ -25,6 +29,7 @@ class LargeDataPallet(Pallet):
 class LargeDataPalletNoReproject(Pallet):
 
     def __init__(self):
+        #: this is required to initialize the Pallet base class properties\
         super(LargeDataPalletNoReproject, self).__init__()
 
         self.destination_coordinate_system = 26912
@@ -37,6 +42,7 @@ class LargeDataPalletNoReproject(Pallet):
 class SmallDataPallet(Pallet):
 
     def __init__(self):
+        #: this is required to initialize the Pallet base class properties
         super(SmallDataPallet, self).__init__()
 
         self.destination_coordinate_system = 26912
@@ -48,11 +54,19 @@ class SmallDataPallet(Pallet):
 
 class TablePallet(Pallet):
 
+    def __init__(self):
+        #: this is required to initialize the Pallet base class properties
+        super(TablePallet, self).__init__()
+
     def build(self, configuration):
         self.add_crate('SchoolInfo', {'source_workspace': source_workspace, 'destination_workspace': destination_workspace})
 
 
 class ShapefilePallet(Pallet):
+
+    def __init__(self):
+        #: this is required to initialize the Pallet base class properties
+        super(ShapefilePallet, self).__init__()
 
     def build(self, configuration):
         self.add_crate(('Counties.shp', data_folder, destination_workspace, 'CountiesFromShapefile'))

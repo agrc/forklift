@@ -17,6 +17,7 @@ destination_workspace = path.join(data_folder, 'SampleDestination.gdb')
 class StringCratePallet(Pallet):
 
     def __init__(self):
+        #: this is required to initialize the Pallet base class properties
         super(StringCratePallet, self).__init__()
 
         self.copy_data = [destination_workspace]
@@ -30,6 +31,7 @@ class StringCratePallet(Pallet):
 class ExplicitCratePallet(Pallet):
 
     def __init__(self):
+        #: this is required to initialize the Pallet base class properties
         super(ExplicitCratePallet, self).__init__()
 
         self.copy_data = [destination_workspace]
@@ -43,6 +45,10 @@ class ExplicitCratePallet(Pallet):
 
 class OneValueTupleCratePallet(Pallet):
 
+    def __init__(self):
+        #: this is required to initialize the Pallet base class properties
+        super(OneValueTupleCratePallet, self).__init__()
+
     def build(self, configuration):
         source_workspace = path.join(data_folder, 'agrc@sgid10.sde')
 
@@ -51,6 +57,10 @@ class OneValueTupleCratePallet(Pallet):
 
 
 class ShapefileCratePallet(Pallet):
+
+    def __init__(self):
+        #: this is required to initialize the Pallet base class properties
+        super(ShapefileCratePallet, self).__init__()
 
     def build(self, configuration):
         source_workspace = path.join(data_folder, 'myshape.shp')
@@ -62,6 +72,10 @@ class ShapefileCratePallet(Pallet):
 
 
 class SdeCratePallet(Pallet):
+
+    def __init__(self):
+        #: this is required to initialize the Pallet base class properties
+        super(SdeCratePallet, self).__init__()
 
     def build(self, configuration):
         destination_workspace = path.join(data_folder, 'UPDATE_TESTS.sde')

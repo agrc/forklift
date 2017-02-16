@@ -19,11 +19,12 @@ class StringCratePallet(Pallet):
     def __init__(self):
         super(StringCratePallet, self).__init__()
 
+        self.copy_data = [destination_workspace]
+
+    def build(self, configuration):
         source_workspace = path.join(data_folder, 'agrc@sgid10.sde')
 
         self.add_crate('Counties', {'source_workspace': source_workspace, 'destination_workspace': destination_workspace})
-
-        self.copy_data = [destination_workspace]
 
 
 class ExplicitCratePallet(Pallet):
@@ -31,19 +32,18 @@ class ExplicitCratePallet(Pallet):
     def __init__(self):
         super(ExplicitCratePallet, self).__init__()
 
+        self.copy_data = [destination_workspace]
+
+    def build(self, configuration):
         source_workspace = path.join(data_folder, 'agrc@sgid10.sde')
 
         crate_info = ('AvalanchePaths', source_workspace, destination_workspace, 'AvyPaths')
         self.add_crate(crate_info)
 
-        self.copy_data = [destination_workspace]
-
 
 class OneValueTupleCratePallet(Pallet):
 
-    def __init__(self):
-        super(OneValueTupleCratePallet, self).__init__()
-
+    def build(self, configuration):
         source_workspace = path.join(data_folder, 'agrc@sgid10.sde')
 
         crate_info = ('AvalanchePaths')
@@ -52,9 +52,7 @@ class OneValueTupleCratePallet(Pallet):
 
 class ShapefileCratePallet(Pallet):
 
-    def __init__(self):
-        super(ShapefileCratePallet, self).__init__()
-
+    def build(self, configuration):
         source_workspace = path.join(data_folder, 'myshape.shp')
 
         self.add_crate('myshape', {'source_workspace': source_workspace, 'destination_workspace': destination_workspace})
@@ -65,9 +63,7 @@ class ShapefileCratePallet(Pallet):
 
 class SdeCratePallet(Pallet):
 
-    def __init__(self):
-        super(SdeCratePallet, self).__init__()
-
+    def build(self, configuration):
         destination_workspace = path.join(data_folder, 'UPDATE_TESTS.sde')
         source_workspace = path.join(data_folder, 'agrc@sgid10.sde')
 

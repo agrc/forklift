@@ -12,6 +12,7 @@ import shutil
 from arcpy import Compact_management
 from arcpy import Describe
 from arcgis import LightSwitch
+from arcpy import ClearWorkspaceCache_management as ClearWorkspaceCache
 from arcpy import ResetEnvironments
 from forklift.models import Crate
 from os import makedirs
@@ -91,6 +92,7 @@ def process_pallets(pallets, is_post_copy=False):
 
                 try:
                     ResetEnvironments()
+                    ClearWorkspaceCache()
                     if not is_post_copy:
                         pallet.process()
                     else:
@@ -108,6 +110,7 @@ def process_pallets(pallets, is_post_copy=False):
                 try:
                     log.info('shipping pallet: %r', pallet)
                     ResetEnvironments()
+                    ClearWorkspaceCache()
                     pallet.ship()
                     log.debug('shipped pallet %s', seat.format_time(clock() - start_seconds))
                 except Exception as e:

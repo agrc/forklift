@@ -203,6 +203,7 @@ def update(crate, validate_crate):
         return (Crate.UNHANDLED_EXCEPTION, e.message)
     finally:
         arcpy.ResetEnvironments()
+        arcpy.ClearWorkspaceCache_management()
 
 
 def _hash(crate, hash_path):

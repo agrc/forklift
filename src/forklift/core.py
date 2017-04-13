@@ -502,7 +502,7 @@ def _check_counts(crate, changes):
         message: String - warning message if any
     '''
 
-    destination_rows = len([row for row in arcpy.da.SearchCursor(crate.destination, ['*'])])
+    destination_rows = int(arcpy.GetCount_management(crate.destination).getOutput(0))
     source_rows = changes.total_rows
     valid = source_rows == destination_rows
 

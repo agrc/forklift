@@ -41,7 +41,9 @@ class Pallet(object):
         #: a list databases or folders that you want forklift to copy to `destinationDestinations`
         #: after a successful process & ship
         self.copy_data = []
-        #: a list of arcgis server services that should be shut down before copying data in `copy_data`
+        #: a list of tuples describing arcgis server services that should be shut down before copying data in `copy_data`
+        #: the format of the tuple is two strings: `('<Folder>/<ServiceName>', '<ServiceType>')`
+        #: for example: `[('PoliticalDistricts', 'MapServer'), ('DEQEnviro/Toolbox', 'GPServer')]`
         self.arcgis_services = []
         #: default output coordinate system and transformation
         self.destination_coordinate_system = arcpy.SpatialReference(3857)
@@ -160,7 +162,7 @@ class Pallet(object):
 
         returns: Boolean'''
         for crate in self._crates:
-            if crate.result[0] in [Crate.INVALID_DATA, Crate.UNHANDLED_EXCEPTION]:
+            if crate.result[0] in [Crate.INVALID_DATA, Crate.UNHANDLED_EXCEPTION, Crate.WARNING]:
                 return False
 
         return True
@@ -187,6 +189,7 @@ class Crate(object):
     CREATED = 'Created table successfully.'
     UPDATED = 'Data updated successfully.'
     INVALID_DATA = 'Data is invalid.'
+    WARNING = 'Warning generated during update.'
     NO_CHANGES = 'No changes found.'
     UNHANDLED_EXCEPTION = 'Unhandled exception during update.'
     UNINITIALIZED = 'This crate was never processed.'
@@ -284,7 +287,7 @@ class Crate(object):
         value: (String, String)
 
         Returns the value of what was set'''
-        acceptable_results = [self.CREATED, self.UPDATED, self.INVALID_DATA, self.NO_CHANGES, self.UNHANDLED_EXCEPTION, self.UNINITIALIZED]
+        acceptable_results = [self.CREATED, self.UPDATED, self.INVALID_DATA, self.NO_CHANGES, self.UNHANDLED_EXCEPTION, self.UNINITIALIZED, self.WARNING]
 
         if value[0] in acceptable_results:
             self.result = value

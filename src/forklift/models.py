@@ -41,7 +41,9 @@ class Pallet(object):
         #: a list databases or folders that you want forklift to copy to `destinationDestinations`
         #: after a successful process & ship
         self.copy_data = []
-        #: a list of arcgis server services that should be shut down before copying data in `copy_data`
+        #: a list of tuples describing arcgis server services that should be shut down before copying data in `copy_data`
+        #: the format of the tuple is two strings: `('<Folder>/<ServiceName>', '<ServiceType>')`
+        #: for example: `[('PoliticalDistricts', 'MapServer'), ('DEQEnviro/Toolbox', 'GPServer')]`
         self.arcgis_services = []
         #: default output coordinate system and transformation
         self.destination_coordinate_system = arcpy.SpatialReference(3857)

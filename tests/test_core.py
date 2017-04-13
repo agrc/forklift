@@ -11,7 +11,7 @@ import arcpy_mocks
 import unittest
 from forklift import cli
 from forklift import core
-from forklift.models import Crate
+from forklift.models import Crate, Changes
 from forklift.exceptions import ValidationException
 from os import path
 from nose import SkipTest
@@ -405,3 +405,18 @@ class CoreTests(unittest.TestCase):
 
         self.assertEqual(arcpy.GetCount_management(path.join(core.hash_gdb_path, crate.name))[0], '3')
         self.assertEqual(arcpy.GetCount_management(crate.destination)[0], '3')
+
+    def test_check_counts(self):
+        row_counts = path.join(current_folder, 'data', 'RowCounts.gdb')
+
+        #: matching
+        crate = Crate('match', row_counts, row_counts, 'match')
+        changes = Changes([])
+        changes.total_rows = 3
+
+        self.assertTrue(core._check_counts(crate, changes)[0])
+
+        #: mismatching
+        changes.total_rows = 2
+
+        self.assertFalse(core._check_counts(crate, changes)[0])

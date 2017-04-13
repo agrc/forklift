@@ -190,6 +190,11 @@ def update(crate, validate_crate):
             edit_session.stopOperation()
             edit_session.stopEditing(True)
 
+        #: sanity check the row counts between source and destination
+        count_status, count_message = _check_counts(crate, changes)
+        if not count_status:
+            return (Crate.WARNING, count_message)
+
         return change_status
     except Exception as e:
         log.error('unhandled exception: %s for crate %r', e.message, crate, exc_info=True)
@@ -483,3 +488,27 @@ def _is_naughty_field(fld):
     #: removes objectid_ which is created by geoprocessing tasks and wouldn't be in destination source
     #: TODO: Deal with possibility of OBJECTID_* being the OIDFieldName
     return 'SHAPE' in fld.upper() or fld.upper() in ['GLOBAL_ID', 'GLOBALID'] or fld.startswith('OBJECTID_')
+
+
+def _check_counts(crate, changes):
+    '''
+    crate: Crate
+    changes: Changes
+
+    Validates that the row counts between source and destination are the same (ignoring empty geometries)
+
+    returns: (valid, message)
+        valid: Boolean - true if counts match
+        message: String - warning message if any
+    '''
+
+    destination_rows = len([row for row in arcpy.da.SearchCursor(crate.destination, ['*'])])
+    source_rows = changes.total_rows
+    valid = source_rows == destination_rows
+
+    if not valid:
+        message = 'Source row count ({}) does not match destination count ({})!'.format(source_rows, destination_rows)
+    else:
+        message = ''
+
+    return (valid, message)

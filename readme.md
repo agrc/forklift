@@ -1,12 +1,18 @@
 🚜📦✨ forklift
 ===================================
-A python CLI tool for managing and organizing the repetitive tasks involved with keeping remote geodatabases in sync with their sources.
+A python CLI tool for managing and organizing the repetitive tasks involved with keeping remote geodatabases in sync with their sources. In other words, it is a tool to tame your scheduled task nightmare.
+
+#### Rules
 
 > The first rule of :tractor: is it does not work on any sabbath.   
 > The second rule of :tractor: is that it's out of your element Donny.
 
-### Usage
-The work that forklift does is defined by [Pallets](src/forklift/models.py). `forklift.models.Pallet` is a base class that allows the user to define a job for forklift to perform by creating a new class that inherits from `Pallet`. Each pallet should have `Pallet` in it's file name and be unique from it's other pallets. A Pallet can have zero or more [Crates](src/forklift/models.py). A `forklift.models.Crate` is a class that defines data that needs to be moved from one location to another (reprojecting to web mercator by default). Crates are created by calling the `add_crates` (or `add_crate`) methods within the `build` method on the pallet. For example:
+## Usage
+
+The work that forklift does is defined by [Pallets](src/forklift/models.py). `forklift.models.Pallet` is a base class that allows the user to define a job for forklift to perform by creating a new class that inherits from `Pallet`. Each pallet should have `Pallet` in it's file name and be unique from it's other pallets.
+
+A Pallet can have zero or more [Crates](src/forklift/models.py). `forklift.models.Crate` is a class that defines data that needs to be moved from one location to another (reprojecting to web mercator by default). Crates are created by calling the `add_crates` (or `add_crate`) methods within the `build` method on the pallet. For example:
+
 ```python
 class MyPallet(Pallet):
     def __init__(self):
@@ -14,27 +20,33 @@ class MyPallet(Pallet):
         super(MyPallet, self).__init__()
 
     def build(self, configuration)
-        destination_workspace = r'C:\MapData'
+        #: all operations that can throw an exception should be done in build
+        destination_workspace = 'C:\\MapData'
         source_workspace = path.join(self.garage, 'connection.sde')
 
         self.add_crate('Counties', {'source_workspace': source_workspace,
                                     'destination_workspace': destination_workspace})
 ```
+
 For details on all of the members of the `Pallet` and `Crate` classes see [models.py](src/forklift/models.py).
 
 For examples of pallets see [samples/PalletSamples.py](samples/PalletSamples.py).
 
 #### CLI
+
 Interacting with forklift is done via the [command line interface](src/forklift/cli.py). Run `forklift -h` for a list of all of the available commands.
 
 #### Config File Properties
+
 `config.json` is created in the working directory after running `forklift config init`. It contains the following properties:
-- `warehouse` The folder where all of the repositories will be cloned into and where forklift will scan for pallets to run.
-- `sendEmails` Determines whether or not to send any emails. Set to `false` when testing.
-- `notify` A list of emails that will be sent the summary report each time `forklift lift` is run (assuming `sendEmails: true`).
-- `repositories` A list of repositories (`<owner>/<name>`) that will be cloned/updated into the warehouse folder.
-- `copyDestinations` A list of folders that you want any data defined in `Pallet.copy_data` to be copied to upon successful processing of the pallet.
+
+- `warehouse` The folder location where all of the `repositories` will be cloned into and where forklift will scan for pallets to lift.
+- `repositories` A list of github repositories in the `<owner>/<name>` format that will be cloned/updated into the `warehouse` folder.
+- `stagingDestination` The folder location where forklift creates and manages data before being copied to `copyDestinations`. This allows data in "production" to not be affected while forklift is running and if there are any issues. Data will only be copied if all crates are processed successfully.
+- `copyDestinations` An array of folder locations that forklift will  copy data to. This is the "production" drop off location. The data is defined in `Pallet.copy_data` and is copied upon successful processing of the pallet.
 - `configuration` A configuration string (`Production`, `Staging`, or `Dev`) that is passed to `Pallet:build` to allow a pallet to use different settings based on how forklift is being run. Defaults to `Production`.
+- `sendEmails` A boolean value that determines whether or not to send forklift summary report emails after each lift.
+- `notify` An array of emails that will be sent the summary report each time `forklift lift` is run.
 
 Any of these properties can be set via the `config set` command like so:
 ```
@@ -42,7 +54,8 @@ forklift config set --key sendEmails --value False
 ```
 If the property is a list then the value is appended to the existing list.
 
-### Install to First Successful Run
+## Install to First Successful Run
+
 1. `pip install .\` from the directory containing `setup.py`.
 1. `forklift config init`
 1. `forklift config set --key copyDestinations --value c:\\MapData` - This is where you want your output placed.
@@ -61,11 +74,16 @@ If the property is a list then the value is appended to the existing list.
 1. `forklift lift`
 
 
-### Development Usage
+#### Development Usage
+
 1. `pip install .\` from the directory containing `setup.py`.
 1. from the `**/src**` directory execute `python -m forklift -h` for usage.
 
-### Tests
-`pip install tox && tox`
+#### Tests
+
+On first run: `pip install tox`
+
+On subsequent runs: `tox`
+
 
 Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) will automatically be skipped if it is not found on your system.

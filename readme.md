@@ -42,7 +42,7 @@ Interacting with forklift is done via the [command line interface](src/forklift/
 
 - `warehouse` The folder location where all of the `repositories` will be cloned into and where forklift will scan for pallets to lift.
 - `repositories` A list of github repositories in the `<owner>/<name>` format that will be cloned/updated into the `warehouse` folder.
-- `stagingDestination` The folder location where forklift creates and manages data before being copied to `copyDestinations`. This allows data in "production" to not be affected while forklift is running and if there are any issues. Data will only be copied if all crates are processed successfully.
+- `stagingDestination` The folder location where forklift creates and manages data before being copied to `copyDestinations`. This allows data in "production" to not be affected while forklift is running and if there are any issues. Data will only be copied if all crates are processed successfully. This is a helper method for creating crates. Usage would be from within a Pallet: `os.path.join(self.staging_rack, 'the.gdb')`
 - `copyDestinations` An array of folder locations that forklift will  copy data to. This is the "production" drop off location. The data is defined in `Pallet.copy_data` and is copied upon successful processing of the pallet.
 - `configuration` A configuration string (`Production`, `Staging`, or `Dev`) that is passed to `Pallet:build` to allow a pallet to use different settings based on how forklift is being run. Defaults to `Production`.
 - `sendEmails` A boolean value that determines whether or not to send forklift summary report emails after each lift.

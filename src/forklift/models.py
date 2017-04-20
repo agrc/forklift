@@ -52,6 +52,8 @@ class Pallet(object):
         self.name = '{}:{}'.format(getsourcefile(self.__class__), self.__class__.__name__)
         #: the location of the garage containing logs and sde connection files etc
         self.garage = dirname(config.config_location)
+        #: the default location to stage geodatabases. For use when creating crates
+        self.staging_rack = config.get_config_prop('stagingDestination')
         self.send_email = send_email
 
     def build(self, configuration='Production'):

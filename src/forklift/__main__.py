@@ -5,35 +5,37 @@ forklift 🚜
 
 Usage:
     forklift config init
-    forklift config set --key <key> --value <value>
     forklift config repos --add <repo>
-    forklift config repos --remove <repo>
     forklift config repos --list
+    forklift config repos --remove <repo>
+    forklift config set --key <key> --value <value>
     forklift garage open
-    forklift list-pallets
     forklift git-update
     forklift lift [<file-path>] [--pallet-arg <arg>] [--verbose]
+    forklift list-pallets
     forklift speedtest
+    forklift update-static <file-path>
 
 Arguments:
     repo            The name of a GitHub repository in <owner>/<name> format.
-    file-path       A path to a file that defines a pallet.
-    arg             A string to be used as an optional initialization parameter to the pallet.
+    file-path       A path to a file that defines one or multiple pallets.
+    pallet-arg      A string to be used as an optional initialization parameter to the pallet.
 
 Examples:
     forklift config init                               Creates the config file.
-    forklift config set --key <key> --value <value>    Sets a key in the config with a value.
     forklift config repos --add agrc/ugs-chemistry     Adds a path to the config. Checks for duplicates.
-    forklift config repos --remove agrc/ugs-chemistry  Removes a path from the config.
     forklift config repos --list                       Outputs the list of pallet folder paths in your config file.
+    forklift config repos --remove agrc/ugs-chemistry  Removes a path from the config.
+    forklift config set --key <key> --value <value>    Sets a key in the config with a value.
     forklift garage open                               Opens the garage folder with explorer.
-    forklift list-pallets                              Outputs the list of pallets from the config.
     forklift git-update                                Pulls the latest updates to all git repositories.
     forklift lift                                      The main entry for running all of pallets found in the warehouse folder.
     forklift lift --verbose                            Print DEBUG statements to the console.
     forklift lift path/to/file                         Run a specific pallet.
     forklift lift path/to/file --pallet-arg arg        Run a specific pallet with "arg" as an initialization parameter.
+    forklift list-pallets                              Outputs the list of pallets from the config.
     forklift speedtest                                 Test the speed on a predefined pallet.
+    forklift update-static path/to/file                Updates the static data defined in the specified pallet.
 '''
 
 import config
@@ -62,9 +64,6 @@ def main():
     _setup_logging(args['--verbose'])
     _add_global_error_handler()
 
-    if args['garage'] and args['open']:
-        startfile(dirname(cli.init()))
-
     if args['config']:
         if args['init']:
             message = cli.init()
@@ -86,14 +85,8 @@ def main():
         if args['repos'] and args['--list']:
             for folder in cli.list_repos():
                 print(folder)
-    elif args['list-pallets']:
-        pallets = cli.list_pallets()
-
-        if len(pallets) == 0:
-            print('No pallets found!')
-        else:
-            for plug in pallets:
-                print(': '.join(plug))
+    elif args['garage'] and args['open']:
+        startfile(dirname(cli.init()))
     elif args['git-update']:
         cli.git_update()
     elif args['lift']:
@@ -104,8 +97,18 @@ def main():
                 cli.start_lift(args['<file-path>'])
         else:
             cli.start_lift()
+    elif args['list-pallets']:
+        pallets = cli.list_pallets()
+
+        if len(pallets) == 0:
+            print('No pallets found!')
+        else:
+            for plug in pallets:
+                print(': '.join(plug))
     elif args['speedtest']:
         cli.speedtest(speedtest)
+    elif args['update-static']:
+        cli.update_static(args['<file-path>'])
 
     shutdown()
 

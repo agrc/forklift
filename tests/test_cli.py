@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # * coding: utf8 *
 '''
-test_lift.py
+test_cli.py
 
 A module that contains tests for the cli.py module
 '''

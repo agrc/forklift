@@ -95,12 +95,20 @@ def start_lift(file_path=None, pallet_arg=None):
     log.info('process_pallets time: %s', seat.format_time(clock() - start_process))
 
     start_copy = clock()
-    copy_results = lift.copy_data(pallets_to_lift, all_pallets, config.get_config_prop('copyDestinations'))
+    copy_destinations = config.get_config_prop('copyDestinations')
+    copy_results = lift.copy_data(pallets_to_lift, all_pallets, copy_destinations)
     log.info('copy_data time: %s', seat.format_time(clock() - start_copy))
 
     start_post_copy_process = clock()
     lift.process_pallets(pallets_to_lift, is_post_copy=True)
     log.info('post_copy_process time: %s', seat.format_time(clock() - start_post_copy_process))
+
+    if len(copy_destinations) == 0:
+        log.info('No `copyDestinations` defined in the config. Skipping update_static...')
+    else:
+        start_static = clock()
+        copy_results += ' ' + lift.update_static_for(pallets_to_lift, copy_destinations, False)
+        log.info('static copy time: %s', seat.format_time(clock() - start_static))
 
     elapsed_time = seat.format_time(clock() - start_seconds)
     report_object = lift.create_report_object(pallets_to_lift, elapsed_time, copy_results, git_errors)
@@ -379,3 +387,29 @@ def speedtest(pallet_location):
     print('{1}Dry Run Output{0}{2}{3}'.format(Fore.RESET, Fore.CYAN, linesep, dry_report))
     print('{1}Repeat Run Output{0}{2}{3}'.format(Fore.RESET, Fore.CYAN, linesep, repeat_report))
     print('{3}{0}{1}Speed Test Results{3}{0}{2}Dry Run:{0} {4}{3}{2}Repeat:{0} {5}'.format(Fore.RESET, Fore.GREEN, Fore.CYAN, linesep, dry_run, repeat))
+
+
+def update_static(file_path):
+    log.info('updating/creating static data for pallet(s) in %s', file_path)
+
+    start_seconds = clock()
+
+    git_errors = git_update()
+
+    pallets = [PalletClass() for location, PalletClass in _get_pallets_in_file(file_path)]
+    for pallet in pallets:
+        pallet.build(config.get_config_prop('configuration'))
+
+    copy_destinations = config.get_config_prop('copyDestinations')
+    if len(copy_destinations) == 0:
+        log.error('No `copyDestinations` defined in the config!')
+        return ''
+
+    copy_results = lift.update_static_for(pallets, copy_destinations, True)
+
+    elapsed_time = seat.format_time(clock() - start_seconds)
+    report_object = lift.create_report_object(pallets, elapsed_time, copy_results, git_errors)
+    report = _format_dictionary(report_object)
+    log.info('%s', report)
+
+    return report

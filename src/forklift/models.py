@@ -55,6 +55,12 @@ class Pallet(object):
         #: the default location to stage geodatabases. For use when creating crates
         self.staging_rack = config.get_config_prop('stagingDestination')
         self.send_email = send_email
+        #: a list of databases or folders that are static and do not participate in crates
+        #: When `forklift lift` is run, it checks for the existence of this data in config.copyDestinations and
+        #: copies the data there if it does not already exists.
+        #: When `forklift update_static <pallet>` is run it copies/overwrites the data in
+        #: copyDestinations (while stopping services in `arcgis_services`).
+        self.static_data = []
 
     def build(self, configuration='Production'):
         '''Invoked before process and ship. Any logic that could cause a pallet to error

@@ -18,6 +18,7 @@ from json import dumps, loads
 log = logging.getLogger('forklift')
 config_location = join(abspath(dirname(__file__)), '..', 'forklift-garage', 'config.json')
 default_warehouse_location = 'c:\\scheduled\\warehouse'
+default_staging_location = 'c:\\scheduled\\staging'
 
 
 def create_default_config():
@@ -28,12 +29,13 @@ def create_default_config():
 
     with open(config_location, 'w') as json_config_file:
         data = {
+            'configuration': 'Production',
             'warehouse': default_warehouse_location,
             'repositories': [],
-            'notify': ['stdavis@utah.gov', 'sgourley@utah.gov'],
-            'sendEmails': False,
             'copyDestinations': [],
-            'configuration': 'Production'
+            'stagingDestination': default_staging_location,
+            'sendEmails': False,
+            'notify': ['stdavis@utah.gov', 'sgourley@utah.gov']
         }
 
         json_config_file.write(dumps(data, sort_keys=True, indent=2, separators=(',', ': ')))

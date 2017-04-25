@@ -121,7 +121,7 @@ def global_exception_handler(ex_cls, ex, tb):
     last_traceback = (traceback.extract_tb(tb))[-1]
     line_number = last_traceback[1]
     file_name = last_traceback[0].split(".")[0]
-    error = traceback.format_exception(ex_cls, ex, tb)
+    error = '\n'.join(traceback.format_exception(ex_cls, ex, tb))
 
     log.error(('global error handler line: %s (%s)' % (line_number, file_name)))
     log.error(error)

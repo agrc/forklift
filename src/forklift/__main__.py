@@ -48,6 +48,7 @@ from messaging import send_email
 from logging import shutdown
 from os import makedirs
 from os import startfile
+from os import linesep
 from os.path import abspath
 from os.path import dirname
 from os.path import join
@@ -121,7 +122,7 @@ def global_exception_handler(ex_cls, ex, tb):
     last_traceback = (traceback.extract_tb(tb))[-1]
     line_number = last_traceback[1]
     file_name = last_traceback[0].split(".")[0]
-    error = '\n'.join(traceback.format_exception(ex_cls, ex, tb))
+    error = linesep.join(traceback.format_exception(ex_cls, ex, tb))
 
     log.error(('global error handler line: %s (%s)' % (line_number, file_name)))
     log.error(error)

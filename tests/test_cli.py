@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # * coding: utf8 *
 '''
-test_lift.py
+test_cli.py
 
 A module that contains tests for the cli.py module
 '''
@@ -257,3 +257,26 @@ class TestReport(unittest.TestCase):
                   'copy_results': []}
 
         print(cli._format_dictionary(report))
+
+
+class TestUpdateStatic(unittest.TestCase):
+
+    def setUp(self):
+        if exists(config_location):
+            remove(config_location)
+
+    def tearDown(self):
+        if exists(config_location):
+            remove(config_location)
+
+    def test_no_copy_destinations(self):
+        config.set_config_prop('copyDestinations', [])
+        report = cli.update_static(join(test_pallets_folder, 'single_pallet.py'))
+
+        self.assertEquals(report, '')
+
+    def test_copy(self):
+        config.set_config_prop('copyDestinations', ['one', 'two'])
+        report = cli.update_static(join(test_pallets_folder, 'single_pallet.py'))
+
+        self.assertRegexpMatches(report, 'ran successfully')

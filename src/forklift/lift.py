@@ -22,6 +22,7 @@ from os import walk
 from time import clock
 
 log = logging.getLogger('forklift')
+service_msg = 'Service(s) will not {}: {}. '
 
 
 def process_crates_for(pallets, update_def, configuration='Production'):
@@ -113,6 +114,40 @@ def process_pallets(pallets, is_post_copy=False):
             log.error('error %s pallet: %s for pallet: %r', verb, e.message, pallet, exc_info=True)
 
 
+def update_static_for(pallets, config_copy_destinations, force):
+    '''
+    pallets: Pallet[]
+    config_copy_destinations: String[]
+    force: Boolean
+
+    Loop over pallets and check to see if data defined in `static_data` is in `copyDestinations`.
+    If it's not their the data is copied. If it is there and force is True, then the services are
+    shut down and the data is overwritten.
+    '''
+
+    results = ''
+    for pallet in pallets:
+        log.info('checking %s pallet', pallet)
+        for source in pallet.static_data:
+            if not path.exists(source):
+                log.error('static_data: %s does not exist!', source)
+                continue
+
+            destinations = map(lambda d: path.join(d, source.split('\\')[-1]), config_copy_destinations)
+            if all([not path.exists(d) for d in destinations]):
+                log.info('copying static data for the first time')
+                for destination in destinations:
+                    _copy_with_overwrite(source, destination)
+            elif force:
+                log.info('overwriting static data')
+                results = _stop_services(pallet.arcgis_services)
+                for destination in destinations:
+                    _copy_with_overwrite(source, destination)
+                results += ' ' + _start_services(pallet.arcgis_services)
+
+    return results
+
+
 def create_report_object(pallets, elapsed_time, copy_results, git_errors):
     reports = [pallet.get_report() for pallet in pallets]
 
@@ -125,6 +160,7 @@ def create_report_object(pallets, elapsed_time, copy_results, git_errors):
 
 
 def _copy_with_overwrite(source, destination):
+    log.info('copying with overwrite: %s to %s', source, destination)
     for src_dir, dirs, files in walk(source):
         dst_dir = src_dir.replace(source, destination, 1)
 
@@ -149,7 +185,42 @@ def _copy_with_overwrite(source, destination):
                 pass
 
 
+def _stop_services(services):
+    lightswitch = LightSwitch()
+
+    log.info('stopping %s dependent services.', len(services))
+    ok, problem_children = lightswitch.ensure('off', services)
+
+    if not ok:
+        stop_msg = service_msg.format('stop', problem_children) + 'This will affect data copy.'
+        log.error(stop_msg)
+        return stop_msg
+
+    return ''
+
+
+def _start_services(services):
+    lightswitch = LightSwitch()
+
+    log.info('starting %s dependent services.', len(services))
+    ok, problem_children = lightswitch.ensure('on', services)
+
+    if not ok:
+        start_msg = service_msg.format('start', problem_children)
+        log.error(start_msg)
+        return start_msg
+
+    return ''
+
+
 def copy_data(specific_pallets, all_pallets, config_copy_destinations):
+    '''
+    specific_pallets: Pallet[]
+    all_pallets: Pallet[]
+    config_copy_destinations: string[]
+
+    Copies databases from either `copy_data` or `static_data` to `config_copy_destinations`.
+    '''
     #: we're lifting everything
     if len(specific_pallets) == 0:
         specific_pallets = all_pallets
@@ -166,20 +237,10 @@ def copy_data(specific_pallets, all_pallets, config_copy_destinations):
 
     #: no pallets to process. we are done here
     if len(filtered_specific_pallets) == 0:
-        return
+        return ''
 
-    lightswitch = LightSwitch()
     services_affected, data_being_moved, destination_to_pallet = _hydrate_data_structures(filtered_specific_pallets, all_pallets)
-    results = ''
-
-    log.info('stopping %s dependent services.', len(services_affected))
-    ok, problem_children = lightswitch.ensure('off', services_affected)
-
-    service_msg = 'Service(s) will not {}: {}. '
-    if not ok:
-        stop_msg = service_msg.format('stop', problem_children) + 'This will affect data copy.'
-        results = stop_msg
-        log.error(stop_msg)
+    results = _stop_services(services_affected)
 
     for source in data_being_moved:
         if Describe(source).workspaceFactoryProgID.startswith('esriDataSourcesGDB.FileGDBWorkspaceFactory'):
@@ -209,7 +270,7 @@ def copy_data(specific_pallets, all_pallets, config_copy_destinations):
                     #: There is still a lock?
                     #: The service probably wasn't shut down
                     #: if there was a problem and the temp gdb exists
-                    #: since we couln't delete it before we probably can't delete it now
+                    #: since we couldn't delete it before we probably can't delete it now
                     #: so take what is in x and copy it over what it can in the original
                     #: that _should_ leave the gdb in a functioning state
                     if path.exists(destination_workspace) and path.exists(destination_workspace + 'x'):
@@ -225,13 +286,7 @@ def copy_data(specific_pallets, all_pallets, config_copy_destinations):
 
                 log.error('there was an error copying %s to %s', source, destination_workspace, exc_info=True)
 
-    log.info('starting %s dependent services.', len(services_affected))
-    ok, problem_children = lightswitch.ensure('on', services_affected)
-
-    if not ok:
-        start_msg = service_msg.format('start', problem_children)
-        results += ' ' + start_msg
-        log.error(start_msg)
+    results += _start_services(services_affected)
 
     return results
 

@@ -236,10 +236,10 @@ def copy_data(specific_pallets, all_pallets, config_copy_destinations):
             pass
 
     #: no pallets to process. we are done here
-    if len(specific_pallets) == 0:
+    if len(filtered_specific_pallets) == 0:
         return ''
 
-    services_affected, data_being_moved, destination_to_pallet = _hydrate_data_structures(specific_pallets, all_pallets)
+    services_affected, data_being_moved, destination_to_pallet = _hydrate_data_structures(filtered_specific_pallets, all_pallets)
     results = _stop_services(services_affected)
 
     for source in data_being_moved:

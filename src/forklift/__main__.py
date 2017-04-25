@@ -22,20 +22,20 @@ Arguments:
     pallet-arg      A string to be used as an optional initialization parameter to the pallet.
 
 Examples:
-    forklift config init                               Creates the config file.
-    forklift config repos --add agrc/ugs-chemistry     Adds a path to the config. Checks for duplicates.
-    forklift config repos --list                       Outputs the list of pallet folder paths in your config file.
-    forklift config repos --remove agrc/ugs-chemistry  Removes a path from the config.
-    forklift config set --key <key> --value <value>    Sets a key in the config with a value.
-    forklift garage open                               Opens the garage folder with explorer.
-    forklift git-update                                Pulls the latest updates to all git repositories.
-    forklift lift                                      The main entry for running all of pallets found in the warehouse folder.
-    forklift lift --verbose                            Print DEBUG statements to the console.
-    forklift lift path/to/file                         Run a specific pallet.
-    forklift lift path/to/file --pallet-arg arg        Run a specific pallet with "arg" as an initialization parameter.
-    forklift list-pallets                              Outputs the list of pallets from the config.
-    forklift speedtest                                 Test the speed on a predefined pallet.
-    forklift update-static path/to/file                Updates the static data defined in the specified pallet.
+    forklift config init                                    Creates the config file.
+    forklift config repos --add agrc/ugs-chemistry          Adds a path to the config. Checks for duplicates.
+    forklift config repos --list                            Outputs the list of pallet folder paths in your config file.
+    forklift config repos --remove agrc/ugs-chemistry       Removes a path from the config.
+    forklift config set --key <key> --value <value>         Sets a key in the config with a value.
+    forklift garage open                                    Opens the garage folder with explorer.
+    forklift git-update                                     Pulls the latest updates to all git repositories.
+    forklift lift                                           The main entry for running all of pallets found in the warehouse folder.
+    forklift lift --verbose                                 Print DEBUG statements to the console.
+    forklift lift path/to/pallet_file.py                    Run a specific pallet.
+    forklift lift path/to/pallet_file.py --pallet-arg arg   Run a specific pallet with "arg" as an initialization parameter.
+    forklift list-pallets                                   Outputs the list of pallets from the config.
+    forklift speedtest                                      Test the speed on a predefined pallet.
+    forklift update-static path/to/pallet_file.py           Updates the static data defined in the specified pallet.
 '''
 
 import config

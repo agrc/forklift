@@ -85,38 +85,32 @@ def process_pallets(pallets, is_post_copy=False):
     log.info('%s pallets...', verb)
 
     for pallet in pallets:
-        if pallet.is_ready_to_ship():  #: checks for schema changes or errors
-            if pallet.requires_processing() and pallet.success[0]:  #: checks for data that was updated
-                log.info('%s pallet: %r', verb, pallet)
-                start_seconds = clock()
+        try:
+            if pallet.is_ready_to_ship():  #: checks for schema changes or errors
+                if pallet.requires_processing() and pallet.success[0]:  #: checks for data that was updated
+                    log.info('%s pallet: %r', verb, pallet)
+                    start_seconds = clock()
 
-                try:
                     ResetEnvironments()
                     ClearWorkspaceCache()
                     if not is_post_copy:
                         pallet.process()
                     else:
                         pallet.post_copy_process()
-                except Exception as e:
-                    pallet.success = (False, e.message)
-                    log.error('error %s pallet: %s for pallet: %r', verb, e.message, pallet, exc_info=True)
 
-                log.debug('%s pallet %s', verb.replace('ing', 'ed'), seat.format_time(clock() - start_seconds))
+                    log.debug('%s pallet %s', verb.replace('ing', 'ed'), seat.format_time(clock() - start_seconds))
 
-            if not is_post_copy:
-                log.debug('shipping pallet...')
-                start_seconds = clock()
+                if not is_post_copy:
+                    start_seconds = clock()
 
-                try:
                     log.info('shipping pallet: %r', pallet)
                     ResetEnvironments()
                     ClearWorkspaceCache()
                     pallet.ship()
                     log.debug('shipped pallet %s', seat.format_time(clock() - start_seconds))
-                except Exception as e:
-                    pallet.success = (False, e.message)
-
-                    log.error('error shipping pallet: %s for pallet: %r', e.message, pallet, exc_info=True)
+        except Exception as e:
+            pallet.success = (False, e.message)
+            log.error('error %s pallet: %s for pallet: %r', verb, e.message, pallet, exc_info=True)
 
 
 def create_report_object(pallets, elapsed_time, copy_results, git_errors):
@@ -161,14 +155,21 @@ def copy_data(specific_pallets, all_pallets, config_copy_destinations):
         specific_pallets = all_pallets
 
     #: filter out pallets whose data did not change
-    specific_pallets = [pallet for pallet in specific_pallets if pallet.requires_processing() is True]
+    filtered_specific_pallets = []
+    for pallet in specific_pallets:
+        try:
+            if pallet.requires_processing() is True:
+                filtered_specific_pallets.append(pallet)
+        except:
+            #: skip, we'll see the error in the report from process_pallets
+            pass
 
     #: no pallets to process. we are done here
-    if len(specific_pallets) == 0:
+    if len(filtered_specific_pallets) == 0:
         return
 
     lightswitch = LightSwitch()
-    services_affected, data_being_moved, destination_to_pallet = _hydrate_data_structures(specific_pallets, all_pallets)
+    services_affected, data_being_moved, destination_to_pallet = _hydrate_data_structures(filtered_specific_pallets, all_pallets)
     results = ''
 
     log.info('stopping %s dependent services.', len(services_affected))

@@ -13,6 +13,7 @@ Usage:
     forklift git-update
     forklift lift [<file-path>] [--pallet-arg <arg>] [--verbose]
     forklift list-pallets
+    forklift scorched-earth
     forklift speedtest
     forklift update-static <file-path>
 
@@ -34,6 +35,8 @@ Examples:
     forklift lift path/to/pallet_file.py                    Run a specific pallet.
     forklift lift path/to/pallet_file.py --pallet-arg arg   Run a specific pallet with "arg" as an initialization parameter.
     forklift list-pallets                                   Outputs the list of pallets from the config.
+    forklift scorched-earth                                 WARNING!!! Deletes all data in `config.stagingDestination` as well as the
+                                                            `hashes.gdb` & `scratch.gdb` file geodatabases.
     forklift speedtest                                      Test the speed on a predefined pallet.
     forklift update-static path/to/pallet_file.py           Updates the static data defined in the specified pallet.
 '''
@@ -106,6 +109,8 @@ def main():
         else:
             for plug in pallets:
                 print(': '.join(plug))
+    elif args['scorched-earth']:
+        cli.scorched_earth()
     elif args['speedtest']:
         cli.speedtest(speedtest)
     elif args['update-static']:

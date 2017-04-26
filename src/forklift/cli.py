@@ -21,8 +21,10 @@ from models import Pallet
 from os.path import abspath, basename, dirname, exists, join, splitext, realpath
 from os import walk
 from os import linesep
+from os import mkdir
 from re import compile
 from requests import get
+from shutil import rmtree
 from time import clock
 
 log = logging.getLogger('forklift')
@@ -413,3 +415,14 @@ def update_static(file_path):
     log.info('%s', report)
 
     return report
+
+
+def scorched_earth():
+    staging = config.get_config_prop('stagingDestination')
+    for folder in [staging, core.hash_gdb_path, core.scratch_gdb_path]:
+        if exists(folder):
+            log.info('deleting: %s', folder)
+            rmtree(folder)
+
+    log.info('recreating: %s', staging)
+    mkdir(staging)

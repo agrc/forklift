@@ -7,11 +7,11 @@ A module that contains tests for the cli.py module
 '''
 
 import unittest
-from forklift import cli, config
+from forklift import cli, config, core
 from forklift.models import Crate
 from json import loads
 from mock import patch, Mock
-from os import remove
+from os import remove, mkdir
 from os.path import abspath, dirname, join, exists
 
 test_data_folder = join(dirname(abspath(__file__)), 'data')
@@ -280,3 +280,23 @@ class TestUpdateStatic(unittest.TestCase):
         report = cli.update_static(join(test_pallets_folder, 'single_pallet.py'))
 
         self.assertRegexpMatches(report, 'ran successfully')
+
+
+class TestScorchedEarth(unittest.TestCase):
+    hash_patch = join(test_data_folder, 'hashes.gdb')
+    scratch_patch = join(test_data_folder, 'scratch.gdb')
+
+    @patch('forklift.core.hash_gdb_path', hash_patch)
+    @patch('forklift.core.scratch_gdb_path', scratch_patch)
+    def test_deletes_folders(self):
+        test_staging = join(test_data_folder, 'staging')
+        test_folder = join(test_staging, 'test')
+        mkdir(test_folder)
+        config.set_config_prop('stagingDestination', test_staging)
+
+        cli.scorched_earth()
+
+        self.assertFalse(exists(core.hash_gdb_path))
+        self.assertFalse(exists(core.scratch_gdb_path))
+        self.assertFalse(exists(test_folder))
+        self.assertTrue(exists(test_staging))

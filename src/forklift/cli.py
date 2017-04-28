@@ -21,7 +21,7 @@ from models import Pallet
 from os.path import abspath, basename, dirname, exists, join, splitext, realpath
 from os import walk
 from os import linesep
-from os import mkdir
+from os import makedirs
 from re import compile
 from requests import get
 from shutil import rmtree
@@ -425,4 +425,4 @@ def scorched_earth():
             rmtree(folder)
 
     log.info('recreating: %s', staging)
-    mkdir(staging)
+    makedirs(staging)

@@ -179,7 +179,7 @@ def _copy_with_overwrite(source, destination):
                 pass
 
             try:
-                shutil.move(src_file, dst_dir)
+                shutil.copy2(src_file, dst_dir)
             except:
                 #: shouldn't matter a whole lot
                 pass

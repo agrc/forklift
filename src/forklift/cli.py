@@ -336,7 +336,6 @@ def speedtest(pallet_location):
 
     #: spoof hashes location so there is no caching
     core.garage = speedtest_destination
-    core.hash_gdb_path = join(core.garage, core._hash_gdb)
     core.scratch_gdb_path = join(core.garage, core._scratch_gdb)
 
     #: delete destination and other artifacts form prior runs
@@ -357,8 +356,6 @@ def speedtest(pallet_location):
                               join(speedtest_destination, 'ChangeSourceData.gdb'))
         _prep_change_data(join(speedtest_destination, 'ChangeSourceData.gdb', 'AddressPoints'))
 
-    if arcpy.Exists(core.hash_gdb_path):
-        arcpy.Delete_management(core.hash_gdb_path)
     if arcpy.Exists(core.scratch_gdb_path):
         arcpy.Delete_management(core.scratch_gdb_path)
 
@@ -381,8 +378,6 @@ def speedtest(pallet_location):
         arcpy.Delete_management(join(speedtest_destination, 'DestinationData.gdb'))
     if arcpy.Exists(join(speedtest_destination, 'ChangeSourceData.gdb')):
         arcpy.Delete_management(join(speedtest_destination, 'ChangeSourceData.gdb'))
-    if arcpy.Exists(core.hash_gdb_path):
-        arcpy.Delete_management(core.hash_gdb_path)
     if arcpy.Exists(core.scratch_gdb_path):
         arcpy.Delete_management(core.scratch_gdb_path)
 
@@ -419,7 +414,7 @@ def update_static(file_path):
 
 def scorched_earth():
     staging = config.get_config_prop('stagingDestination')
-    for folder in [staging, core.hash_gdb_path, core.scratch_gdb_path]:
+    for folder in [staging, core.scratch_gdb_path]:
         if exists(folder):
             log.info('deleting: %s', folder)
             rmtree(folder)

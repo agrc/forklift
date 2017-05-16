@@ -250,7 +250,6 @@ class Crate(object):
 
         #: optional name of the primary key field in the table (all numeric field types will be parsed as whole numbers)
         self.source_primary_key = None
-        self.source_primary_key_type = None
 
         if not arcpy.Exists(self.source):
             status, message = self._try_to_find_data_source_by_name()
@@ -264,22 +263,13 @@ class Crate(object):
             self.result = (Crate.INVALID_DATA, e.message)
             return
 
-        if not self.source_describe.hasOID and source_primary_key is None:
-            self.result = (Crate.INVALID_DATA, 'Source dataset has no OID and source_primary_key defined')
+        if not self.source_describe.hasOID:
+            if source_primary_key is None:
+                self.result = (Crate.INVALID_DATA, 'Source dataset has no OID and source_primary_key defined')
+            elif source_primary_key not in [field.name for field in self.source_describe.fields]:
+                self.result = (Crate.INVALID_DATA, 'source_primary_key does not appear to be a valid field name')
         else:
             self.source_primary_key = source_primary_key or self.source_describe.OIDFieldName
-
-            #: get the type of the primary key field so that we can generate valid sql statements
-            for field in self.source_describe.fields:
-                if field.name.lower() == self.source_primary_key.lower():
-                    if field.type.lower() in ['string', 'guid']:
-                        self.source_primary_key_type = str
-                    else:
-                        self.source_primary_key_type = int
-                    break
-
-            if self.source_primary_key_type is None:
-                self.result = (Crate.INVALID_DATA, 'source_primary_key does not appear to be a valid field name')
 
     def set_source_name(self, value):
         '''Sets the source_name and updates the source property
@@ -377,7 +367,6 @@ class Crate(object):
             'source_name': self.source_name,
             'source_workspace': self.source_workspace,
             'source_primary_key': self.source_primary_key,
-            'source_primary_key_type': self.source_primary_key_type,
             'destination_name': self.destination_name,
             'destination_workspace': self.destination_workspace,
             'destination_coordinate_system': spatial_reference,
@@ -416,7 +405,7 @@ class Changes(object):
         '''
         attribute_hashes: Dictionary<string, hash> of id's and hashes that were not accessed
 
-        returns the union of the two dictionary values'''
-        self._deletes = dict.fromkeys(attribute_hashes.values(), None)
+        returns the deletes'''
+        self._deletes = attribute_hashes
 
         return self._deletes

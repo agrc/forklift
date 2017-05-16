@@ -283,10 +283,8 @@ class TestUpdateStatic(unittest.TestCase):
 
 
 class TestScorchedEarth(unittest.TestCase):
-    hash_patch = join(test_data_folder, 'hashes.gdb')
     scratch_patch = join(test_data_folder, 'scratch.gdb')
 
-    @patch('forklift.core.hash_gdb_path', hash_patch)
     @patch('forklift.core.scratch_gdb_path', scratch_patch)
     def test_deletes_folders(self):
         test_staging = join(test_data_folder, 'staging')
@@ -296,7 +294,6 @@ class TestScorchedEarth(unittest.TestCase):
 
         cli.scorched_earth()
 
-        self.assertFalse(exists(core.hash_gdb_path))
         self.assertFalse(exists(core.scratch_gdb_path))
         self.assertFalse(exists(test_folder))
         self.assertTrue(exists(test_staging))

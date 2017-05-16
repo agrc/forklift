@@ -119,30 +119,6 @@ class TestCrate(unittest.TestCase):
 
         self.assertEqual(crate.name, hash)
 
-    def test_source_primary_type_type_is_correctly_identified(self):
-        skip_if_no_local_sde()
-
-        check_for_changes_fgdb = path.join(current_folder, 'data', 'checkForChanges.gdb')
-
-        # feature class with OBJECTID field
-        crate = Crate('DNROilGasWells', check_for_changes_fgdb, '')
-
-        self.assertEqual(crate.source_primary_key, 'OBJECTID')
-        self.assertEqual(crate.source_primary_key_type, int)
-
-        # table without OBJECTID field
-        crate = Crate('NO_OBJECTID_TEST', update_tests_sde, '', '', source_primary_key='TEST')
-
-        self.assertEqual(crate.source_primary_key, 'TEST')
-        self.assertEqual(crate.source_primary_key_type, str)
-
-        # shapefile
-        data_folder = path.join(current_folder, 'data')
-        crate = Crate('shapefile.shp', data_folder, '')
-
-        self.assertEqual(crate.source_primary_key, 'FID')
-        self.assertEqual(crate.source_primary_key_type, int)
-
     def test_invalid_source_primary_key_name(self):
         skip_if_no_local_sde()
 

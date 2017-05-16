@@ -17,19 +17,17 @@ log = None
 
 reproject_temp_suffix = '_fl'
 
-hash_att_field = 'att_hash'
-
-hash_id_field = 'Id'
+hash_field = 'FORKLIFT_HASH'
 
 src_id_field = 'src_id' + reproject_temp_suffix
 
 garage = path.dirname(config_location)
 
-_hash_gdb = 'hashes.gdb'
 _scratch_gdb = 'scratch.gdb'
 
 scratch_gdb_path = path.join(garage, _scratch_gdb)
-hash_gdb_path = path.join(garage, _hash_gdb)
+
+shape_field_index = -2
 
 
 def init(logger):
@@ -41,10 +39,6 @@ def init(logger):
     log = logger
 
     #: create gdb if needed
-    if not arcpy.Exists(hash_gdb_path):
-        log.info('%s does not exist. creating', hash_gdb_path)
-        arcpy.CreateFileGDB_management(garage, _hash_gdb)
-
     if arcpy.Exists(scratch_gdb_path):
         log.info('%s exist. recreating', scratch_gdb_path)
         arcpy.Delete_management(scratch_gdb_path)
@@ -55,10 +49,6 @@ def init(logger):
 
 
 def optimize_internal_gdbs():
-    if arcpy.Exists(hash_gdb_path):
-        log.info('%s compacting', hash_gdb_path)
-        arcpy.Compact_management(hash_gdb_path)
-
     if arcpy.Exists(scratch_gdb_path):
         log.info('%s deleting', scratch_gdb_path)
         arcpy.Delete_management(scratch_gdb_path)
@@ -78,21 +68,10 @@ def update(crate, validate_crate):
     arcpy.env.geographicTransformations = crate.geographic_transformation
     change_status = (Crate.NO_CHANGES, None)
 
-    def truncate_where_clause(txt):
-        max = 100
-        if txt is not None and len(txt) > max:
-            return txt[:max - 1] + '...'
-        else:
-            return txt
-
     try:
         if not arcpy.Exists(crate.destination):
             log.debug('%s does not exist. creating', crate.destination)
             _create_destination_data(crate)
-
-            #: remove hash table entry for destination that doers not exist
-            if arcpy.Exists(path.join(hash_gdb_path, crate.name)):
-                arcpy.Delete_management(path.join(hash_gdb_path, crate.name))
 
             change_status = (Crate.CREATED, None)
 
@@ -106,7 +85,7 @@ def update(crate, validate_crate):
             return (Crate.INVALID_DATA, e.message)
 
         #: create source hash and store
-        changes = _hash(crate, hash_gdb_path)
+        changes = _hash(crate)
 
         if not changes.has_changes():
             log.debug('No changes found.')
@@ -122,16 +101,8 @@ def update(crate, validate_crate):
             edit_session.startEditing(False, False)
             edit_session.startOperation()
 
-            destination_key = arcpy.Describe(crate.destination).OIDFieldName
-
             log.debug('deleting from destintation table')
-            with arcpy.da.UpdateCursor(crate.destination, destination_key) as cursor:
-                for row in cursor:
-                    if row[0] in changes._deletes:
-                        cursor.deleteRow()
-
-            log.debug('deleting from hash table')
-            with arcpy.da.UpdateCursor(path.join(hash_gdb_path, crate.name), hash_id_field) as cursor:
+            with arcpy.da.UpdateCursor(crate.destination, hash_field) as cursor:
                 for row in cursor:
                     if row[0] in changes._deletes:
                         cursor.deleteRow()
@@ -145,8 +116,6 @@ def update(crate, validate_crate):
             status, message = change_status
             if status != Crate.CREATED:
                 change_status = (Crate.UPDATED, None)
-
-            hash_table = path.join(hash_gdb_path, crate.name)
 
             #: reproject data if source is different than destination
             if crate.needs_reproject():
@@ -163,26 +132,18 @@ def update(crate, validate_crate):
             log.debug('adds features')
 
             if not crate.is_table():
-                shape_field_index = -2
                 changes.fields[shape_field_index] = changes.fields[shape_field_index].rstrip('WKT')
-
-            fields = changes.fields[:-1]
 
             #: cache this so we don't have to call it for every record
             is_table = crate.is_table()
-            hash_fields = [hash_id_field, hash_att_field]
             with arcpy.da.SearchCursor(changes.table, changes.fields) as add_cursor,\
-                    arcpy.da.InsertCursor(crate.destination, fields) as cursor, \
-                    arcpy.da.InsertCursor(hash_table, hash_fields) as hash_cursor:
+                    arcpy.da.InsertCursor(crate.destination, changes.fields) as cursor:
                 for row in add_cursor:
-                    primary_key = row[-1]
-
                     #: skip null geometries
                     if not is_table and row[shape_field_index] is None:
                         continue
 
-                    #: update/store hash lookup using oid from insert into destination
-                    hash_cursor.insertRow((cursor.insertRow(row[:-1]), changes.adds[primary_key]))
+                    cursor.insertRow(row)
 
             log.debug('stopping edit session (saving edits)')
             edit_session.stopOperation()
@@ -209,48 +170,28 @@ def update(crate, validate_crate):
         arcpy.ClearWorkspaceCache_management()
 
 
-def _hash(crate, hash_path):
+def _hash(crate):
     '''
     crate: Crate
 
-    hash_path: string path to hash gdb
-
     returns a Changes model with deltas for the source'''
-    #: TODO cache lookup table for repeat offenders
-    #: create hash lookup table for source data
-    if not arcpy.Exists(path.join(hash_path, crate.name)):
-        log.debug('%s does not exist. creating', crate.name)
-        table = arcpy.CreateTable_management(hash_path, crate.name)
-        arcpy.AddField_management(table, hash_id_field, 'LONG')
-        arcpy.AddField_management(table, hash_att_field, 'TEXT', field_length=32)
-
-        #: truncate destination table since we are hashing for the first time
-        arcpy.TruncateTable_management(crate.destination)
 
     shape_token = 'SHAPE@WKT'
 
     log.info('checking for changes...')
     #: finding and filtering common fields between source and destination
     fields = set([fld.name for fld in arcpy.ListFields(crate.destination)]) & set([fld.name for fld in arcpy.ListFields(crate.source)])
-    fields = _filter_fields(fields, crate.source_primary_key)
-
-    #: keep track of OID token in order to remove from hashing
-    primary_key_index = -1
-    sql_clause = (None, 'ORDER BY {}'.format(crate.source_primary_key))
+    fields = _filter_fields(fields)
 
     if not crate.is_table():
         fields.append(shape_token)
-        primary_key_index = -2
+    fields.append(hash_field)
 
     changes = Changes(list(fields))
-    changes.table = crate.source
-    #: duplicate primary key so we can relate the hashes in the change model adds back to the source
-    changes.fields.append(crate.source_primary_key)
 
-    attribute_hashes = _get_hash_lookups(crate.name, hash_gdb_path)
+    attribute_hashes = _get_hash_lookups(crate.destination)
     total_rows = 0
 
-    insert_cursor = None
     temp_table = path.join(scratch_gdb_path, crate.name)
     if arcpy.Exists(temp_table):
         arcpy.Delete_management(temp_table)
@@ -266,43 +207,22 @@ def _hash(crate, hash_path):
                                                      crate.name,
                                                      template=crate.source)[0]
 
-    arcpy.AddField_management(changes.table, src_id_field, 'TEXT')
-    if crate.source_describe.dataType == 'ShapeFile':
-        log.info('adding FID field for shapefile comparison')
-        arcpy.AddField_management(changes.table, 'FID', 'LONG')
-    #: reset duplicated key because wtf
-    changes.fields[-1] = src_id_field
+    arcpy.AddField_management(changes.table, hash_field, 'TEXT', field_length=8)
+
     insert_cursor = arcpy.da.InsertCursor(changes.table, changes.fields)
 
-    with arcpy.da.SearchCursor(crate.source, fields, sql_clause=sql_clause) as cursor:
-        def parse_id_as_int(id):
-            return str(int(id))
-
-        def parse_id_as_string(id):
-            return str(id)
-
-        if crate.source_primary_key_type == int:
-            #: We are parsing as int because this could be any type of number
-            #: including a float which causes issues by adding a ".0".
-            #: Forklift assumes that all source_primary_key values can be parsed
-            #: as whole numbers.
-            id_parser = parse_id_as_int
-        else:
-            id_parser = parse_id_as_string
-
+    with arcpy.da.SearchCursor(crate.source, [field for field in fields if field != hash_field]) as cursor:
         hashes = {}
 
         for row in cursor:
             total_rows += 1
 
-            #: create shape hash
-            src_id = id_parser(row[primary_key_index])
             if not crate.is_table():
                 shape_wkt = row[-1]
 
                 #: skip features with empty geometry
                 if shape_wkt is None:
-                    log.warn('Empty geometry found in %s: %s', crate.source_primary_key, src_id)
+                    log.warn('Empty geometry found in %s', row)
                     total_rows -= 1
                     continue
 
@@ -321,14 +241,14 @@ def _hash(crate, hash_path):
             if attribute_hash_digest not in attribute_hashes:
                 #: update or add
                 #: insert into temp table
-                insert_cursor.insertRow(row + (src_id,))
+                insert_cursor.insertRow(row + (attribute_hash_digest,))
                 #: add to adds
-                changes.adds[src_id] = attribute_hash_digest
+                changes.adds[attribute_hash_digest] = None
             else:
                 #: remove not modified hash from hashes
                 attribute_hashes.pop(attribute_hash_digest)
 
-                changes.unchanged[src_id] = attribute_hash_digest
+                changes.unchanged[attribute_hash_digest] = None
 
     changes.determine_deletes(attribute_hashes)
     changes.total_rows = total_rows
@@ -348,36 +268,28 @@ def _create_destination_data(crate):
     if crate.is_table():
         log.warn('creating new table: %s', crate.destination)
         arcpy.CreateTable_management(crate.destination_workspace, crate.destination_name, crate.source)
+    else:
+        log.warn('creating new feature class: %s', crate.destination)
+        arcpy.CreateFeatureclass_management(crate.destination_workspace,
+                                            crate.destination_name,
+                                            crate.source_describe.shapeType.upper(),
+                                            crate.source,
+                                            spatial_reference=crate.destination_coordinate_system or crate.source_describe.spatialReference)
 
-        return
-
-    log.warn('creating new feature class: %s', crate.destination)
-
-    arcpy.CreateFeatureclass_management(crate.destination_workspace,
-                                        crate.destination_name,
-                                        crate.source_describe.shapeType.upper(),
-                                        crate.source,
-                                        spatial_reference=crate.destination_coordinate_system or crate.source_describe.spatialReference)
-
-    if crate.source_describe.dataType == 'ShapeFile':
-        log.info('adding FID field for shapefile comparison')
-        arcpy.AddField_management(crate.destination, 'FID', 'LONG')
+    arcpy.AddField_management(crate.destination, hash_field, 'TEXT', field_length=8)
 
 
-def _get_hash_lookups(name, hash_path):
+def _get_hash_lookups(destination):
     '''
-    name: string name of the crate table in the hash geodatabase
-
-    hash_path: string path to hash gdb
+    destination: string path to destination data
 
     returns a hash lookup for all attributes including geometries'''
     hash_lookup = {}
-    fields = [hash_id_field, hash_att_field]
 
-    with arcpy.da.SearchCursor(path.join(hash_path, name), fields) as cursor:
-        for id, att_hash in cursor:
+    with arcpy.da.SearchCursor(destination, [hash_field]) as cursor:
+        for att_hash, in cursor:
             if att_hash is not None:
-                hash_lookup[str(att_hash)] = id
+                hash_lookup[str(att_hash)] = None
 
     return hash_lookup
 
@@ -393,7 +305,7 @@ def check_schema(crate):
 
         for field in arcpy.ListFields(dataset):
             #: don't worry about comparing managed fields
-            if not _is_naughty_field(field.name) and field.name not in ['OBJECTID', 'FID']:
+            if not _is_naughty_field(field.name):
                 field_dict[field.name.upper()] = field
 
         return field_dict
@@ -411,6 +323,8 @@ def check_schema(crate):
     destination_fields = get_fields(crate.destination)
 
     for field_key in destination_fields.keys():
+        if field_key == hash_field.upper():
+            continue
         # make sure that all fields from destination are in source
         # not sure that we care if there are fields in source that are not in destination
         destination_fld = destination_fields[field_key]
@@ -450,35 +364,30 @@ def check_schema(crate):
         return True
 
 
-def _filter_fields(fields, source_primary_key):
+def _filter_fields(fields):
     '''
     fields: String[]
-    source_primary_key: string
 
     returns: String[]
 
-    Filters out fields that mess up the update logic
-    and move the primary be the last field so that we can filter it out of the hash.'''
+    Filters out fields that mess up the update logic.'''
     new_fields = [field for field in fields if not _is_naughty_field(field)]
     new_fields.sort()
-
-    try:
-        new_fields.remove(source_primary_key)
-    except ValueError:
-        #: key not common to both source and destination. add it anyway
-        pass
-
-    new_fields.append(source_primary_key)
 
     return new_fields
 
 
-def _is_naughty_field(fld):
+def _is_naughty_field(field):
+    '''
+    field: String
+
+    returns: Boolean
+
+    determines if field is a field that we want to exclude from hashing'''
     #: global id's do not export to file geodatabase
-    #: removes shape, shape_length etc
     #: removes objectid_ which is created by geoprocessing tasks and wouldn't be in destination source
     #: TODO: Deal with possibility of OBJECTID_* being the OIDFieldName
-    return 'SHAPE' in fld.upper() or fld.upper() in ['GLOBAL_ID', 'GLOBALID'] or fld.startswith('OBJECTID_')
+    return 'SHAPE' in field.upper() or field.upper() in ['GLOBAL_ID', 'GLOBALID'] or field.startswith('OBJECTID')
 
 
 def _check_counts(crate, changes):

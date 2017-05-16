@@ -19,8 +19,6 @@ reproject_temp_suffix = '_fl'
 
 hash_att_field = 'att_hash'
 
-hash_geom_field = 'geom_hash'
-
 hash_id_field = 'Id'
 
 src_id_field = 'src_id' + reproject_temp_suffix
@@ -172,7 +170,7 @@ def update(crate, validate_crate):
 
             #: cache this so we don't have to call it for every record
             is_table = crate.is_table()
-            hash_fields = [hash_id_field, hash_att_field, hash_geom_field]
+            hash_fields = [hash_id_field, hash_att_field]
             with arcpy.da.SearchCursor(changes.table, changes.fields) as add_cursor,\
                     arcpy.da.InsertCursor(crate.destination, fields) as cursor, \
                     arcpy.da.InsertCursor(hash_table, hash_fields) as hash_cursor:
@@ -184,7 +182,7 @@ def update(crate, validate_crate):
                         continue
 
                     #: update/store hash lookup using oid from insert into destination
-                    hash_cursor.insertRow((cursor.insertRow(row[:-1]),) + changes.adds[primary_key])
+                    hash_cursor.insertRow((cursor.insertRow(row[:-1]), changes.adds[primary_key]))
 
             log.debug('stopping edit session (saving edits)')
             edit_session.stopOperation()
@@ -225,7 +223,6 @@ def _hash(crate, hash_path):
         table = arcpy.CreateTable_management(hash_path, crate.name)
         arcpy.AddField_management(table, hash_id_field, 'LONG')
         arcpy.AddField_management(table, hash_att_field, 'TEXT', field_length=32)
-        arcpy.AddField_management(table, hash_geom_field, 'TEXT', field_length=32)
 
         #: truncate destination table since we are hashing for the first time
         arcpy.TruncateTable_management(crate.destination)
@@ -250,7 +247,7 @@ def _hash(crate, hash_path):
     #: duplicate primary key so we can relate the hashes in the change model adds back to the source
     changes.fields.append(crate.source_primary_key)
 
-    attribute_hashes, geometry_hashes = _get_hash_lookups(crate.name, hash_gdb_path)
+    attribute_hashes = _get_hash_lookups(crate.name, hash_gdb_path)
     total_rows = 0
     unique_salty_id = 0
 
@@ -298,7 +295,6 @@ def _hash(crate, hash_path):
             total_rows += 1
             unique_salty_id += 1
             #: create shape hash
-            geom_hash_digest = None
             src_id = id_parser(row[primary_key_index])
             if not crate.is_table():
                 shape_wkt = row[-1]
@@ -309,27 +305,23 @@ def _hash(crate, hash_path):
                     total_rows -= 1
                     continue
 
-                geom_hash_digest = _create_hash(shape_wkt, unique_salty_id)
-
             #: create attribute hash
-            attribute_hash_digest = _create_hash(str(row[:primary_key_index]), unique_salty_id)
+            attribute_hash_digest = _create_hash(str(row), unique_salty_id)
 
             #: check for new feature
-            if attribute_hash_digest not in attribute_hashes or (geom_hash_digest is not None and geom_hash_digest not in geometry_hashes):
+            if attribute_hash_digest not in attribute_hashes:
                 #: update or add
                 #: insert into temp table
                 insert_cursor.insertRow(row + (src_id,))
                 #: add to adds
-                changes.adds[src_id] = (attribute_hash_digest, geom_hash_digest)
+                changes.adds[src_id] = attribute_hash_digest
             else:
                 #: remove not modified hash from hashes
                 attribute_hashes.pop(attribute_hash_digest)
-                if geom_hash_digest is not None:
-                    geometry_hashes.pop(geom_hash_digest)
 
-                changes.unchanged[src_id] = (attribute_hash_digest, geom_hash_digest)
+                changes.unchanged[src_id] = attribute_hash_digest
 
-    changes.determine_deletes(attribute_hashes, geometry_hashes)
+    changes.determine_deletes(attribute_hashes)
     changes.total_rows = total_rows
     del insert_cursor
 
@@ -376,19 +368,16 @@ def _get_hash_lookups(name, hash_path):
 
     hash_path: string path to hash gdb
 
-    returns a tuple with the hash lookups for attributes and geometries'''
+    returns a hash lookup for all attributes including geometries'''
     hash_lookup = {}
-    geo_hash_lookup = {}
-    fields = [hash_id_field, hash_att_field, hash_geom_field]
+    fields = [hash_id_field, hash_att_field]
 
     with arcpy.da.SearchCursor(path.join(hash_path, name), fields) as cursor:
-        for id, att_hash, geo_hash in cursor:
+        for id, att_hash in cursor:
             if att_hash is not None:
                 hash_lookup[str(att_hash)] = id
-            if geo_hash is not None:
-                geo_hash_lookup[str(geo_hash)] = id
 
-    return (hash_lookup, geo_hash_lookup)
+    return hash_lookup
 
 
 def check_schema(crate):

@@ -249,7 +249,6 @@ def _hash(crate, hash_path):
 
     attribute_hashes = _get_hash_lookups(crate.name, hash_gdb_path)
     total_rows = 0
-    unique_salty_id = 0
 
     insert_cursor = None
     temp_table = path.join(scratch_gdb_path, crate.name)
@@ -291,9 +290,11 @@ def _hash(crate, hash_path):
         else:
             id_parser = parse_id_as_string
 
+        hashes = {}
+
         for row in cursor:
             total_rows += 1
-            unique_salty_id += 1
+
             #: create shape hash
             src_id = id_parser(row[primary_key_index])
             if not crate.is_table():
@@ -306,7 +307,15 @@ def _hash(crate, hash_path):
                     continue
 
             #: create attribute hash
-            attribute_hash_digest = _create_hash(str(row), unique_salty_id)
+            attribute_hash = xxh32(str(row))
+
+            attribute_hash_digest = attribute_hash.hexdigest()
+
+            #: check for duplicate hashes
+            while attribute_hash_digest in hashes:
+                attribute_hash.update(attribute_hash_digest)
+                attribute_hash_digest = attribute_hash.hexdigest()
+            hashes[attribute_hash_digest] = None
 
             #: check for new feature
             if attribute_hash_digest not in attribute_hashes:
@@ -353,13 +362,6 @@ def _create_destination_data(crate):
     if crate.source_describe.dataType == 'ShapeFile':
         log.info('adding FID field for shapefile comparison')
         arcpy.AddField_management(crate.destination, 'FID', 'LONG')
-
-
-def _create_hash(string, salt):
-    hasher = xxh32(string)
-    hasher.update(str(salt))
-
-    return hasher.hexdigest()
 
 
 def _get_hash_lookups(name, hash_path):

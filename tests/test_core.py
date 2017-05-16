@@ -20,6 +20,8 @@ from mock import patch
 
 current_folder = path.dirname(path.abspath(__file__))
 check_for_changes_gdb = path.join(current_folder, 'data', 'checkForChanges.gdb')
+duplicates_gdb = path.join(current_folder, 'data', 'Duplicates.gdb')
+duplicates_gdb_copy = path.join(current_folder, 'data', 'DuplicatesCopy.gdb')
 check_for_changes_gdb2 = path.join(current_folder, 'data', 'checkForChanges2.gdb')
 update_tests_sde = path.join(current_folder, 'data', 'UPDATE_TESTS.sde')
 test_gdb = path.join(current_folder, 'data', 'test.gdb')
@@ -46,17 +48,46 @@ class CoreTests(unittest.TestCase):
         delete_if_arcpy_exists(test_gdb)
         delete_if_arcpy_exists(test_folder)
         delete_if_arcpy_exists(core.hash_gdb_path)
+        delete_if_arcpy_exists(duplicates_gdb_copy)
         core.init(cli.log)
 
     def tearDown(self):
         delete_if_arcpy_exists(test_gdb)
         delete_if_arcpy_exists(test_folder)
+        delete_if_arcpy_exists(core.hash_gdb_path)
+        delete_if_arcpy_exists(duplicates_gdb_copy)
 
     def test_update_no_existing_destination(self):
         crate = Crate('ZipCodes', check_for_changes_gdb, test_gdb, 'ImNotHere')
 
         self.assertEqual(core.update(crate, lambda x: True)[0], Crate.CREATED)
         self.assertEqual(arcpy.Exists(crate.destination), True)
+
+    def test_update_duplicate_features(self):
+        arcpy.Copy_management(duplicates_gdb, duplicates_gdb_copy)
+        crate = Crate('Duplicates', duplicates_gdb_copy, test_gdb, 'DuplicatesDest')
+
+        core.update(crate, lambda x: True)
+
+        self.assertEqual(arcpy.GetCount_management(crate.destination).getOutput(0), '4')
+
+        #: remove feature
+        with arcpy.da.UpdateCursor(crate.source, '*') as delete_cursor:
+            delete_cursor.next()
+            delete_cursor.deleteRow()
+
+        core.update(crate, lambda x: True)
+
+        self.assertEqual(arcpy.GetCount_management(crate.destination).getOutput(0), '3')
+
+        #: change feature
+        with arcpy.da.UpdateCursor(crate.source, ['TEST']) as update_cursor:
+            row = update_cursor.next()
+            row[0] = 'change'
+            update_cursor.updateRow(row)
+
+        self.assertEqual(core.update(crate, lambda x: True)[0], Crate.UPDATED)
+        self.assertEqual(arcpy.GetCount_management(crate.destination).getOutput(0), '3')
 
     def test_deleted_destination_between_updates(self):
         crate = Crate('ZipCodes', check_for_changes_gdb, test_gdb, 'ImNotHere')
@@ -322,8 +353,8 @@ class CoreTests(unittest.TestCase):
 
         #: all features hashes are invalid since we deleted the first row
         #: which changes the salt for all following rows
-        self.assertEqual(len(changes.adds), 4)
-        self.assertEqual(len(changes._deletes), 5)
+        self.assertEqual(len(changes.adds), 0)
+        self.assertEqual(len(changes._deletes), 1)
 
         core.update(crate, lambda x: True)
 

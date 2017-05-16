@@ -412,12 +412,11 @@ class Changes(object):
         '''
         return self.has_adds() or self.has_deletes()
 
-    def determine_deletes(self, attribute_hashes, geometry_hashes):
+    def determine_deletes(self, attribute_hashes):
         '''
         attribute_hashes: Dictionary<string, hash> of id's and hashes that were not accessed
-        geometry_hashes: Dictionary<string, hash> of id's and hashes that were not accessed
 
         returns the union of the two dictionary values'''
-        self._deletes = dict.fromkeys(set(attribute_hashes.values() + geometry_hashes.values()), None)
+        self._deletes = dict.fromkeys(attribute_hashes.values(), None)
 
         return self._deletes

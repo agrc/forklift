@@ -11,7 +11,7 @@ from config import config_location
 from exceptions import ValidationException
 from models import Changes, Crate
 from os import path
-from hashlib import md5
+from xxhash import xxh32
 
 log = None
 
@@ -356,7 +356,7 @@ def _create_destination_data(crate):
 
 
 def _create_hash(string, salt):
-    hasher = md5(string)
+    hasher = xxh32(string)
     hasher.update(str(salt))
 
     return hasher.hexdigest()

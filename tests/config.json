@@ -1,0 +1,12 @@
+{
+  "configuration": "Production",
+  "copyDestinations": [],
+  "notify": [
+    "stdavis@utah.gov",
+    "sgourley@utah.gov"
+  ],
+  "repositories": [],
+  "sendEmails": false,
+  "stagingDestination": "c:\\scheduled\\staging",
+  "warehouse": "c:\\scheduled\\warehouse"
+}

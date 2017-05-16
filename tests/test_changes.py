@@ -15,17 +15,6 @@ class TestChanges(unittest.TestCase):
     def setUp(self):
         self.patient = Changes([])
 
-    def test_determine_deletes_from_hash_values(self):
-        attribute_hashes = {
-            'key1': 1,
-            'key2': 2,
-            'key3': 3,
-        }
-
-        deletes = self.patient.determine_deletes(attribute_hashes)
-
-        self.assertEqual(deletes, dict.fromkeys([1, 2, 3]))
-
     def test_has_adds_is_false_when_emtpy(self):
         self.assertFalse(self.patient.has_adds())
 

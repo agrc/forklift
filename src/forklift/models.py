@@ -7,12 +7,14 @@ A module that contains the model classes for forklift
 '''
 
 import arcpy
-import logging
 import config
+import errno
+import logging
 from hashlib import md5
 from inspect import getsourcefile
 from messaging import send_email
 from pprint import PrettyPrinter
+from os import makedirs
 from os.path import dirname
 from os.path import join
 
@@ -67,6 +69,15 @@ class Pallet(object):
         should be placed in here instead of the `__init__` method.
 
         configuration: string `Production`, `Staging`, or `Dev`'''
+
+        self.staging_rack = join(self.staging_rack, configuration)
+
+        try:
+            makedirs(self.staging_rack)
+        except OSError, e:
+            if e.errno != errno.EEXIST:
+                raise
+
         return
 
     def process(self):

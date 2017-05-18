@@ -59,6 +59,7 @@ If the property is a list then the value is appended to the existing list.
 1. `pip install .\` from the directory containing `setup.py`.
 1. `forklift config init`
 1. `forklift config set --key copyDestinations --value c:\\MapData` - This is where you want your output placed.
+1. `forklift config set --key stagingDestinations --value c:\\staging` - This is where your data is staged for copy.
 1. `forklift repos --add agrc/parcels` - The agrc/parcels is the user/repo to scan for Pallets.
 1. `forklift garage open` - Add all connection.sde files to the forklift garage.
 1. Set the following **user** environmental variables.

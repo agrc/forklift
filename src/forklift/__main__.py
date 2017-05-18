@@ -64,7 +64,7 @@ speedtest = join(dirname(realpath(__file__)), '..', '..', 'speedtest', 'SpeedTes
 
 
 def main():
-    args = docopt(__doc__, version='5.4.1')
+    args = docopt(__doc__, version='6.0.0')
     _setup_logging(args['--verbose'])
     _add_global_error_handler()
 

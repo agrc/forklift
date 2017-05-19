@@ -240,13 +240,16 @@ def copy_data(specific_pallets, all_pallets, config_copy_destinations):
         return ''
 
     services_affected, data_being_moved, destination_to_pallet = _hydrate_data_structures(filtered_specific_pallets, all_pallets)
-    results = _stop_services(services_affected)
 
+    #: compact before shutting down services to minimize downtime
     for source in data_being_moved:
         if Describe(source).workspaceFactoryProgID.startswith('esriDataSourcesGDB.FileGDBWorkspaceFactory'):
             log.info('compacting %s', source)
             Compact_management(source)
 
+    results = _stop_services(services_affected)
+
+    for source in data_being_moved:
         for destination in config_copy_destinations:
             destination_workspace = path.join(destination, path.basename(source))
 

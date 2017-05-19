@@ -6,8 +6,9 @@ test_forklift.py
 A module for testing lift.py
 '''
 
+import arcpy
 import unittest
-from forklift import lift
+from forklift import lift, core
 from forklift.models import Pallet, Crate
 from mock import Mock
 from mock import patch
@@ -161,8 +162,8 @@ class TestLift(unittest.TestCase):
         pallet2.post_copy_process.assert_not_called()
         pallet3.post_copy_process.assert_called_once()
 
-    @patch('forklift.lift.Describe', autospec=True)
-    @patch('forklift.lift.Compact_management', autospec=True)
+    @patch('arcpy.Describe', autospec=True)
+    @patch('arcpy.Compact_management', autospec=True)
     @patch('forklift.lift.path.exists', autospec=True)
     @patch('shutil.move', autospec=True)
     @patch('shutil.rmtree', autospec=True)
@@ -190,8 +191,8 @@ class TestLift(unittest.TestCase):
         self.assertEqual(rmtree_mock.call_count, 6)
         self.assertEqual(compact_mock.call_count, 3)
 
-    @patch('forklift.lift.Describe', autospec=True)
-    @patch('forklift.lift.Compact_management', autospec=True)
+    @patch('arcpy.Describe', autospec=True)
+    @patch('arcpy.Compact_management', autospec=True)
     @patch('shutil.move', autospec=True)
     @patch('shutil.rmtree', autospec=True)
     @patch('shutil.copytree', autospec=True)
@@ -209,8 +210,8 @@ class TestLift(unittest.TestCase):
         self.assertEqual(pallet.success, (False, error_message))
 
     @patch('forklift.lift.LightSwitch', autospec=True)
-    @patch('forklift.lift.Describe', autospec=True)
-    @patch('forklift.lift.Compact_management', autospec=True)
+    @patch('arcpy.Describe', autospec=True)
+    @patch('arcpy.Compact_management', autospec=True)
     @patch('forklift.lift.path.exists', autospec=True)
     @patch('shutil.move', autospec=True)
     @patch('shutil.rmtree', autospec=True)
@@ -242,6 +243,31 @@ class TestLift(unittest.TestCase):
         self.assertEqual(rmtree_mock.call_count, 6)
         self.assertEqual(compact_mock.call_count, 3)
         lightswitch_mock().ensure.assert_has_calls([call('off', set([('Pallet', 'MapServer')])), call('on', set([('Pallet', 'MapServer')]))])
+
+    def test_copy_data_scrub_hash_field(self):
+        copy_data_fgdb_name = 'CopyData.gdb'
+        copied_data = path.join(current_folder, copy_data_fgdb_name)
+
+        def cleanup():
+            print('cleaning up')
+            if arcpy.Exists(copied_data):
+                arcpy.Delete_management(copied_data)
+
+        cleanup()
+
+        pallet = Pallet()
+        pallet.copy_data = [path.join(current_folder, 'data', copy_data_fgdb_name)]
+        pallet.requires_processing = Mock(return_value=True)
+
+        lift.copy_data([pallet], [pallet], [current_folder])
+
+        feature_class_fields = [field.name for field in arcpy.Describe(path.join(copied_data, 'DNROilGasWells_adds')).fields]
+        table_fields = [field.name for field in arcpy.Describe(path.join(copied_data, 'Providers_adds')).fields]
+
+        self.assertNotIn(core.hash_field, feature_class_fields)
+        self.assertNotIn(core.hash_field, table_fields)
+
+        cleanup()
 
     def test_create_report_object(self):
         git_errors = ['a', 'b']

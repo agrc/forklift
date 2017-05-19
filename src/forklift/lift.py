@@ -6,14 +6,12 @@ lift.py
 A module that contains methods to handle pallets
 '''
 
+import arcpy
 import logging
 import seat
 import shutil
-from arcpy import Compact_management
-from arcpy import Describe
 from arcgis import LightSwitch
-from arcpy import ClearWorkspaceCache_management as ClearWorkspaceCache
-from arcpy import ResetEnvironments
+from core import hash_field
 from forklift.models import Crate
 from os import makedirs
 from os import path
@@ -92,8 +90,8 @@ def process_pallets(pallets, is_post_copy=False):
                     log.info('%s pallet: %r', verb, pallet)
                     start_seconds = clock()
 
-                    ResetEnvironments()
-                    ClearWorkspaceCache()
+                    arcpy.ResetEnvironments()
+                    arcpy.ClearWorkspaceCache_management()
                     if not is_post_copy:
                         pallet.process()
                     else:
@@ -105,8 +103,8 @@ def process_pallets(pallets, is_post_copy=False):
                     start_seconds = clock()
 
                     log.info('shipping pallet: %r', pallet)
-                    ResetEnvironments()
-                    ClearWorkspaceCache()
+                    arcpy.ResetEnvironments()
+                    arcpy.ClearWorkspaceCache_management()
                     pallet.ship()
                     log.debug('shipped pallet %s', seat.format_time(clock() - start_seconds))
         except Exception as e:
@@ -243,9 +241,9 @@ def copy_data(specific_pallets, all_pallets, config_copy_destinations):
 
     #: compact before shutting down services to minimize downtime
     for source in data_being_moved:
-        if Describe(source).workspaceFactoryProgID.startswith('esriDataSourcesGDB.FileGDBWorkspaceFactory'):
+        if arcpy.Describe(source).workspaceFactoryProgID.startswith('esriDataSourcesGDB.FileGDBWorkspaceFactory'):
             log.info('compacting %s', source)
-            Compact_management(source)
+            arcpy.Compact_management(source)
 
     results = _stop_services(services_affected)
 
@@ -262,6 +260,8 @@ def copy_data(specific_pallets, all_pallets, config_copy_destinations):
 
                 log.debug('copying source to destination')
                 shutil.copytree(source, destination_workspace)
+
+                _scrub_hash_fields(destination_workspace)
 
                 if path.exists(destination_workspace + 'x'):
                     log.debug('removing temporary gdb: %s', destination_workspace + 'x')
@@ -292,6 +292,22 @@ def copy_data(specific_pallets, all_pallets, config_copy_destinations):
     results += _start_services(services_affected)
 
     return results
+
+
+def _scrub_hash_fields(workspace):
+    '''
+    workspace: String
+
+    removes the hash field from all datasets in the workspace'''
+
+    log.info('scrubbing hash fields')
+    arcpy.env.workspace = workspace
+
+    for table in arcpy.ListFeatureClasses() + arcpy.ListTables():
+        log.debug(table)
+        arcpy.DeleteField_management(table, hash_field)
+
+    arcpy.env.workspace = None
 
 
 def _hydrate_data_structures(specific_pallets, all_pallets):

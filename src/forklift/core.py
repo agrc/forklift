@@ -231,6 +231,7 @@ def _hash(crate):
 
             #: check for duplicate hashes
             while attribute_hash_digest in changes.adds or attribute_hash_digest in changes.unchanged:
+                log.warn('duplicate hash found for feature: %s', row)
                 attribute_hash.update(attribute_hash_digest)
                 attribute_hash_digest = attribute_hash.hexdigest()
 

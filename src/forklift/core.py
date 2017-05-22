@@ -213,10 +213,8 @@ def _hash(crate):
             total_rows += 1
 
             if not crate.is_table():
-                shape_wkt = row[-1]
-
                 #: skip features with empty geometry
-                if shape_wkt is None:
+                if row[-1] is None:
                     log.warn('Empty geometry found in %s', row)
                     total_rows -= 1
                     continue

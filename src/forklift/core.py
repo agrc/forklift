@@ -207,9 +207,8 @@ def _hash(crate):
 
     arcpy.AddField_management(changes.table, hash_field, 'TEXT', field_length=8)
 
-    insert_cursor = arcpy.da.InsertCursor(changes.table, changes.fields)
-
-    with arcpy.da.SearchCursor(crate.source, [field for field in fields if field != hash_field]) as cursor:
+    with arcpy.da.SearchCursor(crate.source, [field for field in fields if field != hash_field]) as cursor, \
+            arcpy.da.InsertCursor(changes.table, changes.fields) as insert_cursor:
         for row in cursor:
             total_rows += 1
 
@@ -248,7 +247,6 @@ def _hash(crate):
 
     changes.determine_deletes(attribute_hashes)
     changes.total_rows = total_rows
-    del insert_cursor
 
     return changes
 

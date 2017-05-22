@@ -90,6 +90,14 @@ def update(crate, validate_crate):
         if not changes.has_changes():
             log.debug('No changes found.')
 
+        if changes.has_deletes() or changes.has_adds():
+            log.debug('starting edit session...')
+            edit_session = arcpy.da.Editor(crate.destination_workspace)
+            edit_session.startEditing(False, False)
+            edit_session.startOperation()
+        else:
+            edit_session = None
+
         #: delete unaccessed hashes
         if changes.has_deletes():
             log.debug('Number of rows to be deleted: %d', len(changes._deletes))
@@ -97,18 +105,11 @@ def update(crate, validate_crate):
             if status != Crate.CREATED:
                 change_status = (Crate.UPDATED, None)
 
-            edit_session = arcpy.da.Editor(crate.destination_workspace)
-            edit_session.startEditing(False, False)
-            edit_session.startOperation()
-
             log.debug('deleting from destintation table')
             with arcpy.da.UpdateCursor(crate.destination, hash_field) as cursor:
                 for row in cursor:
                     if row[0] in changes._deletes:
                         cursor.deleteRow()
-
-            edit_session.stopOperation()
-            edit_session.stopEditing(True)
 
         #: add new/updated rows
         if changes.has_adds():
@@ -121,12 +122,6 @@ def update(crate, validate_crate):
             if crate.needs_reproject():
                 changes.table = arcpy.Project_management(changes.table, changes.table + reproject_temp_suffix, crate.destination_coordinate_system,
                                                          crate.geographic_transformation)[0]
-
-            log.debug('starting edit session...')
-            edit_session = arcpy.da.Editor(crate.destination_workspace)
-            edit_session.startEditing(False, False)
-            edit_session.startOperation()
-            log.debug('edit session and operation started')
 
             #: strip off duplicated primary key added during hashing since it's no longer necessary
             log.debug('adds features')
@@ -145,8 +140,10 @@ def update(crate, validate_crate):
 
                     cursor.insertRow(row)
 
-            log.debug('stopping edit session (saving edits)')
+        if edit_session is not None:
+            log.debug('stopping edit operation')
             edit_session.stopOperation()
+            log.debug('stopping edit session (saving edits)')
             edit_session.stopEditing(True)
 
         #: sanity check the row counts between source and destination
@@ -158,9 +155,10 @@ def update(crate, validate_crate):
     except Exception as e:
         log.error('unhandled exception: %s for crate %r', e.message, crate, exc_info=True)
         try:
-            log.warn('stopping edit session (not saving edits)')
-            edit_session.abortOperation()
-            edit_session.stopEditing(False)
+            if edit_session is not None:
+                log.warn('stopping edit session (not saving edits)')
+                edit_session.abortOperation()
+                edit_session.stopEditing(False)
         except:
             pass
 

@@ -212,8 +212,6 @@ def _hash(crate):
     insert_cursor = arcpy.da.InsertCursor(changes.table, changes.fields)
 
     with arcpy.da.SearchCursor(crate.source, [field for field in fields if field != hash_field]) as cursor:
-        hashes = {}
-
         for row in cursor:
             total_rows += 1
 
@@ -232,10 +230,9 @@ def _hash(crate):
             attribute_hash_digest = attribute_hash.hexdigest()
 
             #: check for duplicate hashes
-            while attribute_hash_digest in hashes:
+            while attribute_hash_digest in changes.adds or attribute_hash_digest in changes.unchanged:
                 attribute_hash.update(attribute_hash_digest)
                 attribute_hash_digest = attribute_hash.hexdigest()
-            hashes[attribute_hash_digest] = None
 
             #: check for new feature
             if attribute_hash_digest not in attribute_hashes:

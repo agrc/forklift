@@ -183,9 +183,8 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(len(run('RuralTelcomBoundaries')._deletes), 1)
 
     def test_hash_shapefile(self):
-        arcpy.Copy_management(check_for_changes_gdb, test_gdb)
         data_folder = path.join(current_folder, 'data')
-        crate = Crate('shapefile.shp', data_folder, test_gdb, 'shapefile')
+        crate = Crate('shapefile.shp', data_folder, check_for_changes_gdb, 'shapefile')
         changes = core._hash(crate)
 
         self.assertEqual(len(changes.adds), 1)

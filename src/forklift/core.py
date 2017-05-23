@@ -174,7 +174,7 @@ def _hash(crate):
 
     returns a Changes model with deltas for the source'''
 
-    shape_token = 'SHAPE@WKT'
+    shape_token = 'SHAPE@'
 
     log.info('checking for changes...')
     #: finding and filtering common fields between source and destination
@@ -219,29 +219,32 @@ def _hash(crate):
                     total_rows -= 1
                     continue
 
-            #: create attribute hash
-            attribute_hash = xxh32(str(row))
+                #: do this in two parts to prevent creating an unnecessary copy of the WKT
+                row_hash = xxh32(str(row[:-1]))
+                row_hash.update(row[-1].WKT)
+            else:
+                row_hash = xxh32(str(row))
 
-            attribute_hash_digest = attribute_hash.hexdigest()
+            digest = row_hash.hexdigest()
 
             #: check for duplicate hashes
-            while attribute_hash_digest in changes.adds or attribute_hash_digest in changes.unchanged:
+            while digest in changes.adds or digest in changes.unchanged:
                 log.warn('duplicate hash found for feature: %s', row)
-                attribute_hash.update(attribute_hash_digest)
-                attribute_hash_digest = attribute_hash.hexdigest()
+                row_hash.update(digest)
+                digest = row_hash.hexdigest()
 
             #: check for new feature
-            if attribute_hash_digest not in attribute_hashes:
+            if digest not in attribute_hashes:
                 #: update or add
                 #: insert into temp table
-                insert_cursor.insertRow(row + (attribute_hash_digest,))
+                insert_cursor.insertRow(row + (digest,))
                 #: add to adds
-                changes.adds[attribute_hash_digest] = None
+                changes.adds[digest] = None
             else:
                 #: remove not modified hash from hashes
-                attribute_hashes.pop(attribute_hash_digest)
+                attribute_hashes.pop(digest)
 
-                changes.unchanged[attribute_hash_digest] = None
+                changes.unchanged[digest] = None
 
     changes.determine_deletes(attribute_hashes)
     changes.total_rows = total_rows

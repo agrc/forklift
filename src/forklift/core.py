@@ -174,7 +174,7 @@ def _hash(crate):
 
     returns a Changes model with deltas for the source'''
 
-    shape_token = 'SHAPE@'
+    shape_token = 'SHAPE@WKT'
 
     log.info('checking for changes...')
     #: finding and filtering common fields between source and destination
@@ -221,7 +221,7 @@ def _hash(crate):
 
                 #: do this in two parts to prevent creating an unnecessary copy of the WKT
                 row_hash = xxh32(str(row[:-1]))
-                row_hash.update(row[-1].WKT)
+                row_hash.update(row[-1])
             else:
                 row_hash = xxh32(str(row))
 

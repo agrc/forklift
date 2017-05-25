@@ -123,9 +123,6 @@ def update(crate, validate_crate):
                 changes.table = arcpy.Project_management(changes.table, changes.table + reproject_temp_suffix, crate.destination_coordinate_system,
                                                          crate.geographic_transformation)[0]
 
-            #: strip off duplicated primary key added during hashing since it's no longer necessary
-            log.debug('adds features')
-
             if not crate.is_table():
                 changes.fields[shape_field_index] = changes.fields[shape_field_index].rstrip('WKT')
 

@@ -207,6 +207,7 @@ def _hash(crate):
 
     arcpy.AddField_management(changes.table, hash_field, 'TEXT', field_length=8)
 
+    has_dups = False
     with arcpy.da.SearchCursor(crate.source, [field for field in fields if field != hash_field]) as cursor, \
             arcpy.da.InsertCursor(changes.table, changes.fields) as insert_cursor:
         for row in cursor:
@@ -229,7 +230,7 @@ def _hash(crate):
 
             #: check for duplicate hashes
             while digest in changes.adds or digest in changes.unchanged:
-                log.warn('duplicate hash found for feature: %s', row)
+                has_dups = True
                 row_hash.update(digest)
                 digest = row_hash.hexdigest()
 
@@ -248,6 +249,9 @@ def _hash(crate):
 
     changes.determine_deletes(attribute_hashes)
     changes.total_rows = total_rows
+
+    if has_dups:
+        log.warn('duplicate features detected!')
 
     return changes
 

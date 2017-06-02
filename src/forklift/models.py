@@ -329,7 +329,7 @@ class Crate(object):
 
         def filter_filenames(workspace, name):
             names = []
-            walk = arcpy.da.Walk(workspace, followlinks=True)
+            walk = arcpy.da.Walk(workspace, followlinks=True, datatype=['FeatureClass', 'Table'])
 
             for dirpath, dirnames, filenames in walk:
                 names = filenames

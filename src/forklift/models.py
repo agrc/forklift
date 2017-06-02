@@ -8,10 +8,10 @@ A module that contains the model classes for forklift
 
 import arcpy
 import logging
-import config
+from . import config
 from hashlib import md5
 from inspect import getsourcefile
-from messaging import send_email
+from .messaging import send_email
 from pprint import PrettyPrinter
 from os.path import dirname
 from os.path import join
@@ -119,7 +119,7 @@ class Pallet(object):
             params.update({'destination_coordinate_system': self.destination_coordinate_system, 'geographic_transformation': self.geographic_transformation})
 
             #: info can be a table name here instead of a tuple
-            if isinstance(info, basestring):
+            if isinstance(info, str):
                 params['source_name'] = info
             else:
                 for i, val in enumerate(info):

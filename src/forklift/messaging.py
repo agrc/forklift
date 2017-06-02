@@ -9,7 +9,7 @@ A module that contains a method for sending emails
 import gzip
 import logging
 import io
-from config import get_config_prop
+from .config import get_config_prop
 from email.mime.application import MIMEApplication
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -38,12 +38,12 @@ def send_email(to, subject, body, attachment=''):
         log.warn('Required environment variables for sending emails do not exist. No emails sent. See README.md for more details.')
         return
 
-    if not isinstance(to, basestring):
+    if not isinstance(to, str):
         to_addresses = ','.join(to)
     else:
         to_addresses = to
 
-    if isinstance(body, basestring):
+    if isinstance(body, str):
         message = MIMEMultipart()
         message.attach(MIMEText(body, 'html'))
     else:

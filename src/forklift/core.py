@@ -7,9 +7,9 @@ Tools for updating the data associated with a models.Crate
 '''
 
 import arcpy
-from config import config_location
-from exceptions import ValidationException
-from models import Changes, Crate
+from .config import config_location
+from .exceptions import ValidationException
+from .models import Changes, Crate
 from os import path
 from xxhash import xxh32
 
@@ -318,13 +318,13 @@ def check_schema(crate):
     source_fields = get_fields(crate.source)
     destination_fields = get_fields(crate.destination)
 
-    for field_key in destination_fields.keys():
+    for field_key in list(destination_fields.keys()):
         if field_key == hash_field.upper():
             continue
         # make sure that all fields from destination are in source
         # not sure that we care if there are fields in source that are not in destination
         destination_fld = destination_fields[field_key]
-        if field_key not in source_fields.keys():
+        if field_key not in list(source_fields.keys()):
             missing_fields.append(destination_fld.name)
         else:
             source_fld = source_fields[field_key]

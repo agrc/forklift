@@ -41,13 +41,13 @@ Examples:
     forklift update-static path/to/pallet_file.py           Updates the static data defined in the specified pallet.
 '''
 
-import config
-import cli
+from . import config
+from . import cli
 import faulthandler
 import logging.config
 import sys
 from docopt import docopt
-from messaging import send_email
+from .messaging import send_email
 from logging import shutdown
 from os import makedirs
 from os import startfile
@@ -71,7 +71,7 @@ def main():
     if args['config']:
         if args['init']:
             message = cli.init()
-            print('config file: {}'.format(message))
+            print(('config file: {}'.format(message)))
 
         if args['repos'] and args['<repo>']:
             if args['--add']:
@@ -108,7 +108,7 @@ def main():
             print('No pallets found!')
         else:
             for plug in pallets:
-                print(': '.join(plug))
+                print((': '.join(plug)))
     elif args['scorched-earth']:
         cli.scorched_earth()
     elif args['speedtest']:

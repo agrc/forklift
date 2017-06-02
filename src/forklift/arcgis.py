@@ -91,7 +91,7 @@ class LightSwitch(object):
         return ok
 
     def _return_false_for_status(self, json_response):
-        if 'status' in json_response.keys() and json_response['status'] == 'error':
+        if 'status' in list(json_response.keys()) and json_response['status'] == 'error':
             if 'Token Expired.' in json_response['messages']:
                 self._request_token()
 

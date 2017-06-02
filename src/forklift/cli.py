@@ -6,18 +6,18 @@ lift.py
 A module that contains the implementation of the cli commands
 '''
 
-import config
-import core
-import lift
+from . import config
+from . import core
+from . import lift
 import logging
 import pystache
-import seat
+from . import seat
 import sys
 from colorama import init as colorama_init, Fore
-from messaging import send_email
+from .messaging import send_email
 from git import Repo
 from imp import load_source
-from models import Pallet
+from .models import Pallet
 from os.path import abspath, basename, dirname, exists, join, splitext, realpath
 from os import walk
 from os import linesep
@@ -32,7 +32,7 @@ template = join(abspath(dirname(__file__)), 'report_template.html')
 speedtest_destination = join(dirname(realpath(__file__)), '..', '..', 'speedtest', 'data')
 colorama_init()
 
-pallet_file_regex = compile(ur'pallet.*\.py$')
+pallet_file_regex = compile(r'pallet.*\.py$')
 
 
 def init():
@@ -294,7 +294,7 @@ def _change_data(data_path):
 
     field_changers = {'UTAddPtID': lambda value: value[:-1] + 'X' if value else 'X'}
     change_field = 'FieldToChange'
-    fields = field_changers.keys() + [change_field]
+    fields = list(field_changers.keys()) + [change_field]
 
     with arcpy.da.UpdateCursor(data_path, fields) as cursor:
         for row in cursor:
@@ -310,7 +310,7 @@ def _change_data(data_path):
                 elif field_to_change == 'UnchangedRow' or field_to_change is None:
                     continue
                 else:
-                    print 'Uknown field to change: {}'.format(field_to_change)
+                    print('Uknown field to change: {}'.format(field_to_change))
 
 
 def _prep_change_data(data_path):
@@ -329,7 +329,7 @@ def _prep_change_data(data_path):
 
 
 def speedtest(pallet_location):
-    print('{0}{1}Setting up speed test...{0}'.format(Fore.RESET, Fore.MAGENTA))
+    print(('{0}{1}Setting up speed test...{0}'.format(Fore.RESET, Fore.MAGENTA)))
 
     #: remove logging
     log.handlers = [logging.NullHandler()]
@@ -359,16 +359,16 @@ def speedtest(pallet_location):
     if arcpy.Exists(core.scratch_gdb_path):
         arcpy.Delete_management(core.scratch_gdb_path)
 
-    print('{0}{1}Tests ready starting dry run...{0}'.format(Fore.RESET, Fore.MAGENTA))
+    print(('{0}{1}Tests ready starting dry run...{0}'.format(Fore.RESET, Fore.MAGENTA)))
 
     start_seconds = clock()
     dry_report = start_lift(pallet_location)
     dry_run = seat.format_time(clock() - start_seconds)
 
-    print('{0}{1}Changing data...{0}'.format(Fore.RESET, Fore.MAGENTA))
+    print(('{0}{1}Changing data...{0}'.format(Fore.RESET, Fore.MAGENTA)))
     _change_data(join(speedtest_destination, 'ChangeSourceData.gdb', 'AddressPoints'))
 
-    print('{0}{1}Repeating test...{0}'.format(Fore.RESET, Fore.MAGENTA))
+    print(('{0}{1}Repeating test...{0}'.format(Fore.RESET, Fore.MAGENTA)))
     start_seconds = clock()
     repeat_report = start_lift(pallet_location)
     repeat = seat.format_time(clock() - start_seconds)
@@ -381,9 +381,9 @@ def speedtest(pallet_location):
     if arcpy.Exists(core.scratch_gdb_path):
         arcpy.Delete_management(core.scratch_gdb_path)
 
-    print('{1}Dry Run Output{0}{2}{3}'.format(Fore.RESET, Fore.CYAN, linesep, dry_report))
-    print('{1}Repeat Run Output{0}{2}{3}'.format(Fore.RESET, Fore.CYAN, linesep, repeat_report))
-    print('{3}{0}{1}Speed Test Results{3}{0}{2}Dry Run:{0} {4}{3}{2}Repeat:{0} {5}'.format(Fore.RESET, Fore.GREEN, Fore.CYAN, linesep, dry_run, repeat))
+    print(('{1}Dry Run Output{0}{2}{3}'.format(Fore.RESET, Fore.CYAN, linesep, dry_report)))
+    print(('{1}Repeat Run Output{0}{2}{3}'.format(Fore.RESET, Fore.CYAN, linesep, repeat_report)))
+    print(('{3}{0}{1}Speed Test Results{3}{0}{2}Dry Run:{0} {4}{3}{2}Repeat:{0} {5}'.format(Fore.RESET, Fore.GREEN, Fore.CYAN, linesep, dry_run, repeat)))
 
 
 def update_static(file_path):

@@ -8,10 +8,10 @@ A module that contains methods to handle pallets
 
 import arcpy
 import logging
-import seat
+from . import seat
 import shutil
-from arcgis import LightSwitch
-from core import hash_field
+from .arcgis import LightSwitch
+from .core import hash_field
 from forklift.models import Crate
 from os import makedirs
 from os import path
@@ -131,7 +131,7 @@ def update_static_for(pallets, config_copy_destinations, force):
                 log.error('static_data: %s does not exist!', source)
                 continue
 
-            destinations = map(lambda d: path.join(d, source.split('\\')[-1]), config_copy_destinations)
+            destinations = [path.join(d, source.split('\\')[-1]) for d in config_copy_destinations]
             if all([not path.exists(d) for d in destinations]):
                 log.info('copying static data for the first time')
                 for destination in destinations:
@@ -150,7 +150,7 @@ def create_report_object(pallets, elapsed_time, copy_results, git_errors):
     reports = [pallet.get_report() for pallet in pallets]
 
     return {'total_pallets': len(reports),
-            'num_success_pallets': len(filter(lambda p: p['success'], reports)),
+            'num_success_pallets': len([p for p in reports if p['success']]),
             'git_errors': git_errors,
             'pallets': reports,
             'total_time': elapsed_time,

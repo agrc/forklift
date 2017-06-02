@@ -69,7 +69,6 @@ setup(
     install_requires=[
         'colorama==0.3.7',
         'docopt==0.6.2',
-        'faulthandler==2.6.0',
         'gitpython==2.1.3',
         'ndg-httpsclient==0.4.2',
         'pyasn1==0.2.3',

@@ -9,7 +9,7 @@ A module that contains the model classes for forklift
 import arcpy
 import logging
 from . import config
-from hashlib import md5
+from xxhash import xxh32
 from inspect import getsourcefile
 from .messaging import send_email
 from pprint import PrettyPrinter
@@ -243,7 +243,7 @@ class Crate(object):
         #: the full path to the destination data
         self.destination = join(self.destination_workspace, self.destination_name)
         #: the hash table name of a crate
-        self.name = '{1}_{0}'.format(md5(self.destination).hexdigest(), self.destination_name).replace('.', '_')
+        self.name = '{1}_{0}'.format(xxh32(self.destination).hexdigest(), self.destination_name).replace('.', '_')
 
         #: the full path to the source data
         self.source = join(source_workspace, source_name)

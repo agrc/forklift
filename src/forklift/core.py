@@ -81,8 +81,8 @@ def update(crate, validate_crate):
             if has_custom == NotImplemented:
                 check_schema(crate)
         except ValidationException as e:
-            log.warn('validation error: %s for crate %r', e.message, crate, exc_info=True)
-            return (Crate.INVALID_DATA, e.message)
+            log.warn('validation error: %s for crate %r', e, crate, exc_info=True)
+            return (Crate.INVALID_DATA, e)
 
         #: create source hash and store
         changes = _hash(crate)
@@ -150,7 +150,7 @@ def update(crate, validate_crate):
 
         return change_status
     except Exception as e:
-        log.error('unhandled exception: %s for crate %r', e.message, crate, exc_info=True)
+        log.error('unhandled exception: %s for crate %r', e, crate, exc_info=True)
         try:
             if edit_session is not None:
                 log.warn('stopping edit session (not saving edits)')
@@ -159,7 +159,7 @@ def update(crate, validate_crate):
         except:
             pass
 
-        return (Crate.UNHANDLED_EXCEPTION, e.message)
+        return (Crate.UNHANDLED_EXCEPTION, e)
     finally:
         arcpy.ResetEnvironments()
         arcpy.ClearWorkspaceCache_management()

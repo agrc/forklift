@@ -260,7 +260,7 @@ class Crate(object):
         try:
             self.source_describe = describer(self.source)
         except IOError as e:
-            self.result = (Crate.INVALID_DATA, e.message)
+            self.result = (Crate.INVALID_DATA, e)
             return
 
         if not self.source_describe.hasOID:

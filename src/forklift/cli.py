@@ -46,7 +46,7 @@ def add_repo(repo):
     try:
         _validate_repo(repo, raises=True)
     except Exception as e:
-        return e.message
+        return e
 
     return config.set_config_prop('repositories', repo)
 
@@ -146,7 +146,7 @@ def _sort_pallets(file_path, pallet_arg):
             if pallet_location == file_path or file_path is None:
                 sorted_pallets.append(pallet)
         except Exception as e:
-            log.error('error creating pallet class: %s. %s', PalletClass.__name__, e.message, exc_info=True)
+            log.error('error creating pallet class: %s. %s', PalletClass.__name__, e, exc_info=True)
 
     sorted_pallets.sort(key=lambda p: p.__class__.__name__)
 
@@ -241,7 +241,7 @@ def _get_pallets_in_file(file_path):
             mod = load_source(name, file_path)
     except Exception as e:
         # skip modules that fail to import
-        log.error('%s failed to import: %s', file_path, e.message, exc_info=True)
+        log.error('%s failed to import: %s', file_path, e, exc_info=True)
         return []
 
     for member in dir(mod):

@@ -42,8 +42,8 @@ def process_crates_for(pallets, update_def, configuration='Production'):
             log.debug('building pallet: %r', pallet)
             pallet.build(configuration)
         except Exception as e:
-            pallet.success = (False, e.message)
-            log.error('error building pallet: %s for pallet: %r', e.message, pallet, exc_info=True)
+            pallet.success = (False, e)
+            log.error('error building pallet: %s for pallet: %r', e, pallet, exc_info=True)
             continue
 
         for crate in pallet.get_crates():
@@ -108,8 +108,8 @@ def process_pallets(pallets, is_post_copy=False):
                     pallet.ship()
                     log.debug('shipped pallet %s', seat.format_time(clock() - start_seconds))
         except Exception as e:
-            pallet.success = (False, e.message)
-            log.error('error %s pallet: %s for pallet: %r', verb, e.message, pallet, exc_info=True)
+            pallet.success = (False, e)
+            log.error('error %s pallet: %s for pallet: %r', verb, e, pallet, exc_info=True)
 
 
 def update_static_for(pallets, config_copy_destinations, force):

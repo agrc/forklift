@@ -11,13 +11,14 @@ from .config import config_location
 from .exceptions import ValidationException
 from .models import Changes, Crate
 from os import path
-from xxhash import xxh32
+from xxhash import xxh64
 
 log = None
 
 reproject_temp_suffix = '_fl'
 
 hash_field = 'FORKLIFT_HASH'
+hash_field_length = 16
 
 src_id_field = 'src_id' + reproject_temp_suffix
 
@@ -202,7 +203,7 @@ def _hash(crate):
                                                      crate.name,
                                                      template=crate.source)[0]
 
-    arcpy.AddField_management(changes.table, hash_field, 'TEXT', field_length=8)
+    arcpy.AddField_management(changes.table, hash_field, 'TEXT', field_length=hash_field_length)
 
     has_dups = False
     with arcpy.da.SearchCursor(crate.source, [field for field in fields if field != hash_field]) as cursor, \
@@ -218,10 +219,10 @@ def _hash(crate):
                     continue
 
                 #: do this in two parts to prevent creating an unnecessary copy of the WKT
-                row_hash = xxh32(str(row[:-1]))
+                row_hash = xxh64(str(row[:-1]))
                 row_hash.update(row[-1])
             else:
-                row_hash = xxh32(str(row))
+                row_hash = xxh64(str(row))
 
             digest = row_hash.hexdigest()
 
@@ -272,7 +273,7 @@ def _create_destination_data(crate):
                                             crate.source,
                                             spatial_reference=crate.destination_coordinate_system or crate.source_describe.spatialReference)
 
-    arcpy.AddField_management(crate.destination, hash_field, 'TEXT', field_length=8)
+    arcpy.AddField_management(crate.destination, hash_field, 'TEXT', field_length=hash_field_length)
 
 
 def _get_hash_lookups(destination):

@@ -332,7 +332,7 @@ class Crate(object):
             walk = arcpy.da.Walk(workspace, followlinks=True, datatype=['FeatureClass', 'Table'])
 
             for dirpath, dirnames, filenames in walk:
-                names = filenames
+                names = names + filenames
 
             #: could get a value like db.owner.***name and db.owner.name so filter on name
             return [fc for fc in names if fc.split('.')[2] == self.source_name]

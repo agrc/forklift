@@ -17,6 +17,7 @@ from os.path import dirname
 from os.path import join
 
 pprinter = PrettyPrinter(indent=4, width=40)
+names_cache = {}
 
 
 class Pallet(object):
@@ -328,11 +329,14 @@ class Crate(object):
             return (None, 'Can\'t find data outside of sde')
 
         def filter_filenames(workspace, name):
-            names = []
-            walk = arcpy.da.Walk(workspace, followlinks=True, datatype=['FeatureClass', 'Table'])
+            if workspace in names_cache:
+                names = names_cache[workspace]
+            else:
+                arcpy.env.workspace = workspace
+                names = arcpy.ListFeatureClasses() + arcpy.ListTables()
+                arcpy.env.workspace = None
 
-            for dirpath, dirnames, filenames in walk:
-                names = names + filenames
+                names_cache[workspace] = names
 
             #: could get a value like db.owner.***name and db.owner.name so filter on name
             return [fc for fc in names if fc.split('.')[2] == self.source_name]

@@ -7,7 +7,7 @@ Tests for the core.py module
 '''
 
 import arcpy
-import arcpy_mocks
+from . import arcpy_mocks
 import unittest
 from forklift import cli
 from forklift import core
@@ -71,8 +71,9 @@ class CoreTests(unittest.TestCase):
 
         #: remove feature
         with arcpy.da.UpdateCursor(crate.source, '*') as delete_cursor:
-            delete_cursor.next()
-            delete_cursor.deleteRow()
+            for row in delete_cursor:
+                delete_cursor.deleteRow()
+                break
 
         core.update(crate, lambda x: True)
 
@@ -80,9 +81,10 @@ class CoreTests(unittest.TestCase):
 
         #: change feature
         with arcpy.da.UpdateCursor(crate.source, ['TEST']) as update_cursor:
-            row = update_cursor.next()
-            row[0] = 'change'
-            update_cursor.updateRow(row)
+            for row in update_cursor:
+                row[0] = 'change'
+                update_cursor.updateRow(row)
+                break
 
         self.assertEqual(core.update(crate, lambda x: True)[0], Crate.UPDATED)
         self.assertEqual(arcpy.GetCount_management(crate.destination).getOutput(0), '3')
@@ -253,8 +255,9 @@ class CoreTests(unittest.TestCase):
         core.update(crate, lambda x: True)
 
         with arcpy.da.SearchCursor(crate.destination, '*') as cur:
-            row = cur.next()
-            self.assertEqual('this is   ', row[1])
+            for row in cur:
+                self.assertEqual('this is   ', row[1])
+                break
 
     def test_move_data_skip_empty_geometry(self):
         empty_geometry_gdb = path.join(current_folder, 'data', 'EmptyGeometry.gdb')
@@ -315,8 +318,9 @@ class CoreTests(unittest.TestCase):
 
         core.update(crate, lambda x: True)
         with arcpy.da.UpdateCursor(crate.source, '*') as cur:
-            cur.next()
-            cur.deleteRow()
+            for row in cur:
+                cur.deleteRow()
+                break
 
         changes = core._hash(crate)
 
@@ -353,9 +357,10 @@ class CoreTests(unittest.TestCase):
 
         core.update(crate, lambda x: True)
         with arcpy.da.UpdateCursor(crate.source, 'SYMBOL', 'NAME = \'{}\''.format(row_name)) as cur:
-            row = cur.next()
-            row[0] = 99
-            cur.updateRow(row)
+            for row in cur:
+                row[0] = 99
+                cur.updateRow(row)
+                break
 
         changes = core._hash(crate)
 
@@ -370,9 +375,10 @@ class CoreTests(unittest.TestCase):
 
         core.update(crate, lambda x: True)
         with arcpy.da.UpdateCursor(crate.source, 'Shape@XY', 'API = \'{}\''.format(row_api)) as cur:
-            row = cur.next()
-            row[0] = (row[0][0] + 10, row[0][1] + 10)
-            cur.updateRow(row)
+            for row in cur:
+                row[0] = (row[0][0] + 10, row[0][1] + 10)
+                cur.updateRow(row)
+                break
 
         changes = core._hash(crate)
         self.assertEqual(len(changes.adds), 1)
@@ -385,9 +391,10 @@ class CoreTests(unittest.TestCase):
 
         core.update(crate, lambda x: True)
         with arcpy.da.UpdateCursor(crate.source, 'Shape@XY') as cur:
-            row = cur.next()
-            row[0] = None
-            cur.updateRow(row)
+            for row in cur:
+                row[0] = None
+                cur.updateRow(row)
+                break
 
         changes = core._hash(crate)
 

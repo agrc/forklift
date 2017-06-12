@@ -310,7 +310,7 @@ def _change_data(data_path):
                 elif field_to_change == 'UnchangedRow' or field_to_change is None:
                     continue
                 else:
-                    print('Uknown field to change: {}'.format(field_to_change))
+                    print('Unknown field to change: {}'.format(field_to_change))
 
 
 def _prep_change_data(data_path):

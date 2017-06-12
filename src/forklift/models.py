@@ -333,7 +333,12 @@ class Crate(object):
                 names = names_cache[workspace]
             else:
                 arcpy.env.workspace = workspace
-                names = arcpy.ListFeatureClasses() + arcpy.ListTables()
+
+                def default_to_empty(list):
+                    if list is None:
+                        return []
+                    return list
+                names = default_to_empty(arcpy.ListFeatureClasses()) + default_to_empty(arcpy.ListTables())
                 arcpy.env.workspace = None
 
                 names_cache[workspace] = names

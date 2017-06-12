@@ -71,7 +71,7 @@ class TestRepos(unittest.TestCase):
     def test_add_repo_invalid(self):
         result = cli.add_repo('bad/repo')
 
-        self.assertIn('[Invalid repo name or owner]', result)
+        self.assertIn('[Invalid repo name or owner]', str(result))
 
     @patch('forklift.cli._validate_repo')
     def test_add_repo_checks_for_duplicates(self, _validate_repo_mock):

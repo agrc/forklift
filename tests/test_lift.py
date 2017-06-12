@@ -104,21 +104,23 @@ class TestLift(unittest.TestCase):
         pallet3.process.assert_called_once()
 
         pallet = self.PalletMock()
-        pallet.process.side_effect = Exception('process error')
+        process_error = Exception('process error')
+        pallet.process.side_effect = process_error
         pallet.success = (True,)
 
         lift.process_pallets([pallet])
 
-        self.assertEqual(pallet.success, (False, 'process error'))
+        self.assertEqual(pallet.success, (False, process_error))
 
     def test_process_pallets_handles_ship_exception(self):
         pallet = self.PalletMock()
-        pallet.ship.side_effect = Exception('ship error')
+        ship_error = Exception('ship error')
+        pallet.ship.side_effect = ship_error
         pallet.success = (True,)
 
         lift.process_pallets([pallet])
 
-        self.assertEqual(pallet.success, (False, 'ship error'))
+        self.assertEqual(pallet.success, (False, ship_error))
 
     def test_process_pallets_resets_arcpy(self):
         pallet = self.PalletMock()

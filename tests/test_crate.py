@@ -10,7 +10,7 @@ import arcpy
 import unittest
 from arcpy import env, SpatialReference
 from forklift.models import Crate
-from hashlib import md5
+from xxhash import xxh64
 from mock import patch
 from nose import SkipTest
 from os import path
@@ -106,7 +106,7 @@ class TestCrate(unittest.TestCase):
         destination_name = 'dn'
         crate = Crate('sourceName', 'source', destination_workspace, destination_name)
 
-        hash = destination_name + '_' + md5(path.join(destination_workspace, destination_name)).hexdigest()
+        hash = destination_name + '_' + xxh64(path.join(destination_workspace, destination_name)).hexdigest()
 
         self.assertEqual(crate.name, hash)
 
@@ -115,7 +115,7 @@ class TestCrate(unittest.TestCase):
         source_name = 'sn'
         crate = Crate(source_name, 'source', destination_workspace)
 
-        hash = source_name + '_' + md5(path.join(destination_workspace, source_name)).hexdigest()
+        hash = source_name + '_' + xxh64(path.join(destination_workspace, source_name)).hexdigest()
 
         self.assertEqual(crate.name, hash)
 
@@ -125,9 +125,9 @@ class TestCrate(unittest.TestCase):
         crate = Crate('NO_OBJECTID_TEST', update_tests_sde, '', '', source_primary_key='NOTAFIELD')
         self.assertEqual(crate.result[0], Crate.INVALID_DATA)
 
-    @patch('arcpy.da.Walk')
-    def test_try_to_find_data_source_by_name_returns_and_updates_feature_name(self, walk):
-        walk.return_value = [(None, None, ['db.owner.Counties'])]
+    @patch('arcpy.ListFeatureClasses')
+    def test_try_to_find_data_source_by_name_returns_and_updates_feature_name(self, list_feature_classes):
+        list_feature_classes.return_value = ['db.owner.Counties']
 
         crate = Crate(
             source_name='Counties',
@@ -151,9 +151,9 @@ class TestCrate(unittest.TestCase):
 
         self.assertIsNone(crate._try_to_find_data_source_by_name()[0])
 
-    @patch('arcpy.da.Walk')
-    def test_try_to_find_data_source_by_name_returns_False_if_duplicate(self, walk):
-        walk.return_value = [(None, None, ['db.owner.Counties', 'db.owner2.Counties'])]
+    @patch('arcpy.ListTables')
+    def test_try_to_find_data_source_by_name_returns_False_if_duplicate(self, list_tables):
+        list_tables.return_value = ['db.owner.Counties', 'db.owner2.Counties']
 
         crate = Crate(
             source_name='duplicate',
@@ -163,9 +163,9 @@ class TestCrate(unittest.TestCase):
 
         self.assertFalse(crate._try_to_find_data_source_by_name()[0])
 
-    @patch('arcpy.da.Walk')
-    def test_try_to_find_data_source_by_name_filters_common_duplicates(self, walk):
-        walk.return_value = [(None, None, ['db.owner.Counties', 'db.owner.duplicateCounties'])]
+    @patch('arcpy.ListFeatureClasses')
+    def test_try_to_find_data_source_by_name_filters_common_duplicates(self, list_feature_classes):
+        list_feature_classes.return_value = ['db.owner.Counties', 'db.owner.duplicateCounties']
 
         crate = Crate(
             source_name='Counties',

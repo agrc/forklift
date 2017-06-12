@@ -335,7 +335,7 @@ def speedtest(pallet_location):
     #: remove logging
     log.handlers = [logging.NullHandler()]
 
-    #: spoof hashes location so there is no caching
+    #: spoof garage & scratch location so there is no caching
     core.garage = speedtest_destination
     core.scratch_gdb_path = join(core.garage, core._scratch_gdb)
 
@@ -349,13 +349,10 @@ def speedtest(pallet_location):
 
     if arcpy.Exists(join(speedtest_destination, 'ChangeSourceData.gdb')):
         arcpy.Delete_management(join(speedtest_destination, 'ChangeSourceData.gdb'))
-        arcpy.Copy_management(join(speedtest_destination, 'SourceData.gdb'),
-                              join(speedtest_destination, 'ChangeSourceData.gdb'))
-        _prep_change_data(join(speedtest_destination, 'ChangeSourceData.gdb', 'AddressPoints'))
-    else:
-        arcpy.Copy_management(join(speedtest_destination, 'SourceData.gdb'),
-                              join(speedtest_destination, 'ChangeSourceData.gdb'))
-        _prep_change_data(join(speedtest_destination, 'ChangeSourceData.gdb', 'AddressPoints'))
+
+    arcpy.Copy_management(join(speedtest_destination, 'SourceData.gdb'),
+                          join(speedtest_destination, 'ChangeSourceData.gdb'))
+    _prep_change_data(join(speedtest_destination, 'ChangeSourceData.gdb', 'AddressPoints'))
 
     if arcpy.Exists(core.scratch_gdb_path):
         arcpy.Delete_management(core.scratch_gdb_path)

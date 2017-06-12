@@ -317,15 +317,16 @@ def _prep_change_data(data_path):
     import arcpy
     change_field = 'FieldToChange'
     value_field = 'UTAddPtID'
+    layer_name = 'CalcLayer'
 
     arcpy.AddField_management(data_path, change_field, 'TEXT', field_length=50)
     where = 'OBJECTID >= 879389 and OBJECTID <= 899388'
-    arcpy.MakeFeatureLayer_management(data_path, 'CalcLayer', where)
-    arcpy.CalculateField_management('CalcLayer',
+    layer = arcpy.MakeFeatureLayer_management(data_path, layer_name, where)
+    arcpy.CalculateField_management(layer_name,
                                     change_field,
                                     "'{}'".format(value_field),
-                                    'PYTHON_9.3')
-    arcpy.Delete_management('CalcLayer')
+                                    'PYTHON')
+    arcpy.Delete_management(layer)
 
 
 def speedtest(pallet_location):

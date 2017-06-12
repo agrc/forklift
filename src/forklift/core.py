@@ -93,56 +93,45 @@ def update(crate, validate_crate):
 
         if changes.has_deletes() or changes.has_adds():
             log.debug('starting edit session...')
-            edit_session = arcpy.da.Editor(crate.destination_workspace)
-            edit_session.startEditing(False, False)
-            edit_session.startOperation()
-        else:
-            edit_session = None
+            with arcpy.da.Editor(crate.destination_workspace):
+                #: delete unaccessed hashes
+                if changes.has_deletes():
+                    log.debug('Number of rows to be deleted: %d', len(changes._deletes))
+                    status, message = change_status
+                    if status != Crate.CREATED:
+                        change_status = (Crate.UPDATED, None)
 
-        #: delete unaccessed hashes
-        if changes.has_deletes():
-            log.debug('Number of rows to be deleted: %d', len(changes._deletes))
-            status, message = change_status
-            if status != Crate.CREATED:
-                change_status = (Crate.UPDATED, None)
+                    log.debug('deleting from destintation table')
+                    with arcpy.da.UpdateCursor(crate.destination, hash_field) as cursor:
+                        for row in cursor:
+                            if row[0] in changes._deletes:
+                                cursor.deleteRow()
 
-            log.debug('deleting from destintation table')
-            with arcpy.da.UpdateCursor(crate.destination, hash_field) as cursor:
-                for row in cursor:
-                    if row[0] in changes._deletes:
-                        cursor.deleteRow()
+                #: add new/updated rows
+                if changes.has_adds():
+                    log.debug('Number of rows to be added: %d', len(changes.adds))
+                    status, message = change_status
+                    if status != Crate.CREATED:
+                        change_status = (Crate.UPDATED, None)
 
-        #: add new/updated rows
-        if changes.has_adds():
-            log.debug('Number of rows to be added: %d', len(changes.adds))
-            status, message = change_status
-            if status != Crate.CREATED:
-                change_status = (Crate.UPDATED, None)
+                    #: reproject data if source is different than destination
+                    if crate.needs_reproject():
+                        changes.table = arcpy.Project_management(changes.table, changes.table + reproject_temp_suffix, crate.destination_coordinate_system,
+                                                                 crate.geographic_transformation)[0]
 
-            #: reproject data if source is different than destination
-            if crate.needs_reproject():
-                changes.table = arcpy.Project_management(changes.table, changes.table + reproject_temp_suffix, crate.destination_coordinate_system,
-                                                         crate.geographic_transformation)[0]
+                    if not crate.is_table():
+                        changes.fields[shape_field_index] = changes.fields[shape_field_index].rstrip('WKT')
 
-            if not crate.is_table():
-                changes.fields[shape_field_index] = changes.fields[shape_field_index].rstrip('WKT')
+                    #: cache this so we don't have to call it for every record
+                    is_table = crate.is_table()
+                    with arcpy.da.SearchCursor(changes.table, changes.fields) as add_cursor,\
+                            arcpy.da.InsertCursor(crate.destination, changes.fields) as cursor:
+                        for row in add_cursor:
+                            #: skip null geometries
+                            if not is_table and row[shape_field_index] is None:
+                                continue
 
-            #: cache this so we don't have to call it for every record
-            is_table = crate.is_table()
-            with arcpy.da.SearchCursor(changes.table, changes.fields) as add_cursor,\
-                    arcpy.da.InsertCursor(crate.destination, changes.fields) as cursor:
-                for row in add_cursor:
-                    #: skip null geometries
-                    if not is_table and row[shape_field_index] is None:
-                        continue
-
-                    cursor.insertRow(row)
-
-        if edit_session is not None:
-            log.debug('stopping edit operation')
-            edit_session.stopOperation()
-            log.debug('stopping edit session (saving edits)')
-            edit_session.stopEditing(True)
+                            cursor.insertRow(row)
 
         #: sanity check the row counts between source and destination
         count_status, count_message = _check_counts(crate, changes)
@@ -152,13 +141,6 @@ def update(crate, validate_crate):
         return change_status
     except Exception as e:
         log.error('unhandled exception: %s for crate %r', e, crate, exc_info=True)
-        try:
-            if edit_session is not None:
-                log.warn('stopping edit session (not saving edits)')
-                edit_session.abortOperation()
-                edit_session.stopEditing(False)
-        except:
-            pass
 
         return (Crate.UNHANDLED_EXCEPTION, e)
     finally:

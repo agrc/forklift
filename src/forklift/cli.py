@@ -292,41 +292,29 @@ def _format_dictionary(pallet_reports):
 def _change_data(data_path):
     import arcpy
 
-    field_changers = {'UTAddPtID': lambda value: value[:-1] + 'X' if value else 'X'}
-    change_field = 'FieldToChange'
-    fields = list(field_changers.keys()) + [change_field]
+    def field_changer(value):
+        return value[:-1] + 'X' if value else 'X'
 
-    with arcpy.da.UpdateCursor(data_path, fields) as cursor:
+    change_field = 'FieldToChange'
+    value_field = 'UTAddPtID'
+
+    with arcpy.da.UpdateCursor(data_path, [value_field, change_field]) as cursor:
         for row in cursor:
-            field_to_change = row[fields.index(change_field)]
-            if field_to_change in field_changers:
-                field_index = fields.index(field_to_change)
-                value = row[field_index]
-                row[field_index] = field_changers[field_to_change](value)
-                cursor.updateRow(row)
-            else:
-                if field_to_change == 'DeleteRow':
-                    cursor.deleteRow()
-                elif field_to_change == 'UnchangedRow' or field_to_change is None:
-                    continue
-                else:
-                    print('Unknown field to change: {}'.format(field_to_change))
+            row[1] = field_changer(row[0])
+            cursor.updateRow(row)
 
 
 def _prep_change_data(data_path):
     import arcpy
     change_field = 'FieldToChange'
     value_field = 'UTAddPtID'
-    layer_name = 'CalcLayer'
 
-    arcpy.AddField_management(data_path, change_field, 'TEXT', field_length=50)
+    arcpy.AddField_management(data_path, change_field, 'TEXT', field_length=150)
     where = 'OBJECTID >= 879389 and OBJECTID <= 899388'
-    layer = arcpy.MakeFeatureLayer_management(data_path, layer_name, where)
-    arcpy.CalculateField_management(layer_name,
-                                    change_field,
-                                    "'{}'".format(value_field),
-                                    'PYTHON')
-    arcpy.Delete_management(layer)
+    with arcpy.da.UpdateCursor(data_path, [value_field, change_field], where) as update_cursor:
+        for row in update_cursor:
+            row[1] = row[0]
+            update_cursor.updateRow(row)
 
 
 def speedtest(pallet_location):

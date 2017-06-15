@@ -142,6 +142,14 @@ def _sort_pallets(file_path, pallet_arg):
             else:
                 pallet = PalletClass()
 
+            try:
+                log.debug('building pallet: %r', pallet)
+                pallet.build(config.get_config_prop('configuration'))
+            except Exception as e:
+                pallet.success = (False, e)
+                log.error('error building pallet: %s for pallet: %r', e, pallet, exc_info=True)
+                continue
+
             all_pallets.append(pallet)
             if pallet_location == file_path or file_path is None:
                 sorted_pallets.append(pallet)

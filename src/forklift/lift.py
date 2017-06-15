@@ -38,14 +38,6 @@ def process_crates_for(pallets, update_def, configuration='Production'):
     for pallet in pallets:
         log.info('processing crates for pallet: %r', pallet)
 
-        try:
-            log.debug('building pallet: %r', pallet)
-            pallet.build(configuration)
-        except Exception as e:
-            pallet.success = (False, e)
-            log.error('error building pallet: %s for pallet: %r', e, pallet, exc_info=True)
-            continue
-
         for crate in pallet.get_crates():
             log.info('crate: %s', crate.destination_name)
             if crate.result[0] == Crate.INVALID_DATA:

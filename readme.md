@@ -56,6 +56,7 @@ If the property is a list then the value is appended to the existing list.
 
 ## Install to First Successful Run
 
+From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/arcpy/get-started/using-conda-with-arcgis-pro.htm) (`c:\Program Files\ArcGIS\Pro\bin\Python\scripts\proenv.bat`):
 1. `pip install .\` from the directory containing `setup.py`.
 1. `forklift config init`
 1. `forklift config set --key copyDestinations --value c:\\MapData` - This is where you want your output placed.
@@ -87,3 +88,8 @@ On subsequent runs: `tox`
 
 
 Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) will automatically be skipped if it is not found on your system.
+
+## Changelog
+
+__8.0.0__
+- Upgraded to python 3.5. Now requires running from within the [ArcGIS Pro Conda environment](http://pro.arcgis.com/en/pro-app/arcpy/get-started/using-conda-with-arcgis-pro.htm) ([PR #187](https://github.com/agrc/forklift/pull/187)).

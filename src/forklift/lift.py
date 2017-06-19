@@ -251,7 +251,7 @@ def copy_data(specific_pallets, all_pallets, config_copy_destinations):
                     shutil.move(destination_workspace, destination_workspace + 'x')
 
                 log.debug('copying source to destination')
-                shutil.copytree(source, destination_workspace)
+                shutil.copytree(source, destination_workspace, ignore=shutil.ignore_patterns('*.lock'))
 
                 _scrub_hash_fields(destination_workspace)
 

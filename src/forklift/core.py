@@ -49,12 +49,6 @@ def init(logger):
     arcpy.ClearEnvironment('workspace')
 
 
-def optimize_internal_gdbs():
-    if arcpy.Exists(scratch_gdb_path):
-        log.info('%s deleting', scratch_gdb_path)
-        arcpy.Delete_management(scratch_gdb_path)
-
-
 def update(crate, validate_crate):
     '''
     crate: models.Crate

@@ -74,6 +74,8 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
 1. Install [git](https://git-scm.com/)
 1. `forklift lift`
 
+`run_forklift.bat` is an example of a batch file that could be used to run forklift via Window Scheduler.
+
 
 #### Development Usage
 

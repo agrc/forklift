@@ -91,5 +91,10 @@ Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) wi
 
 ## Changelog
 
+__8.1.0__
+- `Pallet.build` is now called on all pallets even when only a single pallet is run [#186](https://github.com/agrc/forklift/issues/186)
+- `*.lock` files are ignored when copying from staging to `copy_data` destinations.
+- Removed the deletion of the scratch GDB from the end of the forklift process. ArcGIS Pro was having issues with this and it's already being removed at the beginning of the process.
+
 __8.0.0__
 - Upgraded to python 3.5. Now requires running from within the [ArcGIS Pro Conda environment](http://pro.arcgis.com/en/pro-app/arcpy/get-started/using-conda-with-arcgis-pro.htm) ([PR #187](https://github.com/agrc/forklift/pull/187)).

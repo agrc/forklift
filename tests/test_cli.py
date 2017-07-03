@@ -155,6 +155,12 @@ class TestListPallets(unittest.TestCase):
         except Exception as e:
             self.fail(e)
 
+    def test_handles_build_errors(self):
+        pallets, all_pallets = cli._sort_pallets(join(test_data_folder, 'BuildErrorPallet.py'), None)
+
+        self.assertEqual(len([p for p in pallets if p.success[0]]), 1)
+        self.assertEqual(len([p for p in pallets if not p.success[0]]), 2)
+
 
 @patch('forklift.lift.process_crates_for')
 @patch('forklift.lift.process_pallets')

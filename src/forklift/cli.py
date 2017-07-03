@@ -146,7 +146,6 @@ def _sort_pallets(file_path, pallet_arg):
             except Exception as e:
                 pallet.success = (False, e)
                 log.error('error building pallet: %s for pallet: %r', e, pallet, exc_info=True)
-                continue
 
             all_pallets.append(pallet)
             if pallet_location == file_path or file_path is None:

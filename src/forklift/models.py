@@ -149,7 +149,7 @@ class Pallet(object):
         Override this method to make pallets ship on a different schedule
 
         returns: Boolean'''
-        return self.are_crates_valid()
+        return self.are_crates_valid() and self.success[0]
 
     def requires_processing(self):
         '''Returns True if any crates were updated. Returns False if there are no crates defined.

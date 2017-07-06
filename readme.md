@@ -91,6 +91,10 @@ Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) wi
 
 ## Changelog
 
+__8.1.1__
+- Fixed bug that prevented pallets that through errors during `pallet.build()` from showing up in the report.
+- Update tests and associated data for Pro 2.0.
+
 __8.1.0__
 - `Pallet.build` is now called on all pallets even when only a single pallet is run [#186](https://github.com/agrc/forklift/issues/186)
 - `*.lock` files are ignored when copying from staging to `copy_data` destinations.

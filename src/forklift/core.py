@@ -7,6 +7,7 @@ Tools for updating the data associated with a models.Crate
 '''
 
 import arcpy
+from arcgisscripting import ExecuteError
 from .config import config_location
 from .exceptions import ValidationException
 from .models import Changes, Crate
@@ -41,9 +42,14 @@ def init(logger):
 
     #: create gdb if needed
     if arcpy.Exists(scratch_gdb_path):
-        log.info('%s exist. recreating', scratch_gdb_path)
-        arcpy.Delete_management(scratch_gdb_path)
+        log.info('%s exists, deleting', scratch_gdb_path)
+        try:
+            arcpy.Delete_management(scratch_gdb_path)
+        except ExecuteError:
+            #: swallow error thrown by Pro 2.0
+            pass
 
+    log.info('creating: %s', scratch_gdb_path)
     arcpy.CreateFileGDB_management(garage, _scratch_gdb)
 
     arcpy.ClearEnvironment('workspace')

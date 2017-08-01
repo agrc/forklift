@@ -404,6 +404,7 @@ def _mirror_fields(source, destination):
         'Blob': 'BLOB',
         'Date': 'DATE',
         'Double': 'DOUBLE',
+        'GlobalID': 'GUID',
         'Guid': 'GUID',
         'Integer': 'LONG',
         'Single': 'FLOAT',

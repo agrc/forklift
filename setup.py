@@ -1,4 +1,3 @@
-# -*- encoding: utf8 -*-
 import glob
 import io
 from os.path import basename

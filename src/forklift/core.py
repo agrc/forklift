@@ -411,21 +411,11 @@ def _mirror_fields(source, destination):
         'String': 'TEXT'
     }
 
+    add_fields = []
     for field in arcpy.da.Describe(source)['fields']:
         if field.type == 'OID':
             continue
 
-        if field.isNullable:
-            nullable = 'NULLABLE'
-        else:
-            nullable = 'NON_NULLABLE'
-        if field.required:
-            required = 'REQUIRED'
-        else:
-            required = 'NON_REQUIRED'
-        arcpy.management.AddField(destination, field.name, TYPES[field.type],
-                                  field_precision=field.precision,
-                                  field_scale=field.scale,
-                                  field_length=field.length,
-                                  field_is_nullable=nullable,
-                                  field_is_required=required)
+        add_fields.append([field.name, TYPES[field.type], field.aliasName, field.length])
+
+    arcpy.management.AddFields(destination, add_fields)

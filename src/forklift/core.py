@@ -181,9 +181,8 @@ def _hash(crate):
                                                             template=crate.source,
                                                             spatial_reference=crate.source_describe.spatialReference)[0]
     else:
-        changes.table = arcpy.CreateTable_management(scratch_gdb_path,
-                                                     crate.name,
-                                                     template=crate.source)[0]
+        changes.table = arcpy.CreateTable_management(scratch_gdb_path, crate.name)[0]
+        _mirror_fields(crate.source, changes.table)
 
     arcpy.AddField_management(changes.table, hash_field, 'TEXT', field_length=hash_field_length)
 
@@ -246,7 +245,8 @@ def _create_destination_data(crate):
 
     if crate.is_table():
         log.warn('creating new table: %s', crate.destination)
-        arcpy.CreateTable_management(crate.destination_workspace, crate.destination_name, crate.source)
+        arcpy.CreateTable_management(crate.destination_workspace, crate.destination_name)
+        _mirror_fields(crate.source, crate.destination)
     else:
         log.warn('creating new feature class: %s', crate.destination)
         arcpy.CreateFeatureclass_management(crate.destination_workspace,
@@ -391,3 +391,41 @@ def _check_counts(crate, changes):
         message = ''
 
     return (valid, message)
+
+
+def _mirror_fields(source, destination):
+    '''
+    source: string - path to table
+    destination: string - path to table
+
+    adds all of the fields in source to destination
+    '''
+    TYPES = {
+        'Blob': 'BLOB',
+        'Date': 'DATE',
+        'Double': 'DOUBLE',
+        'Guid': 'GUID',
+        'Integer': 'LONG',
+        'Single': 'FLOAT',
+        'SmallInteger': 'SHORT',
+        'String': 'TEXT'
+    }
+
+    for field in arcpy.da.Describe(source)['fields']:
+        if field.type == 'OID':
+            continue
+
+        if field.isNullable:
+            nullable = 'NULLABLE'
+        else:
+            nullable = 'NON_NULLABLE'
+        if field.required:
+            required = 'REQUIRED'
+        else:
+            required = 'NON_REQUIRED'
+        arcpy.management.AddField(destination, field.name, TYPES[field.type],
+                                  field_precision=field.precision,
+                                  field_scale=field.scale,
+                                  field_length=field.length,
+                                  field_is_nullable=nullable,
+                                  field_is_required=required)

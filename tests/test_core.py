@@ -54,6 +54,7 @@ class CoreTests(unittest.TestCase):
         delete_if_arcpy_exists(test_gdb)
         delete_if_arcpy_exists(test_folder)
         delete_if_arcpy_exists(duplicates_gdb_copy)
+        delete_if_arcpy_exists(path.join(current_folder, 'config.json'))
 
     def test_update_no_existing_destination(self):
         crate = Crate('ZipCodes', check_for_changes_gdb, test_gdb, 'ImNotHere')
@@ -418,3 +419,17 @@ class CoreTests(unittest.TestCase):
         changes.total_rows = 2
 
         self.assertFalse(core._check_counts(crate, changes)[0])
+
+    def test_mirror_fields(self):
+        arcpy.management.CreateFileGDB(path.dirname(test_gdb), path.basename(test_gdb))
+        destination = arcpy.management.CreateTable(test_gdb, 'MirrorFieldsTable')
+
+        core._mirror_fields(path.join(check_for_changes_gdb, 'MirrorFields'), destination)
+
+        fields = arcpy.da.Describe(destination)['fields']
+
+        self.assertEqual(len(fields), 8)
+
+        for field in fields:
+            if field.name == 'TEST_TEXT':
+                self.assertEqual(field.length, 25)

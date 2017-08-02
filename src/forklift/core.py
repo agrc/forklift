@@ -404,7 +404,6 @@ def _mirror_fields(source, destination):
         'Blob': 'BLOB',
         'Date': 'DATE',
         'Double': 'DOUBLE',
-        'GlobalID': 'GUID',
         'Guid': 'GUID',
         'Integer': 'LONG',
         'Single': 'FLOAT',
@@ -414,7 +413,7 @@ def _mirror_fields(source, destination):
 
     add_fields = []
     for field in arcpy.da.Describe(source)['fields']:
-        if field.type == 'OID':
+        if field.type in ['OID', 'GlobalID']:
             continue
 
         add_fields.append([field.name, TYPES[field.type], field.aliasName, field.length])

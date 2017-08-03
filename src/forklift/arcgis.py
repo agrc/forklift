@@ -35,7 +35,7 @@ class LightSwitch(object):
         what: string 'off' or 'on' 
         affected_services: list { service_name, service_type }
         
-        returns the services that did still did not do what was requested'''
+        returns the services that still did not do what was requested'''
         tries = 4
         wait = [8, 5, 3, 2, 1]
 

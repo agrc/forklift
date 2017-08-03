@@ -31,9 +31,11 @@ class LightSwitch(object):
 
     def ensure(self, what, affected_services):
         '''
-        ensures that a affected_services are started or stopped with 5 attempts. 
+        ensures that affected_services are started or stopped with 5 attempts. 
         what: string 'off' or 'on' 
-        affected_services: list { service_name, service_type }'''
+        affected_services: list { service_name, service_type }
+        
+        returns the services that did still did not do what was requested'''
         tries = 4
         wait = [8, 5, 3, 2, 1]
 

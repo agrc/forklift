@@ -35,6 +35,9 @@ class LightSwitch(object):
         if host:
             self.server = host
 
+        if not username and not password and not host:
+            raise Exception('Setting all credentials to empty values will use the default env values.')
+
         self._reset_token()
 
     def reset_credentials(self):

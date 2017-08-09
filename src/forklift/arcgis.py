@@ -22,19 +22,33 @@ services_url = r'{}services'.format(base_url)
 
 class LightSwitch(object):
     def __init__(self):
+        self.reset_credentials()
+        self._reset_token()
+
+    def set_credentials(self, username, password, host):
+        '''updates the credentials that LightSwitch will use to stop and start services
+        '''
+        if username:
+            self.username = username
+        if password:
+            self.password = password
+        if host:
+            self.server = host
+
+        self._reset_token()
+
+    def reset_credentials(self):
+        '''reset the credentials to the environmental settings
+        '''
         self.username = environ.get('FORKLIFT_AGS_USERNAME')
         self.password = environ.get('FORKLIFT_AGS_PASSWORD')
         self.server = environ.get('FORKLIFT_AGS_SERVER_HOST')
-        self.token = None
-        self.token_expire_milliseconds = 0
-        self.payload = None
 
     def ensure(self, what, affected_services):
-        '''
-        ensures that affected_services are started or stopped with 5 attempts. 
-        what: string 'off' or 'on' 
+        '''ensures that affected_services are started or stopped with 5 attempts.
+        what: string 'off' or 'on'
         affected_services: list { service_name, service_type }
-        
+
         returns the services that still did not do what was requested'''
         tries = 4
         wait = [8, 5, 3, 2, 1]
@@ -122,3 +136,8 @@ class LightSwitch(object):
 
         self.token = response_data['token']
         self.token_expire_milliseconds = int(response_data['expires'])
+
+    def _reset_token(self):
+        self.token = None
+        self.token_expire_milliseconds = 0
+        self.payload = None

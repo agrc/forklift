@@ -11,7 +11,7 @@ from forklift import cli, config, core
 from forklift.models import Crate
 from json import loads
 from mock import patch, Mock
-from os import remove, mkdir
+from os import remove, makedirs
 from os.path import abspath, dirname, join, exists
 
 test_data_folder = join(dirname(abspath(__file__)), 'data')
@@ -295,7 +295,7 @@ class TestScorchedEarth(unittest.TestCase):
     def test_deletes_folders(self):
         test_staging = join(test_data_folder, 'staging')
         test_folder = join(test_staging, 'test')
-        mkdir(test_folder)
+        makedirs(test_folder)
         config.set_config_prop('stagingDestination', test_staging)
 
         cli.scorched_earth()

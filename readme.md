@@ -79,34 +79,52 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
 
 #### Development Usage
 
-1. `pip install .\` from the directory containing `setup.py`.
-1. from the `**/src**` directory execute `python -m forklift -h` for usage.
+- create new env
+  - `conda create --name forklift --clone arcgispro-py3`
+  - `activate forklift`
+- install deps
+  - `conda install flake8 mock`
+  - `pip install nose-cov rednose`
+- optionally install forklift
+  - `cd forklift`
+  - `pip install .\ -U`
+- run forklift
+  - for the installed version execute `forklift -h`
+  - for the source version, from the `**/src**` directory, execute `python -m forklift -h` for usage
 
 #### Tests
 
-On first run: `pip install tox`
+##### On first run
+- install deps
+  - `conda install flake8 mock`
+  - `pip install nose-cov rednose`
+- run tests
+  - `nosetests --with-id --rednose --cov-config .coveragerc --with-coverage --cover-package forklift --cov-report term-missing --cover-erase`
+  
+##### On subsequent runs
+`nosetests --with-id --rednose --cov-config .coveragerc --with-coverage --cover-package forklift --cov-report term-missing --cover-erase`
 
-On subsequent runs: `tox`
+_Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) will automatically be skipped if it is not found on your system._
 
+#### Linting
+`flake8`
 
-Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) will automatically be skipped if it is not found on your system.
+# Changelog
 
-## Changelog
-
-__8.2.0__
+**8.2.0**
 - Fixed a bug causing errors when trying to delete the scratch database [a6941b1ff3757267d69ec04cdf12488b1d77aa2c](https://github.com/agrc/forklift/commit/a6941b1ff3757267d69ec04cdf12488b1d77aa2c)
 - Added a sample batch file ([`run_forklift.bat`](`run_forklift.bat`)) that can be used with Windows Scheduler.
 - Fixed a bug caused by creating standalone tables with templates ([#197](https://github.com/agrc/forklift/issues/197)).
 - Added the ability to update the ArcGIS Server credentials in [`LightSwitch`](src/forklift/arcgis.py) ([PR #200](https://github.com/agrc/forklift/pull/200)).
 
-__8.1.1__
+**8.1.1**
 - Fixed bug that prevented pallets that through errors during `pallet.build()` from showing up in the report.
 - Update tests and associated data for Pro 2.0.
 
-__8.1.0__
+**8.1.0**
 - `Pallet.build` is now called on all pallets even when only a single pallet is run [#186](https://github.com/agrc/forklift/issues/186)
 - `*.lock` files are ignored when copying from staging to `copy_data` destinations.
 - Removed the deletion of the scratch GDB from the end of the forklift process. ArcGIS Pro was having issues with this and it's already being removed at the beginning of the process.
 
-__8.0.0__
+**8.0.0**
 - Upgraded to python 3.5. Now requires running from within the [ArcGIS Pro Conda environment](http://pro.arcgis.com/en/pro-app/arcpy/get-started/using-conda-with-arcgis-pro.htm) ([PR #187](https://github.com/agrc/forklift/pull/187)).

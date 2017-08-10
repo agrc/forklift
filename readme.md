@@ -93,6 +93,12 @@ Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) wi
 
 ## Changelog
 
+__8.2.0__
+- Fixed a bug causing errors when trying to delete the scratch database [a6941b1ff3757267d69ec04cdf12488b1d77aa2c](https://github.com/agrc/forklift/commit/a6941b1ff3757267d69ec04cdf12488b1d77aa2c)
+- Added a sample batch file ([`run_forklift.bat`](`run_forklift.bat`)) that can be used with Windows Scheduler.
+- Fixed a bug caused by creating standalone tables with templates ([#197](https://github.com/agrc/forklift/issues/197)).
+- Added the ability to update the ArcGIS Server credentials in [`LightSwitch`](src/forklift/arcgis.py) ([PR #200](https://github.com/agrc/forklift/pull/200)).
+
 __8.1.1__
 - Fixed bug that prevented pallets that through errors during `pallet.build()` from showing up in the report.
 - Update tests and associated data for Pro 2.0.

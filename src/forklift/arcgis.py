@@ -8,6 +8,7 @@ A module that contains a class to control arcgis services.
 
 import logging
 import requests
+from multiprocess import Pool
 from os import environ
 from time import sleep
 from time import time
@@ -61,23 +62,27 @@ class LightSwitch(object):
                      'No services will be stopped or started. See README.md for more details.')
             return (True, None)
 
+        def act_on_service(service_info):
+            service_name, service_type = service_info
+            if what == 'off':
+                log.debug('stopping %s.%s', service_name, service_type)
+                status, message = self.turn_off(service_name, service_type)
+            else:
+                log.debug('starting %s.%s', service_name, service_type)
+                status, message = self.turn_on(service_name, service_type)
+
+            if not status:
+                return (service_name, service_type)
+            return None
+
         while len(affected_services) > 0 and tries >= 0:
-            problem_child = []
             sleep(wait[tries])
-
-            for service_name, service_type in affected_services:
-                if what == 'off':
-                    log.debug('stopping %s.%s', service_name, service_type)
-                    status, message = self.turn_off(service_name, service_type)
-                else:
-                    log.debug('starting %s.%s', service_name, service_type)
-                    status, message = self.turn_on(service_name, service_type)
-
-                if not status:
-                    problem_child.append((service_name, service_type))
-
             tries -= 1
-            affected_services = problem_child
+
+            num_processes = environ.get('FORKLIFT_POOL_PROCESSES')
+            pool = Pool(num_processes or 20)
+            affected_services = [service for service in pool.map(act_on_service, affected_services) if service is not None]
+            pool.close()
 
             if len(affected_services) > 0:
                 log.debug('retrying %s',  ', '.join([name + '.' + service for name, service in affected_services]))

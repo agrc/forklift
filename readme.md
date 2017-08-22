@@ -71,6 +71,7 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
     - `FORKLIFT_AGS_USERNAME` ArcGIS admin username.
     - `FORKLIFT_AGS_PASSWORD` ArcGIS admin password.
     - `FORKLIFT_AGS_SERVER_HOST` ArcGIS host address eg: `localhost`
+    - `FORKLIFT_POOL_PROCESSES` (optional: defaults to 20) Number of [multiprocessing processes](https://docs.python.org/3/library/multiprocessing.html#using-a-pool-of-workers) to be used to parallelize the starting and stopping of services.
 1. Install [git](https://git-scm.com/)
 1. `forklift lift`
 
@@ -100,7 +101,7 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
   - `pip install nose-cov rednose`
 - run tests
   - `nosetests --with-id --rednose --cov-config .coveragerc --with-coverage --cover-package forklift --cov-report term-missing --cover-erase`
-  
+
 ##### On subsequent runs
 `nosetests --with-id --rednose --cov-config .coveragerc --with-coverage --cover-package forklift --cov-report term-missing --cover-erase`
 

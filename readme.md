@@ -108,7 +108,7 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
 _Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) will automatically be skipped if it is not found on your system._
 
 #### Linting
-`flake8`
+`flake8 src/forklift tests`
 
 # Changelog
 

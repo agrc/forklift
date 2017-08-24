@@ -63,17 +63,19 @@ class LightSwitch(object):
             return (True, None)
 
         def act_on_service(service_info):
+            #: logs within this context do not show up in the console or log file
             service_name, service_type = service_info
             if what == 'off':
-                log.debug('stopping %s.%s', service_name, service_type)
                 status, message = self.turn_off(service_name, service_type)
             else:
-                log.debug('starting %s.%s', service_name, service_type)
                 status, message = self.turn_on(service_name, service_type)
 
             if not status:
                 return (service_name, service_type)
             return None
+
+        def get_service_names(services):
+            return ', '.join([name + '.' + service for name, service in affected_services])
 
         while len(affected_services) > 0 and tries >= 0:
             sleep(wait[tries])
@@ -81,13 +83,15 @@ class LightSwitch(object):
 
             num_processes = environ.get('FORKLIFT_POOL_PROCESSES')
             pool = Pool(num_processes or 20)
+
+            log.debug('affected services: %s', get_service_names(affected_services))
             affected_services = [service for service in pool.map(act_on_service, affected_services) if service is not None]
             pool.close()
 
             if len(affected_services) > 0:
-                log.debug('retrying %s',  ', '.join([name + '.' + service for name, service in affected_services]))
+                log.debug('retrying %s', get_service_names(affected_services))
 
-        return (len(affected_services) == 0, ', '.join([name + '.' + service for name, service in affected_services]))
+        return (len(affected_services) == 0, get_service_names(affected_services))
 
     def turn_off(self, service, type):
         return self._flip_switch(service, type, 'stop')

@@ -209,6 +209,17 @@ class TestCliStartLift(unittest.TestCase):
 
         self.assertEqual(order, ['Pallet1', 'Pallet2', 'Pallet3'])
 
+    @patch('forklift.lift.update_static_for')
+    def test_start_lift_update_static(self, update_static_for, process_pallets, process_crates_for, git_update):
+        cli.start_lift(join(test_data_folder, 'pallet_argument.py'), 'test')
+
+        update_static_for.assert_not_called()
+
+        config.set_config_prop('copyDestinations', ['a'])
+        cli.start_lift(join(test_data_folder, 'pallet_argument.py'), 'test')
+
+        update_static_for.assert_called_once()
+
 
 class TestCliGeneral(unittest.TestCase):
 

@@ -26,6 +26,8 @@ from re import compile
 from requests import get
 from shutil import rmtree
 from time import clock
+from multiprocess import Pool
+from os import environ
 
 log = logging.getLogger('forklift')
 template = join(abspath(dirname(__file__)), 'report_template.html')
@@ -169,30 +171,45 @@ def _send_report_email(report_object):
     send_email(config.get_config_prop('notify'), 'Forklift Report', email_content, log_file)
 
 
-def git_update():
+def _clone_or_pull_repo(repo_name):
     warehouse = config.get_config_prop('warehouse')
-    errors = []
-    for repo_name in config.get_config_prop('repositories'):
-        try:
-            folder = join(warehouse, repo_name.split('/')[1])
-            if not exists(folder):
-                log.info('git cloning: {}'.format(repo_name))
-                Repo.clone_from(_repo_to_url(repo_name), join(warehouse, folder))
-            else:
-                log.info('git updating: {}'.format(repo_name))
-                repo = _get_repo(folder)
-                origin = repo.remotes[0]
-                fetch_infos = origin.pull()
+    log_message = None
+    try:
+        folder = join(warehouse, repo_name.split('/')[1])
+        if not exists(folder):
+            log_message = 'git cloning: {}'.format(repo_name)
+            repo = Repo.clone_from(_repo_to_url(repo_name), join(warehouse, folder))
+            repo.close()
+        else:
+            log_message = 'git updating: {}'.format(repo_name)
+            repo = _get_repo(folder)
+            origin = repo.remotes[0]
+            fetch_infos = origin.pull()
 
-                if len(fetch_infos) > 0:
-                    if fetch_infos[0].flags == 4:
-                        log.debug('no updates to pallet')
-                    elif fetch_infos[0].flags in [32, 64]:
-                        log.info('updated to %s', fetch_infos[0].commit.name_rev)
-        except Exception as e:
-            errors.append('Git update error for {}: {}'.format(repo_name, e))
+            if len(fetch_infos) > 0:
+                if fetch_infos[0].flags == 4:
+                    log_message = log_message + '\nno updates to pallet'
+                elif fetch_infos[0].flags in [32, 64]:
+                    log_message = log_message + '\nupdated to %s', fetch_infos[0].commit.name_rev
+        return (None, log_message)
+    except Exception as e:
+        return ('Git update error for {}: {}'.format(repo_name, e), log_message)
 
-    return errors
+
+def git_update():
+    log.info('git updating (in parallel)...')
+    num_processes = environ.get('FORKLIFT_POOL_PROCESSES')
+    pool = Pool(num_processes or config.default_num_processes)
+
+    results = pool.map(_clone_or_pull_repo, config.get_config_prop('repositories'))
+
+    for error, info in results:
+        if info is not None:
+            log.info(info)
+        if error is not None:
+            log.error(error)
+
+    return [error for error in results if error is not None]
 
 
 def _get_repo(folder):

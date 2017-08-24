@@ -13,6 +13,7 @@ from json import loads
 from mock import patch, Mock
 from os import remove, makedirs
 from os.path import abspath, dirname, join, exists
+from .mocks import PoolMock
 
 test_data_folder = join(dirname(abspath(__file__)), 'data')
 test_pallets_folder = join(test_data_folder, 'list_pallets')
@@ -162,6 +163,7 @@ class TestListPallets(unittest.TestCase):
         self.assertEqual(len([p for p in pallets if not p.success[0]]), 2)
 
 
+@patch('forklift.cli.git_update')
 @patch('forklift.lift.process_crates_for')
 @patch('forklift.lift.process_pallets')
 class TestCliStartLift(unittest.TestCase):
@@ -176,20 +178,20 @@ class TestCliStartLift(unittest.TestCase):
         if exists(config_location):
             remove(config_location)
 
-    def test_start_lift_with_path(self, process_pallets, process_crates_for):
+    def test_start_lift_with_path(self, process_pallets, process_crates_for, git_update):
         cli.start_lift(join(test_pallets_folder, 'multiple_pallets.py'))
 
         self.assertEqual(len(process_crates_for.call_args[0][0]), 2)
         self.assertEqual(len(process_pallets.call_args[0][0]), 2)
 
-    def test_start_lift_with_out_path(self, process_pallets, process_crates_for):
+    def test_start_lift_with_out_path(self, process_pallets, process_crates_for, git_update):
         config.set_config_prop('warehouse', test_pallets_folder, override=True)
         cli.start_lift()
 
         self.assertEqual(len(process_crates_for.call_args[0][0]), 4)
         self.assertEqual(len(process_pallets.call_args[0][0]), 4)
 
-    def test_start_lift_pallet_arg(self, process_pallets, process_crates_for):
+    def test_start_lift_pallet_arg(self, process_pallets, process_crates_for, git_update):
         cli.start_lift(join(test_data_folder, 'pallet_argument.py'), 'test')
 
         pallet = process_crates_for.call_args[0][0][0]
@@ -200,7 +202,7 @@ class TestCliStartLift(unittest.TestCase):
         pallet = process_crates_for.call_args[0][0][0]
         self.assertEqual(pallet.arg, None)
 
-    def test_start_lift_alphebetical_order(self, process_pallets, process_crates_for):
+    def test_start_lift_alphebetical_order(self, process_pallets, process_crates_for, git_update):
         cli.start_lift(join(test_data_folder, 'alphabetize', 'pallet.py'))
 
         order = [p.__class__.__name__ for p in process_crates_for.call_args[0][0]]
@@ -224,10 +226,11 @@ class TestGitUpdate(unittest.TestCase):
         if exists(config_location):
             remove(config_location)
 
+    @patch('forklift.cli.Pool', return_value=PoolMock)
     @patch('git.Repo.clone_from')
     @patch('forklift.cli._get_repo')
     @patch('forklift.cli._validate_repo')
-    def test_git_update(self, _validate_repo_mock, _get_repo_mock, clone_from_mock):
+    def test_git_update(self, _validate_repo_mock, _get_repo_mock, clone_from_mock, poolmock):
         remote_mock = Mock()
         remote_mock.pull = Mock()
         remote_mock.pull.return_value = []

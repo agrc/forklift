@@ -12,6 +12,7 @@ from multiprocess import Pool
 from os import environ
 from time import sleep
 from time import time
+from . import config
 
 
 log = logging.getLogger('forklift')
@@ -82,7 +83,7 @@ class LightSwitch(object):
             tries -= 1
 
             num_processes = environ.get('FORKLIFT_POOL_PROCESSES')
-            pool = Pool(num_processes or 20)
+            pool = Pool(num_processes or config.default_num_processes)
 
             log.debug('affected services: %s', get_service_names(affected_services))
             affected_services = [service for service in pool.map(act_on_service, affected_services) if service is not None]

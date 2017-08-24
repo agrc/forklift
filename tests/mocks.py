@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 '''
-arcpy_mocks
+mocks
 ----------------------------------
 mock arcpy for testing
 '''
@@ -37,3 +37,11 @@ class SpatialReference(object):
     @property
     def name(self):
         return ''
+
+
+class PoolMock(object):
+    def map(*args):
+        return map(*args)
+
+    def close():
+        pass

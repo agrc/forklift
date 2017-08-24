@@ -12,14 +12,7 @@ from mock import Mock
 from mock import patch
 from mock import call
 from time import time
-
-
-class PoolMock(object):
-    def map(*args):
-        return map(*args)
-
-    def close():
-        pass
+from .mocks import PoolMock
 
 
 class TestLightSwitch(unittest.TestCase):

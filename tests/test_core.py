@@ -7,7 +7,7 @@ Tests for the core.py module
 '''
 
 import arcpy
-from . import arcpy_mocks
+from . import mocks
 import unittest
 from forklift import cli
 from forklift import core
@@ -103,7 +103,7 @@ class CoreTests(unittest.TestCase):
     @patch('arcpy.Exists')
     def test_update_custom_validation_that_fails(self, arcpy_exists):
         arcpy_exists.return_value = True
-        crate = Crate('', '', '', describer=arcpy_mocks.Describe)
+        crate = Crate('', '', '', describer=mocks.Describe)
 
         self.assertEqual(core.update(crate, raise_validation_exception)[0], Crate.INVALID_DATA)
 
@@ -115,7 +115,7 @@ class CoreTests(unittest.TestCase):
         def custom(crate):
             return NotImplemented
 
-        crate = Crate('', '', '', describer=arcpy_mocks.Describe)
+        crate = Crate('', '', '', describer=mocks.Describe)
 
         self.assertEqual(core.update(crate, custom)[0], Crate.INVALID_DATA)
 
@@ -123,7 +123,7 @@ class CoreTests(unittest.TestCase):
     def test_update_error(self, arcpy_exists):
         arcpy_exists.return_value = True
 
-        crate = Crate('', '', '', describer=arcpy_mocks.Describe)
+        crate = Crate('', '', '', describer=mocks.Describe)
 
         self.assertEqual(core.update(crate, lambda c: True)[0], Crate.UNHANDLED_EXCEPTION)
 

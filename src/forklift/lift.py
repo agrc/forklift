@@ -138,7 +138,7 @@ def update_static_for(pallets, config_copy_destinations, force):
     return results
 
 
-def create_report_object(pallets, elapsed_time, copy_results, git_errors):
+def create_report_object(pallets, elapsed_time, copy_results, git_errors, static_copy_results):
     reports = [pallet.get_report() for pallet in pallets]
 
     return {'total_pallets': len(reports),
@@ -146,7 +146,8 @@ def create_report_object(pallets, elapsed_time, copy_results, git_errors):
             'git_errors': git_errors,
             'pallets': reports,
             'total_time': elapsed_time,
-            'copy_results': copy_results}
+            'copy_results': copy_results,
+            'static_copy_results': static_copy_results}
 
 
 def _copy_with_overwrite(source, destination):

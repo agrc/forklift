@@ -274,7 +274,8 @@ class TestReport(unittest.TestCase):
                   'git_errors': ['a git error'],
                   'pallets': [success, fail],
                   'total_time': '5 minutes',
-                  'copy_results': []}
+                  'copy_results': 'copy error',
+                  'static_copy_results': 'static copy error'}
 
         print(cli._format_dictionary(report))
 

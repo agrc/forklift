@@ -114,11 +114,11 @@ def start_lift(file_path=None, pallet_arg=None, skip_git=False):
         log.info('No `copyDestinations` defined in the config. Skipping update_static...')
     else:
         start_static = clock()
-        copy_results += ' ' + lift.update_static_for(pallets_to_lift, copy_destinations, False)
+        static_copy_results = lift.update_static_for(pallets_to_lift, copy_destinations, False)
         log.info('static copy time: %s', seat.format_time(clock() - start_static))
 
     elapsed_time = seat.format_time(clock() - start_seconds)
-    report_object = lift.create_report_object(pallets_to_lift, elapsed_time, copy_results, git_errors)
+    report_object = lift.create_report_object(pallets_to_lift, elapsed_time, copy_results, git_errors, static_copy_results)
 
     _send_report_email(report_object)
 
@@ -289,6 +289,9 @@ def _format_dictionary(pallet_reports):
     if pallet_reports['copy_results'] not in [None, '']:
         report_str += '{}{}{}{}'.format(Fore.RED, pallet_reports['copy_results'], Fore.RESET, linesep)
 
+    if pallet_reports['static_copy_results'] not in [None, '']:
+        report_str += '{}{}{}{}'.format(Fore.RED, pallet_reports['static_copy_results'], Fore.RESET, linesep)
+
     if len(pallet_reports['git_errors']) > 0:
         for git_error in pallet_reports['git_errors']:
             report_str += '{}{}{}'.format(Fore.RED, git_error, linesep)
@@ -413,10 +416,10 @@ def update_static(file_path):
         log.error('No `copyDestinations` defined in the config!')
         return ''
 
-    copy_results = lift.update_static_for(pallets, copy_destinations, True)
+    static_copy_results = lift.update_static_for(pallets, copy_destinations, True)
 
     elapsed_time = seat.format_time(clock() - start_seconds)
-    report_object = lift.create_report_object(pallets, elapsed_time, copy_results, git_errors)
+    report_object = lift.create_report_object(pallets, elapsed_time, '', git_errors, static_copy_results)
     report = _format_dictionary(report_object)
     log.info('%s', report)
 

@@ -1,28 +1,46 @@
+<!DOCTYPE html>
 <html>
+
 <head>
-    <title>Report Template Tests</title>
-    <script src='//cdnjs.cloudflare.com/ajax/libs/mustache.js/2.2.1/mustache.js'></script>
-    <script src="//ajax.googleapis.com/ajax/libs/dojo/1.10.4/dojo/dojo.js"></script>
+  <title>Report Template Tests</title>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/mustache.js/2.2.1/mustache.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/dojo/1.10.4/dojo/dojo.js"></script>
+  <style>
+    .container {
+      border: solid 1px gray;
+      padding: 5px;
+    }
+    table {
+      width: 100%;
+    }
+  </style>
 </head>
+
 <body>
-    <h1>Report Template Tests</h1>
+  <h1>Report Template Tests</h1>
 
-    <script type='text/javascript'>
-        require([
-            'dojo/dom-construct',
+  <script type="text/javascript">
+    require([
+      'dojo/dom-construct',
 
-            'dojo/text!./data/report.json',
-            'dojo/text!../src/forklift/report_template.html'
-        ], function (
-            domConstruct,
+      'dojo/text!./data/report_with_errors.json',
+      'dojo/text!./data/report_success.json',
+      'dojo/text!../src/forklift/report_template.html'
+    ], function(
+      domConstruct,
 
-            testJson,
-            reportTemplate
-        ) {
-            var dom = Mustache.render(reportTemplate, JSON.parse(testJson));
-            domConstruct.place(dom, document.body);
-            console.debug(dom);
-        });
-    </script>
+      testJsonErrors,
+      testJsonSuccess,
+      reportTemplate
+    ) {
+      [testJsonErrors, testJsonSuccess].forEach(json => {
+        var container = domConstruct.create('div', {className: 'container'}, document.body);
+        var dom = Mustache.render(reportTemplate, JSON.parse(json));
+        domConstruct.place(dom, container);
+        console.debug(dom);
+      });
+    });
+  </script>
 </body>
+
 </html>

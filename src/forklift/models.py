@@ -298,10 +298,23 @@ class Crate(object):
     def get_report(self):
         '''Returns the relavant info related to this crate that is shown on the report as a dictionary
         '''
-        if self.result[0] == self.NO_CHANGES:
+        status = self.result[0]
+        if status == self.NO_CHANGES:
             return None
 
-        return {'name': self.destination_name, 'result': self.result[0], 'crate_message': self.result[1] or ''}
+        if status in [self.WARNING, self.UNINITIALIZED]:
+            message_level = 'warning'
+        elif status in [self.UNHANDLED_EXCEPTION, self.INVALID_DATA]:
+            message_level = 'error'
+        else:
+            message_level = ''
+
+        return {
+            'name': self.destination_name,
+            'result': self.result[0],
+            'crate_message': self.result[1] or '',
+            'message_level': message_level
+        }
 
     def is_table(self):
         '''returns True if the crate defines a table

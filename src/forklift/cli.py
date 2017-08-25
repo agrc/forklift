@@ -112,6 +112,7 @@ def start_lift(file_path=None, pallet_arg=None, skip_git=False):
 
     if len(copy_destinations) == 0:
         log.info('No `copyDestinations` defined in the config. Skipping update_static...')
+        static_copy_results = ''
     else:
         start_static = clock()
         static_copy_results = lift.update_static_for(pallets_to_lift, copy_destinations, False)
@@ -301,18 +302,22 @@ def _format_dictionary(pallet_reports):
         if not report['success']:
             color = Fore.RED
 
-        report_str += '{}{}{}{}'.format(color, report['name'], Fore.RESET, linesep)
+        report_str += '{3}{0}{1}{2}{3}'.format(color, report['name'], Fore.RESET, linesep)
 
         if report['message']:
-            report_str += 'pallet message: {}{}{}{}'.format(Fore.YELLOW, report['message'], Fore.RESET, linesep)
+            report_str += 'pallet message: {}{}{}{}'.format(Fore.RED, report['message'], Fore.RESET, linesep)
 
         for crate in report['crates']:
-            report_str += '{0:>40}{3} - {1}{4}{2}'.format(crate['name'], crate['result'], linesep, Fore.CYAN, Fore.RESET)
+            report_str += '{0:>40} - {1}{3}{2}'.format(crate['name'], crate['result'], linesep, Fore.RESET)
 
             if crate['crate_message'] is None:
                 continue
 
-            report_str += 'crate message: {0}{1}{2}{3}'.format(Fore.MAGENTA, crate['crate_message'], Fore.RESET, linesep)
+            if crate['message_level'] == 'warning':
+                color = Fore.YELLOW
+            else:
+                color = Fore.RED
+            report_str += 'crate message: {0}{1}{2}{3}'.format(color, crate['crate_message'], Fore.RESET, linesep)
 
     return report_str
 

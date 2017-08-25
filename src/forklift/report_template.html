@@ -1,23 +1,37 @@
+<!-- gmail will strip the <style> tag if it's not in the <head> -->
+<head>
+  <style>
+    .error {
+      background-color: #fc7973;
+    }
+    .success {
+      background-color: #83ec8f;
+    }
+    .warning {
+      background-color: #fcc573;
+    }
+  </style>
+</head>
 <p><b>{{num_success_pallets}}</b> out of <b>{{total_pallets}}</b> pallets ran successfully in {{total_time}}.</p>
 <table>
   <tbody>
     {{#git_errors}}
     <tr>
-      <td colspan="2" style="background-color: #fc7973">{{.}}</td>
+      <td colspan="2" class="error">{{.}}</td>
     </tr>
     {{/git_errors}} {{#copy_results}}
     <tr>
-      <td colspan="2" style="background-color: #fc7973">{{copy_results}}</td>
+      <td colspan="2" class="error">{{copy_results}}</td>
     </tr>
     {{/copy_results}} {{#static_copy_results}}
     <tr>
-      <td colspan="2" style="background-color: #fc7973">{{static_copy_results}}</td>
+      <td colspan="2" class="error">{{static_copy_results}}</td>
     </tr>
     {{/static_copy_results}}
 
     {{#pallets}}
     <tr>
-      <td colspan="2" style="background-color: {{#success}}#83ec8f{{/success}} {{^success}}#fc7973{{/success}}">
+      <td colspan="2" class="{{#success}}success{{/success}}{{^success}}error{{/success}}">
         {{name}}
       </td>
     </tr>
@@ -32,7 +46,7 @@
     </tr>
     {{#crate_message}}
     <tr>
-      <td colspan="2" style="padding-left: 20px"><b>{{crate_message}}</b></td>
+      <td colspan="2" class="{{message_level}}" style="padding-left: 20px;"><b>{{crate_message}}</b></td>
     </tr>
     {{/crate_message}}
     {{/crates}}

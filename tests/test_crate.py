@@ -183,3 +183,26 @@ class TestCrate(unittest.TestCase):
         self.assertEqual(crate.source_name, name)
         self.assertEqual(crate.destination_name, 'Counties')
         self.assertEqual(crate.source, path.join(crate.source_workspace, crate.source_name))
+
+    def test_get_report(self):
+        crate = Crate('foo', 'bar', 'baz', 'goo')
+
+        crate.result = (Crate.NO_CHANGES, None)
+
+        self.assertIsNone(crate.get_report())
+
+        msg = 'blah'
+        crate.result = (Crate.CREATED, msg)
+
+        self.assertEqual(crate.get_report()['crate_message'], msg)
+
+        crate.result = (Crate.WARNING, msg)
+
+        self.assertEqual(crate.get_report()['result'], Crate.WARNING)
+        self.assertEqual(crate.get_report()['message_level'], 'warning')
+
+        crate.result = (Crate.UNHANDLED_EXCEPTION, msg)
+        self.assertEqual(crate.get_report()['message_level'], 'error')
+
+        crate.result = (Crate.INVALID_DATA, msg)
+        self.assertEqual(crate.get_report()['message_level'], 'error')

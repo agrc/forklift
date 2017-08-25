@@ -15,7 +15,9 @@
                 "result": "Created table successfully."
             }, {
                 "name": "FeatureClassTwo",
-                "result": "Created table successfully."
+                "result": "Created table successfully.",
+                "crate_message": "Destination has zero records",
+                "message_level": "warning"
             }]
         }, {
             "name": "Z:\\forklift\\samples\\PalletSamples.py:ExplicitCratePallet",
@@ -23,7 +25,8 @@
             "message": "This pallet only runs on Fridays.",
             "crates": [{
                 "name": "FeatureClassOne",
-                "result": "Data updated successfully."
+                "result": "Data updated successfully.",
+                "message_level": ""
             }]
         }, {
             "name": "Z:\\forklift\\samples\\PalletSamples.py:OneValueTupleCratePallet",
@@ -32,7 +35,8 @@
             "crates": [{
                 "name": "FeatureClassOne",
                 "result": "Data is invalid",
-                "crate_message": "a very long message with a stack trace and all sorts of errors a very long message with a stack trace and all sorts of errors"
+                "crate_message": "a very long message with a stack trace and all sorts of errors a very long message with a stack trace and all sorts of errors",
+                "message_level": "error"
             }, {
                 "name": "FeatureClassOne",
                 "result": "Created table successfully."
@@ -47,7 +51,8 @@
             "crates": [{
                 "name": "FeatureClassOne",
                 "result": "Data is invalid",
-                "crate_message": "schema change..."
+                "crate_message": "schema change...",
+                "message_level": "error"
             }]
         }, {
             "name": "Z:\\forklift\\samples\\PalletSamples.py:SdeCratePallet",

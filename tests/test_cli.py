@@ -250,9 +250,10 @@ class TestReport(unittest.TestCase):
     def test_format_dictionary(self):
         #: run with --nocapture and look at tox console output
         good_crate = {'name': 'Good-Crate', 'result': Crate.CREATED, 'crate_message': None}
-        bad_crate = {'name': 'Bad-Crate', 'result': Crate.UNHANDLED_EXCEPTION, 'crate_message': 'This thing blew up.'}
+        bad_crate = {'name': 'Bad-Crate', 'result': Crate.UNHANDLED_EXCEPTION, 'crate_message': 'This thing blew up.', 'message_level': 'error'}
+        warn_crate = {'name': 'Warn-Crate', 'result': Crate.WARNING, 'crate_message': 'This thing almost blew up.', 'message_level': 'warning'}
 
-        success = {'name': 'Successful Pallet', 'success': True, 'message': None, 'crates': [good_crate, good_crate]}
+        success = {'name': 'Successful Pallet', 'success': True, 'message': None, 'crates': [good_crate, good_crate, warn_crate]}
         fail = {'name': 'Fail Pallet', 'success': False, 'message': 'What Happened?!', 'crates': [bad_crate, good_crate]}
 
         report = {'total_pallets': 2,

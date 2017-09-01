@@ -253,10 +253,11 @@ class TestGitUpdate(unittest.TestCase):
         config.set_config_prop('warehouse', test_pallets_folder, override=True)
         config.set_config_prop('repositories', ['agrc/nested', 'agrc/forklift'])
 
-        cli.git_update()
+        results = cli.git_update()
 
         clone_from_mock.assert_called_once()
         remote_mock.pull.assert_called_once()
+        self.assertEqual(len(results), 0)
 
 
 class TestReport(unittest.TestCase):

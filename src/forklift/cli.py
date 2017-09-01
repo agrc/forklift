@@ -213,7 +213,7 @@ def git_update():
         if error is not None:
             log.error(error)
 
-    return [error for error in results if error is not None]
+    return [error for error, info in results if error is not None]
 
 
 def _get_repo(folder):

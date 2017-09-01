@@ -19,11 +19,13 @@
     <tr>
       <td colspan="2" class="error">{{.}}</td>
     </tr>
-    {{/git_errors}} {{#copy_results}}
+    {{/git_errors}}
+    {{#copy_results}}
     <tr>
       <td colspan="2" class="error">{{copy_results}}</td>
     </tr>
-    {{/copy_results}} {{#static_copy_results}}
+    {{/copy_results}}
+    {{#static_copy_results}}
     <tr>
       <td colspan="2" class="error">{{static_copy_results}}</td>
     </tr>

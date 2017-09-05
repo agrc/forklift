@@ -1,4 +1,5 @@
 {
+    "hostname": "SomeMachineName",
     "num_success_pallets": 3,
     "total_pallets": 3,
     "copy_results": "",

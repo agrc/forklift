@@ -6,10 +6,7 @@ lift.py
 A module that contains methods to handle pallets
 '''
 
-import arcpy
-import logging
 from . import seat
-import shutil
 from .arcgis import LightSwitch
 from .core import hash_field
 from forklift.models import Crate
@@ -18,6 +15,10 @@ from os import path
 from os import remove
 from os import walk
 from time import clock
+import arcpy
+import logging
+import shutil
+import socket
 
 log = logging.getLogger('forklift')
 service_msg = 'Service(s) will not {}: {}. '
@@ -141,7 +142,8 @@ def update_static_for(pallets, config_copy_destinations, force):
 def create_report_object(pallets, elapsed_time, copy_results, git_errors, static_copy_results):
     reports = [pallet.get_report() for pallet in pallets]
 
-    return {'total_pallets': len(reports),
+    return {'hostname': socket.gethostname(),
+            'total_pallets': len(reports),
             'num_success_pallets': len([p for p in reports if p['success']]),
             'git_errors': git_errors,
             'pallets': reports,

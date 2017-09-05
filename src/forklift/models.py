@@ -407,6 +407,7 @@ class Changes(object):
         self.fields = fields
         self.table = ''
         self.total_rows = 0
+        self.has_dups = False
 
     def has_adds(self):
         '''returns true if the source table has new rows

@@ -133,6 +133,9 @@ def update(crate, validate_crate):
 
                             cursor.insertRow(row)
 
+        if changes.has_dups:
+            change_status = (Crate.WARNING, 'Duplicate features detected!')
+
         #: sanity check the row counts between source and destination
         count_status, count_message = _check_counts(crate, changes)
         if not count_status:
@@ -230,7 +233,8 @@ def _hash(crate):
     changes.total_rows = total_rows
 
     if has_dups:
-        log.warn('duplicate features detected!')
+        log.warn('Duplicate features detected!')
+        changes.has_dups = True
 
     return changes
 

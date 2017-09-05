@@ -88,7 +88,7 @@ class CoreTests(unittest.TestCase):
                 update_cursor.updateRow(row)
                 break
 
-        self.assertEqual(core.update(crate, lambda x: True)[0], Crate.UPDATED)
+        self.assertEqual(core.update(crate, lambda x: True)[0], Crate.WARNING)
         self.assertEqual(arcpy.GetCount_management(crate.destination).getOutput(0), '3')
 
     def test_deleted_destination_between_updates(self):

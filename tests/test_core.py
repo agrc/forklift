@@ -421,6 +421,13 @@ class CoreTests(unittest.TestCase):
 
         self.assertFalse(core._check_counts(crate, changes)[0])
 
+        #: empty
+        crate = Crate('empty', row_counts, row_counts, 'empty')
+        changes = Changes([])
+        changes.total_rows = 0
+
+        self.assertEqual(core._check_counts(crate, changes), (False, 'Destination has zero rows!'))
+
     def test_mirror_fields(self):
         arcpy.management.CreateFileGDB(path.dirname(test_gdb), path.basename(test_gdb))
         destination = arcpy.management.CreateTable(test_gdb, 'MirrorFieldsTable')

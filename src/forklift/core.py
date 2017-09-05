@@ -387,14 +387,15 @@ def _check_counts(crate, changes):
 
     destination_rows = int(arcpy.GetCount_management(crate.destination).getOutput(0))
     source_rows = changes.total_rows
-    valid = source_rows == destination_rows
 
-    if not valid:
+    if not source_rows == destination_rows:
         message = 'Source row count ({}) does not match destination count ({})!'.format(source_rows, destination_rows)
+    elif destination_rows == 0:
+        message = 'Destination has zero rows!'
     else:
         message = ''
 
-    return (valid, message)
+    return (message == '', message)
 
 
 def _mirror_fields(source, destination):

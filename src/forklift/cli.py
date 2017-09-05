@@ -172,7 +172,7 @@ def _send_report_email(report_object):
     with open(template, 'r') as template_file:
         email_content = pystache.render(template_file.read(), report_object)
 
-    send_email(config.get_config_prop('notify'), 'Forklift Report', email_content, log_file)
+    send_email(config.get_config_prop('notify'), 'Forklift Report for {}'.format(report_object['hostname']), email_content, log_file)
 
 
 def _clone_or_pull_repo(repo_name):

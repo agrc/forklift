@@ -1,4 +1,5 @@
 {
+    "hostname": "SomeMachineName",
     "num_success_pallets": 3,
     "total_pallets": 5,
     "copy_results": "Services will not stop: Roadkill/Overlays.MapServer, Roadkill/AnotherService.GPServer. This will affect data copy. Services will not start: Roadkill/Overlays.MapServer.",

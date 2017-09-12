@@ -414,19 +414,19 @@ class CoreTests(unittest.TestCase):
         changes = Changes([])
         changes.total_rows = 3
 
-        self.assertTrue(core._check_counts(crate, changes)[0])
+        self.assertIsNone(core._check_counts(crate, changes))
 
         #: mismatching
         changes.total_rows = 2
 
-        self.assertFalse(core._check_counts(crate, changes)[0])
+        self.assertEquals(core._check_counts(crate, changes)[0], Crate.WARNING)
 
         #: empty
         crate = Crate('empty', row_counts, row_counts, 'empty')
         changes = Changes([])
         changes.total_rows = 0
 
-        self.assertEqual(core._check_counts(crate, changes), (False, 'Destination has zero rows!'))
+        self.assertEqual(core._check_counts(crate, changes), (Crate.INVALID_DATA, 'Destination has zero rows!'))
 
     def test_mirror_fields(self):
         arcpy.management.CreateFileGDB(path.dirname(test_gdb), path.basename(test_gdb))

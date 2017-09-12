@@ -137,11 +137,9 @@ def update(crate, validate_crate):
             change_status = (Crate.WARNING, 'Duplicate features detected!')
 
         #: sanity check the row counts between source and destination
-        count_status, count_message = _check_counts(crate, changes)
-        if not count_status:
-            return (Crate.WARNING, count_message)
+        count_status = _check_counts(crate, changes)
 
-        return change_status
+        return count_status or change_status
     except Exception as e:
         log.error('unhandled exception: %s for crate %r', e, crate, exc_info=True)
 
@@ -389,13 +387,11 @@ def _check_counts(crate, changes):
     source_rows = changes.total_rows
 
     if not source_rows == destination_rows:
-        message = 'Source row count ({}) does not match destination count ({})!'.format(source_rows, destination_rows)
+        return (Crate.WARNING, 'Source row count ({}) does not match destination count ({})!'.format(source_rows, destination_rows))
     elif destination_rows == 0:
-        message = 'Destination has zero rows!'
-    else:
-        message = ''
+        return (Crate.INVALID_DATA, 'Destination has zero rows!')
 
-    return (message == '', message)
+    return None
 
 
 def _mirror_fields(source, destination):

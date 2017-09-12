@@ -171,7 +171,7 @@ class Pallet(object):
 
         returns: Boolean'''
         for crate in self._crates:
-            if crate.result[0] in [Crate.INVALID_DATA, Crate.UNHANDLED_EXCEPTION, Crate.WARNING]:
+            if crate.result[0] in [Crate.INVALID_DATA, Crate.UNHANDLED_EXCEPTION]:
                 return False
 
         return True

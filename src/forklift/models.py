@@ -161,7 +161,7 @@ class Pallet(object):
             if crate.result[0] in [Crate.INVALID_DATA, Crate.UNHANDLED_EXCEPTION]:
                 return False
             if not has_updated:
-                has_updated = crate.result[0] in [Crate.UPDATED, Crate.CREATED]
+                has_updated = crate.result[0] in [Crate.UPDATED, Crate.CREATED, Crate.WARNING]
 
         return has_updated
 

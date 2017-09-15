@@ -223,6 +223,12 @@ class TestCliStartLift(unittest.TestCase):
 
         update_static_for.assert_called_once()
 
+    @patch('forklift.lift.prepare_packaging_for_pallets')
+    def test_start_lift_prepare_packaging(self, prepare_mock, process_pallets, process_crates_for, git_update):
+        cli.start_lift(join(test_data_folder, 'pallet_argument.py'))
+
+        prepare_mock.assert_called_once()
+
 
 class TestCliGeneral(unittest.TestCase):
 

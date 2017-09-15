@@ -35,6 +35,17 @@ class TestLift(unittest.TestCase):
     def setUp(self):
         self.PalletMock = Mock(Pallet)
 
+    def test_prepare_packaging_for_pallets(self):
+        pallet_good = Pallet()
+
+        pallet_bad = Pallet()
+        pallet_bad.prepare_packaging = lambda: 1 + 't'
+
+        lift.prepare_packaging_for_pallets([pallet_good, pallet_bad])
+
+        self.assertTrue(pallet_good.success[0])
+        self.assertFalse(pallet_bad.success[0])
+
     def test_process_crate_for_set_results(self):
         crate1 = Crate('DNROilGasWells', check_for_changes_gdb, check_for_changes_gdb, 'a')
         crate2 = Crate('DNROilGasWells', check_for_changes_gdb, check_for_changes_gdb, 'b')

@@ -68,7 +68,15 @@ class Pallet(object):
         '''Invoked before process and ship. Any logic that could cause a pallet to error
         should be placed in here instead of the `__init__` method.
 
+        Unlike `prepare_packaging` this method is called for every pallet reguardless of whether
+        or not they are being lifted. This is so that appropriate services are shut down during copy data.
+
         configuration: string `Production`, `Staging`, or `Dev`'''
+        return
+
+    def prepare_packaging(self):
+        '''Invoked before process and ship only if this pallet is being lifted explicitly.
+        '''
         return
 
     def process(self):

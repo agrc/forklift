@@ -23,6 +23,23 @@ log = logging.getLogger('forklift')
 service_msg = 'Service(s) will not {}: {}. '
 
 
+def prepare_packaging_for_pallets(pallets):
+    '''
+    pallets: Pallet[]
+
+    Calls prepare_packaging for pallets
+    '''
+    log.info('preparing packing for %d pallets', len(pallets))
+
+    for pallet in pallets:
+        try:
+            log.debug('prepare packaging for: %r', pallet)
+            pallet.prepare_packaging()
+        except Exception as e:
+            pallet.success = (False, e)
+            log.error('error preparing packaging: %s for pallet: %r', e, pallet, exc_info=True)
+
+
 def process_crates_for(pallets, update_def):
     '''
     pallets: Pallet[]

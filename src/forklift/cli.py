@@ -92,6 +92,10 @@ def start_lift(file_path=None, pallet_arg=None, skip_git=False):
     pallets_to_lift, all_pallets = _sort_pallets(file_path, pallet_arg)
 
     start_process = clock()
+    lift.prepare_packaging_for_pallets(pallets_to_lift)
+    log.info('prepare_packaging_for_pallets time: %s', seat.format_time(clock() - start_process))
+
+    start_process = clock()
     core.init(log)
     lift.process_crates_for(pallets_to_lift, core.update)
     log.info('process_crates time: %s', seat.format_time(clock() - start_process))

@@ -6,14 +6,14 @@ test_forklift.py
 A module for testing lift.py
 '''
 
-import arcpy
 import unittest
-from forklift import lift, core
-from forklift.models import Pallet, Crate
-from mock import Mock
-from mock import patch
-from mock import call
 from os import path
+
+from mock import Mock, call, patch
+
+import arcpy
+from forklift import core, lift
+from forklift.models import Crate, Pallet
 
 fgd_describe = Mock()
 fgd_describe.workspaceFactoryProgID = 'esriDataSourcesGDB.FileGDBWorkspaceFactory'

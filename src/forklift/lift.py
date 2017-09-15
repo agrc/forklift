@@ -23,11 +23,10 @@ log = logging.getLogger('forklift')
 service_msg = 'Service(s) will not {}: {}. '
 
 
-def process_crates_for(pallets, update_def, configuration='Production'):
+def process_crates_for(pallets, update_def):
     '''
     pallets: Pallet[]
     update_def: Function. core.update
-    configuration: string. Production, Staging, Dev
 
     Calls update_def on all crates (excluding duplicates) in pallets
     '''

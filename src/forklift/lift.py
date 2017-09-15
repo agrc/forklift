@@ -6,19 +6,18 @@ lift.py
 A module that contains methods to handle pallets
 '''
 
-from . import seat
-from .arcgis import LightSwitch
-from .core import hash_field
-from forklift.models import Crate
-from os import makedirs
-from os import path
-from os import remove
-from os import walk
-from time import clock
-import arcpy
 import logging
 import shutil
 import socket
+from os import makedirs, path, remove, walk
+from time import clock
+
+import arcpy
+from forklift.models import Crate
+
+from . import seat
+from .arcgis import LightSwitch
+from .core import hash_field
 
 log = logging.getLogger('forklift')
 service_msg = 'Service(s) will not {}: {}. '

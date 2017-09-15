@@ -6,28 +6,27 @@ lift.py
 A module that contains the implementation of the cli commands
 '''
 
-from . import config
-from . import core
-from . import lift
 import logging
-import pystache
-from . import seat
 import sys
-from colorama import init as colorama_init, Fore
-from .messaging import send_email
-from git import Repo
 from imp import load_source
-from .models import Pallet
-from os.path import abspath, basename, dirname, exists, join, splitext, realpath
-from os import walk
-from os import linesep
-from os import makedirs
+from os import environ, linesep, makedirs, walk
+from os.path import (abspath, basename, dirname, exists, join, realpath,
+                     splitext)
 from re import compile
-from requests import get
 from shutil import rmtree
 from time import clock
+
+from colorama import init as colorama_init
+from colorama import Fore
 from multiprocess import Pool
-from os import environ
+
+import pystache
+from git import Repo
+from requests import get
+
+from . import config, core, lift, seat
+from .messaging import send_email
+from .models import Pallet
 
 log = logging.getLogger('forklift')
 template = join(abspath(dirname(__file__)), 'report_template.html')

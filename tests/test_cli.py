@@ -7,12 +7,15 @@ A module that contains tests for the cli.py module
 '''
 
 import unittest
+from json import loads
+from os import makedirs, remove
+from os.path import abspath, dirname, exists, join
+
+from mock import Mock, patch
+
 from forklift import cli, config, core
 from forklift.models import Crate
-from json import loads
-from mock import patch, Mock
-from os import remove, makedirs
-from os.path import abspath, dirname, join, exists
+
 from .mocks import PoolMock
 
 test_data_folder = join(dirname(abspath(__file__)), 'data')

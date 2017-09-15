@@ -6,15 +6,16 @@ models.py
 A module that contains the model classes for forklift
 '''
 
-import arcpy
 import logging
-from . import config
-from xxhash import xxh64
 from inspect import getsourcefile
-from .messaging import send_email
+from os.path import dirname, join
 from pprint import PrettyPrinter
-from os.path import dirname
-from os.path import join
+
+import arcpy
+from xxhash import xxh64
+
+from . import config
+from .messaging import send_email
 
 pprinter = PrettyPrinter(indent=4, width=40)
 names_cache = {}

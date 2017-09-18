@@ -41,21 +41,17 @@ Examples:
     forklift update-static path/to/pallet_file.py           Updates the static data defined in the specified pallet.
 '''
 
-from . import config
-from . import cli
 import faulthandler
 import logging.config
 import sys
-from docopt import docopt
-from .messaging import send_email
 from logging import shutdown
-from os import makedirs
-from os import startfile
-from os import linesep
-from os.path import abspath
-from os.path import dirname
-from os.path import join
-from os.path import realpath
+from os import linesep, makedirs, startfile
+from os.path import abspath, dirname, join, realpath
+
+from docopt import docopt
+
+from . import cli, config
+from .messaging import send_email
 
 log_location = join(abspath(dirname(__file__)), '..', 'forklift-garage', 'forklift.log')
 detailed_formatter = logging.Formatter(fmt='%(levelname)-7s %(asctime)s %(module)10s:%(lineno)5s %(message)s',

@@ -111,6 +111,13 @@ _Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) w
 `flake8 src/forklift tests`
 
 # Changelog
+**8.3.0**
+- Parallelize the starting & stopping of ArcGIS Server services ([#118](https://github.com/agrc/forklift/issues/118)).
+- Parallelize git_update ([#204](https://github.com/agrc/forklift/issues/204)).
+- Fix the thin red line showing up at the top of successful report emails.
+- Add warning to reports for duplicate features ([#185](https://github.com/agrc/forklift/issues/185)) and empty destinations ([#197](https://github.com/agrc/forklift/issues/197)).
+- Give static copy errors their own line on the report.
+- Add hostname to report email subject and body ([#182](https://github.com/agrc/forklift/issues/182)).
 
 **8.2.0**
 - Fixed a bug causing errors when trying to delete the scratch database [a6941b1ff3757267d69ec04cdf12488b1d77aa2c](https://github.com/agrc/forklift/commit/a6941b1ff3757267d69ec04cdf12488b1d77aa2c)

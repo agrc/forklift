@@ -36,7 +36,7 @@ class Tox(TestCommand):
 
 setup(
     name="forklift",
-    version="8.2.0",
+    version="8.3.0",
     license="MIT",
     description="CLI tool for managing automated tasks.",
     long_description="",

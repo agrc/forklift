@@ -111,6 +111,9 @@ _Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) w
 `flake8 src/forklift tests`
 
 # Changelog
+**8.3.1**
+- Fix bug in `list-pallets` command. Thanks [@joshgroeneveld](https://github.com/joshgroeneveld)!
+
 **8.3.0**
 - Parallelize the starting & stopping of ArcGIS Server services ([#118](https://github.com/agrc/forklift/issues/118)).
 - Parallelize git_update ([#204](https://github.com/agrc/forklift/issues/204)).

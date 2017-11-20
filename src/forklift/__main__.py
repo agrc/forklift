@@ -103,8 +103,8 @@ def main():
         if len(pallets) == 0:
             print('No pallets found!')
         else:
-            for plug in pallets:
-                print((': '.join(plug)))
+            for path, pallet_class in pallets:
+                print((': '.join([path, str(pallet_class)])))
     elif args['scorched-earth']:
         cli.scorched_earth()
     elif args['speedtest']:

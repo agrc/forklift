@@ -40,13 +40,15 @@ class TestConfigInit(unittest.TestCase):
 
         with open(path) as config:
             config_dict = loads(config.read())
-            self.assertEqual(config_dict, {u"configuration": u"Production",
-                                           u"warehouse": u"c:\\scheduled\\warehouse",
-                                           u"repositories": [],
-                                           u"copyDestinations": [],
-                                           u"stagingDestination": u"c:\\scheduled\\staging",
-                                           u"sendEmails": False,
-                                           u"notify": [u"stdavis@utah.gov", u"sgourley@utah.gov"]})
+            self.assertEqual(config_dict, {
+                u"configuration": u"Production",
+                u"warehouse": u"c:\\scheduled\\warehouse",
+                u"repositories": [],
+                u"copyDestinations": [],
+                u"stagingDestination": u"c:\\scheduled\\staging",
+                u"sendEmails": False,
+                u"notify": [u"stdavis@utah.gov", u"sgourley@utah.gov"]
+            })
 
     def test_init_returns_path_for_existing_config_file(self):
         self.assertEqual(cli.init(), cli.init())
@@ -277,16 +279,30 @@ class TestReport(unittest.TestCase):
         bad_crate = {'name': 'Bad-Crate', 'result': Crate.UNHANDLED_EXCEPTION, 'crate_message': 'This thing blew up.', 'message_level': 'error'}
         warn_crate = {'name': 'Warn-Crate', 'result': Crate.WARNING, 'crate_message': 'This thing almost blew up.', 'message_level': 'warning'}
 
-        success = {'name': 'Successful Pallet', 'success': True, 'message': None, 'crates': [good_crate, good_crate, warn_crate]}
-        fail = {'name': 'Fail Pallet', 'success': False, 'message': 'What Happened?!', 'crates': [bad_crate, good_crate]}
+        success = {
+            'name': 'Successful Pallet',
+            'success': True,
+            'message': None,
+            'crates': [good_crate, good_crate, warn_crate],
+            'total_processing_time': '1 hr'
+        }
+        fail = {
+            'name': 'Fail Pallet',
+            'success': False,
+            'message': 'What Happened?!',
+            'crates': [bad_crate, good_crate],
+            'total_processing_time': '2 hrs'
+        }
 
-        report = {'total_pallets': 2,
-                  'num_success_pallets': 1,
-                  'git_errors': ['a git error'],
-                  'pallets': [success, fail],
-                  'total_time': '5 minutes',
-                  'copy_results': 'copy error',
-                  'static_copy_results': 'static copy error'}
+        report = {
+            'total_pallets': 2,
+            'num_success_pallets': 1,
+            'git_errors': ['a git error'],
+            'pallets': [success, fail],
+            'total_time': '5 minutes',
+            'copy_results': 'copy error',
+            'static_copy_results': 'static copy error'
+        }
 
         print(cli._format_dictionary(report))
 

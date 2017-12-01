@@ -126,6 +126,10 @@ def start_lift(file_path=None, pallet_arg=None, skip_git=False, skip_copy=False)
         static_copy_results = ''
         log.info('copy data and post copy processing were skipped')
 
+    # log process times for each pallet
+    for pallet in pallets_to_lift:
+        log.debug('processing_times (in seconds) for %r: %s', pallet, pallet.processing_times)
+
     elapsed_time = seat.format_time(clock() - start_seconds)
     report_object = lift.create_report_object(pallets_to_lift, elapsed_time, copy_results, git_errors, static_copy_results)
 
@@ -322,7 +326,7 @@ def _format_dictionary(pallet_reports):
         if not report['success']:
             color = Fore.RED
 
-        report_str += '{3}{0}{1}{2}{3}'.format(color, report['name'], Fore.RESET, linesep)
+        report_str += '{3}{0}{1} ({4}){2}{3}'.format(color, report['name'], Fore.RESET, linesep, report['total_processing_time'])
 
         if report['message']:
             report_str += 'pallet message: {}{}{}{}'.format(Fore.RED, report['message'], Fore.RESET, linesep)

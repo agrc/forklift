@@ -21,3 +21,15 @@ def format_time(seconds):
         return '{} minutes'.format(round(seconds / minute, 2))
 
     return '{} hours'.format(round(seconds / hour, 2))
+
+
+class timed_pallet_process(object):
+    def __init__(self, pallet, name):
+        self.pallet = pallet
+        self.name = name
+
+    def __enter__(self):
+        self.pallet.start_timer(self.name)
+
+    def __exit__(self, type, value, traceback):
+        self.pallet.stop_timer(self.name)

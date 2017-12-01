@@ -7,8 +7,11 @@ A module that contains tests for the pallet module.
 '''
 
 import unittest
-from forklift.models import Pallet, Crate
+from time import sleep
+
 from mock import patch
+
+from forklift.models import Crate, Pallet
 
 
 class TestPallet(unittest.TestCase):
@@ -316,3 +319,20 @@ class TestPalletGetReport(unittest.TestCase):
         self.assertEqual(len(report['crates']), 3)
         self.assertEqual(report['crates'][1]['result'], Crate.INVALID_DATA)
         self.assertEqual(report['crates'][1]['crate_message'], 'Invalid data message')
+
+    def test_processing_time(self):
+        pallet = Pallet()
+        first = 'first'
+        second = 'second'
+
+        pallet.start_timer(first)
+        sleep(2)
+        pallet.stop_timer(first)
+
+        pallet.start_timer(second)
+        sleep(3)
+        pallet.stop_timer(second)
+
+        self.assertEqual(round(pallet.total_processing_time), 5)
+        self.assertEqual(round(pallet.processing_times[first]), 2)
+        self.assertEqual(round(pallet.processing_times[second]), 3)

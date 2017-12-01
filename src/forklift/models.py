@@ -10,11 +10,12 @@ import logging
 from inspect import getsourcefile
 from os.path import dirname, join
 from pprint import PrettyPrinter
+from time import clock
 
 import arcpy
 from xxhash import xxh64
 
-from . import config
+from . import config, seat
 from .messaging import send_email
 
 pprinter = PrettyPrinter(indent=4, width=40)
@@ -63,6 +64,9 @@ class Pallet(object):
         #: When `forklift update_static <pallet>` is run it copies/overwrites the data in
         #: copyDestinations (while stopping services in `arcgis_services`).
         self.static_data = []
+        self.total_processing_time = 0
+        self.processing_times = {}
+        self.timers = {}
 
     def build(self, configuration='Production'):
         '''Invoked before process and ship. Any logic that could cause a pallet to error
@@ -185,13 +189,26 @@ class Pallet(object):
 
         return True
 
+    def start_timer(self, name):
+        self.timers[name] = clock()
+
+    def stop_timer(self, name):
+        processing_time = self.processing_times.setdefault(name, 0)
+        processing_time += clock() - self.timers[name]
+
+        self.processing_times[name] = processing_time
+        self.total_processing_time += processing_time
+
     def get_report(self):
         '''Returns a message about the result of each crate in the pallet.
         '''
-        return {'name': self.name,
-                'success': self.success[0] and self.are_crates_valid(),
-                'message': self.success[1] or '',
-                'crates': [crate.get_report() for crate in self._crates if crate.get_report() is not None]}
+        return {
+            'name': self.name,
+            'success': self.success[0] and self.are_crates_valid(),
+            'message': self.success[1] or '',
+            'crates': [crate.get_report() for crate in self._crates if crate.get_report() is not None],
+            'total_processing_time': seat.format_time(self.total_processing_time)
+        }
 
     def __repr__(self):
         '''Override for better logging. Use with %r
@@ -318,12 +335,7 @@ class Crate(object):
         else:
             message_level = ''
 
-        return {
-            'name': self.destination_name,
-            'result': self.result[0],
-            'crate_message': self.result[1] or '',
-            'message_level': message_level
-        }
+        return {'name': self.destination_name, 'result': self.result[0], 'crate_message': self.result[1] or '', 'message_level': message_level}
 
     def is_table(self):
         '''returns True if the crate defines a table
@@ -360,6 +372,7 @@ class Crate(object):
                     if list is None:
                         return []
                     return list
+
                 names = default_to_empty(arcpy.ListFeatureClasses()) + default_to_empty(arcpy.ListTables())
                 arcpy.env.workspace = None
 

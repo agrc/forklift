@@ -11,6 +11,7 @@
             "name": "Z:\\forklift\\samples\\PalletSamples.py:StringCratePallet",
             "success": true,
             "message": null,
+            "total_processing_time": "45 minutes",
             "crates": [{
                 "name": "FeatureClassOne",
                 "result": "Created table successfully."
@@ -24,6 +25,7 @@
             "name": "Z:\\forklift\\samples\\PalletSamples.py:ExplicitCratePallet",
             "success": true,
             "message": "This pallet only runs on Fridays.",
+            "total_processing_time": "45 minutes",
             "crates": [{
                 "name": "FeatureClassOne",
                 "result": "Data updated successfully.",
@@ -33,6 +35,7 @@
             "name": "Z:\\forklift\\samples\\PalletSamples.py:OneValueTupleCratePallet",
             "success": false,
             "message": "pallet failed to run because it broke",
+            "total_processing_time": "45 minutes",
             "crates": [{
                 "name": "FeatureClassOne",
                 "result": "Data is invalid",
@@ -49,6 +52,7 @@
             "name": "Z:\\forklift\\samples\\PalletSamples.py:ShapefileCratePallet",
             "success": false,
             "message": "warehouse fire",
+            "total_processing_time": "45 minutes",
             "crates": [{
                 "name": "FeatureClassOne",
                 "result": "Data is invalid",
@@ -59,6 +63,7 @@
             "name": "Z:\\forklift\\samples\\PalletSamples.py:SdeCratePallet",
             "success": true,
             "message": null,
+            "total_processing_time": "45 minutes",
             "crates": [{
                 "name": "FeatureClassOne",
                 "result": "Data updated successfully."

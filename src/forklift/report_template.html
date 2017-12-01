@@ -10,6 +10,10 @@
     .warning {
       background-color: #fcc573;
     }
+    .pull-right {
+      float: right;
+      margin-left: 20px;
+    }
   </style>
 </head>
 <p><b>{{num_success_pallets}}</b> out of <b>{{total_pallets}}</b> pallets ran successfully in <b>{{total_time}}</b> on {{hostname}}.</p>
@@ -35,6 +39,9 @@
     <tr>
       <td colspan="2" class="{{#success}}success{{/success}}{{^success}}error{{/success}}">
         {{name}}
+        <span class="pull-right">
+          {{total_processing_time}}
+        </span>
       </td>
     </tr>
     <tr>

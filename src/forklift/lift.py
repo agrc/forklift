@@ -34,7 +34,8 @@ def prepare_packaging_for_pallets(pallets):
     for pallet in pallets:
         try:
             log.debug('prepare packaging for: %r', pallet)
-            pallet.prepare_packaging()
+            with seat.timed_pallet_process(pallet, 'prepare_packaging'):
+                pallet.prepare_packaging()
         except Exception as e:
             pallet.success = (False, e)
             log.error('error preparing packaging: %s for pallet: %r', e, pallet, exc_info=True)
@@ -52,26 +53,27 @@ def process_crates_for(pallets, update_def):
     log.info('processing crates for %d pallets.', len(pallets))
 
     for pallet in pallets:
-        log.info('processing crates for pallet: %r', pallet)
+        with seat.timed_pallet_process(pallet, 'process_crates'):
+            log.info('processing crates for pallet: %r', pallet)
 
-        for crate in pallet.get_crates():
-            log.info('crate: %s', crate.destination_name)
-            if crate.result[0] == Crate.INVALID_DATA:
-                log.warn('result: %s', crate.result)
-                continue
+            for crate in pallet.get_crates():
+                log.info('crate: %s', crate.destination_name)
+                if crate.result[0] == Crate.INVALID_DATA:
+                    log.warn('result: %s', crate.result)
+                    continue
 
-            if crate.destination not in processed_crates:
-                log.debug('%r', crate)
-                start_seconds = clock()
+                if crate.destination not in processed_crates:
+                    log.debug('%r', crate)
+                    start_seconds = clock()
 
-                processed_crates[crate.destination] = crate.set_result(update_def(crate, pallet.validate_crate))
+                    processed_crates[crate.destination] = crate.set_result(update_def(crate, pallet.validate_crate))
 
-                log.debug('finished crate %s', seat.format_time(clock() - start_seconds))
-                log.info('result: %s', crate.result)
-            else:
-                log.info('skipping crate')
+                    log.debug('finished crate %s', seat.format_time(clock() - start_seconds))
+                    log.info('result: %s', crate.result)
+                else:
+                    log.info('skipping crate')
 
-                crate.set_result(processed_crates[crate.destination])
+                    crate.set_result(processed_crates[crate.destination])
 
 
 def process_pallets(pallets, is_post_copy=False):
@@ -101,9 +103,11 @@ def process_pallets(pallets, is_post_copy=False):
                     arcpy.ResetEnvironments()
                     arcpy.ClearWorkspaceCache_management()
                     if not is_post_copy:
-                        pallet.process()
+                        with seat.timed_pallet_process(pallet, 'process'):
+                            pallet.process()
                     else:
-                        pallet.post_copy_process()
+                        with seat.timed_pallet_process(pallet, 'post_copy_process'):
+                            pallet.post_copy_process()
 
                     log.debug('%s pallet %s', verb.replace('ing', 'ed'), seat.format_time(clock() - start_seconds))
 
@@ -113,7 +117,8 @@ def process_pallets(pallets, is_post_copy=False):
                     log.info('shipping pallet: %r', pallet)
                     arcpy.ResetEnvironments()
                     arcpy.ClearWorkspaceCache_management()
-                    pallet.ship()
+                    with seat.timed_pallet_process(pallet, 'ship'):
+                        pallet.ship()
                     log.debug('shipped pallet %s', seat.format_time(clock() - start_seconds))
         except Exception as e:
             pallet.success = (False, e)
@@ -133,23 +138,24 @@ def update_static_for(pallets, config_copy_destinations, force):
 
     results = ''
     for pallet in pallets:
-        log.info('checking %s pallet', pallet)
-        for source in pallet.static_data:
-            if not path.exists(source):
-                log.error('static_data: %s does not exist!', source)
-                continue
+        with seat.timed_pallet_process(pallet, 'update_static'):
+            log.info('checking %s pallet', pallet)
+            for source in pallet.static_data:
+                if not path.exists(source):
+                    log.error('static_data: %s does not exist!', source)
+                    continue
 
-            destinations = [path.join(d, source.split('\\')[-1]) for d in config_copy_destinations]
-            if all([not path.exists(d) for d in destinations]):
-                log.info('copying static data for the first time')
-                for destination in destinations:
-                    _copy_with_overwrite(source, destination)
-            elif force:
-                log.info('overwriting static data')
-                results = _stop_services(pallet.arcgis_services)
-                for destination in destinations:
-                    _copy_with_overwrite(source, destination)
-                results += ' ' + _start_services(pallet.arcgis_services)
+                destinations = [path.join(d, source.split('\\')[-1]) for d in config_copy_destinations]
+                if all([not path.exists(d) for d in destinations]):
+                    log.info('copying static data for the first time')
+                    for destination in destinations:
+                        _copy_with_overwrite(source, destination)
+                elif force:
+                    log.info('overwriting static data')
+                    results = _stop_services(pallet.arcgis_services)
+                    for destination in destinations:
+                        _copy_with_overwrite(source, destination)
+                    results += ' ' + _start_services(pallet.arcgis_services)
 
     return results
 

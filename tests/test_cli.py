@@ -248,7 +248,7 @@ class TestGitUpdate(unittest.TestCase):
         if exists(config_location):
             remove(config_location)
 
-    @patch('forklift.cli.Pool', return_value=PoolMock)
+    @patch('forklift.cli.Pool', return_value=PoolMock())
     @patch('git.Repo.clone_from')
     @patch('forklift.cli._get_repo')
     @patch('forklift.cli._validate_repo')

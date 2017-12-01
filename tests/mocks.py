@@ -40,8 +40,11 @@ class SpatialReference(object):
 
 
 class PoolMock(object):
-    def map(*args):
+    def map(self, *args):
         return list(map(*args))
 
-    def close():
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
         pass

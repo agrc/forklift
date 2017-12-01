@@ -87,11 +87,9 @@ class LightSwitch(object):
             swimmers = num_processes or config.default_num_processes
             if swimmers > len(affected_services):
                 swimmers = len(affected_services)
-            pool = Pool(swimmers)
-
-            log.debug('affected services: %s', get_service_names(affected_services))
-            affected_services = [service for service in pool.map(act_on_service, affected_services) if service is not None]
-            pool.close()
+            with Pool(swimmers) as pool:
+                log.debug('affected services: %s', get_service_names(affected_services))
+                affected_services = [service for service in pool.map(act_on_service, affected_services) if service is not None]
 
             if len(affected_services) > 0:
                 log.debug('retrying %s', get_service_names(affected_services))

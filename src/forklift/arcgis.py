@@ -7,13 +7,14 @@ A module that contains a class to control arcgis services.
 '''
 
 import logging
-import requests
-from multiprocess import Pool
 from os import environ
-from time import sleep
-from time import time
-from . import config
+from time import sleep, time
 
+from multiprocess import Pool
+
+import requests
+
+from . import config
 
 log = logging.getLogger('forklift')
 
@@ -83,7 +84,10 @@ class LightSwitch(object):
             tries -= 1
 
             num_processes = environ.get('FORKLIFT_POOL_PROCESSES')
-            pool = Pool(num_processes or config.default_num_processes)
+            swimmers = num_processes or config.default_num_processes
+            if swimmers > len(affected_services):
+                swimmers = len(affected_services)
+            pool = Pool(swimmers)
 
             log.debug('affected services: %s', get_service_names(affected_services))
             affected_services = [service for service in pool.map(act_on_service, affected_services) if service is not None]

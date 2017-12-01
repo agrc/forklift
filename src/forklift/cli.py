@@ -205,10 +205,22 @@ def _clone_or_pull_repo(repo_name):
 
 def git_update():
     log.info('git updating (in parallel)...')
-    num_processes = environ.get('FORKLIFT_POOL_PROCESSES')
-    pool = Pool(num_processes or config.default_num_processes)
 
-    results = pool.map(_clone_or_pull_repo, config.get_config_prop('repositories'))
+    repositories = config.get_config_prop('repositories')
+    num_repos = len(repositories)
+
+    if num_repos == 0:
+        log.info('no repositories to update')
+        return []
+
+    num_processes = environ.get('FORKLIFT_POOL_PROCESSES')
+    swimmers = num_processes or config.default_num_processes
+    if swimmers > num_repos:
+        swimmers = num_repos
+
+    pool = Pool(swimmers)
+
+    results = pool.map(_clone_or_pull_repo, repositories)
 
     for error, info in results:
         if info is not None:

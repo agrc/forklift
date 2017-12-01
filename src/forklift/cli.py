@@ -227,9 +227,8 @@ def git_update():
     if swimmers > num_repos:
         swimmers = num_repos
 
-    pool = Pool(swimmers)
-
-    results = pool.map(_clone_or_pull_repo, repositories)
+    with Pool(swimmers) as pool:
+        results = pool.map(_clone_or_pull_repo, repositories)
 
     for error, info in results:
         if info is not None:

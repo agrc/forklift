@@ -7,11 +7,12 @@ A module that tests arcgis.py
 '''
 
 import unittest
-from forklift.arcgis import LightSwitch
-from mock import Mock
-from mock import patch
-from mock import call
 from time import time
+
+from mock import Mock, call, patch
+
+from forklift.arcgis import LightSwitch
+
 from .mocks import PoolMock
 
 
@@ -119,7 +120,7 @@ class TestLightSwitch(unittest.TestCase):
         self.assertEqual(self.patient.token, 'token1')
         self.assertEqual(self.patient.token_expire_milliseconds, 123)
 
-    @patch('forklift.arcgis.Pool', return_value=PoolMock)
+    @patch('forklift.arcgis.Pool', return_value=PoolMock())
     @patch('forklift.arcgis.sleep')
     def test_ensure_tries_five_times_with_failures(self, sleep, poolmock):
         affected_services = [('1', 'MapServer')]
@@ -135,7 +136,7 @@ class TestLightSwitch(unittest.TestCase):
         self.patient.turn_off.assert_not_called()
         sleep.assert_has_calls([call(1), call(2), call(3), call(5), call(8)])
 
-    @patch('forklift.arcgis.Pool', return_value=PoolMock)
+    @patch('forklift.arcgis.Pool', return_value=PoolMock())
     @patch('forklift.arcgis.sleep')
     def test_ensure_returns_formatted_problems(self, sleep, poolmock):
         affected_services = [('1', 'MapServer'), ('2', 'GPServer'), ('3', 'GeocodeServer')]
@@ -147,7 +148,7 @@ class TestLightSwitch(unittest.TestCase):
 
         self.assertEqual('1.MapServer, 2.GPServer, 3.GeocodeServer', affected_services)
 
-    @patch('forklift.arcgis.Pool', return_value=PoolMock)
+    @patch('forklift.arcgis.Pool', return_value=PoolMock())
     @patch('forklift.arcgis.sleep')
     def test_ensure_tries_until_success(self, sleep, poolmock):
         affected_services = [('1', 'MapServer')]

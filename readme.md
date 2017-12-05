@@ -111,6 +111,11 @@ _Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) w
 `flake8 src/forklift tests`
 
 # Changelog
+**8.4.0**
+- Better management of parallel processes.
+- Add process time per pallet to report ([#215](https://github.com/agrc/forklift/issues/215)).
+- Implement `--skip-copy` parameter to `lift` allowing the user to skip copying data to `copyDestinations`.
+
 **8.3.1**
 - Fix bug in `list-pallets` command. Thanks [@joshgroeneveld](https://github.com/joshgroeneveld)!
 

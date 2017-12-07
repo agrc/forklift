@@ -114,12 +114,18 @@ class LightSwitch(object):
         if self.token_expire_milliseconds <= time() * 1000:
             self._request_token()
 
+        ok = False
         data = {'f': 'json', 'token': self.token}
+        
+        try:
+            r = requests.post(url, data=data, timeout=30)
+            r.raise_for_status()
 
-        r = requests.post(url, data=data)
-        r.raise_for_status()
-
-        ok = self._return_false_for_status(r.json())
+            ok = self._return_false_for_status(r.json())
+        except requests.exceptions.Timeout:
+            return False
+        except requests.exceptions.ConnectTimeout:
+            return False
 
         sleep(3.0)
 

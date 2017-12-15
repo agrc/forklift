@@ -4,7 +4,7 @@ A python CLI tool for managing and organizing the repetitive tasks involved with
 
 #### Rules
 
-> The first rule of :tractor: is it does not work on any sabbath.   
+> The first rule of :tractor: is it does not work on any sabbath.
 > The second rule of :tractor: is that it's out of your element Donny.
 
 ## Usage
@@ -111,6 +111,9 @@ _Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) w
 `flake8 src/forklift tests`
 
 # Changelog
+**8.4.1**
+- Add a timeout on http requests to avoid infinite hanging requests.
+
 **8.4.0**
 - Better management of parallel processes.
 - Add process time per pallet to report ([#215](https://github.com/agrc/forklift/issues/215)).

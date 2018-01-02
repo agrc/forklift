@@ -61,6 +61,11 @@ speedtest = join(dirname(realpath(__file__)), '..', '..', 'speedtest', 'SpeedTes
 
 
 def main():
+    if sys.version_info.major != 3:
+        log = logging.getLogger('forklift')
+        print('please activate the conda package and run on python3')
+        log.error('activate the python 3 proenv to use forklift')
+
     args = docopt(__doc__, version='8.4.1')
     _setup_logging(args['--verbose'])
     _add_global_error_handler()

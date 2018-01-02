@@ -65,6 +65,7 @@ def main():
         log = logging.getLogger('forklift')
         print('please activate the conda package and run on python3')
         log.error('activate the python 3 proenv to use forklift')
+        return
 
     args = docopt(__doc__, version='8.4.1')
     _setup_logging(args['--verbose'])

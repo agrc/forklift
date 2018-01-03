@@ -113,7 +113,7 @@ class LightSwitch(object):
         if self.token_expire_milliseconds <= time() * 1000:
             self._request_token()
 
-        ok = False
+        ok = (False, None)
         data = {'f': 'json', 'token': self.token}
 
         try:

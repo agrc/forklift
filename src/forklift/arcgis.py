@@ -10,10 +10,11 @@ import logging
 from os import environ
 from time import sleep, time
 
+from multiprocess import Pool
+
 import requests
 
-import config
-from multiprocess import Pool
+from . import config
 
 log = logging.getLogger('forklift')
 

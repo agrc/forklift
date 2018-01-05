@@ -118,7 +118,7 @@ class LightSwitch(object):
         data = {'f': 'json', 'token': self.token}
 
         try:
-            r = requests.post(url, data=data, timeout=30)
+            r = requests.post(url, data=data, timeout=60)
             r.raise_for_status()
 
             ok = self._return_false_for_status(r.json())

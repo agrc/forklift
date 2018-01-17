@@ -36,7 +36,7 @@ class Tox(TestCommand):
 
 setup(
     name="forklift",
-    version="8.4.1",
+    version="8.4.2",
     license="MIT",
     description="CLI tool for managing automated tasks.",
     long_description="",
@@ -57,7 +57,7 @@ setup(
         "Operating System :: POSIX",
         "Operating System :: Microsoft :: Windows",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3 :: Only",
         "Topic :: Utilities",
     ],
     keywords=[

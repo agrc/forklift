@@ -5,6 +5,7 @@ A python CLI tool for managing and organizing the repetitive tasks involved with
 #### Rules
 
 > The first rule of :tractor: is it does not work on any sabbath.
+
 > The second rule of :tractor: is that it's out of your element Donny.
 
 ## Usage
@@ -111,6 +112,13 @@ _Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) w
 `flake8 src/forklift tests`
 
 # Changelog
+
+**8.4.2**
+- Fix unicode bug with `-h` help CLI option.
+- Fix bug in timeout code.
+- Increase timeout value.
+- Try to enforce running only on python 3.
+
 **8.4.1**
 - Add a timeout on http requests to avoid infinite hanging requests.
 

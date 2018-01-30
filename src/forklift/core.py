@@ -182,6 +182,8 @@ def _hash(crate):
                                                             crate.name,
                                                             geometry_type=crate.source_describe.shapeType.upper(),
                                                             template=crate.source,
+                                                            has_m='SAME_AS_TEMPLATE',
+                                                            has_z='SAME_AS_TEMPLATE',
                                                             spatial_reference=crate.source_describe.spatialReference)[0]
     else:
         changes.table = arcpy.CreateTable_management(scratch_gdb_path, crate.name)[0]

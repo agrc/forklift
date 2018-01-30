@@ -6,13 +6,15 @@ core.py
 Tools for updating the data associated with a models.Crate
 '''
 
+from os import path
+
 import arcpy
 from arcgisscripting import ExecuteError
+from xxhash import xxh64
+
 from .config import config_location
 from .exceptions import ValidationException
 from .models import Changes, Crate
-from os import path
-from xxhash import xxh64
 
 log = None
 
@@ -253,8 +255,10 @@ def _create_destination_data(crate):
         log.warn('creating new feature class: %s', crate.destination)
         arcpy.CreateFeatureclass_management(crate.destination_workspace,
                                             crate.destination_name,
-                                            crate.source_describe.shapeType.upper(),
-                                            crate.source,
+                                            geometry_type=crate.source_describe.shapeType.upper(),
+                                            template=crate.source,
+                                            has_m='SAME_AS_TEMPLATE',
+                                            has_z='SAME_AS_TEMPLATE',
                                             spatial_reference=crate.destination_coordinate_system or crate.source_describe.spatialReference)
 
     arcpy.AddField_management(crate.destination, hash_field, 'TEXT', field_length=hash_field_length)

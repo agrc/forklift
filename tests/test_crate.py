@@ -6,15 +6,16 @@ test_crate.py
 A module for testing crate.py
 '''
 
-import arcpy
 import unittest
-from arcpy import env, SpatialReference
-from forklift.models import Crate
-from xxhash import xxh64
-from mock import patch
-from nose import SkipTest
 from os import path
 
+from forklift.models import Crate
+from mock import patch
+from nose import SkipTest
+from xxhash import xxh64
+
+import arcpy
+from arcpy import SpatialReference, env
 
 current_folder = path.dirname(path.abspath(__file__))
 check_for_changes_fgdb = path.join(current_folder, 'data', 'checkForChanges.gdb')
@@ -206,3 +207,30 @@ class TestCrate(unittest.TestCase):
 
         crate.result = (Crate.INVALID_DATA, msg)
         self.assertEqual(crate.get_report()['message_level'], 'error')
+
+    def test_was_updated(self):
+        crate = Crate('foo', 'bar', 'baz', 'goo')
+
+        crate.result = (Crate.INVALID_DATA, None)
+        self.assertFalse(crate.was_updated())
+
+        crate.result = (Crate.WARNING, None)
+        self.assertFalse(crate.was_updated())
+
+        crate.result = (Crate.NO_CHANGES, None)
+        self.assertFalse(crate.was_updated())
+
+        crate.result = (Crate.UNHANDLED_EXCEPTION, None)
+        self.assertFalse(crate.was_updated())
+
+        crate.result = (Crate.UNINITIALIZED, None)
+        self.assertFalse(crate.was_updated())
+
+        crate.result = (Crate.CREATED, None)
+        self.assertTrue(crate.was_updated())
+
+        crate.result = (Crate.UPDATED, None)
+        self.assertTrue(crate.was_updated())
+
+        crate.result = (Crate.UPDATED_OR_CREATED_WITH_WARNINGS, None)
+        self.assertTrue(crate.was_updated())

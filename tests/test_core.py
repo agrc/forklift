@@ -6,17 +6,18 @@ test_core.py
 Tests for the core.py module
 '''
 
-import arcpy
-from . import mocks
 import unittest
-from forklift import cli
-from forklift import core
-from forklift.models import Crate, Changes
-from forklift.exceptions import ValidationException
 from os import path
+
 from nose import SkipTest
-from mock import Mock
-from mock import patch
+
+import arcpy
+from forklift import cli, core
+from forklift.exceptions import ValidationException
+from forklift.models import Changes, Crate
+from mock import Mock, patch
+
+from . import mocks
 
 current_folder = path.dirname(path.abspath(__file__))
 check_for_changes_gdb = path.join(current_folder, 'data', 'checkForChanges.gdb')
@@ -88,7 +89,7 @@ class CoreTests(unittest.TestCase):
                 update_cursor.updateRow(row)
                 break
 
-        self.assertEqual(core.update(crate, lambda x: True)[0], Crate.WARNING)
+        self.assertEqual(core.update(crate, lambda x: True)[0], Crate.UPDATED_OR_CREATED_WITH_WARNINGS)
         self.assertEqual(arcpy.GetCount_management(crate.destination).getOutput(0), '3')
 
     def test_deleted_destination_between_updates(self):

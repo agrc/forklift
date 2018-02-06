@@ -8,9 +8,10 @@ Tools for updating the data associated with a models.Crate
 
 from os import path
 
+from xxhash import xxh64
+
 import arcpy
 from arcgisscripting import ExecuteError
-from xxhash import xxh64
 
 from .config import config_location
 from .exceptions import ValidationException
@@ -131,14 +132,14 @@ def update(crate, validate_crate):
                                 continue
 
                             cursor.insertRow(row)
+
+            if changes.has_dups:
+                change_status = (Crate.UPDATED_OR_CREATED_WITH_WARNINGS, 'Duplicate features detected!')
         else:
             log.debug('No changes found.')
 
             if changes.has_dups:
                 change_status = (Crate.WARNING, 'Duplicate features detected!')
-
-        if changes.has_dups:
-            change_status = (Crate.UPDATED_OR_CREATED_WITH_WARNINGS, 'Duplicate features detected!')
 
         #: sanity check the row counts between source and destination
         count_status = _check_counts(crate, changes)

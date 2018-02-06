@@ -90,10 +90,7 @@ def update(crate, validate_crate):
         #: create source hash and store
         changes = _hash(crate)
 
-        if not changes.has_changes():
-            log.debug('No changes found.')
-
-        if changes.has_deletes() or changes.has_adds():
+        if changes.has_changes():
             log.debug('starting edit session...')
             with arcpy.da.Editor(crate.destination_workspace):
                 #: delete unaccessed hashes
@@ -134,9 +131,14 @@ def update(crate, validate_crate):
                                 continue
 
                             cursor.insertRow(row)
+        else:
+            log.debug('No changes found.')
+
+            if changes.has_dups:
+                change_status = (Crate.WARNING, 'Duplicate features detected!')
 
         if changes.has_dups:
-            change_status = (Crate.WARNING, 'Duplicate features detected!')
+            change_status = (Crate.UPDATED_OR_CREATED_WITH_WARNINGS, 'Duplicate features detected!')
 
         #: sanity check the row counts between source and destination
         count_status = _check_counts(crate, changes)
@@ -393,7 +395,12 @@ def _check_counts(crate, changes):
     source_rows = changes.total_rows
 
     if not source_rows == destination_rows:
-        return (Crate.WARNING, 'Source row count ({}) does not match destination count ({})!'.format(source_rows, destination_rows))
+        status = Crate.WARNING
+
+        if changes.has_changes():
+            status = Crate.UPDATED_OR_CREATED_WITH_WARNINGS
+
+        return (status, 'Source row count ({}) does not match destination count ({})!'.format(source_rows, destination_rows))
     elif destination_rows == 0:
         return (Crate.INVALID_DATA, 'Destination has zero rows!')
 

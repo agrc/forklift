@@ -174,7 +174,7 @@ class Pallet(object):
             if crate.result[0] in [Crate.INVALID_DATA, Crate.UNHANDLED_EXCEPTION]:
                 return False
             if not has_updated:
-                has_updated = crate.result[0] in [Crate.UPDATED, Crate.CREATED, Crate.WARNING]
+                has_updated = crate.result[0] in [Crate.UPDATED, Crate.CREATED, Crate.UPDATED_OR_CREATED_WITH_WARNINGS]
 
         return has_updated
 
@@ -224,7 +224,8 @@ class Crate(object):
     CREATED = 'Created table successfully.'
     UPDATED = 'Data updated successfully.'
     INVALID_DATA = 'Data is invalid.'
-    WARNING = 'Warning generated during update.'
+    WARNING = 'Warning generated during update. Data not modified.'
+    UPDATED_OR_CREATED_WITH_WARNINGS = 'Warning generated during update and data updated successfully.'
     NO_CHANGES = 'No changes found.'
     UNHANDLED_EXCEPTION = 'Unhandled exception during update.'
     UNINITIALIZED = 'This crate was never processed.'
@@ -328,7 +329,7 @@ class Crate(object):
         if status == self.NO_CHANGES:
             return None
 
-        if status in [self.WARNING, self.UNINITIALIZED]:
+        if status in [self.WARNING, self.UNINITIALIZED, self.UPDATED_OR_CREATED_WITH_WARNINGS]:
             message_level = 'warning'
         elif status in [self.UNHANDLED_EXCEPTION, self.INVALID_DATA]:
             message_level = 'error'
@@ -353,6 +354,9 @@ class Crate(object):
             needs_reproject = self.destination_coordinate_system.name != self.source_describe.spatialReference.name
 
         return needs_reproject
+
+    def was_updated(self):
+        return self.result[0] in [Crate.CREATED, Crate.UPDATED, Crate.UPDATED_OR_CREATED_WITH_WARNINGS]
 
     def _try_to_find_data_source_by_name(self):
         '''try to find the source name in the source workspace.

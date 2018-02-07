@@ -17,8 +17,13 @@
                 "result": "Created table successfully."
             }, {
                 "name": "FeatureClassTwo",
-                "result": "Created table successfully.",
-                "crate_message": "Destination has zero records",
+                "result": "Warning generated during update. Data not modified.",
+                "crate_message": "Duplicate features detected!",
+                "message_level": "warning"
+            }, {
+                "name": "FeatureClassThree",
+                "result": "Warning generated during update and data updated successfully.",
+                "crate_message": "Duplicate features detected!",
                 "message_level": "warning"
             }]
         }, {

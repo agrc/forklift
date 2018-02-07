@@ -313,14 +313,21 @@ class Crate(object):
         value: (String, String)
 
         Returns the value of what was set'''
-        acceptable_results = [self.CREATED, self.UPDATED, self.INVALID_DATA, self.NO_CHANGES, self.UNHANDLED_EXCEPTION, self.UNINITIALIZED, self.WARNING]
+        acceptable_results = [self.CREATED,
+                              self.UPDATED,
+                              self.INVALID_DATA,
+                              self.NO_CHANGES,
+                              self.UNHANDLED_EXCEPTION,
+                              self.UNINITIALIZED,
+                              self.WARNING,
+                              self.UPDATED_OR_CREATED_WITH_WARNINGS]
 
         if value[0] in acceptable_results:
             self.result = value
         else:
-            self.result = value = ('unknown result', value)
+            self.result = ('unknown result', value)
 
-        return value
+        return self.result
 
     def get_report(self):
         '''Returns the relavant info related to this crate that is shown on the report as a dictionary

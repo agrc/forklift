@@ -68,7 +68,7 @@ def main():
 
         return
 
-    args = docopt(__doc__, version='8.4.2')
+    args = docopt(__doc__, version='8.5.0')
     _setup_logging(args['--verbose'])
     _add_global_error_handler()
 

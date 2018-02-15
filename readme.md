@@ -113,6 +113,11 @@ _Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) w
 
 # Changelog
 
+**8.5.0**
+- Add support for m & z values in the destination geometry ([#223](https://github.com/agrc/forklift/issues/223)).
+- Add new crate warning type (`UPDATED_OR_CREATED_WITH_WARNINGS`) to address the [issue of processing crates with warnings](https://github.com/agrc/forklift/issues/#185). Now `WARNING` means there was a warning and the data was _not_ updated and `UPDATED_OR_CREATED_WITH_WARNINGS` means there was a warning and the data _was_ updated (or created).
+- Add `Crate.was_updated()` method to save code in pallets when you want to check to see if the data for a crate was updated.
+
 **8.4.2**
 - Fix unicode bug with `-h` help CLI option.
 - Fix bug in timeout code.

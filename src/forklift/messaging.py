@@ -7,18 +7,19 @@ A module that contains a method for sending emails
 '''
 
 import gzip
-import logging
 import io
-from .config import get_config_prop
+import logging
 from email.mime.application import MIMEApplication
-from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from os import environ
-from os.path import basename
-from os.path import isfile
+from os.path import basename, isfile
 from smtplib import SMTP
 
+from .config import get_config_prop
+
 log = logging.getLogger('forklift')
+skip_emails = False
 
 
 def send_email(to, subject, body, attachment=''):
@@ -64,7 +65,7 @@ def send_email(to, subject, body, attachment=''):
 
             message.attach(log_file_attachment)
 
-    if get_config_prop('sendEmails'):
+    if get_config_prop('sendEmails') and not skip_emails:
         smtp = SMTP(smtp_server, smtp_port)
         smtp.sendmail(from_address, to, message.as_string())
         smtp.quit()

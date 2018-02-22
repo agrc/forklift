@@ -11,7 +11,7 @@ Usage:
     forklift config set --key <key> --value <value>
     forklift garage open
     forklift git-update
-    forklift lift [<file-path>] [--pallet-arg <arg>] [--skip-copy] [--verbose]
+    forklift lift [<file-path>] [--pallet-arg <arg>] [--skip-copy] [--verbose] [--skip-emails]
     forklift list-pallets
     forklift scorched-earth
     forklift speedtest
@@ -33,6 +33,7 @@ Examples:
     forklift lift                                           The main entry for running all of pallets found in the warehouse folder.
     forklift lift --verbose                                 Print DEBUG statements to the console.
     forklift lift --skip-copy                               Skip copying to `copyDestinations`.
+    forklift lift --skip-emails                             Skip sending emails.
     forklift lift path/to/pallet_file.py                    Run a specific pallet.
     forklift lift path/to/pallet_file.py --pallet-arg arg   Run a specific pallet with "arg" as an initialization parameter.
     forklift list-pallets                                   Outputs the list of pallets from the config.
@@ -51,8 +52,7 @@ from os.path import abspath, dirname, join, realpath
 
 from docopt import docopt
 
-from . import cli, config
-from .messaging import send_email
+from . import cli, config, messaging
 
 log_location = join(abspath(dirname(__file__)), '..', 'forklift-garage', 'forklift.log')
 detailed_formatter = logging.Formatter(fmt='%(levelname)-7s %(asctime)s %(module)10s:%(lineno)5s %(message)s',
@@ -71,6 +71,9 @@ def main():
     args = docopt(__doc__, version='8.5.0')
     _setup_logging(args['--verbose'])
     _add_global_error_handler()
+
+    if args['--skip-emails']:
+        messaging.skip_emails = True
 
     if args['config']:
         if args['init']:
@@ -137,7 +140,7 @@ def global_exception_handler(ex_cls, ex, tb):
     log.error(error)
 
     log_file = join(dirname(config.config_location), 'forklift.log')
-    send_email(config.get_config_prop('notify'), 'Forklift Error', error, log_file)
+    messaging.send_email(config.get_config_prop('notify'), 'Forklift Error', error, log_file)
 
 
 def _add_global_error_handler():

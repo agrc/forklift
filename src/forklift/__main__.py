@@ -11,7 +11,7 @@ Usage:
     forklift config set --key <key> --value <value>
     forklift garage open
     forklift git-update
-    forklift lift [<file-path>] [--pallet-arg <arg>] [--skip-copy] [--verbose] [--skip-emails]
+    forklift lift [<file-path>] [--pallet-arg <arg>] [--skip-copy] [--verbose] [--skip-emails|--send-emails]
     forklift list-pallets
     forklift scorched-earth
     forklift speedtest
@@ -33,7 +33,8 @@ Examples:
     forklift lift                                           The main entry for running all of pallets found in the warehouse folder.
     forklift lift --verbose                                 Print DEBUG statements to the console.
     forklift lift --skip-copy                               Skip copying to `copyDestinations`.
-    forklift lift --skip-emails                             Skip sending emails.
+    forklift lift --skip-emails                             Skip sending emails. Overrides `sendEmails` config as False.
+    forklift lift --send-emails                             Force sending emails. Overrides `sendEmails` config as True.
     forklift lift path/to/pallet_file.py                    Run a specific pallet.
     forklift lift path/to/pallet_file.py --pallet-arg arg   Run a specific pallet with "arg" as an initialization parameter.
     forklift list-pallets                                   Outputs the list of pallets from the config.
@@ -73,7 +74,9 @@ def main():
     _add_global_error_handler()
 
     if args['--skip-emails']:
-        messaging.skip_emails = True
+        messaging.send_emails_override = False
+    elif args['--send-emails']:
+        messaging.send_emails_override = True
 
     if args['config']:
         if args['init']:

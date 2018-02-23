@@ -19,7 +19,7 @@ from smtplib import SMTP
 from .config import get_config_prop
 
 log = logging.getLogger('forklift')
-skip_emails = False
+send_emails_override = None
 
 
 def send_email(to, subject, body, attachment=''):
@@ -65,7 +65,8 @@ def send_email(to, subject, body, attachment=''):
 
             message.attach(log_file_attachment)
 
-    if get_config_prop('sendEmails') and not skip_emails:
+    if (send_emails_override is None and get_config_prop('sendEmails')) or \
+            (send_emails_override is not None and send_emails_override):
         smtp = SMTP(smtp_server, smtp_port)
         smtp.sendmail(from_address, to, message.as_string())
         smtp.quit()

@@ -72,8 +72,8 @@ setup(
         'pystache==0.*',
         'requests==2.*',
         'xxhash==1.*',
-        'multiprocess==0.*',
-        'dill==0.*'
+        'multiprocess==0.70.5',
+        'dill==0.2.7.1'
         #: pyopenssl, ndg-httpsclient, pyasn1 are there to disable ssl warnings in requests
     ],
     dependency_links=[

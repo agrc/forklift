@@ -294,7 +294,7 @@ class Crate(object):
 
         if not self.source_describe.hasOID:
             if source_primary_key is None:
-                self.result = (Crate.INVALID_DATA, 'Source dataset has no OID and source_primary_key defined')
+                self.result = (Crate.INVALID_DATA, 'Source dataset has no OID and source_primary_key is not defined')
             elif source_primary_key not in [field.name for field in self.source_describe.fields]:
                 self.result = (Crate.INVALID_DATA, 'source_primary_key does not appear to be a valid field name')
         else:

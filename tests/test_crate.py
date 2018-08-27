@@ -9,13 +9,12 @@ A module for testing crate.py
 import unittest
 from os import path
 
+import arcpy
+from arcpy import SpatialReference, env
 from forklift.models import Crate
 from mock import patch
 from nose import SkipTest
 from xxhash import xxh64
-
-import arcpy
-from arcpy import SpatialReference, env
 
 current_folder = path.dirname(path.abspath(__file__))
 check_for_changes_fgdb = path.join(current_folder, 'data', 'checkForChanges.gdb')
@@ -119,12 +118,6 @@ class TestCrate(unittest.TestCase):
         hash = source_name + '_' + xxh64(path.join(destination_workspace, source_name)).hexdigest()
 
         self.assertEqual(crate.name, hash)
-
-    def test_invalid_source_primary_key_name(self):
-        skip_if_no_local_sde()
-
-        crate = Crate('NO_OBJECTID_TEST', update_tests_sde, '', '', source_primary_key='NOTAFIELD')
-        self.assertEqual(crate.result[0], Crate.INVALID_DATA)
 
     @patch('arcpy.ListFeatureClasses')
     def test_try_to_find_data_source_by_name_returns_and_updates_feature_name(self, list_feature_classes):

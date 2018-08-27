@@ -9,13 +9,12 @@ Tests for the core.py module
 import unittest
 from os import path
 
-from nose import SkipTest
-
 import arcpy
 from forklift import cli, core
 from forklift.exceptions import ValidationException
 from forklift.models import Changes, Crate
 from mock import Mock, patch
+from nose import SkipTest
 
 from . import mocks
 
@@ -138,11 +137,11 @@ class CoreTests(unittest.TestCase):
         tbl = 'NO_OBJECTID_TEST'
 
         #: has changes
-        crate = Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, check_for_changes_gdb, tbl, source_primary_key='TEST')
+        crate = Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, check_for_changes_gdb, tbl)
         self.assertEqual(len(core._hash(crate).adds), 1)
 
         #: no changes
-        crate = Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, check_for_changes_gdb, '{}_NO_CHANGES'.format(tbl), source_primary_key='TEST')
+        crate = Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, check_for_changes_gdb, '{}_NO_CHANGES'.format(tbl))
         self.assertEqual(len(core._hash(crate).adds), 0)
 
     def test_hash_custom_source_key_float(self):
@@ -151,7 +150,7 @@ class CoreTests(unittest.TestCase):
         tbl = 'FLOAT_ID'
 
         #: has changes
-        crate = Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, check_for_changes_gdb, tbl, source_primary_key='TEST')
+        crate = Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, check_for_changes_gdb, tbl)
         changes = core._hash(crate)
         self.assertEqual(len(changes.adds), 1)
 
@@ -182,7 +181,7 @@ class CoreTests(unittest.TestCase):
                     geographic_transformation='NAD_1983_To_WGS_1984_5')
                 )
 
-        self.assertEqual(len(run('Parcels_Morgan')._deletes), 1)
+        self.assertEqual(len(run('Parcels_Morgan')._deletes), 2)
 
         #: different coordinate systems
         self.assertEqual(len(run('RuralTelcomBoundaries')._deletes), 1)
@@ -253,7 +252,7 @@ class CoreTests(unittest.TestCase):
     def test_move_data_no_objectid(self):
         skip_if_no_local_sde()
 
-        crate = Crate('NO_OBJECTID_TEST', update_tests_sde, test_gdb, source_primary_key='TEST')
+        crate = Crate('NO_OBJECTID_TEST', update_tests_sde, test_gdb)
 
         core.update(crate, lambda x: True)
 

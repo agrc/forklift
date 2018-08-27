@@ -125,8 +125,8 @@ class Pallet(object):
         the `source_workspace`. The third value sets `destination_workspace`. `defaults` is unused.
         If a tuple has 4 values, the first value is set to `source_name`. The second value sets `source_workspace`.
         The third value sets `destination_workspace`. The fourth value sets `destination_name`. `defaults` is unused.
-        If a tuple has 5 values, it is the same as 4 with the addition of `source_primary_key` as the fifth value.'''
-        crate_param_names = ['source_name', 'source_workspace', 'destination_workspace', 'destination_name', 'source_primary_key']
+        '''
+        crate_param_names = ['source_name', 'source_workspace', 'destination_workspace', 'destination_name']
 
         for info in crate_infos:
             params = defaults.copy()
@@ -238,7 +238,6 @@ class Crate(object):
                  destination_name=None,
                  destination_coordinate_system=None,
                  geographic_transformation=None,
-                 source_primary_key=None,
                  describer=arcpy.Describe):
         #: the logging module to keep track of the crate
         self.log = logging.getLogger('forklift')
@@ -277,9 +276,6 @@ class Crate(object):
         #: the full path to the source data
         self.source = join(source_workspace, source_name)
 
-        #: optional name of the primary key field in the table (all numeric field types will be parsed as whole numbers)
-        self.source_primary_key = None
-
         if not arcpy.Exists(self.source):
             status, message = self._try_to_find_data_source_by_name()
             if not status:
@@ -291,14 +287,6 @@ class Crate(object):
         except IOError as e:
             self.result = (Crate.INVALID_DATA, e)
             return
-
-        if not self.source_describe.hasOID:
-            if source_primary_key is None:
-                self.result = (Crate.INVALID_DATA, 'Source dataset has no OID and source_primary_key is not defined')
-            elif source_primary_key not in [field.name for field in self.source_describe.fields]:
-                self.result = (Crate.INVALID_DATA, 'source_primary_key does not appear to be a valid field name')
-        else:
-            self.source_primary_key = source_primary_key or self.source_describe.OIDFieldName
 
     def set_source_name(self, value):
         '''Sets the source_name and updates the source property
@@ -422,7 +410,6 @@ class Crate(object):
             'result': self.result,
             'source_name': self.source_name,
             'source_workspace': self.source_workspace,
-            'source_primary_key': self.source_primary_key,
             'destination_name': self.destination_name,
             'destination_workspace': self.destination_workspace,
             'destination_coordinate_system': spatial_reference,

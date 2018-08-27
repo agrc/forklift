@@ -229,7 +229,7 @@ class Crate(object):
     NO_CHANGES = 'No changes found.'
     UNHANDLED_EXCEPTION = 'Unhandled exception during update.'
     UNINITIALIZED = 'This crate was never processed.'
-    ERROR = 'There was an error.' #: This can be used to manually set an error on a crate from within a pallet.
+    ERROR = 'There was an error.'  #: This can be used to manually set an error on a crate from within a pallet.
 
     def __init__(self,
                  source_name,

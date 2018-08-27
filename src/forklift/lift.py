@@ -188,13 +188,13 @@ def _copy_with_overwrite(source, destination):
             try:
                 if path.exists(dst_file):
                     remove(dst_file)
-            except:
+            except Exception:
                 #: shouldn't matter a whole lot
                 pass
 
             try:
                 shutil.copy2(src_file, dst_dir)
-            except:
+            except Exception:
                 #: shouldn't matter a whole lot
                 pass
 
@@ -245,7 +245,7 @@ def copy_data(specific_pallets, all_pallets, config_copy_destinations):
         try:
             if pallet.requires_processing() is True:
                 filtered_specific_pallets.append(pallet)
-        except:
+        except Exception:
             #: skip, we'll see the error in the report from process_pallets
             pass
 

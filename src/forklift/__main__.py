@@ -164,7 +164,7 @@ def _setup_logging(verbose):
 
     try:
         makedirs(dirname(log_location))
-    except:
+    except Exception:
         pass
 
     file_handler = logging.handlers.RotatingFileHandler(log_location, backupCount=18)

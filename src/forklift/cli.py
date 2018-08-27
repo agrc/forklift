@@ -16,12 +16,11 @@ from re import compile
 from shutil import rmtree
 from time import clock
 
-from colorama import init as colorama_init
-from colorama import Fore
-from multiprocess import Pool
-
 import pystache
+from colorama import Fore
+from colorama import init as colorama_init
 from git import Repo
+from multiprocess import Pool
 from requests import get
 
 from . import config, core, lift, seat
@@ -298,7 +297,7 @@ def _get_pallets_in_file(file_path):
             potential_class = getattr(mod, member)
             if issubclass(potential_class, Pallet) and potential_class != Pallet:
                 pallets.append((file_path, potential_class))
-        except:
+        except Exception:
             #: member was likely not a class
             pass
 

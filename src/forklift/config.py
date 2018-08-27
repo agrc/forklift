@@ -7,13 +7,9 @@ A module that contains logic for reading and writing the config file
 '''
 
 import logging
-from os import makedirs
-from os.path import abspath
-from os.path import dirname
-from os.path import exists
-from os.path import join
 from json import dumps, loads
-
+from os import makedirs
+from os.path import abspath, dirname, exists, join
 
 log = logging.getLogger('forklift')
 config_location = join(abspath(dirname(__file__)), '..', 'forklift-garage', 'config.json')
@@ -25,7 +21,7 @@ default_num_processes = 20
 def create_default_config():
     try:
         makedirs(dirname(config_location))
-    except:
+    except Exception:
         pass
 
     with open(config_location, 'w') as json_config_file:

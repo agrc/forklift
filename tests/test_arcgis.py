@@ -9,50 +9,45 @@ A module that tests arcgis.py
 import unittest
 from time import time
 
+import requests
 from mock import Mock, call, patch
+from nose.tools import raises
 
 from forklift.arcgis import LightSwitch
-
-from .mocks import PoolMock
 
 
 class TestLightSwitch(unittest.TestCase):
 
     def setUp(self):
-        self.patient = LightSwitch()
-        self.patient.username = 'name'
-        self.patient.password = 'password'
-        self.patient.server = 'host'
+        self.patient = LightSwitch({
+            'machineName': 'grwgisdev09.state.ut.us',
+            'username': 'username',
+            'password': 'password',
+            'protocol': 'protocol',
+            'port': 6080
+        })
 
-    def test_turn_on(self):
-        flip_switch_mock = Mock()
+    def test_ensure_stop(self):
+        _fetch_mock = Mock()
+        _fetch_mock.side_effect = [(True, None)]
 
-        self.patient._flip_switch = flip_switch_mock
+        self.patient._fetch = _fetch_mock
 
-        self.patient.turn_on('MyService', 'ServiceType')
+        self.patient.ensure('stop')
 
-        flip_switch_mock.assert_called_once()
-        flip_switch_mock.assert_called_with('MyService', 'ServiceType', 'start')
+        _fetch_mock.assert_called_once()
+        _fetch_mock.assert_called_with(self.patient.switch_url, 'stop')
 
-    def test_turn_off(self):
-        flip_switch_mock = Mock()
+    def test_ensure_start(self):
+        _fetch_mock = Mock()
+        _fetch_mock.side_effect = [(True, None)]
 
-        self.patient._flip_switch = flip_switch_mock
+        self.patient._fetch = _fetch_mock
 
-        self.patient.turn_off('MyService', 'ServiceType')
+        self.patient.ensure('start')
 
-        flip_switch_mock.assert_called_once()
-        flip_switch_mock.assert_called_with('MyService', 'ServiceType', 'stop')
-
-    def test_flip_switch(self):
-        fetch_mock = Mock()
-
-        self.patient._fetch = fetch_mock
-
-        self.patient._flip_switch('MyService', 'ServiceType', 'action')
-
-        fetch_mock.assert_called_once()
-        fetch_mock.assert_called_with('http://host:6080/arcgis/admin/services/MyService.ServiceType/action')
+        _fetch_mock.assert_called_once()
+        _fetch_mock.assert_called_with(self.patient.switch_url, 'start')
 
     @patch('forklift.arcgis.sleep')
     @patch('forklift.arcgis.requests')
@@ -120,53 +115,73 @@ class TestLightSwitch(unittest.TestCase):
         self.assertEqual(self.patient.token, 'token1')
         self.assertEqual(self.patient.token_expire_milliseconds, 123)
 
-    @patch('forklift.arcgis.Pool', return_value=PoolMock())
     @patch('forklift.arcgis.sleep')
-    def test_ensure_tries_five_times_with_failures(self, sleep, poolmock):
-        affected_services = [('1', 'MapServer')]
+    def test_ensure_tries_five_times_with_failures(self, sleep):
+        self.patient._fetch = Mock(return_value=(False, 'failed'))
 
-        self.patient.turn_on = Mock(return_value=(False, ''))
-        self.patient.turn_off = Mock()
-
-        status, affected_services = self.patient.ensure('on', affected_services)
+        status, message = self.patient.ensure('start')
 
         self.assertFalse(status)
-        self.assertEqual('1.MapServer', affected_services)
-        self.assertEqual(self.patient.turn_on.call_count, 5)
-        self.patient.turn_off.assert_not_called()
-        sleep.assert_has_calls([call(1), call(2), call(3), call(5), call(8)])
+        self.assertEqual(message, 'failed')
+        self.assertEqual(self.patient._fetch.call_count, 5)
+        sleep.assert_has_calls([call(0), call(2), call(4), call(8), call(12)])
 
-    @patch('forklift.arcgis.Pool', return_value=PoolMock())
     @patch('forklift.arcgis.sleep')
-    def test_ensure_returns_formatted_problems(self, sleep, poolmock):
-        affected_services = [('1', 'MapServer'), ('2', 'GPServer'), ('3', 'GeocodeServer')]
+    def test_ensure_returns_formatted_problems(self, sleep):
+        self.patient._fetch = Mock(return_value=(False, 'failed'))
 
-        self.patient.turn_on = Mock(return_value=(False, ''))
-        self.patient.turn_off = Mock()
+        status, message = self.patient.ensure('start')
 
-        status, affected_services = self.patient.ensure('on', affected_services)
+        self.assertEqual('failed', message)
 
-        self.assertEqual('1.MapServer, 2.GPServer, 3.GeocodeServer', affected_services)
-
-    @patch('forklift.arcgis.Pool', return_value=PoolMock())
     @patch('forklift.arcgis.sleep')
-    def test_ensure_tries_until_success(self, sleep, poolmock):
-        affected_services = [('1', 'MapServer')]
+    def test_ensure_tries_until_success(self, sleep):
+        self.patient._fetch = Mock(side_effect=[(False, ''), (True, '')])
 
-        self.patient.turn_on = Mock(side_effect=[(False, ''), (True, '')])
-        self.patient.turn_off = Mock()
-
-        status, affected_services = self.patient.ensure('on', affected_services)
+        status, message = self.patient.ensure('stop')
 
         self.assertTrue(status)
-        self.assertEqual(affected_services, '')
-        self.patient.turn_off.assert_not_called()
-        self.assertEqual(self.patient.turn_on.call_count, 2)
-        sleep.assert_has_calls([call(1)])
+        self.assertEqual(message, '')
+        self.assertEqual(self.patient._fetch.call_count, 2)
+        sleep.assert_has_calls([call(0)])
 
-    def test_missing_environ_vars(self):
-        self.patient.username = None
-        self.patient.password = None
-        self.patient.server = None
+    @patch('forklift.arcgis.requests.post')
+    def test_handles_timeout_gracefully(self, post):
+        post.side_effect = requests.exceptions.Timeout('timed out')
 
-        self.assertEqual((True, None), self.patient.ensure('on', []))
+        self.patient.token_expire_milliseconds = 9223372036854775807
+        status, message = self.patient._fetch('url')
+
+        self.assertEqual(post.call_count, 1)
+        self.assertFalse(status)
+        self.assertEqual(message, post.side_effect)
+
+    @patch('forklift.arcgis.requests.post')
+    def test_handles_connection_error_gracefully(self, post):
+        post.side_effect = requests.exceptions.ConnectTimeout('timed out')
+
+        self.patient.token_expire_milliseconds = 9223372036854775807
+        status, message = self.patient._fetch('url')
+
+        self.assertEqual(post.call_count, 1)
+        self.assertFalse(status)
+        self.assertEqual(message, post.side_effect)
+
+    @patch('forklift.arcgis.requests.post')
+    def test_handles_httperror_error_gracefully(self, post):
+        post.side_effect = requests.exceptions.HTTPError('http error')
+
+        self.patient.token_expire_milliseconds = 9223372036854775807
+        status, message = self.patient._fetch('url')
+
+        self.assertEqual(post.call_count, 1)
+        self.assertFalse(status)
+        self.assertEqual(message, post.side_effect)
+
+    @raises(KeyError)
+    def test_missing_vars(self):
+        self.patient = LightSwitch({'a': 1})
+
+    @raises(Exception)
+    def test_empty_vars(self):
+        self.patient = LightSwitch({'username': None, 'password': None, 'machineName': 'test'})

@@ -24,13 +24,16 @@ class LightSwitch(object):
 
             raise Exception(required_fields)
 
+        self.token_expire_milliseconds = 0
+        self.token = None
+        self.timeout = 120
+
         self.username = server['username']
         self.password = server['password']
 
         base_url = '{}://{}:{}/arcgis/admin'.format(server['protocol'], server['machineName'], server['port'])
         self.token_url = '{}/generateToken'.format(base_url)
         self.switch_url = '{}/machines/{}/'.format(base_url, server['machineName'])
-        self.token_expire_milliseconds = 0
 
     def ensure(self, what):
         '''ensures that affected_services are started or stopped with 5 attempts.
@@ -39,19 +42,16 @@ class LightSwitch(object):
 
         returns the services that still did not do what was requested'''
         tries = 4
-        wait = [8, 5, 3, 2, 1]
-        status, message = self._flip_switch(self.switch_url, what)
+        wait = [12, 8, 4, 2, 0]
+        status = False
 
         while not status and tries >= 0:
             sleep(wait[tries])
             tries -= 1
 
-            status, message = self._flip_switch(self.switch_url, what)
+            status, message = self._fetch(self.switch_url, what)
 
         return status, message
-
-    def _flip_switch(self, url, what):
-        return self._fetch(url + what)
 
     def _fetch(self, url):
         # check to make sure that token isn't expired
@@ -62,13 +62,15 @@ class LightSwitch(object):
         data = {'f': 'json', 'token': self.token}
 
         try:
-            r = requests.post(url, data=data, timeout=120)
+            r = requests.post(url, data=data, timeout=self.timeout)
             r.raise_for_status()
 
             ok = self._return_false_for_status(r.json())
+        except requests.exceptions.ConnectTimeout as t:
+            return (False, t)
         except requests.exceptions.Timeout as t:
             return (False, t)
-        except requests.exceptions.ConnectTimeout as t:
+        except requests.exceptions.HTTPError as t:
             return (False, t)
 
         return ok

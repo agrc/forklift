@@ -58,6 +58,7 @@ If the property is a list then the value is appended to the existing list.
 ## Install to First Successful Run
 
 From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/arcpy/get-started/using-conda-with-arcgis-pro.htm) (`c:\Program Files\ArcGIS\Pro\bin\Python\scripts\proenv.bat`):
+1. Install [git](https://git-scm.com/)
 1. `pip install .\` from the directory containing `setup.py`.
 1. `forklift config init`
 1. `forklift config set --key copyDestinations --value c:\\MapData` - This is where you want your output placed.
@@ -69,11 +70,33 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
     - `FORKLIFT_SMTP_SERVER` The SMTP server that you want to send emails with.
     - `FORKLIFT_SMTP_PORT` The SMTP port number.
     - `FORKLIFT_FROM_ADDRESS` The from email address for emails sent by forklift.
-    - `FORKLIFT_AGS_USERNAME` ArcGIS admin username.
-    - `FORKLIFT_AGS_PASSWORD` ArcGIS admin password.
-    - `FORKLIFT_AGS_SERVER_HOST` ArcGIS host address eg: `localhost`
     - `FORKLIFT_POOL_PROCESSES` (optional: defaults to 20) Number of [multiprocessing processes](https://docs.python.org/3/library/multiprocessing.html#using-a-pool-of-workers) to be used to parallelize the starting and stopping of services.
-1. Install [git](https://git-scm.com/)
+1. Edit the `config.json` to add the arcgis server(s) to manage. The options property will be mixed in to all of the other servers.
+    - `username` ArcGIS admin username.
+    - `password` ArcGIS admin password.
+    - `host` ArcGIS host address eg: `localhost`
+    - `port` ArcGIS server instance port eg: 6080
+```json
+"servers": {
+   "options": {
+       "username": "mapserv",
+       "password": "test",
+       "port": 6080
+   },
+   "primary": {
+       "host": "localhost",
+   },
+   "secondary": {
+       "host": "127.0.0.1"
+   },
+   "backup": {
+       "host": "0.0.0.0",
+       "username": "test",
+       "password": "password",
+       "port": 6443
+   }
+}
+```
 1. `forklift lift`
 
 `run_forklift.bat` is an example of a batch file that could be used to run forklift via Window Scheduler.

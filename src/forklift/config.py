@@ -32,7 +32,13 @@ def create_default_config():
             'copyDestinations': [],
             'stagingDestination': default_staging_location,
             'sendEmails': False,
-            'notify': ['stdavis@utah.gov', 'sgourley@utah.gov']
+            'notify': ['stdavis@utah.gov', 'sgourley@utah.gov'],
+            'email': {
+                'smtpServer': 'send.state.ut.us',
+                'smtpPort': 25,
+                'fromAddress': 'noreply@utah.gov'
+            },
+            'poolProcesses': default_num_processes
         }
 
         json_config_file.write(dumps(data, sort_keys=True, indent=2, separators=(',', ': ')))
@@ -50,7 +56,20 @@ def _get_config():
 
 
 def get_config_prop(key):
-    return _get_config()[key]
+    if key.lower() != 'servers':
+        return _get_config()[key]
+
+    servers = _get_config()[key]
+    if 'options' not in servers.keys():
+        return servers
+
+    options = servers.pop('options')
+    for key, item in servers.items():
+        temp = options.copy()
+        temp.update(item)
+        servers[key] = temp
+
+    return servers
 
 
 def set_config_prop(key, value, override=False):

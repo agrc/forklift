@@ -7,11 +7,12 @@ A module that contains tests for config.py
 '''
 
 import unittest
-from forklift import config
-from os.path import exists, join, abspath, dirname
 from os import remove
+from os.path import abspath, dirname, exists, join
+
 from mock import patch
 
+from forklift import config
 
 config.config_location = join(abspath(dirname(__file__)), 'config.json')
 
@@ -60,3 +61,49 @@ class ConfigTest(unittest.TestCase):
         message = config.set_config_prop('test', 'value')
 
         self.assertEqual(message, 'Added value to test')
+
+    @patch('forklift.config._get_config')
+    def test_config_values_merge_from_parent_options(self, mock_obj):
+        mock_obj.return_value = {
+            'servers': {
+                'options': {
+                    'username': 'username',
+                    'password': 'password',
+                    'port': 0
+                },
+                '0': {
+                    'machineName': '0-host',
+                },
+                '1': {
+                    'machineName': '1-host'
+                },
+                '2': {
+                    'machineName': '2-host',
+                    'username': 'other-username',
+                    'password': 'other-password',
+                    'port': 1
+                }
+            }
+        }
+
+        servers = config.get_config_prop('servers')
+        self.assertEqual(servers['0'], {
+            'machineName': '0-host',
+            'username': 'username',
+            'password': 'password',
+            'port': 0
+        })
+
+        self.assertEqual(servers['1'], {
+            'machineName': '1-host',
+            'username': 'username',
+            'password': 'password',
+            'port': 0
+        })
+
+        self.assertEqual(servers['2'], {
+            'machineName': '2-host',
+            'username': 'other-username',
+            'password': 'other-password',
+            'port': 1
+        })

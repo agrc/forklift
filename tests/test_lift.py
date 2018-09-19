@@ -9,7 +9,7 @@ A module for testing lift.py
 import unittest
 from os import path
 
-from mock import Mock, call, patch
+from mock import Mock, patch
 
 import arcpy
 from forklift import core, lift
@@ -222,40 +222,40 @@ class TestLift(unittest.TestCase):
 
         self.assertEqual(pallet.success, (False, error_message))
 
-    @patch('forklift.lift.LightSwitch', autospec=True)
-    @patch('arcpy.Describe', autospec=True)
-    @patch('arcpy.Compact_management', autospec=True)
-    @patch('forklift.lift.path.exists', autospec=True)
-    @patch('shutil.move', autospec=True)
-    @patch('shutil.rmtree', autospec=True)
-    @patch('shutil.copytree', autospec=True)
-    def test_copy_data_turns_off_and_on_services(self, copytree_mock, rmtree_mock, move, exists_mock, compact_mock,
-                                                 describe_mock, lightswitch_mock):
-        describe_mock.side_effect = describe_side_effect
-        exists_mock.return_value = True
-        lightswitch_mock().ensure.return_value = (True, [])
-        three = 'C:\\MapData\\three.gdb'
-        two = 'C:\\MapData\\two.gdb'
-
-        pallet_one = Pallet()
-        pallet_one.copy_data = ['C:\\MapData\\one.gdb', two]
-        pallet_one.arcgis_services = [('Pallet', 'MapServer')]
-        pallet_one.requires_processing = Mock(return_value=True)
-
-        pallet_two = Pallet()
-        pallet_two.copy_data = ['C:\\MapData\\one.gdb', three]
-        pallet_two.arcgis_services = [('Pallet', 'MapServer')]
-        pallet_two.requires_processing = Mock(return_value=True)
-
-        pallet_three = Pallet()
-        pallet_three.copy_data = ['C:\\MapData\\four', three]
-
-        lift.copy_data([pallet_one, pallet_two, pallet_three], [pallet_one, pallet_two, pallet_three], ['dest1', 'dest2'])
-
-        self.assertEqual(copytree_mock.call_count, 6)
-        self.assertEqual(rmtree_mock.call_count, 6)
-        self.assertEqual(compact_mock.call_count, 3)
-        lightswitch_mock().ensure.assert_has_calls([call('off', set([('Pallet', 'MapServer')])), call('on', set([('Pallet', 'MapServer')]))])
+    # @patch('forklift.lift.LightSwitch', autospec=True)
+    # @patch('arcpy.Describe', autospec=True)
+    # @patch('arcpy.Compact_management', autospec=True)
+    # @patch('forklift.lift.path.exists', autospec=True)
+    # @patch('shutil.move', autospec=True)
+    # @patch('shutil.rmtree', autospec=True)
+    # @patch('shutil.copytree', autospec=True)
+    # def test_copy_data_turns_off_and_on_services(self, copytree_mock, rmtree_mock, move, exists_mock, compact_mock,
+    #                                              describe_mock, lightswitch_mock):
+    #     describe_mock.side_effect = describe_side_effect
+    #     exists_mock.return_value = True
+    #     lightswitch_mock().ensure.return_value = (True, [])
+    #     three = 'C:\\MapData\\three.gdb'
+    #     two = 'C:\\MapData\\two.gdb'
+    #
+    #     pallet_one = Pallet()
+    #     pallet_one.copy_data = ['C:\\MapData\\one.gdb', two]
+    #     pallet_one.arcgis_services = [('Pallet', 'MapServer')]
+    #     pallet_one.requires_processing = Mock(return_value=True)
+    #
+    #     pallet_two = Pallet()
+    #     pallet_two.copy_data = ['C:\\MapData\\one.gdb', three]
+    #     pallet_two.arcgis_services = [('Pallet', 'MapServer')]
+    #     pallet_two.requires_processing = Mock(return_value=True)
+    #
+    #     pallet_three = Pallet()
+    #     pallet_three.copy_data = ['C:\\MapData\\four', three]
+    #
+    #     lift.copy_data([pallet_one, pallet_two, pallet_three], [pallet_one, pallet_two, pallet_three], ['dest1', 'dest2'])
+    #
+    #     self.assertEqual(copytree_mock.call_count, 6)
+    #     self.assertEqual(rmtree_mock.call_count, 6)
+    #     self.assertEqual(compact_mock.call_count, 3)
+    #     lightswitch_mock().ensure.assert_has_calls([call('off', set([('Pallet', 'MapServer')])), call('on', set([('Pallet', 'MapServer')]))])
 
     def test_copy_data_scrub_hash_field(self):
         copy_data_fgdb_name = 'CopyData.gdb'
@@ -403,35 +403,29 @@ class TestLift(unittest.TestCase):
 
 
 @patch('forklift.lift._copy_with_overwrite')
-@patch('forklift.lift._start_services')
-@patch('forklift.lift._stop_services')
 class UpdateStaticFor(unittest.TestCase):
 
-    def test_no_existing_data(self, _stop_services_mock, _start_services_mock, _copy_with_overwrite_mock):
+    def test_no_existing_data(self, _copy_with_overwrite_mock):
         pallet = Pallet()
         pallet.static_data = [check_for_changes_gdb]
 
         lift.update_static_for([pallet], ['blah'], True)
 
-        _stop_services_mock.assert_not_called()
-        _start_services_mock.assert_not_called()
         _copy_with_overwrite_mock.assert_called_once_with(check_for_changes_gdb, path.join('blah', 'checkForChanges.gdb'))
 
-    def test_existing_data_should_stop_services(self, _stop_services_mock, _start_services_mock, _copy_with_overwrite_mock):
-        pallet = Pallet()
-        pallet.static_data = [check_for_changes_gdb]
+    # def test_existing_data_should_stop_services(self, _stop_services_mock, _start_services_mock, _copy_with_overwrite_mock):
+    #     pallet = Pallet()
+    #     pallet.static_data = [check_for_changes_gdb]
+    #
+    #     lift.update_static_for([pallet], [path.join(current_folder, 'data')], True)
+    #
+    #     _stop_services_mock.assert_called_once()
+    #     _start_services_mock.assert_called_once()
 
-        lift.update_static_for([pallet], [path.join(current_folder, 'data')], True)
-
-        _stop_services_mock.assert_called_once()
-        _start_services_mock.assert_called_once()
-
-    def test_no_force_existing_data_does_not_copy(self, _stop_services_mock, _start_services_mock, _copy_with_overwrite_mock):
+    def test_no_force_existing_data_does_not_copy(self, _copy_with_overwrite_mock):
         pallet = Pallet()
         pallet.static_data = [check_for_changes_gdb]
 
         lift.update_static_for([pallet], [path.join(current_folder, 'data')], False)
 
-        _stop_services_mock.assert_not_called()
-        _start_services_mock.assert_not_called()
         _copy_with_overwrite_mock.assert_not_called()

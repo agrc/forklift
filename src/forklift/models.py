@@ -12,8 +12,9 @@ from os.path import dirname, join
 from pprint import PrettyPrinter
 from time import clock
 
-import arcpy
 from xxhash import xxh64
+
+import arcpy
 
 from . import config, seat
 from .messaging import send_email

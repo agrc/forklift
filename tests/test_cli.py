@@ -47,7 +47,13 @@ class TestConfigInit(unittest.TestCase):
                 u"copyDestinations": [],
                 u"stagingDestination": u"c:\\scheduled\\staging",
                 u"sendEmails": False,
-                u"notify": [u"stdavis@utah.gov", u"sgourley@utah.gov"]
+                u"notify": [u"stdavis@utah.gov", u"sgourley@utah.gov"],
+                u"email": {
+                    u"smtpServer": u"send.state.ut.us",
+                    u"smtpPort": 25,
+                    u"fromAddress": u"noreply@utah.gov"
+                },
+                u"poolProcesses": 20
             })
 
     def test_init_returns_path_for_existing_config_file(self):

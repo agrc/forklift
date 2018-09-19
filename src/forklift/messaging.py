@@ -12,7 +12,6 @@ import logging
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from os import environ
 from os.path import basename, isfile
 from smtplib import SMTP
 
@@ -31,9 +30,10 @@ def send_email(to, subject, body, attachment=''):
 
     Send an email.
     '''
-    from_address = environ.get('FORKLIFT_FROM_ADDRESS')
-    smtp_server = environ.get('FORKLIFT_SMTP_SERVER')
-    smtp_port = environ.get('FORKLIFT_SMTP_PORT')
+    email_server = get_config_prop('email')
+    from_address = email_server['fromAddress']
+    smtp_server = email_server['smtpServer']
+    smtp_port = email_server['smtpPort']
 
     if None in [from_address, smtp_server, smtp_port]:
         log.warn('Required environment variables for sending emails do not exist. No emails sent. See README.md for more details.')

@@ -64,13 +64,6 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
 1. `forklift config set --key copyDestinations --value c:\\MapData` - This is where you want your output placed.
 1. `forklift repos --add agrc/parcels` - The agrc/parcels is the user/repo to scan for Pallets.
 1. `forklift garage open` - Add all connection.sde files to the forklift garage.
-1. Set the following **user** environmental variables.
-  - _required for sending email reports and/or starting/stopping ArcGIS Server Services_
-  - _may require a reboot_
-    - `FORKLIFT_SMTP_SERVER` The SMTP server that you want to send emails with.
-    - `FORKLIFT_SMTP_PORT` The SMTP port number.
-    - `FORKLIFT_FROM_ADDRESS` The from email address for emails sent by forklift.
-    - `FORKLIFT_POOL_PROCESSES` (optional: defaults to 20) Number of [multiprocessing processes](https://docs.python.org/3/library/multiprocessing.html#using-a-pool-of-workers) to be used to parallelize the starting and stopping of services.
 1. Edit the `config.json` to add the arcgis server(s) to manage. The options property will be mixed in to all of the other servers.
     - `username` ArcGIS admin username.
     - `password` ArcGIS admin password.
@@ -95,6 +88,17 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
        "password": "password",
        "port": 6443
    }
+}
+```
+1.  Edit the `config.json` to add the email notification properties. _required for sending email reports and/or starting/stopping ArcGIS Server Services_
+    - `smtpServer` The SMTP server that you want to send emails with.
+    - `smtpPort` The SMTP port number.
+    - `fromAddress` The from email address for emails sent by forklift.
+```json
+"email": {
+    "smtpServer": "send.state.ut.us",
+    "smtpPort": 25,
+    "fromAddress": "noreply@utah.gov"
 }
 ```
 1. `forklift lift`

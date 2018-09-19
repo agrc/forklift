@@ -16,7 +16,6 @@ import arcpy
 from forklift.models import Crate
 
 from . import seat
-from .arcgis import LightSwitch
 from .core import hash_field
 
 log = logging.getLogger('forklift')
@@ -152,10 +151,10 @@ def update_static_for(pallets, config_copy_destinations, force):
                         _copy_with_overwrite(source, destination)
                 elif force:
                     log.info('overwriting static data')
-                    results = _stop_services(pallet.arcgis_services)
+                    # results = _stop_services(pallet.arcgis_services)
                     for destination in destinations:
                         _copy_with_overwrite(source, destination)
-                    results += ' ' + _start_services(pallet.arcgis_services)
+                    # results += ' ' + _start_services(pallet.arcgis_services)
 
     return results
 
@@ -199,34 +198,6 @@ def _copy_with_overwrite(source, destination):
                 pass
 
 
-def _stop_services(services):
-    lightswitch = LightSwitch()
-
-    log.info('stopping %s dependent services.', len(services))
-    ok, problem_children = lightswitch.ensure('off', services)
-
-    if not ok:
-        stop_msg = service_msg.format('stop', problem_children) + 'This will affect data copy.'
-        log.error(stop_msg)
-        return stop_msg
-
-    return ''
-
-
-def _start_services(services):
-    lightswitch = LightSwitch()
-
-    log.info('starting %s dependent services.', len(services))
-    ok, problem_children = lightswitch.ensure('on', services)
-
-    if not ok:
-        start_msg = service_msg.format('start', problem_children)
-        log.error(start_msg)
-        return start_msg
-
-    return ''
-
-
 def copy_data(specific_pallets, all_pallets, config_copy_destinations):
     '''
     specific_pallets: Pallet[]
@@ -261,7 +232,7 @@ def copy_data(specific_pallets, all_pallets, config_copy_destinations):
             log.info('compacting %s', source)
             arcpy.Compact_management(source)
 
-    results = _stop_services(services_affected)
+    # results = _stop_services(servers)
 
     for source in data_being_moved:
         for destination in config_copy_destinations:
@@ -305,9 +276,9 @@ def copy_data(specific_pallets, all_pallets, config_copy_destinations):
 
                 log.error('there was an error copying %s to %s', source, destination_workspace, exc_info=True)
 
-    results += _start_services(services_affected)
+    # results += _start_services(services_affected)
 
-    return results
+    # return results
 
 
 def _scrub_hash_fields(workspace):

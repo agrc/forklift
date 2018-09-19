@@ -7,107 +7,51 @@ A module that contains a class to control arcgis services.
 '''
 
 import logging
-from os import environ
 from time import sleep, time
-
-from multiprocess import Pool
 
 import requests
 
-from . import config
-
 log = logging.getLogger('forklift')
-
-base_url = r'http://{}:6080/arcgis/admin/'
-token_url = r'{}generateToken'.format(base_url)
-services_url = r'{}services'.format(base_url)
 
 
 class LightSwitch(object):
-    def __init__(self):
-        self.reset_credentials()
-        self._reset_token()
 
-    def set_credentials(self, username, password, host):
-        '''updates the credentials that LightSwitch will use to stop and start services
-        '''
-        if username:
-            self.username = username
-        if password:
-            self.password = password
-        if host:
-            self.server = host
+    def __init__(self, server):
+        if None in [server['username'], server['password'], server['machineName']]:
+            required_fields = 'Required information for connecting to ArcGIS Server do not exist. '
+            'Server will not be stopped or started. See README.md for more details.'
+            log.warn(required_fields)
 
-        if not username and not password and not host:
-            raise Exception('Setting all credentials to empty values will use the default env values.')
+            raise Exception(required_fields)
 
-        self._reset_token()
+        self.username = server['username']
+        self.password = server['password']
 
-    def reset_credentials(self):
-        '''reset the credentials to the environmental settings
-        '''
-        self.username = environ.get('FORKLIFT_AGS_USERNAME')
-        self.password = environ.get('FORKLIFT_AGS_PASSWORD')
-        self.server = environ.get('FORKLIFT_AGS_SERVER_HOST')
+        base_url = '{}://{}:{}/arcgis/admin'.format(server['protocol'], server['machineName'], server['port'])
+        self.token_url = '{}/generateToken'.format(base_url)
+        self.switch_url = '{}/machines/{}/'.format(base_url, server['machineName'])
+        self.token_expire_milliseconds = 0
 
-    def ensure(self, what, affected_services):
+    def ensure(self, what):
         '''ensures that affected_services are started or stopped with 5 attempts.
-        what: string 'off' or 'on'
-        affected_services: list { service_name, service_type }
+        what: string 'stop' or 'start'
+        server: dictionary of server to stop
 
         returns the services that still did not do what was requested'''
         tries = 4
         wait = [8, 5, 3, 2, 1]
+        status, message = self._flip_switch(self.switch_url, what)
 
-        if None in [self.username, self.password, self.server]:
-            log.warn('Required environmental variables for connecting to ArcGIS Server do not exist. ' +
-                     'No services will be stopped or started. See README.md for more details.')
-            return (True, None)
-
-        def act_on_service(service_info):
-            #: logs within this context do not show up in the console or log file
-            service_name, service_type = service_info
-            if what == 'off':
-                status, message = self.turn_off(service_name, service_type)
-            else:
-                status, message = self.turn_on(service_name, service_type)
-
-            if not status:
-                return (service_name, service_type)
-            return None
-
-        def get_service_names(services):
-            return ', '.join([name + '.' + service for name, service in affected_services])
-
-        while len(affected_services) > 0 and tries >= 0:
+        while not status and tries >= 0:
             sleep(wait[tries])
             tries -= 1
 
-            num_processes = environ.get('FORKLIFT_POOL_PROCESSES')
-            swimmers = num_processes or config.default_num_processes
-            if swimmers > len(affected_services):
-                swimmers = len(affected_services)
-            with Pool(swimmers) as pool:
-                log.debug('affected services: %s', get_service_names(affected_services))
-                affected_services = [service for service in pool.map(act_on_service, affected_services) if service is not None]
+            status, message = self._flip_switch(self.switch_url, what)
 
-            if len(affected_services) > 0:
-                log.debug('retrying %s', get_service_names(affected_services))
+        return status, message
 
-        return (len(affected_services) == 0, get_service_names(affected_services))
-
-    def turn_off(self, service, type):
-        return self._flip_switch(service, type, 'stop')
-
-    def turn_on(self, service, type):
-        return self._flip_switch(service, type, 'start')
-
-    def _flip_switch(self, service, type, what):
-        url = '{}/{}.{}/{}'.format(services_url.format(self.server),
-                                   service,
-                                   type,
-                                   what)
-        return self._fetch(url)
+    def _flip_switch(self, url, what):
+        return self._fetch(url + what)
 
     def _fetch(self, url):
         # check to make sure that token isn't expired
@@ -127,8 +71,6 @@ class LightSwitch(object):
         except requests.exceptions.ConnectTimeout as t:
             return (False, t)
 
-        sleep(3.0)
-
         return ok
 
     def _return_false_for_status(self, json_response):
@@ -143,13 +85,9 @@ class LightSwitch(object):
         return (True, None)
 
     def _request_token(self):
-        data = {'username': self.username,
-                'password': self.password,
-                'client': 'requestip',
-                'expiration': 60,
-                'f': 'json'}
+        data = {'username': self.username, 'password': self.password, 'client': 'requestip', 'expiration': 60, 'f': 'json'}
 
-        response = requests.post(token_url.format(self.server), data=data)
+        response = requests.post(self.token_url, data=data)
         response.raise_for_status()
 
         response_data = response.json()
@@ -157,8 +95,3 @@ class LightSwitch(object):
 
         self.token = response_data['token']
         self.token_expire_milliseconds = int(response_data['expires'])
-
-    def _reset_token(self):
-        self.token = None
-        self.token_expire_milliseconds = 0
-        self.payload = None

@@ -103,43 +103,45 @@ def start_lift(file_path=None, pallet_arg=None, skip_git=False, skip_copy=False)
     lift.process_pallets(pallets_to_lift)
     log.info('process_pallets time: %s', seat.format_time(clock() - start_process))
 
-    if not skip_copy:
-        start_copy = clock()
-        copy_destinations = config.get_config_prop('copyDestinations')
-        copy_results = lift.copy_data(pallets_to_lift, all_pallets, copy_destinations)
-        log.info('copy_data time: %s', seat.format_time(clock() - start_copy))
+    lift.add_to_receiving(pallets_to_lift, all_pallets, config.get_config_prop('receivingDestination'))
 
-        start_post_copy_process = clock()
-        lift.process_pallets(pallets_to_lift, is_post_copy=True)
-        log.info('post_copy_process time: %s', seat.format_time(clock() - start_post_copy_process))
-
-        if len(copy_destinations) == 0:
-            log.info('No `copyDestinations` defined in the config. Skipping update_static...')
-            static_copy_results = ''
-        else:
-            start_static = clock()
-            static_copy_results = lift.update_static_for(pallets_to_lift, copy_destinations, False)
-            log.info('static copy time: %s', seat.format_time(clock() - start_static))
-    else:
-        copy_results = 'Copying to copyDestinations was skipped!'
-        static_copy_results = ''
-        log.info('copy data and post copy processing were skipped')
+    # if not skip_copy:
+    #     start_copy = clock()
+    #     copy_destinations = config.get_config_prop('copyDestinations')
+    #     copy_results = lift.copy_data(pallets_to_lift, all_pallets, copy_destinations)
+    #     log.info('copy_data time: %s', seat.format_time(clock() - start_copy))
+    #
+    #     start_post_copy_process = clock()
+    #     lift.process_pallets(pallets_to_lift, is_post_copy=True)
+    #     log.info('post_copy_process time: %s', seat.format_time(clock() - start_post_copy_process))
+    #
+    #     if len(copy_destinations) == 0:
+    #         log.info('No `copyDestinations` defined in the config. Skipping update_static...')
+    #         static_copy_results = ''
+    #     else:
+    #         start_static = clock()
+    #         static_copy_results = lift.update_static_for(pallets_to_lift, copy_destinations, False)
+    #         log.info('static copy time: %s', seat.format_time(clock() - start_static))
+    # else:
+    #     copy_results = 'Copying to copyDestinations was skipped!'
+    #     static_copy_results = ''
+    #     log.info('copy data and post copy processing were skipped')
 
     # log process times for each pallet
-    for pallet in pallets_to_lift:
-        log.debug('processing_times (in seconds) for %r: %s', pallet, pallet.processing_times)
-
-    elapsed_time = seat.format_time(clock() - start_seconds)
-    report_object = lift.create_report_object(pallets_to_lift, elapsed_time, copy_results, git_errors, static_copy_results)
-
-    _send_report_email(report_object)
-
-    log.info('Finished in {}.'.format(elapsed_time))
-
-    report = _format_dictionary(report_object)
-    log.info('%s', report)
-
-    return report
+    # for pallet in pallets_to_lift:
+    #     log.debug('processing_times (in seconds) for %r: %s', pallet, pallet.processing_times)
+    #
+    # elapsed_time = seat.format_time(clock() - start_seconds)
+    # report_object = lift.create_report_object(pallets_to_lift, elapsed_time, copy_results, git_errors, static_copy_results)
+    #
+    # _send_report_email(report_object)
+    #
+    # log.info('Finished in {}.'.format(elapsed_time))
+    #
+    # report = _format_dictionary(report_object)
+    # log.info('%s', report)
+    #
+    # return report
 
 
 def _sort_pallets(file_path, pallet_arg):

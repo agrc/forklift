@@ -206,8 +206,6 @@ def add_to_receiving(specific_pallets, all_pallets, receiving_destintation):
 
     Copies scrubbed hashed data to `receiving_destintation` that is ready to go to production.
     '''
-    import pdb
-    pdb.set_trace()
     #: we're acting on all pallets
     if len(specific_pallets) == 0:
         specific_pallets = all_pallets
@@ -226,19 +224,12 @@ def add_to_receiving(specific_pallets, all_pallets, receiving_destintation):
     if len(filtered_specific_pallets) == 0:
         return ''
 
-    services_affected, data_being_moved, destination_to_pallet = _hydrate_data_structures(filtered_specific_pallets, all_pallets)
+    data = _get_destinations_ready(filtered_specific_pallets, all_pallets)
+    for data_source in data.keys():
+        metadata = arcpy.da.Describe(data_source)
+        destination_workspace = path.join(receiving_destintation, path.basename(metadata['path']))
 
-    #: compact before shutting down services to minimize downtime
-    for source in data_being_moved:
-        if arcpy.Describe(source).workspaceFactoryProgID.startswith('esriDataSourcesGDB.FileGDBWorkspaceFactory'):
-            _scrub_hash_fields(source)
-
-            log.info('compacting %s', source)
-            arcpy.Compact_management(source)
-
-        destination_workspace = path.join(receiving_destintation, path.basename(source))
-
-        log.info('copying {} to {}...'.format(source, destination_workspace))
+        log.info('copying {} to {}...'.format(metadata['path'], receiving_destintation))
         start_seconds = clock()
         try:
             if path.exists(destination_workspace):
@@ -246,13 +237,20 @@ def add_to_receiving(specific_pallets, all_pallets, receiving_destintation):
                 shutil.move(destination_workspace, destination_workspace + 'x')
 
             log.debug('copying source to destination')
-            shutil.copytree(source, destination_workspace, ignore=shutil.ignore_patterns('*.lock'))
+            shutil.copytree(metadata['path'], destination_workspace, ignore=shutil.ignore_patterns('*.lock'))
 
             if path.exists(destination_workspace + 'x'):
                 log.debug('removing temporary gdb: %s', destination_workspace + 'x')
                 shutil.rmtree(destination_workspace + 'x')
 
             log.info('copy successful in %s', seat.format_time(clock() - start_seconds))
+
+            log.debug('scrubbing %s', destination_workspace)
+            _scrub_hash_fields(destination_workspace)
+
+            if destination_workspace.endswith('.gdb'):
+                log.info('compacting %s', destination_workspace)
+                arcpy.Compact_management(destination_workspace)
         except Exception as e:
             try:
                 #: There is still a lock?
@@ -268,11 +266,11 @@ def add_to_receiving(specific_pallets, all_pallets, receiving_destintation):
             except Exception:
                 log.error('%s might be in a corrupted state', destination_workspace, exc_info=True)
 
-            if source.lower() in destination_to_pallet:
-                for pallet in destination_to_pallet[source.lower()]:
-                    pallet.success = (False, str(e))
+            # if data_source.lower() in destination_to_pallet:
+            #     for pallet in destination_to_pallet[data_source.lower()]:
+            #         pallet.success = (False, str(e))
 
-            log.error('there was an error copying %s to %s', source, destination_workspace, exc_info=True)
+            log.error('there was an error copying %s to %s', data_source, destination_workspace, exc_info=True)
 
 
 def copy_data(specific_pallets, all_pallets, config_copy_destinations):
@@ -363,8 +361,6 @@ def _scrub_hash_fields(workspace):
     workspace: String
 
     removes the hash field from all datasets in the workspace'''
-
-    log.info('scrubbing hash fields')
     arcpy.env.workspace = workspace
 
     for table in arcpy.ListFeatureClasses() + arcpy.ListTables():
@@ -404,3 +400,17 @@ def _hydrate_data_structures(specific_pallets, all_pallets):
             break
 
     return services_affected, data_being_moved, destination_to_pallet
+
+
+def _get_destinations_ready(specific_pallets, all_pallets):
+    def normalize_workspace(workspace_path):
+        return path.normpath(workspace_path.lower())
+
+    data = {}
+
+    for pallet in set(specific_pallets + all_pallets):
+        for crate in pallet.get_crates():
+            if crate.result[0] in [Crate.UPDATED, Crate.CREATED, Crate.UPDATED_OR_CREATED_WITH_WARNINGS]:
+                data.setdefault(crate.destination, []).append(pallet)
+
+    return data

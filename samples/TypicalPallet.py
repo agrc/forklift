@@ -13,13 +13,33 @@ class TypicalPallet(Pallet):
 
         self.arcgis_services = [('Service', 'MapServer')]
 
-        self.location_utm = path.join(self.staging_rack, 'location_utm.gdb')
+        self.boundaries_utm = path.join(self.staging_rack, 'boundaries_utm.gdb')
 
-        self.copy_data = [self.location_utm]
+        self.copy_data = [self.boundaries_utm]
         self.destination_coordinate_system = 26912
 
     def build(self, configuration=None):
         data_folder = path.join(path.dirname(path.realpath(__file__)), 'data')
         source_workspace = path.join(data_folder, 'SourceData.gdb')
 
-        self.add_crates(['AddressPoints'], {'source_workspace': source_workspace, 'destination_workspace': self.location_utm})
+        self.add_crates(['Counties'], {'source_workspace': source_workspace, 'destination_workspace': self.boundaries_utm})
+
+
+class AnotherPallet(Pallet):
+
+    def __init__(self):
+        super(AnotherPallet, self).__init__()
+
+        self.arcgis_services = [('Service', 'MapServer')]
+
+        self.boundaries_utm = path.join(self.staging_rack, 'boundaries_utm.gdb')
+
+        self.copy_data = [self.boundaries_utm]
+        self.static_data = [path.join(path.dirname(path.realpath(__file__)), 'data', 'SourceData.gdb')]
+        self.destination_coordinate_system = 26912
+
+    def build(self, configuration=None):
+        data_folder = path.join(path.dirname(path.realpath(__file__)), 'data')
+        source_workspace = path.join(data_folder, 'SourceData.gdb')
+
+        self.add_crates(['SchoolInfo'], {'source_workspace': source_workspace, 'destination_workspace': self.boundaries_utm})

@@ -118,9 +118,16 @@ def start_lift(file_path=None, pallet_arg=None, skip_git=False, skip_copy=False)
         log.debug('processing_times (in seconds) for %r: %s', pallet, pallet.processing_times)
 
     elapsed_time = seat.format_time(clock() - start_seconds)
+    report_object = lift.create_report_object(pallets_to_lift, elapsed_time, copy_results, git_errors)
+
     # _send_report_email(report_object)
 
     log.info('Finished in {}.'.format(elapsed_time))
+
+    report = _format_dictionary(report_object)
+    log.info('%s', report)
+
+    return report
 
 
 def _sort_pallets(file_path, pallet_arg):
@@ -293,9 +300,6 @@ def _format_dictionary(pallet_reports):
     if pallet_reports['copy_results'] not in [None, '']:
         report_str += '{}{}{}{}'.format(Fore.RED, pallet_reports['copy_results'], Fore.RESET, linesep)
 
-    if pallet_reports['static_copy_results'] not in [None, '']:
-        report_str += '{}{}{}{}'.format(Fore.RED, pallet_reports['static_copy_results'], Fore.RESET, linesep)
-
     if len(pallet_reports['git_errors']) > 0:
         for git_error in pallet_reports['git_errors']:
             report_str += '{}{}{}'.format(Fore.RED, git_error, linesep)
@@ -305,7 +309,10 @@ def _format_dictionary(pallet_reports):
         if not report['success']:
             color = Fore.RED
 
-        report_str += '{3}{0}{1} ({4}){2}{3}'.format(color, report['name'], Fore.RESET, linesep, report['total_processing_time'])
+        report_str += '{0}{1}{2} ({4}){3}'.format(color, report['name'], Fore.RESET, linesep, report['total_processing_time'])
+
+        #: update report object to be smarter and probably a list
+        report_str += '{0:>40} - {1}{2}{3}{4}'.format('Static Data', color, report['statics'], Fore.RESET, linesep)
 
         if report['message']:
             report_str += 'pallet message: {}{}{}{}'.format(Fore.RED, report['message'], Fore.RESET, linesep)
@@ -313,13 +320,14 @@ def _format_dictionary(pallet_reports):
         for crate in report['crates']:
             report_str += '{0:>40} - {1}{3}{2}'.format(crate['name'], crate['result'], linesep, Fore.RESET)
 
-            if crate['crate_message'] is None:
+            if crate['crate_message'] is None or len(crate['crate_message']) < 1:
                 continue
 
             if crate['message_level'] == 'warning':
                 color = Fore.YELLOW
             else:
                 color = Fore.RED
+
             report_str += 'crate message: {0}{1}{2}{3}'.format(color, crate['crate_message'], Fore.RESET, linesep)
 
     return report_str
@@ -424,10 +432,10 @@ def update_static(file_path):
         log.error('No `copyDestinations` defined in the config!')
         return ''
 
-    static_copy_results = lift.update_static_for(pallets, copy_destinations, True)
+    # static_copy_results = lift.update_static_for(pallets, copy_destinations, True)
 
     elapsed_time = seat.format_time(clock() - start_seconds)
-    report_object = lift.create_report_object(pallets, elapsed_time, '', git_errors, static_copy_results)
+    report_object = lift.create_report_object(pallets, elapsed_time, '', git_errors)
     report = _format_dictionary(report_object)
     log.info('%s', report)
 

@@ -209,6 +209,7 @@ class Pallet(object):
             'success': self.success[0] and self.are_crates_valid(),
             'message': self.success[1] or '',
             'crates': [crate.get_report() for crate in self._crates if crate.get_report() is not None],
+            'statics': self.static_success,
             'total_processing_time': seat.format_time(self.total_processing_time)
         }
 

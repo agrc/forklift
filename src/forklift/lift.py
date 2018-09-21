@@ -210,7 +210,8 @@ def _move_to_dropoff(destination_and_pallet, dropoff_location, static=False):
 
             log.error('there was an error copying %s to %s', data_source, path.join(dropoff_location, gdb_name), exc_info=True)
 
-def create_report_object(pallets, elapsed_time, copy_results, git_errors, static_copy_results):
+
+def create_report_object(pallets, elapsed_time, copy_results, git_errors):
     reports = [pallet.get_report() for pallet in pallets]
 
     return {'hostname': socket.gethostname(),
@@ -219,8 +220,7 @@ def create_report_object(pallets, elapsed_time, copy_results, git_errors, static
             'git_errors': git_errors,
             'pallets': reports,
             'total_time': elapsed_time,
-            'copy_results': copy_results,
-            'static_copy_results': static_copy_results}
+            'copy_results': copy_results}
 
 
 def _copy_with_overwrite(source, destination):

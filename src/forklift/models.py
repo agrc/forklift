@@ -42,9 +42,16 @@ class Pallet(object):
         self._crates = []
         #: the status of the pallet (successful: Bool, message: string)
         self.success = (True, None)
+        self.static_success = (True, None)
         #: a list databases or folders that you want forklift to copy to `destinationDestinations`
         #: after a successful process & ship
         self.copy_data = []
+        #: a list of databases or folders that are static and do not participate in crates
+        #: When `forklift lift` is run, it checks for the existence of this data in config.copyDestinations and
+        #: copies the data there if it does not already exists.
+        #: When `forklift update_static <pallet>` is run it copies/overwrites the data in
+        #: copyDestinations (while stopping services in `arcgis_services`).
+        self.static_data = []
         #: a list of tuples describing arcgis server services that should be shut down before copying data in `copy_data`
         #: the format of the tuple is two strings: `('<Folder>/<ServiceName>', '<ServiceType>')`
         #: for example: `[('PoliticalDistricts', 'MapServer'), ('DEQEnviro/Toolbox', 'GPServer')]`
@@ -57,14 +64,8 @@ class Pallet(object):
         #: the location of the garage containing logs and sde connection files etc
         self.garage = dirname(config.config_location)
         #: the default location to stage geodatabases. For use when creating crates
-        self.staging_rack = config.get_config_prop('stagingDestination')
+        self.staging_rack = config.get_config_prop('hashLocation')
         self.send_email = send_email
-        #: a list of databases or folders that are static and do not participate in crates
-        #: When `forklift lift` is run, it checks for the existence of this data in config.copyDestinations and
-        #: copies the data there if it does not already exists.
-        #: When `forklift update_static <pallet>` is run it copies/overwrites the data in
-        #: copyDestinations (while stopping services in `arcgis_services`).
-        self.static_data = []
         self.total_processing_time = 0
         self.processing_times = {}
         self.timers = {}

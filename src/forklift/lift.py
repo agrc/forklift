@@ -22,6 +22,26 @@ log = logging.getLogger('forklift')
 service_msg = 'Service(s) will not {}: {}. '
 
 
+def process_checklist(config):
+    _remove_if_exists(config.get_config_prop('dropoffLocation'))
+    _create_if_not_exists([config.get_config_prop('hashLocation'), config.get_config_prop('dropoffLocation')])
+
+
+def _remove_if_exists(location):
+    if not path.exists(location):
+        return
+
+    shutil.rmtree(location)
+
+
+def _create_if_not_exists(locations):
+    for location in locations:
+        if path.exists(location):
+            continue
+
+        makedirs(location)
+
+
 def prepare_packaging_for_pallets(pallets):
     '''
     pallets: Pallet[]
@@ -110,54 +130,85 @@ def process_pallets(pallets, is_post_copy=False):
 
                     log.debug('%s pallet %s', verb.replace('ing', 'ed'), seat.format_time(clock() - start_seconds))
 
-                if not is_post_copy:
-                    start_seconds = clock()
-
-                    log.info('shipping pallet: %r', pallet)
-                    arcpy.ResetEnvironments()
-                    arcpy.ClearWorkspaceCache_management()
-                    with seat.timed_pallet_process(pallet, 'ship'):
-                        pallet.ship()
-                    log.debug('shipped pallet %s', seat.format_time(clock() - start_seconds))
+                # if not is_post_copy:
+                #     start_seconds = clock()
+                #
+                #     log.info('shipping pallet: %r', pallet)
+                #     arcpy.ResetEnvironments()
+                #     arcpy.ClearWorkspaceCache_management()
+                #     with seat.timed_pallet_process(pallet, 'ship'):
+                #         pallet.ship()
+                #     log.debug('shipped pallet %s', seat.format_time(clock() - start_seconds))
         except Exception as e:
             pallet.success = (False, e)
             log.error('error %s pallet: %s for pallet: %r', verb, e, pallet, exc_info=True)
 
 
-def update_static_for(pallets, config_copy_destinations, force):
+def dropoff_data(specific_pallets, all_pallets, dropoff_location):
     '''
-    pallets: Pallet[]
-    config_copy_destinations: String[]
-    force: Boolean
+    specific_pallets: Pallet[]
+    all_pallets: Pallet[]
+    config_copy_destinations: string[]
 
-    Loop over pallets and check to see if data defined in `static_data` is in `copyDestinations`.
-    If it's not their the data is copied. If it is there and force is True, then the services are
-    shut down and the data is overwritten.
+    Copies scrubbed hashed data to `dropoff_location` that is ready to go to production.
     '''
+    #: we're acting on all pallets
+    if len(specific_pallets) == 0:
+        specific_pallets = all_pallets
 
-    results = ''
-    for pallet in pallets:
-        with seat.timed_pallet_process(pallet, 'update_static'):
-            log.info('checking %s pallet', pallet)
-            for source in pallet.static_data:
-                if not path.exists(source):
-                    log.error('static_data: %s does not exist!', source)
-                    continue
+    #: filter out pallets whose data did not change
+    filtered_specific_pallets = []
+    for pallet in specific_pallets:
+        try:
+            if pallet.requires_processing() is True:
+                filtered_specific_pallets.append(pallet)
+        except Exception:
+            #: skip, we'll see the error in the report from process_pallets
+            pass
 
-                destinations = [path.join(d, source.split('\\')[-1]) for d in config_copy_destinations]
-                if all([not path.exists(d) for d in destinations]):
-                    log.info('copying static data for the first time')
-                    for destination in destinations:
-                        _copy_with_overwrite(source, destination)
-                elif force:
-                    log.info('overwriting static data')
-                    # results = _stop_services(pallet.arcgis_services)
-                    for destination in destinations:
-                        _copy_with_overwrite(source, destination)
-                    # results += ' ' + _start_services(pallet.arcgis_services)
+    #: no pallets with data updates. we are done here
+    if len(filtered_specific_pallets) == 0:
+        return ''
 
-    return results
+    #: data_source eg: C:\forklift\data\hashed\boundaries_utm.gdb
+    destination_and_pallet, static_and_pallet = _get_locations_for_dropoff(filtered_specific_pallets, all_pallets)
+    _move_to_dropoff(destination_and_pallet, dropoff_location)
+    _move_to_dropoff(static_and_pallet, dropoff_location, static=True)
 
+
+def gift_wrap(location):
+    arcpy.env.workspace = location
+
+    workspaces = arcpy.ListWorkspaces('*', 'FileGDB')
+
+    [_remove_hash_from_workspace(workspace) for workspace in workspaces]
+    [arcpy.management.Compact(workspace) for workspace in workspaces]
+
+
+def _move_to_dropoff(destination_and_pallet, dropoff_location, static=False):
+    '''
+    destination_and_pallet: string, pallet[]
+    dropoff_location: string
+    static: boolean'''
+    for data_source in destination_and_pallet:
+        gdb_name = path.basename(data_source)
+        log.info('copying {} to {}...'.format(data_source, path.join(dropoff_location, gdb_name)))
+        start_seconds = clock()
+        try:
+            log.debug('copying source to destination')
+            shutil.copytree(data_source, path.join(dropoff_location, gdb_name), ignore=shutil.ignore_patterns('*.lock'))
+            log.info('copy successful in %s', seat.format_time(clock() - start_seconds))
+        except Exception as e:
+            if data_source.lower() in destination_and_pallet:
+                for pallet in destination_and_pallet[data_source.lower()]:
+                    if static:
+                        pallet.static_success = (False, str(e))
+
+                        continue
+
+                    pallet.success = (False, str(e))
+
+            log.error('there was an error copying %s to %s', data_source, path.join(dropoff_location, gdb_name), exc_info=True)
 
 def create_report_object(pallets, elapsed_time, copy_results, git_errors, static_copy_results):
     reports = [pallet.get_report() for pallet in pallets]
@@ -196,81 +247,6 @@ def _copy_with_overwrite(source, destination):
             except Exception:
                 #: shouldn't matter a whole lot
                 pass
-
-
-def add_to_receiving(specific_pallets, all_pallets, receiving_destintation):
-    '''
-    specific_pallets: Pallet[]
-    all_pallets: Pallet[]
-    config_copy_destinations: string[]
-
-    Copies scrubbed hashed data to `receiving_destintation` that is ready to go to production.
-    '''
-    #: we're acting on all pallets
-    if len(specific_pallets) == 0:
-        specific_pallets = all_pallets
-
-    #: filter out pallets whose data did not change
-    filtered_specific_pallets = []
-    for pallet in specific_pallets:
-        try:
-            if pallet.requires_processing() is True:
-                filtered_specific_pallets.append(pallet)
-        except Exception:
-            #: skip, we'll see the error in the report from process_pallets
-            pass
-
-    #: no pallets with data updates. we are done here
-    if len(filtered_specific_pallets) == 0:
-        return ''
-
-    data = _get_destinations_ready(filtered_specific_pallets, all_pallets)
-    for data_source in data.keys():
-        metadata = arcpy.da.Describe(data_source)
-        destination_workspace = path.join(receiving_destintation, path.basename(metadata['path']))
-
-        log.info('copying {} to {}...'.format(metadata['path'], receiving_destintation))
-        start_seconds = clock()
-        try:
-            if path.exists(destination_workspace):
-                log.debug('%s exists moving', destination_workspace)
-                shutil.move(destination_workspace, destination_workspace + 'x')
-
-            log.debug('copying source to destination')
-            shutil.copytree(metadata['path'], destination_workspace, ignore=shutil.ignore_patterns('*.lock'))
-
-            if path.exists(destination_workspace + 'x'):
-                log.debug('removing temporary gdb: %s', destination_workspace + 'x')
-                shutil.rmtree(destination_workspace + 'x')
-
-            log.info('copy successful in %s', seat.format_time(clock() - start_seconds))
-
-            log.debug('scrubbing %s', destination_workspace)
-            _scrub_hash_fields(destination_workspace)
-
-            if destination_workspace.endswith('.gdb'):
-                log.info('compacting %s', destination_workspace)
-                arcpy.Compact_management(destination_workspace)
-        except Exception as e:
-            try:
-                #: There is still a lock?
-                #: The service probably wasn't shut down
-                #: if there was a problem and the temp gdb exists
-                #: since we couldn't delete it before we probably can't delete it now
-                #: so take what is in x and copy it over what it can in the original
-                #: that _should_ leave the gdb in a functioning state
-                if path.exists(destination_workspace) and path.exists(destination_workspace + 'x'):
-                    log.debug('cleaning up %s', destination_workspace)
-                    _copy_with_overwrite(destination_workspace + 'x', destination_workspace)
-                    shutil.rmtree(destination_workspace + 'x')
-            except Exception:
-                log.error('%s might be in a corrupted state', destination_workspace, exc_info=True)
-
-            # if data_source.lower() in destination_to_pallet:
-            #     for pallet in destination_to_pallet[data_source.lower()]:
-            #         pallet.success = (False, str(e))
-
-            log.error('there was an error copying %s to %s', data_source, destination_workspace, exc_info=True)
 
 
 def copy_data(specific_pallets, all_pallets, config_copy_destinations):
@@ -323,7 +299,7 @@ def copy_data(specific_pallets, all_pallets, config_copy_destinations):
                 log.debug('copying source to destination')
                 shutil.copytree(source, destination_workspace, ignore=shutil.ignore_patterns('*.lock'))
 
-                _scrub_hash_fields(destination_workspace)
+                _remove_hash_from_workspace(destination_workspace)
 
                 if path.exists(destination_workspace + 'x'):
                     log.debug('removing temporary gdb: %s', destination_workspace + 'x')
@@ -356,7 +332,7 @@ def copy_data(specific_pallets, all_pallets, config_copy_destinations):
     # return results
 
 
-def _scrub_hash_fields(workspace):
+def _remove_hash_from_workspace(workspace):
     '''
     workspace: String
 
@@ -402,15 +378,24 @@ def _hydrate_data_structures(specific_pallets, all_pallets):
     return services_affected, data_being_moved, destination_to_pallet
 
 
-def _get_destinations_ready(specific_pallets, all_pallets):
+def _get_locations_for_dropoff(specific_pallets, all_pallets):
     def normalize_workspace(workspace_path):
         return path.normpath(workspace_path.lower())
 
-    data = {}
+    destination_to_pallet = {}
+    static_to_pallet = {}
 
     for pallet in set(specific_pallets + all_pallets):
         for crate in pallet.get_crates():
-            if crate.result[0] in [Crate.UPDATED, Crate.CREATED, Crate.UPDATED_OR_CREATED_WITH_WARNINGS]:
-                data.setdefault(crate.destination, []).append(pallet)
+            normal_paths = [normalize_workspace(p) for p in pallet.static_data]
+            for p in normal_paths:
+                static_to_pallet.setdefault(p, []).append(pallet)
 
-    return data
+            if crate.result[0] in [Crate.UPDATED, Crate.CREATED, Crate.UPDATED_OR_CREATED_WITH_WARNINGS]:
+                normal_paths = [normalize_workspace(p) for p in pallet.copy_data]
+                for p in normal_paths:
+                    destination_to_pallet.setdefault(p, []).append(pallet)
+
+                break
+
+    return destination_to_pallet, static_to_pallet

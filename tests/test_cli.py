@@ -41,19 +41,29 @@ class TestConfigInit(unittest.TestCase):
         with open(path) as config:
             config_dict = loads(config.read())
             self.assertEqual(config_dict, {
-                u"configuration": u"Production",
-                u"warehouse": u"c:\\scheduled\\warehouse",
-                u"repositories": [],
-                u"copyDestinations": [],
-                u"stagingDestination": u"c:\\scheduled\\staging",
-                u"sendEmails": False,
-                u"notify": [u"stdavis@utah.gov", u"sgourley@utah.gov"],
-                u"email": {
-                    u"smtpServer": u"send.state.ut.us",
-                    u"smtpPort": 25,
-                    u"fromAddress": u"noreply@utah.gov"
+                u'configuration': u'Production',
+                u'dropoffLocation': u'c:\\forklift\\data\\receiving',
+                u'email': {
+                    u'smtpServer': u'send.state.ut.us',
+                    u'smtpPort': 25,
+                    u'fromAddress': u'noreply@utah.gov'
                 },
-                u"poolProcesses": 20
+                u'hashLocation': u'c:\\forklift\\data\\hashed',
+                u'notify': [u'stdavis@utah.gov', u'sgourley@utah.gov'],
+                u'poolProcesses': 20,
+                u'repositories': [],
+                u'sendEmails': False,
+                u'servers': {
+                    u'options': {
+                        u'protocol': u'http',
+                        u'port': 6080
+                    },
+                    u'primary': {
+                        u'machineName': u'machine.name.here'
+                    }
+                },
+                u'shipTo': [u'c:\\forklift\\data\\production'],
+                u"warehouse": u"c:\\scheduled\\warehouse",
             })
 
     def test_init_returns_path_for_existing_config_file(self):

@@ -27,18 +27,28 @@ def create_default_config():
     with open(config_location, 'w') as json_config_file:
         data = {
             'configuration': 'Production',
-            'warehouse': default_warehouse_location,
-            'repositories': [],
-            'copyDestinations': [],
-            'stagingDestination': default_staging_location,
-            'sendEmails': False,
-            'notify': ['stdavis@utah.gov', 'sgourley@utah.gov'],
+            'dropoffLocation': 'c:\\forklift\\data\\receiving',
             'email': {
                 'smtpServer': 'send.state.ut.us',
                 'smtpPort': 25,
                 'fromAddress': 'noreply@utah.gov'
             },
-            'poolProcesses': default_num_processes
+            'hashLocation': 'c:\\forklift\\data\\hashed',
+            'notify': ['stdavis@utah.gov', 'sgourley@utah.gov'],
+            'poolProcesses': default_num_processes,
+            'repositories': [],
+            'sendEmails': False,
+            'servers': {
+                'options': {
+                    'protocol': 'http',
+                    'port': 6080
+                },
+                'primary': {
+                    'machineName': 'machine.name.here'
+                }
+            },
+            'shipTo': ['c:\\forklift\\data\\production'],
+            'warehouse': default_warehouse_location,
         }
 
         json_config_file.write(dumps(data, sort_keys=True, indent=2, separators=(',', ': ')))

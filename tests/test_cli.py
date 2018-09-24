@@ -341,13 +341,12 @@ class TestScorchedEarth(unittest.TestCase):
 
     @patch('forklift.core.scratch_gdb_path', scratch_patch)
     def test_deletes_folders(self):
-        test_staging = join(test_data_folder, 'staging')
-        test_folder = join(test_staging, 'test')
+        test_hash_location = join(test_data_folder, 'hashLocation')
+        test_folder = join(test_hash_location, 'test')
         makedirs(test_folder)
-        config.set_config_prop('stagingDestination', test_staging)
+        config.set_config_prop('hashLocation', test_hash_location)
 
         cli.scorched_earth()
 
         self.assertFalse(exists(core.scratch_gdb_path))
         self.assertFalse(exists(test_folder))
-        self.assertTrue(exists(test_staging))

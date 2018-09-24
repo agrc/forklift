@@ -291,7 +291,7 @@ class TestLift(unittest.TestCase):
         p2 = Pallet()
         p3 = Pallet()
 
-        report = lift.create_report_object([p1, p2, p3], 10, copy_results, git_errors, '')
+        report = lift.create_report_object([p1, p2, p3], 10, copy_results, git_errors)
 
         self.assertEqual(report['total_pallets'], 3)
         self.assertEqual(report['num_success_pallets'], 2)

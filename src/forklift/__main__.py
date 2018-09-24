@@ -106,11 +106,11 @@ def main():
     elif args['lift']:
         if args['<file-path>']:
             if args['--pallet-arg']:
-                cli.start_lift(args['<file-path>'], args['<arg>'], skip_copy=args['--skip-copy'])
+                cli.start_lift(args['<file-path>'], args['<arg>'])
             else:
-                cli.start_lift(args['<file-path>'], skip_copy=args['--skip-copy'])
+                cli.start_lift(args['<file-path>'])
         else:
-            cli.start_lift(skip_copy=args['--skip-copy'])
+            cli.start_lift()
     elif args['list-pallets']:
         pallets = cli.list_pallets()
 

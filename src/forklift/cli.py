@@ -78,7 +78,7 @@ def list_repos():
     return validate_results
 
 
-def start_lift(file_path=None, pallet_arg=None, skip_git=False, skip_copy=False):
+def start_lift(file_path=None, pallet_arg=None, skip_git=False):
     log.info('starting forklift')
 
     if not skip_git:

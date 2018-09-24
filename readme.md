@@ -90,7 +90,7 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
    }
 }
 ```
-1.  Edit the `config.json` to add the email notification properties. _required for sending email reports and/or starting/stopping ArcGIS Server Services_
+1.  Edit the `config.json` to add the email notification properties. _(This is required for sending email reports)_
     - `smtpServer` The SMTP server that you want to send emails with.
     - `smtpPort` The SMTP port number.
     - `fromAddress` The from email address for emails sent by forklift.

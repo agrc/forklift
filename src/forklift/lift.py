@@ -19,7 +19,6 @@ from . import seat
 from .core import hash_field
 
 log = logging.getLogger('forklift')
-service_msg = 'Service(s) will not {}: {}. '
 
 
 def process_checklist(config):

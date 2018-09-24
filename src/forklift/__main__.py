@@ -11,7 +11,7 @@ Usage:
     forklift config set --key <key> --value <value>
     forklift garage open
     forklift git-update
-    forklift lift [<file-path>] [--pallet-arg <arg>] [--skip-copy] [--verbose] [--skip-emails|--send-emails]
+    forklift lift [<file-path>] [--pallet-arg <arg>] [--verbose] [--skip-emails|--send-emails]
     forklift list-pallets
     forklift scorched-earth
     forklift speedtest
@@ -32,7 +32,6 @@ Examples:
     forklift git-update                                     Pulls the latest updates to all git repositories.
     forklift lift                                           The main entry for running all of pallets found in the warehouse folder.
     forklift lift --verbose                                 Print DEBUG statements to the console.
-    forklift lift --skip-copy                               Skip copying to `copyDestinations`.
     forklift lift --skip-emails                             Skip sending emails. Overrides `sendEmails` config as False.
     forklift lift --send-emails                             Force sending emails. Overrides `sendEmails` config as True.
     forklift lift path/to/pallet_file.py                    Run a specific pallet.
@@ -106,11 +105,11 @@ def main():
     elif args['lift']:
         if args['<file-path>']:
             if args['--pallet-arg']:
-                cli.start_lift(args['<file-path>'], args['<arg>'], skip_copy=args['--skip-copy'])
+                cli.start_lift(args['<file-path>'], args['<arg>'])
             else:
-                cli.start_lift(args['<file-path>'], skip_copy=args['--skip-copy'])
+                cli.start_lift(args['<file-path>'])
         else:
-            cli.start_lift(skip_copy=args['--skip-copy'])
+            cli.start_lift()
     elif args['list-pallets']:
         pallets = cli.list_pallets()
 

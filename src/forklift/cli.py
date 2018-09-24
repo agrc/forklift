@@ -443,11 +443,8 @@ def update_static(file_path):
 
 
 def scorched_earth():
-    staging = config.get_config_prop('stagingDestination')
-    for folder in [staging, core.scratch_gdb_path]:
+    hash_location = config.get_config_prop('hashLocation')
+    for folder in [hash_location, core.scratch_gdb_path]:
         if exists(folder):
             log.info('deleting: %s', folder)
             rmtree(folder)
-
-    log.info('recreating: %s', staging)
-    makedirs(staging)

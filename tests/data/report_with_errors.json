@@ -3,7 +3,6 @@
     "num_success_pallets": 3,
     "total_pallets": 5,
     "copy_results": "Services will not stop: Roadkill/Overlays.MapServer, Roadkill/AnotherService.GPServer. This will affect data copy. Services will not start: Roadkill/Overlays.MapServer.",
-    "static_copy_results": "Static copy error",
     "total_time": "4.5 hours",
     "git_errors": ["Git update error for agrc/oil-gas-mining: raise GitCommandError(self.args, status, errstr)\n', GitCommandError: 'git pull -v origin' returned with exit code 1"],
     "pallets": [

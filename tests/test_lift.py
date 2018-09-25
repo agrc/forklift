@@ -400,32 +400,3 @@ class TestLift(unittest.TestCase):
         affected_services, data_being_moved, destination_to_pallet = lift._hydrate_data_structures(pallets[:1], pallets)
 
         self.assertEqual(affected_services, set(['service2', 'service1']))
-
-
-@patch('forklift.lift._copy_with_overwrite')
-class UpdateStaticFor(unittest.TestCase):
-
-    def test_no_existing_data(self, _copy_with_overwrite_mock):
-        pallet = Pallet()
-        pallet.static_data = [check_for_changes_gdb]
-
-        lift.update_static_for([pallet], ['blah'], True)
-
-        _copy_with_overwrite_mock.assert_called_once_with(check_for_changes_gdb, path.join('blah', 'checkForChanges.gdb'))
-
-    # def test_existing_data_should_stop_services(self, _stop_services_mock, _start_services_mock, _copy_with_overwrite_mock):
-    #     pallet = Pallet()
-    #     pallet.static_data = [check_for_changes_gdb]
-    #
-    #     lift.update_static_for([pallet], [path.join(current_folder, 'data')], True)
-    #
-    #     _stop_services_mock.assert_called_once()
-    #     _start_services_mock.assert_called_once()
-
-    def test_no_force_existing_data_does_not_copy(self, _copy_with_overwrite_mock):
-        pallet = Pallet()
-        pallet.static_data = [check_for_changes_gdb]
-
-        lift.update_static_for([pallet], [path.join(current_folder, 'data')], False)
-
-        _copy_with_overwrite_mock.assert_not_called()

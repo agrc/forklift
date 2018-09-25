@@ -230,17 +230,6 @@ class TestCliStartLift(unittest.TestCase):
 
         self.assertEqual(order, ['Pallet1', 'Pallet2', 'Pallet3'])
 
-    @patch('forklift.lift.update_static_for')
-    def test_start_lift_update_static(self, update_static_for, process_pallets, process_crates_for, git_update):
-        cli.start_lift(join(test_data_folder, 'pallet_argument.py'), 'test')
-
-        update_static_for.assert_not_called()
-
-        config.set_config_prop('copyDestinations', ['a'])
-        cli.start_lift(join(test_data_folder, 'pallet_argument.py'), 'test')
-
-        update_static_for.assert_called_once()
-
     @patch('forklift.lift.prepare_packaging_for_pallets')
     def test_start_lift_prepare_packaging(self, prepare_mock, process_pallets, process_crates_for, git_update):
         cli.start_lift(join(test_data_folder, 'pallet_argument.py'))
@@ -316,34 +305,10 @@ class TestReport(unittest.TestCase):
             'git_errors': ['a git error'],
             'pallets': [success, fail],
             'total_time': '5 minutes',
-            'copy_results': 'copy error',
-            'static_copy_results': 'static copy error'
+            'copy_results': 'copy error'
         }
 
         print(cli._format_dictionary(report))
-
-
-class TestUpdateStatic(unittest.TestCase):
-
-    def setUp(self):
-        if exists(config_location):
-            remove(config_location)
-
-    def tearDown(self):
-        if exists(config_location):
-            remove(config_location)
-
-    def test_no_copy_destinations(self):
-        config.set_config_prop('copyDestinations', [])
-        report = cli.update_static(join(test_pallets_folder, 'single_pallet.py'))
-
-        self.assertEquals(report, '')
-
-    def test_copy(self):
-        config.set_config_prop('copyDestinations', ['one', 'two'])
-        report = cli.update_static(join(test_pallets_folder, 'single_pallet.py'))
-
-        self.assertRegexpMatches(report, 'ran successfully')
 
 
 class TestScorchedEarth(unittest.TestCase):

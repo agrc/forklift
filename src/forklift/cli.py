@@ -9,7 +9,7 @@ A module that contains the implementation of the cli commands
 import logging
 import sys
 from imp import load_source
-from os import environ, linesep, makedirs, walk
+from os import environ, linesep, walk
 from os.path import (abspath, basename, dirname, exists, join, realpath,
                      splitext)
 from re import compile
@@ -311,9 +311,6 @@ def _format_dictionary(pallet_reports):
 
         report_str += '{0}{1}{2} ({4}){3}'.format(color, report['name'], Fore.RESET, linesep, report['total_processing_time'])
 
-        #: update report object to be smarter and probably a list
-        report_str += '{0:>40} - {1}{2}{3}{4}'.format('Static Data', color, report['statics'], Fore.RESET, linesep)
-
         if report['message']:
             report_str += 'pallet message: {}{}{}{}'.format(Fore.RED, report['message'], Fore.RESET, linesep)
 
@@ -414,32 +411,6 @@ def speedtest(pallet_location):
     print(('{1}Dry Run Output{0}{2}{3}'.format(Fore.RESET, Fore.CYAN, linesep, dry_report)))
     print(('{1}Repeat Run Output{0}{2}{3}'.format(Fore.RESET, Fore.CYAN, linesep, repeat_report)))
     print(('{3}{0}{1}Speed Test Results{3}{0}{2}Dry Run:{0} {4}{3}{2}Repeat:{0} {5}'.format(Fore.RESET, Fore.GREEN, Fore.CYAN, linesep, dry_run, repeat)))
-
-
-def update_static(file_path):
-    log.info('updating/creating static data for pallet(s) in %s', file_path)
-
-    start_seconds = clock()
-
-    git_errors = git_update()
-
-    pallets = [PalletClass() for location, PalletClass in _get_pallets_in_file(file_path)]
-    for pallet in pallets:
-        pallet.build(config.get_config_prop('configuration'))
-
-    copy_destinations = config.get_config_prop('copyDestinations')
-    if len(copy_destinations) == 0:
-        log.error('No `copyDestinations` defined in the config!')
-        return ''
-
-    # static_copy_results = lift.update_static_for(pallets, copy_destinations, True)
-
-    elapsed_time = seat.format_time(clock() - start_seconds)
-    report_object = lift.create_report_object(pallets, elapsed_time, '', git_errors)
-    report = _format_dictionary(report_object)
-    log.info('%s', report)
-
-    return report
 
 
 def scorched_earth():

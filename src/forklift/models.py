@@ -42,16 +42,9 @@ class Pallet(object):
         self._crates = []
         #: the status of the pallet (successful: Bool, message: string)
         self.success = (True, None)
-        self.static_success = (True, None)
         #: a list databases or folders that you want forklift to copy to `destinationDestinations`
         #: after a successful process & ship
         self.copy_data = []
-        #: a list of databases or folders that are static and do not participate in crates
-        #: When `forklift lift` is run, it checks for the existence of this data in config.copyDestinations and
-        #: copies the data there if it does not already exists.
-        #: When `forklift update_static <pallet>` is run it copies/overwrites the data in
-        #: copyDestinations (while stopping services in `arcgis_services`).
-        self.static_data = []
         #: a list of tuples describing arcgis server services that should be shut down before copying data in `copy_data`
         #: the format of the tuple is two strings: `('<Folder>/<ServiceName>', '<ServiceType>')`
         #: for example: `[('PoliticalDistricts', 'MapServer'), ('DEQEnviro/Toolbox', 'GPServer')]`
@@ -209,7 +202,6 @@ class Pallet(object):
             'success': self.success[0] and self.are_crates_valid(),
             'message': self.success[1] or '',
             'crates': [crate.get_report() for crate in self._crates if crate.get_report() is not None],
-            'statics': self.static_success,
             'total_processing_time': seat.format_time(self.total_processing_time)
         }
 

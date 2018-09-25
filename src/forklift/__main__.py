@@ -15,7 +15,6 @@ Usage:
     forklift list-pallets
     forklift scorched-earth
     forklift speedtest
-    forklift update-static <file-path>
 
 Arguments:
     repo            The name of a GitHub repository in <owner>/<name> format.
@@ -40,7 +39,6 @@ Examples:
     forklift scorched-earth                                 WARNING!!! Deletes all data in `config.stagingDestination` as well as the
                                                             `hashes.gdb` & `scratch.gdb` file geodatabases.
     forklift speedtest                                      Test the speed on a predefined pallet.
-    forklift update-static path/to/pallet_file.py           Updates the static data defined in the specified pallet.
 '''
 
 import faulthandler
@@ -122,8 +120,6 @@ def main():
         cli.scorched_earth()
     elif args['speedtest']:
         cli.speedtest(speedtest)
-    elif args['update-static']:
-        cli.update_static(args['<file-path>'])
 
     shutdown()
 

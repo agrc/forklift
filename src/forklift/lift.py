@@ -170,9 +170,8 @@ def dropoff_data(specific_pallets, all_pallets, dropoff_location):
         return ''
 
     #: data_source eg: C:\forklift\data\hashed\boundaries_utm.gdb
-    destination_and_pallet, static_and_pallet = _get_locations_for_dropoff(filtered_specific_pallets, all_pallets)
+    destination_and_pallet = _get_locations_for_dropoff(filtered_specific_pallets, all_pallets)
     _move_to_dropoff(destination_and_pallet, dropoff_location)
-    _move_to_dropoff(static_and_pallet, dropoff_location, static=True)
 
 
 def gift_wrap(location):
@@ -184,11 +183,10 @@ def gift_wrap(location):
     [arcpy.management.Compact(workspace) for workspace in workspaces]
 
 
-def _move_to_dropoff(destination_and_pallet, dropoff_location, static=False):
+def _move_to_dropoff(destination_and_pallet, dropoff_location):
     '''
     destination_and_pallet: string, pallet[]
-    dropoff_location: string
-    static: boolean'''
+    dropoff_location: string'''
     for data_source in destination_and_pallet:
         gdb_name = path.basename(data_source)
         log.info('copying {} to {}...'.format(data_source, path.join(dropoff_location, gdb_name)))
@@ -200,11 +198,6 @@ def _move_to_dropoff(destination_and_pallet, dropoff_location, static=False):
         except Exception as e:
             if data_source.lower() in destination_and_pallet:
                 for pallet in destination_and_pallet[data_source.lower()]:
-                    if static:
-                        pallet.static_success = (False, str(e))
-
-                        continue
-
                     pallet.success = (False, str(e))
 
             log.error('there was an error copying %s to %s', data_source, path.join(dropoff_location, gdb_name), exc_info=True)
@@ -382,14 +375,9 @@ def _get_locations_for_dropoff(specific_pallets, all_pallets):
         return path.normpath(workspace_path.lower())
 
     destination_to_pallet = {}
-    static_to_pallet = {}
 
     for pallet in set(specific_pallets + all_pallets):
         for crate in pallet.get_crates():
-            normal_paths = [normalize_workspace(p) for p in pallet.static_data]
-            for p in normal_paths:
-                static_to_pallet.setdefault(p, []).append(pallet)
-
             if crate.result[0] in [Crate.UPDATED, Crate.CREATED, Crate.UPDATED_OR_CREATED_WITH_WARNINGS]:
                 normal_paths = [normalize_workspace(p) for p in pallet.copy_data]
                 for p in normal_paths:
@@ -397,4 +385,4 @@ def _get_locations_for_dropoff(specific_pallets, all_pallets):
 
                 break
 
-    return destination_to_pallet, static_to_pallet
+    return destination_to_pallet

@@ -284,7 +284,6 @@ class TestLift(unittest.TestCase):
 
     def test_get_lift_status(self):
         git_errors = ['a', 'b']
-        copy_results = ['c', 'd']
         p1 = Pallet()
         p1.success = (False, '')
 
@@ -296,7 +295,6 @@ class TestLift(unittest.TestCase):
         self.assertEqual(report['total_pallets'], 3)
         self.assertEqual(report['num_success_pallets'], 2)
         self.assertEqual(report['git_errors'], git_errors)
-        self.assertEqual(report['copy_results'], copy_results)
 
     def test_hydrate_data_structures_with_empty_is_ok(self):
         pallets = [Pallet(), Pallet()]

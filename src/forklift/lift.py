@@ -211,8 +211,7 @@ def get_lift_status(pallets, elapsed_time, git_errors):
             'num_success_pallets': len([p for p in reports if p['success']]),
             'git_errors': git_errors,
             'pallets': reports,
-            'total_time': elapsed_time,
-            'copy_results': copy_results}
+            'total_time': elapsed_time}
 
 
 def _copy_with_overwrite(source, destination):

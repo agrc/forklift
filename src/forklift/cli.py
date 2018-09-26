@@ -426,9 +426,6 @@ def _generate_console_report(pallet_reports):
         pallet_reports['num_success_pallets'], len(pallet_reports['pallets']), Fore.RESET, linesep, Fore.GREEN,
         Fore.CYAN, pallet_reports['total_time'])
 
-    if pallet_reports['copy_results'] not in [None, '']:
-        report_str += '{}{}{}{}'.format(Fore.RED, pallet_reports['copy_results'], Fore.RESET, linesep)
-
     if len(pallet_reports['git_errors']) > 0:
         for git_error in pallet_reports['git_errors']:
             report_str += '{}{}{}'.format(Fore.RED, git_error, linesep)

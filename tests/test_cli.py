@@ -305,7 +305,6 @@ class TestTicketing(unittest.TestCase):
             'git_errors': ['a git error'],
             'pallets': [success, fail],
             'total_time': '5 minutes',
-            'copy_results': 'copy error'
         }
 
         print(cli._generate_console_report(report))
@@ -337,9 +336,7 @@ class TestTicketing(unittest.TestCase):
             'num_success_pallets': 1,
             'git_errors': ['a git error'],
             'pallets': [success, fail],
-            'total_time': '5 minutes',
-            'copy_results': 'copy error'
-        }
+            'total_time': '5 minutes'        }
 
         cli._generate_packing_slip(report, test_data_folder)
 

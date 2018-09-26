@@ -2,7 +2,6 @@
     "hostname": "SomeMachineName",
     "num_success_pallets": 3,
     "total_pallets": 3,
-    "copy_results": "",
     "total_time": "4.5 hours",
     "git_errors": [],
     "pallets": [

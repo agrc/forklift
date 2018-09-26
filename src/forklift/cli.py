@@ -9,6 +9,7 @@ A module that contains the implementation of the cli commands
 import logging
 import sys
 from imp import load_source
+from json import dump
 from os import environ, linesep, listdir, walk
 from os.path import (abspath, basename, dirname, exists, join, realpath,
                      splitext)
@@ -121,6 +122,7 @@ def start_lift(file_path=None, pallet_arg=None, skip_git=False):
     elapsed_time = seat.format_time(clock() - start_seconds)
     report_object = lift.create_report_object(pallets_to_lift, elapsed_time, copy_results, git_errors)
 
+    _create_ticket(report_object, config.get_config_prop('dropoffLocation'))
     # _send_report_email(report_object)
 
     log.info('Finished in {}.'.format(elapsed_time))
@@ -276,6 +278,16 @@ def _sort_pallets(file_path, pallet_arg):
     sorted_pallets.sort(key=lambda p: p.__class__.__name__)
 
     return (sorted_pallets, all_pallets)
+
+
+def _create_ticket(status, location):
+    status = status['pallets']
+
+    if not exists(location):
+        return
+
+    with open(join(location, 'ticket.json'), 'w', encoding='utf-8') as ticket:
+        dump(status, ticket, indent=2)
 
 
 def _send_report_email(report_object):

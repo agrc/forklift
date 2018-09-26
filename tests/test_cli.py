@@ -11,7 +11,7 @@ from json import loads
 from os import makedirs, remove
 from os.path import abspath, dirname, exists, join
 
-from mock import Mock, patch
+from mock import Mock, mock_open, patch
 
 from forklift import cli, config, core
 from forklift.models import Crate
@@ -276,10 +276,10 @@ class TestGitUpdate(unittest.TestCase):
         self.assertEqual(len(results), 0)
 
 
-class TestReport(unittest.TestCase):
+class TestTicketing(unittest.TestCase):
 
-    def test_format_dictionary(self):
-        #: run with --nocapture and look at tox console output
+    def test_format_ticket_for_report(self):
+        #: run with --nocapture and look at console output
         good_crate = {'name': 'Good-Crate', 'result': Crate.CREATED, 'crate_message': None}
         bad_crate = {'name': 'Bad-Crate', 'result': Crate.UNHANDLED_EXCEPTION, 'crate_message': 'This thing blew up.', 'message_level': 'error'}
         warn_crate = {'name': 'Warn-Crate', 'result': Crate.WARNING, 'crate_message': 'This thing almost blew up.', 'message_level': 'warning'}
@@ -309,6 +309,42 @@ class TestReport(unittest.TestCase):
         }
 
         print(cli._format_dictionary(report))
+
+    @patch('forklift.cli.dump')
+    @patch('builtins.open', mock_open(read_data='1'))
+    def test_create_ticket_file(self, dump):
+        good_crate = {'name': 'Good-Crate', 'result': Crate.CREATED, 'crate_message': None}
+        bad_crate = {'name': 'Bad-Crate', 'result': Crate.UNHANDLED_EXCEPTION, 'crate_message': 'This thing blew up.', 'message_level': 'error'}
+        warn_crate = {'name': 'Warn-Crate', 'result': Crate.WARNING, 'crate_message': 'This thing almost blew up.', 'message_level': 'warning'}
+
+        success = {
+            'name': 'Successful Pallet',
+            'success': True,
+            'message': None,
+            'crates': [good_crate, good_crate, warn_crate],
+            'total_processing_time': '1 hr'
+        }
+        fail = {
+            'name': 'Fail Pallet',
+            'success': False,
+            'message': 'What Happened?!',
+            'crates': [bad_crate, good_crate],
+            'total_processing_time': '2 hrs'
+        }
+
+        report = {
+            'total_pallets': 2,
+            'num_success_pallets': 1,
+            'git_errors': ['a git error'],
+            'pallets': [success, fail],
+            'total_time': '5 minutes',
+            'copy_results': 'copy error'
+        }
+
+        cli._create_ticket(report, test_data_folder)
+
+        open.assert_called_with(join(test_data_folder, 'ticket.json'), 'w', encoding='utf-8')
+        dump.assert_called_once()
 
 
 class TestScorchedEarth(unittest.TestCase):

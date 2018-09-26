@@ -12,6 +12,7 @@ Usage:
     forklift garage open
     forklift git-update
     forklift lift [<file-path>] [--pallet-arg <arg>] [--verbose] [--skip-emails|--send-emails]
+    forklift ship [--verbose] [--pallet-arg <arg>] [--skip-emails|--send-emails]
     forklift list-pallets
     forklift scorched-earth
     forklift speedtest
@@ -35,6 +36,7 @@ Examples:
     forklift lift --send-emails                             Force sending emails. Overrides `sendEmails` config as True.
     forklift lift path/to/pallet_file.py                    Run a specific pallet.
     forklift lift path/to/pallet_file.py --pallet-arg arg   Run a specific pallet with "arg" as an initialization parameter.
+    forklift ship                                           Moves data from the drop off location to the ship to location.
     forklift list-pallets                                   Outputs the list of pallets from the config.
     forklift scorched-earth                                 WARNING!!! Deletes all data in `config.stagingDestination` as well as the
                                                             `hashes.gdb` & `scratch.gdb` file geodatabases.
@@ -108,6 +110,11 @@ def main():
                 cli.start_lift(args['<file-path>'])
         else:
             cli.start_lift()
+    elif args['ship']:
+        if args['--pallet-arg']:
+            cli.ship_data(args['<arg>'])
+        else:
+            cli.ship_data()
     elif args['list-pallets']:
         pallets = cli.list_pallets()
 

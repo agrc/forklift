@@ -105,11 +105,11 @@ def main():
     elif args['lift']:
         if args['<file-path>']:
             if args['--pallet-arg']:
-                cli.start_lift(args['<file-path>'], args['<arg>'])
+                cli.lift_pallets(args['<file-path>'], args['<arg>'])
             else:
-                cli.start_lift(args['<file-path>'])
+                cli.lift_pallets(args['<file-path>'])
         else:
-            cli.start_lift()
+            cli.lift_pallets()
     elif args['ship']:
         if args['--pallet-arg']:
             cli.ship_data(args['<arg>'])

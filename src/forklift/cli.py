@@ -32,6 +32,7 @@ from .models import Pallet
 log = logging.getLogger('forklift')
 template = join(abspath(dirname(__file__)), 'report_template.html')
 speedtest_destination = join(dirname(realpath(__file__)), '..', '..', 'speedtest', 'data')
+packing_slip_file = 'packing-slip.json'
 colorama_init()
 
 pallet_file_regex = compile(r'pallet.*\.py$')
@@ -288,8 +289,28 @@ def _generate_packing_slip(status, location):
     if not exists(location):
         return
 
-    with open(join(location, 'ticket.json'), 'w', encoding='utf-8') as ticket:
-        dump(status, ticket, indent=2)
+    with open(join(location, packing_slip_file), 'w', encoding='utf-8') as slip:
+        dump(status, slip, indent=2)
+
+
+def _process_packing_slip(packing_slip=None):
+    if packing_slip is None:
+        location = join(config.get_config_prop('dropoffLocation'), packing_slip_file)
+
+        with open(location, 'r', encoding='utf-8') as slip:
+            packing_slip = load(slip)
+
+    pallets = []
+    for item in packing_slip:
+        if not item['success']:
+            continue
+
+        pallet = _build_pallets(item['name'])
+        pallet.set_state_from_packing_slip(item['crates'])
+
+        pallets.append(pallet)
+
+    return pallets
 
 
 def _send_report_email(report_object):

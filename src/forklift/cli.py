@@ -91,7 +91,7 @@ def start_lift(file_path=None, pallet_arg=None, skip_git=False):
     start_seconds = clock()
 
     log.debug('building pallets')
-    pallets_to_lift, all_pallets = _sort_pallets(file_path, pallet_arg)
+    pallets_to_lift, all_pallets = _build_pallets(file_path, pallet_arg)
 
     log.debug('processing checklist')
     lift.process_checklist(config)
@@ -163,7 +163,7 @@ def ship_data(pallet_arg=None):
         sleep(300)
 
     #: get affected pallets
-    all_pallets = _sort_pallets(list_pallets(), pallet_arg)
+    all_pallets = _build_pallets(list_pallets(), pallet_arg)
     affected_pallets = []
 
     for pallet in all_pallets:
@@ -247,7 +247,7 @@ def scorched_earth():
             rmtree(folder)
 
 
-def _sort_pallets(file_path, pallet_arg):
+def _build_pallets(file_path, pallet_arg):
     if file_path is not None:
         pallet_infos = set(_get_pallets_in_file(file_path) + list_pallets())
     else:

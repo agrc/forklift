@@ -28,6 +28,7 @@ class LightSwitch(object):
         self.token = None
         self.timeout = 120
 
+        self.server = server
         self.username = server['username']
         self.password = server['password']
 

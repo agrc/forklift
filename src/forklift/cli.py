@@ -9,12 +9,12 @@ A module that contains the implementation of the cli commands
 import logging
 import sys
 from imp import load_source
-from os import environ, linesep, walk
+from os import environ, linesep, listdir, walk
 from os.path import (abspath, basename, dirname, exists, join, realpath,
                      splitext)
 from re import compile
 from shutil import rmtree
-from time import clock
+from time import clock, sleep
 
 import pystache
 from colorama import Fore
@@ -24,6 +24,7 @@ from multiprocess import Pool
 from requests import get
 
 from . import config, core, lift, seat
+from .arcgis import LightSwitch
 from .messaging import send_email
 from .models import Pallet
 
@@ -128,6 +129,57 @@ def start_lift(file_path=None, pallet_arg=None, skip_git=False):
     log.info('%s', report)
 
     return report
+
+
+def ship_data(pallet_arg=None):
+    #: look for servers in config
+    servers = config.get_config_prop('servers')
+
+    #: if none return
+    if servers is None or len(servers) == 0:
+        servers = []
+
+    #: look for drop off location
+    pickup_location = config.get_config_prop('dropoffLocation')
+
+    #: return if no data
+    files_and_folders = set(listdir(pickup_location))
+    if not exists(pickup_location) or len(files_and_folders) == 0:
+        pass
+
+    switches = [LightSwitch(server) for server in servers]
+
+    #: for each server
+    for switch in switches:
+        #: stop server
+        services = switch.ensure('stop')
+        #: copy data
+        lift.copy_data()
+        #: start server
+        switch.ensure('start', services)
+        #: wait period (failover logic)
+        sleep(300)
+
+    #: get affected pallets
+    all_pallets = _sort_pallets(list_pallets(), pallet_arg)
+    affected_pallets = []
+
+    for pallet in all_pallets:
+        names = set([basename(data) for data in pallet.copy_data])
+
+        if len(names & files_and_folders) == 0:
+            continue
+
+        affected_pallets.append(pallet)
+
+    ticket = {}
+    #: punch ticket
+    [pallet.punch_ticket(ticket) for pallet in affected_pallets]
+    #: run pallet lifecycle
+    #: post copy process
+    #: ship
+
+    #: send report?
 
 
 def speedtest(pallet_location):

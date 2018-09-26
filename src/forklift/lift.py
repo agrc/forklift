@@ -167,7 +167,7 @@ def dropoff_data(specific_pallets, all_pallets, dropoff_location):
 
     #: no pallets with data updates. we are done here
     if len(filtered_specific_pallets) == 0:
-        return ''
+        return
 
     #: data_source eg: C:\forklift\data\hashed\boundaries_utm.gdb
     destination_and_pallet = _get_locations_for_dropoff(filtered_specific_pallets, all_pallets)
@@ -203,7 +203,7 @@ def _move_to_dropoff(destination_and_pallet, dropoff_location):
             log.error('there was an error copying %s to %s', data_source, path.join(dropoff_location, gdb_name), exc_info=True)
 
 
-def create_report_object(pallets, elapsed_time, copy_results, git_errors):
+def get_lift_status(pallets, elapsed_time, git_errors):
     reports = [pallet.get_report() for pallet in pallets]
 
     return {'hostname': socket.gethostname(),

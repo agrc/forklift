@@ -282,7 +282,7 @@ class TestLift(unittest.TestCase):
 
         cleanup()
 
-    def test_create_report_object(self):
+    def test_get_lift_status(self):
         git_errors = ['a', 'b']
         copy_results = ['c', 'd']
         p1 = Pallet()
@@ -291,7 +291,7 @@ class TestLift(unittest.TestCase):
         p2 = Pallet()
         p3 = Pallet()
 
-        report = lift.create_report_object([p1, p2, p3], 10, copy_results, git_errors)
+        report = lift.get_lift_status([p1, p2, p3], 10, git_errors)
 
         self.assertEqual(report['total_pallets'], 3)
         self.assertEqual(report['num_success_pallets'], 2)

@@ -308,11 +308,11 @@ class TestTicketing(unittest.TestCase):
             'copy_results': 'copy error'
         }
 
-        print(cli._format_dictionary(report))
+        print(cli._generate_console_report(report))
 
     @patch('forklift.cli.dump')
     @patch('builtins.open', mock_open(read_data='1'))
-    def test_create_ticket_file(self, dump):
+    def test_generate_packing_slip_file(self, dump):
         good_crate = {'name': 'Good-Crate', 'result': Crate.CREATED, 'crate_message': None}
         bad_crate = {'name': 'Bad-Crate', 'result': Crate.UNHANDLED_EXCEPTION, 'crate_message': 'This thing blew up.', 'message_level': 'error'}
         warn_crate = {'name': 'Warn-Crate', 'result': Crate.WARNING, 'crate_message': 'This thing almost blew up.', 'message_level': 'warning'}
@@ -341,7 +341,7 @@ class TestTicketing(unittest.TestCase):
             'copy_results': 'copy error'
         }
 
-        cli._create_ticket(report, test_data_folder)
+        cli._generate_packing_slip(report, test_data_folder)
 
         open.assert_called_with(join(test_data_folder, 'ticket.json'), 'w', encoding='utf-8')
         dump.assert_called_once()

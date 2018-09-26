@@ -130,6 +130,69 @@ def start_lift(file_path=None, pallet_arg=None, skip_git=False):
     return report
 
 
+def speedtest(pallet_location):
+    print(('{0}{1}Setting up speed test...{0}'.format(Fore.RESET, Fore.MAGENTA)))
+
+    #: remove logging
+    log.handlers = [logging.NullHandler()]
+
+    #: spoof garage & scratch location so there is no caching
+    core.garage = speedtest_destination
+    core.scratch_gdb_path = join(core.garage, core._scratch_gdb)
+
+    #: delete destination and other artifacts form prior runs
+    import arcpy
+    if arcpy.Exists(join(speedtest_destination, 'DestinationData.gdb')):
+        arcpy.Delete_management(join(speedtest_destination, 'DestinationData.gdb'))
+        arcpy.CreateFileGDB_management(speedtest_destination, 'DestinationData.gdb')
+    else:
+        arcpy.CreateFileGDB_management(speedtest_destination, 'DestinationData.gdb')
+
+    if arcpy.Exists(join(speedtest_destination, 'ChangeSourceData.gdb')):
+        arcpy.Delete_management(join(speedtest_destination, 'ChangeSourceData.gdb'))
+
+    arcpy.Copy_management(join(speedtest_destination, 'SourceData.gdb'),
+                          join(speedtest_destination, 'ChangeSourceData.gdb'))
+    _prep_change_data(join(speedtest_destination, 'ChangeSourceData.gdb', 'AddressPoints'))
+
+    if arcpy.Exists(core.scratch_gdb_path):
+        arcpy.Delete_management(core.scratch_gdb_path)
+
+    print(('{0}{1}Tests ready starting dry run...{0}'.format(Fore.RESET, Fore.MAGENTA)))
+
+    start_seconds = clock()
+    dry_report = start_lift(pallet_location, skip_git=True)
+    dry_run = seat.format_time(clock() - start_seconds)
+
+    print(('{0}{1}Changing data...{0}'.format(Fore.RESET, Fore.MAGENTA)))
+    _change_data(join(speedtest_destination, 'ChangeSourceData.gdb', 'AddressPoints'))
+
+    print(('{0}{1}Repeating test...{0}'.format(Fore.RESET, Fore.MAGENTA)))
+    start_seconds = clock()
+    repeat_report = start_lift(pallet_location, skip_git=True)
+    repeat = seat.format_time(clock() - start_seconds)
+
+    #: clean up so git state is unchanged
+    if arcpy.Exists(join(speedtest_destination, 'DestinationData.gdb')):
+        arcpy.Delete_management(join(speedtest_destination, 'DestinationData.gdb'))
+    if arcpy.Exists(join(speedtest_destination, 'ChangeSourceData.gdb')):
+        arcpy.Delete_management(join(speedtest_destination, 'ChangeSourceData.gdb'))
+    if arcpy.Exists(core.scratch_gdb_path):
+        arcpy.Delete_management(core.scratch_gdb_path)
+
+    print(('{1}Dry Run Output{0}{2}{3}'.format(Fore.RESET, Fore.CYAN, linesep, dry_report)))
+    print(('{1}Repeat Run Output{0}{2}{3}'.format(Fore.RESET, Fore.CYAN, linesep, repeat_report)))
+    print(('{3}{0}{1}Speed Test Results{3}{0}{2}Dry Run:{0} {4}{3}{2}Repeat:{0} {5}'.format(Fore.RESET, Fore.GREEN, Fore.CYAN, linesep, dry_run, repeat)))
+
+
+def scorched_earth():
+    hash_location = config.get_config_prop('hashLocation')
+    for folder in [hash_location, core.scratch_gdb_path]:
+        if exists(folder):
+            log.info('deleting: %s', folder)
+            rmtree(folder)
+
+
 def _sort_pallets(file_path, pallet_arg):
     if file_path is not None:
         pallet_infos = set(_get_pallets_in_file(file_path) + list_pallets())
@@ -356,66 +419,3 @@ def _prep_change_data(data_path):
         for row in update_cursor:
             row[1] = row[0]
             update_cursor.updateRow(row)
-
-
-def speedtest(pallet_location):
-    print(('{0}{1}Setting up speed test...{0}'.format(Fore.RESET, Fore.MAGENTA)))
-
-    #: remove logging
-    log.handlers = [logging.NullHandler()]
-
-    #: spoof garage & scratch location so there is no caching
-    core.garage = speedtest_destination
-    core.scratch_gdb_path = join(core.garage, core._scratch_gdb)
-
-    #: delete destination and other artifacts form prior runs
-    import arcpy
-    if arcpy.Exists(join(speedtest_destination, 'DestinationData.gdb')):
-        arcpy.Delete_management(join(speedtest_destination, 'DestinationData.gdb'))
-        arcpy.CreateFileGDB_management(speedtest_destination, 'DestinationData.gdb')
-    else:
-        arcpy.CreateFileGDB_management(speedtest_destination, 'DestinationData.gdb')
-
-    if arcpy.Exists(join(speedtest_destination, 'ChangeSourceData.gdb')):
-        arcpy.Delete_management(join(speedtest_destination, 'ChangeSourceData.gdb'))
-
-    arcpy.Copy_management(join(speedtest_destination, 'SourceData.gdb'),
-                          join(speedtest_destination, 'ChangeSourceData.gdb'))
-    _prep_change_data(join(speedtest_destination, 'ChangeSourceData.gdb', 'AddressPoints'))
-
-    if arcpy.Exists(core.scratch_gdb_path):
-        arcpy.Delete_management(core.scratch_gdb_path)
-
-    print(('{0}{1}Tests ready starting dry run...{0}'.format(Fore.RESET, Fore.MAGENTA)))
-
-    start_seconds = clock()
-    dry_report = start_lift(pallet_location, skip_git=True)
-    dry_run = seat.format_time(clock() - start_seconds)
-
-    print(('{0}{1}Changing data...{0}'.format(Fore.RESET, Fore.MAGENTA)))
-    _change_data(join(speedtest_destination, 'ChangeSourceData.gdb', 'AddressPoints'))
-
-    print(('{0}{1}Repeating test...{0}'.format(Fore.RESET, Fore.MAGENTA)))
-    start_seconds = clock()
-    repeat_report = start_lift(pallet_location, skip_git=True)
-    repeat = seat.format_time(clock() - start_seconds)
-
-    #: clean up so git state is unchanged
-    if arcpy.Exists(join(speedtest_destination, 'DestinationData.gdb')):
-        arcpy.Delete_management(join(speedtest_destination, 'DestinationData.gdb'))
-    if arcpy.Exists(join(speedtest_destination, 'ChangeSourceData.gdb')):
-        arcpy.Delete_management(join(speedtest_destination, 'ChangeSourceData.gdb'))
-    if arcpy.Exists(core.scratch_gdb_path):
-        arcpy.Delete_management(core.scratch_gdb_path)
-
-    print(('{1}Dry Run Output{0}{2}{3}'.format(Fore.RESET, Fore.CYAN, linesep, dry_report)))
-    print(('{1}Repeat Run Output{0}{2}{3}'.format(Fore.RESET, Fore.CYAN, linesep, repeat_report)))
-    print(('{3}{0}{1}Speed Test Results{3}{0}{2}Dry Run:{0} {4}{3}{2}Repeat:{0} {5}'.format(Fore.RESET, Fore.GREEN, Fore.CYAN, linesep, dry_run, repeat)))
-
-
-def scorched_earth():
-    hash_location = config.get_config_prop('hashLocation')
-    for folder in [hash_location, core.scratch_gdb_path]:
-        if exists(folder):
-            log.info('deleting: %s', folder)
-            rmtree(folder)

@@ -80,7 +80,7 @@ def list_repos():
     return validate_results
 
 
-def start_lift(file_path=None, pallet_arg=None, skip_git=False):
+def lift_pallets(file_path=None, pallet_arg=None, skip_git=False):
     log.info('starting forklift')
 
     if not skip_git:
@@ -215,7 +215,7 @@ def speedtest(pallet_location):
     print(('{0}{1}Tests ready starting dry run...{0}'.format(Fore.RESET, Fore.MAGENTA)))
 
     start_seconds = clock()
-    dry_report = start_lift(pallet_location, skip_git=True)
+    dry_report = lift_pallets(pallet_location, skip_git=True)
     dry_run = seat.format_time(clock() - start_seconds)
 
     print(('{0}{1}Changing data...{0}'.format(Fore.RESET, Fore.MAGENTA)))
@@ -223,7 +223,7 @@ def speedtest(pallet_location):
 
     print(('{0}{1}Repeating test...{0}'.format(Fore.RESET, Fore.MAGENTA)))
     start_seconds = clock()
-    repeat_report = start_lift(pallet_location, skip_git=True)
+    repeat_report = lift_pallets(pallet_location, skip_git=True)
     repeat = seat.format_time(clock() - start_seconds)
 
     #: clean up so git state is unchanged

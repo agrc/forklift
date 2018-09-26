@@ -199,40 +199,40 @@ class TestCliStartLift(unittest.TestCase):
         if exists(config_location):
             remove(config_location)
 
-    def test_start_lift_with_path(self, process_pallets, process_crates_for, git_update):
-        cli.start_lift(join(test_pallets_folder, 'multiple_pallets.py'))
+    def test_lift_pallets_with_path(self, process_pallets, process_crates_for, git_update):
+        cli.lift_pallets(join(test_pallets_folder, 'multiple_pallets.py'))
 
         self.assertEqual(len(process_crates_for.call_args[0][0]), 2)
         self.assertEqual(len(process_pallets.call_args[0][0]), 2)
 
-    def test_start_lift_with_out_path(self, process_pallets, process_crates_for, git_update):
+    def test_lift_pallets_with_out_path(self, process_pallets, process_crates_for, git_update):
         config.set_config_prop('warehouse', test_pallets_folder, override=True)
-        cli.start_lift()
+        cli.lift_pallets()
 
         self.assertEqual(len(process_crates_for.call_args[0][0]), 4)
         self.assertEqual(len(process_pallets.call_args[0][0]), 4)
 
-    def test_start_lift_pallet_arg(self, process_pallets, process_crates_for, git_update):
-        cli.start_lift(join(test_data_folder, 'pallet_argument.py'), 'test')
+    def test_lift_pallets_pallet_arg(self, process_pallets, process_crates_for, git_update):
+        cli.lift_pallets(join(test_data_folder, 'pallet_argument.py'), 'test')
 
         pallet = process_crates_for.call_args[0][0][0]
         self.assertEqual(pallet.arg, 'test')
 
-        cli.start_lift(join(test_data_folder, 'pallet_argument.py'))
+        cli.lift_pallets(join(test_data_folder, 'pallet_argument.py'))
 
         pallet = process_crates_for.call_args[0][0][0]
         self.assertEqual(pallet.arg, None)
 
-    def test_start_lift_alphebetical_order(self, process_pallets, process_crates_for, git_update):
-        cli.start_lift(join(test_data_folder, 'alphabetize', 'pallet.py'))
+    def test_lift_pallets_alphebetical_order(self, process_pallets, process_crates_for, git_update):
+        cli.lift_pallets(join(test_data_folder, 'alphabetize', 'pallet.py'))
 
         order = [p.__class__.__name__ for p in process_crates_for.call_args[0][0]]
 
         self.assertEqual(order, ['Pallet1', 'Pallet2', 'Pallet3'])
 
     @patch('forklift.lift.prepare_packaging_for_pallets')
-    def test_start_lift_prepare_packaging(self, prepare_mock, process_pallets, process_crates_for, git_update):
-        cli.start_lift(join(test_data_folder, 'pallet_argument.py'))
+    def test_lift_pallets_prepare_packaging(self, prepare_mock, process_pallets, process_crates_for, git_update):
+        cli.lift_pallets(join(test_data_folder, 'pallet_argument.py'))
 
         prepare_mock.assert_called_once()
 

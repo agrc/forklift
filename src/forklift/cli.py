@@ -109,7 +109,9 @@ def lift_pallets(file_path=None, pallet_arg=None, skip_git=False):
     lift.process_pallets(pallets_to_lift)
     log.info('process_pallets time: %s', seat.format_time(clock() - start_process))
 
-    copy_results = lift.dropoff_data(pallets_to_lift, all_pallets, config.get_config_prop('dropoffLocation'))
+    start_process = clock()
+    lift.dropoff_data(pallets_to_lift, all_pallets, config.get_config_prop('dropoffLocation'))
+    log.info('dropoff_data time: %s', seat.format_time(clock() - start_process))
 
     start_process = clock()
     lift.gift_wrap(config.get_config_prop('dropoffLocation'))
@@ -120,14 +122,14 @@ def lift_pallets(file_path=None, pallet_arg=None, skip_git=False):
         log.debug('processing_times (in seconds) for %r: %s', pallet, pallet.processing_times)
 
     elapsed_time = seat.format_time(clock() - start_seconds)
-    report_object = lift.create_report_object(pallets_to_lift, elapsed_time, copy_results, git_errors)
+    status = lift.get_lift_status(pallets_to_lift, elapsed_time, git_errors)
 
-    _create_ticket(report_object, config.get_config_prop('dropoffLocation'))
-    # _send_report_email(report_object)
+    _generate_packing_slip(status, config.get_config_prop('dropoffLocation'))
+    # _send_report_email(status)
 
     log.info('Finished in {}.'.format(elapsed_time))
 
-    report = _format_dictionary(report_object)
+    report = _generate_console_report(status)
     log.info('%s', report)
 
     return report
@@ -280,7 +282,7 @@ def _build_pallets(file_path, pallet_arg):
     return (sorted_pallets, all_pallets)
 
 
-def _create_ticket(status, location):
+def _generate_packing_slip(status, location):
     status = status['pallets']
 
     if not exists(location):
@@ -419,7 +421,7 @@ def _get_pallets_in_file(file_path):
     return pallets
 
 
-def _format_dictionary(pallet_reports):
+def _generate_console_report(pallet_reports):
     report_str = '{3}{3}    {4}{0}{2} out of {5}{1}{2} pallets ran successfully in {6}.{3}'.format(
         pallet_reports['num_success_pallets'], len(pallet_reports['pallets']), Fore.RESET, linesep, Fore.GREEN,
         Fore.CYAN, pallet_reports['total_time'])

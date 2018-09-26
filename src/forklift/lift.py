@@ -377,6 +377,9 @@ def _get_locations_for_dropoff(specific_pallets, all_pallets):
     destination_to_pallet = {}
 
     for pallet in set(specific_pallets + all_pallets):
+        if not pallet.success[0]:
+            continue
+
         for crate in pallet.get_crates():
             if crate.result[0] in [Crate.UPDATED, Crate.CREATED, Crate.UPDATED_OR_CREATED_WITH_WARNINGS]:
                 normal_paths = [normalize_workspace(p) for p in pallet.copy_data]

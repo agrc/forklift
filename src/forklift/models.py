@@ -163,15 +163,11 @@ class Pallet(object):
         '''Returns True if any crates were updated. Returns False if there are no crates defined.
 
         returns: Boolean'''
-        has_updated = False
-
         for crate in self._crates:
-            if crate.result[0] in [Crate.INVALID_DATA, Crate.UNHANDLED_EXCEPTION]:
+            if not crate.was_updated():
                 return False
-            if not has_updated:
-                has_updated = crate.result[0] in [Crate.UPDATED, Crate.CREATED, Crate.UPDATED_OR_CREATED_WITH_WARNINGS]
 
-        return has_updated
+        return True
 
     def are_crates_valid(self):
         '''Returns True if there are not any schema changes or errors within the crates

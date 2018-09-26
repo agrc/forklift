@@ -9,7 +9,7 @@ A module that contains the implementation of the cli commands
 import logging
 import sys
 from imp import load_source
-from json import dump
+from json import dump, load
 from os import environ, linesep, listdir, walk
 from os.path import (abspath, basename, dirname, exists, join, realpath,
                      splitext)
@@ -120,17 +120,18 @@ def lift_pallets(file_path=None, pallet_arg=None, skip_git=False):
 
     #: log process times for each pallet
     for pallet in pallets_to_lift:
-        log.debug('processing_times (in seconds) for %r: %s', pallet, pallet.processing_times)
+        log.debug('processing times (in seconds) for %r: %s', pallet, pallet.processing_times)
 
     elapsed_time = seat.format_time(clock() - start_seconds)
     status = lift.get_lift_status(pallets_to_lift, elapsed_time, git_errors)
 
     _generate_packing_slip(status, config.get_config_prop('dropoffLocation'))
+
     # _send_report_email(status)
 
+    report = _generate_console_report(status)
     log.info('Finished in {}.'.format(elapsed_time))
 
-    report = _generate_console_report(status)
     log.info('%s', report)
 
     return report
@@ -140,49 +141,57 @@ def ship_data(pallet_arg=None):
     #: look for servers in config
     servers = config.get_config_prop('servers')
 
-    #: if none return
     if servers is None or len(servers) == 0:
+        log.info('no servers defined in config')
         servers = []
 
     #: look for drop off location
     pickup_location = config.get_config_prop('dropoffLocation')
 
-    #: return if no data
     files_and_folders = set(listdir(pickup_location))
     if not exists(pickup_location) or len(files_and_folders) == 0:
-        pass
+        log.warn('no data found or packing slip found in pickup location.. exiting')
 
-    switches = [LightSwitch(server) for server in servers]
+        return
 
-    #: for each server
-    for switch in switches:
-        #: stop server
-        services = switch.ensure('stop')
-        #: copy data
-        lift.copy_data()
-        #: start server
-        switch.ensure('start', services)
-        #: wait period (failover logic)
-        sleep(300)
+    missing_packing_slip = False
+    if packing_slip_file not in files_and_folders:
+        missing_packing_slip = True
+        log.info('no packing slip found in pickup location... copying data only')
+
+    ship_only = False
+    if missing_packing_slip is False and len(files_and_folders) == 1:
+        log.info('only packing slip found in pickup location... shipping pallets only')
+        ship_only = True
+
+    if not ship_only:
+        switches = [LightSwitch(server) for server in servers]
+
+        #: for each server
+        for switch in switches:
+            log.info('stopping (%s)', switch.server['machineName'])
+            #: stop server
+            services = switch.ensure('stop')
+            #: copy data
+            lift.copy_data()
+            #: start server
+            switch.ensure('start', services)
+            #: wait period (failover logic)
+            sleep(300)
+
+    if missing_packing_slip:
+        #: send report
+        return
 
     #: get affected pallets
-    all_pallets = _build_pallets(list_pallets(), pallet_arg)
-    affected_pallets = []
+    pallets_to_ship = _process_packing_slip()
 
-    for pallet in all_pallets:
-        names = set([basename(data) for data in pallet.copy_data])
-
-        if len(names & files_and_folders) == 0:
-            continue
-
-        affected_pallets.append(pallet)
-
-    ticket = {}
-    #: punch ticket
-    [pallet.punch_ticket(ticket) for pallet in affected_pallets]
-    #: run pallet lifecycle
-    #: post copy process
-    #: ship
+    for pallet in pallets_to_ship:
+        #: run pallet lifecycle
+        #: post copy process
+        pallet.post_copy_process()
+        #: ship
+        pallet.ship()
 
     #: send report?
 

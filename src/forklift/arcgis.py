@@ -17,26 +17,35 @@ log = logging.getLogger('forklift')
 class LightSwitch(object):
 
     def __init__(self, server):
-        if None in [server['username'], server['password'], server['machineName']]:
-            required_fields = 'Required information for connecting to ArcGIS Server do not exist. '
-            'Server will not be stopped or started. See README.md for more details.'
+        required_fields = 'Required information for connecting to ArcGIS Server do not exist. '
+        'Server will not be stopped or started. See README.md for more details.'
+
+        if len(server) != 2:
             log.warn(required_fields)
 
             raise Exception(required_fields)
+
+        self.server_label = server[0]
+        server = server[1]
+        self.server_qualified_name = server['machineName']
+
+        if None in [server['username'], server['password'], server['machineName']]:
+            log.warn(required_fields)
+
+            raise Exception(required_fields)
+
+        self.username = server['username']
+        self.password = server['password']
 
         self.token_expire_milliseconds = 0
         self.token = None
         self.timeout = 120
 
-        self.server = server
-        self.username = server['username']
-        self.password = server['password']
-
         base_url = '{}://{}:{}/arcgis/admin'.format(server['protocol'], server['machineName'], server['port'])
         self.token_url = '{}/generateToken'.format(base_url)
         self.switch_url = '{}/machines/{}/'.format(base_url, server['machineName'])
 
-    def ensure(self, what):
+    def ensure(self, what, services=None):
         '''ensures that affected_services are started or stopped with 5 attempts.
         what: string 'stop' or 'start'
         server: dictionary of server to stop
@@ -50,9 +59,9 @@ class LightSwitch(object):
             sleep(wait[tries])
             tries -= 1
 
-            status, message = self._fetch(self.switch_url, what)
+            status, message = self._fetch(self.switch_url + what)
 
-        return status, message
+        return None
 
     def _fetch(self, url):
         # check to make sure that token isn't expired

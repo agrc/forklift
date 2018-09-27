@@ -40,31 +40,32 @@ class TestConfigInit(unittest.TestCase):
 
         with open(path) as config:
             config_dict = loads(config.read())
-            self.assertEqual(config_dict, {
-                u'configuration': u'Production',
-                u'dropoffLocation': u'c:\\forklift\\data\\receiving',
-                u'email': {
-                    u'smtpServer': u'send.state.ut.us',
-                    u'smtpPort': 25,
-                    u'fromAddress': u'noreply@utah.gov'
-                },
-                u'hashLocation': u'c:\\forklift\\data\\hashed',
-                u'notify': [u'stdavis@utah.gov', u'sgourley@utah.gov'],
-                u'poolProcesses': 20,
-                u'repositories': [],
-                u'sendEmails': False,
-                u'servers': {
-                    u'options': {
-                        u'protocol': u'http',
-                        u'port': 6080
+            self.assertEqual(
+                config_dict, {
+                    u'configuration': u'Production',
+                    u'dropoffLocation': u'c:\\forklift\\data\\receiving',
+                    u'email': {
+                        u'smtpServer': u'send.state.ut.us',
+                        u'smtpPort': 25,
+                        u'fromAddress': u'noreply@utah.gov'
                     },
-                    u'primary': {
-                        u'machineName': u'machine.name.here'
-                    }
-                },
-                u'shipTo': [u'c:\\forklift\\data\\production'],
-                u"warehouse": u"c:\\scheduled\\warehouse",
-            })
+                    u'hashLocation': u'c:\\forklift\\data\\hashed',
+                    u'notify': [u'stdavis@utah.gov', u'sgourley@utah.gov'],
+                    u'poolProcesses': 20,
+                    u'repositories': [],
+                    u'sendEmails': False,
+                    u'servers': {
+                        u'options': {
+                            u'protocol': u'http',
+                            u'port': 6080
+                        },
+                        u'primary': {
+                            u'machineName': u'machine.name.here'
+                        }
+                    },
+                    u'shipTo': [u'c:\\forklift\\data\\production'],
+                    u"warehouse": u"c:\\scheduled\\warehouse",
+                })
 
     def test_init_returns_path_for_existing_config_file(self):
         self.assertEqual(cli.init(), cli.init())
@@ -192,7 +193,7 @@ class TestListPallets(unittest.TestCase):
 @patch('forklift.cli.git_update')
 @patch('forklift.lift.process_crates_for')
 @patch('forklift.lift.process_pallets')
-class TestCliStartLift(unittest.TestCase):
+class TestLiftPallets(unittest.TestCase):
 
     def setUp(self):
         if exists(config_location):
@@ -281,7 +282,7 @@ class TestGitUpdate(unittest.TestCase):
         self.assertEqual(len(results), 0)
 
 
-class TestTicketing(unittest.TestCase):
+class TestPackingSlip(unittest.TestCase):
 
     def test_format_ticket_for_report(self):
         #: run with --nocapture and look at console output
@@ -296,13 +297,7 @@ class TestTicketing(unittest.TestCase):
             'crates': [good_crate, good_crate, warn_crate],
             'total_processing_time': '1 hr'
         }
-        fail = {
-            'name': 'Fail Pallet',
-            'success': False,
-            'message': 'What Happened?!',
-            'crates': [bad_crate, good_crate],
-            'total_processing_time': '2 hrs'
-        }
+        fail = {'name': 'Fail Pallet', 'success': False, 'message': 'What Happened?!', 'crates': [bad_crate, good_crate], 'total_processing_time': '2 hrs'}
 
         report = {
             'total_pallets': 2,
@@ -328,20 +323,9 @@ class TestTicketing(unittest.TestCase):
             'crates': [good_crate, good_crate, warn_crate],
             'total_processing_time': '1 hr'
         }
-        fail = {
-            'name': 'Fail Pallet',
-            'success': False,
-            'message': 'What Happened?!',
-            'crates': [bad_crate, good_crate],
-            'total_processing_time': '2 hrs'
-        }
+        fail = {'name': 'Fail Pallet', 'success': False, 'message': 'What Happened?!', 'crates': [bad_crate, good_crate], 'total_processing_time': '2 hrs'}
 
-        report = {
-            'total_pallets': 2,
-            'num_success_pallets': 1,
-            'git_errors': ['a git error'],
-            'pallets': [success, fail],
-            'total_time': '5 minutes'}
+        report = {'total_pallets': 2, 'num_success_pallets': 1, 'git_errors': ['a git error'], 'pallets': [success, fail], 'total_time': '5 minutes'}
 
         cli._generate_packing_slip(report, test_data_folder)
 
@@ -363,3 +347,91 @@ class TestScorchedEarth(unittest.TestCase):
 
         self.assertFalse(exists(core.scratch_gdb_path))
         self.assertFalse(exists(test_folder))
+
+
+class TestShipData(unittest.TestCase):
+    sample_slip = '''[
+  {
+    "name": "c:\\Projects\\GitHub\\forklift\\samples\\TypicalPallet.py:TypicalPallet",
+    "success": true,
+    "message": "",
+    "crates": [
+      {
+        "name": "Counties",
+        "result": "Created table successfully.",
+        "crate_message": "",
+        "message_level": ""
+      }
+    ],
+    "total_processing_time": "4780 ms"
+  }
+]'''
+
+    @patch('forklift.cli.listdir', return_value=[])
+    def test_ship_exits_if_no_files_or_slip(self, listdir):
+        shipped = cli.ship_data()
+
+        self.assertFalse(shipped)
+
+    @patch('forklift.cli.exists', return_value=True)
+    @patch('forklift.cli._process_packing_slip')
+    @patch('forklift.config.get_config_prop')
+    @patch('forklift.lift.copy_data')
+    @patch('forklift.cli.listdir', return_value=[cli.packing_slip_file])
+    def test_ship_only_ships_if_only_slip_found(self, listdir, copy_data, config_prop, packing_slip, exists):
+        def mock_props(value):
+            if value == 'servers':
+                return [{
+                    'machineName': '0-host',
+                    'username': 'username',
+                    'password': 'password',
+                    'port': 0
+                }]
+
+            return 'whatever'
+
+        config_prop.side_effect = mock_props
+
+        shipped = cli.ship_data()
+
+        self.assertTrue(shipped)
+        copy_data.assert_not_called()
+        packing_slip.assert_called_once()
+
+    @patch('forklift.cli.exists', return_value=True)
+    @patch('forklift.cli._process_packing_slip')
+    @patch('forklift.lift.copy_data')
+    @patch('forklift.cli.listdir', return_value=[cli.packing_slip_file])
+    def test_post_process_if_success(self, listdir, copy_data, packing_slip, exists):
+        slip = {
+            'success': True,
+            'requires_processing': True
+        }
+        pallet = Mock(slip=slip)
+        pallet.ship.return_value = None
+        pallet.post_copy_process.return_value = None
+        packing_slip.return_value = [pallet]
+
+        cli.ship_data()
+
+        pallet.ship.assert_called_once()
+        pallet.post_copy_process.assert_called_once()
+
+    @patch('forklift.cli.exists', return_value=True)
+    @patch('forklift.cli._process_packing_slip')
+    @patch('forklift.lift.copy_data')
+    @patch('forklift.cli.listdir', return_value=[cli.packing_slip_file])
+    def test_post_process_if_not_success(self, listdir, copy_data, packing_slip, exists):
+        slip = {
+            'success': False,
+            'requires_processing': True
+        }
+        pallet = Mock(slip=slip)
+        pallet.ship.return_value = None
+        pallet.post_copy_process.return_value = None
+        packing_slip.return_value = [pallet]
+
+        cli.ship_data()
+
+        pallet.ship.assert_not_called()
+        pallet.post_copy_process.assert_not_called()

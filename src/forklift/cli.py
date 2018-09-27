@@ -152,7 +152,7 @@ def ship_data(pallet_arg=None):
     if not exists(pickup_location) or len(files_and_folders) == 0:
         log.warn('no data found or packing slip found in pickup location.. exiting')
 
-        return
+        return False
 
     missing_packing_slip = False
     if packing_slip_file not in files_and_folders:
@@ -165,19 +165,20 @@ def ship_data(pallet_arg=None):
         ship_only = True
 
     if not ship_only:
-        switches = [LightSwitch(server) for server in servers]
+        switches = [LightSwitch(server) for server in servers.items()]
 
         #: for each server
         for switch in switches:
-            log.info('stopping (%s)', switch.server['machineName'])
+            log.info('stopping (%s)', switch.server_label)
             #: stop server
             services = switch.ensure('stop')
             #: copy data
-            lift.copy_data()
+            lift.copy_data(config.get_config_prop('dropoffLocation'), config.get_config_prop('shipTo'), packing_slip_file, switch.server_qualified_name)
+            log.info('starting (%s)', switch.server_label)
             #: start server
             switch.ensure('start', services)
             #: wait period (failover logic)
-            sleep(300)
+            # sleep(300)
 
     if missing_packing_slip:
         #: send report
@@ -186,14 +187,27 @@ def ship_data(pallet_arg=None):
     #: get affected pallets
     pallets_to_ship = _process_packing_slip()
 
+    report = []
+
     for pallet in pallets_to_ship:
+        slip = pallet.slip
         #: run pallet lifecycle
         #: post copy process
-        pallet.post_copy_process()
-        #: ship
-        pallet.ship()
+        if pallet.slip['success'] and pallet.slip['requires_processing']:
+            log.info('post copy processing (%r)', pallet)
+            pallet.post_copy_process()
+            slip['post_copy_processed'] = True
+
+        if pallet.slip['success']:
+            log.info('shipping (%r)', pallet)
+            pallet.ship()
+            slip['shipped'] = True
+
+        report.append(slip)
 
     #: send report?
+    log.info('%r', report)
+    return report
 
 
 def speedtest(pallet_location):
@@ -217,8 +231,7 @@ def speedtest(pallet_location):
     if arcpy.Exists(join(speedtest_destination, 'ChangeSourceData.gdb')):
         arcpy.Delete_management(join(speedtest_destination, 'ChangeSourceData.gdb'))
 
-    arcpy.Copy_management(join(speedtest_destination, 'SourceData.gdb'),
-                          join(speedtest_destination, 'ChangeSourceData.gdb'))
+    arcpy.Copy_management(join(speedtest_destination, 'SourceData.gdb'), join(speedtest_destination, 'ChangeSourceData.gdb'))
     _prep_change_data(join(speedtest_destination, 'ChangeSourceData.gdb', 'AddressPoints'))
 
     if arcpy.Exists(core.scratch_gdb_path):
@@ -302,7 +315,7 @@ def _generate_packing_slip(status, location):
         dump(status, slip, indent=2)
 
 
-def _process_packing_slip(packing_slip=None):
+def _process_packing_slip(packing_slip=None, pallet_arg=None):
     if packing_slip is None:
         location = join(config.get_config_prop('dropoffLocation'), packing_slip_file)
 
@@ -314,10 +327,10 @@ def _process_packing_slip(packing_slip=None):
         if not item['success']:
             continue
 
-        pallet = _build_pallets(item['name'])
-        pallet.set_state_from_packing_slip(item['crates'])
+        sorted, all_pallets = _build_pallets(item['name'], pallet_arg)
+        all_pallets[0].add_packing_slip(item)
 
-        pallets.append(pallet)
+        pallets.append(all_pallets[0])
 
     return pallets
 
@@ -462,9 +475,9 @@ def _get_pallets_in_file(file_path):
 
 
 def _generate_console_report(pallet_reports):
-    report_str = '{3}{3}    {4}{0}{2} out of {5}{1}{2} pallets ran successfully in {6}.{3}'.format(
-        pallet_reports['num_success_pallets'], len(pallet_reports['pallets']), Fore.RESET, linesep, Fore.GREEN,
-        Fore.CYAN, pallet_reports['total_time'])
+    report_str = '{3}{3}    {4}{0}{2} out of {5}{1}{2} pallets ran successfully in {6}.{3}'.format(pallet_reports['num_success_pallets'],
+                                                                                                   len(pallet_reports['pallets']), Fore.RESET, linesep,
+                                                                                                   Fore.GREEN, Fore.CYAN, pallet_reports['total_time'])
 
     if len(pallet_reports['git_errors']) > 0:
         for git_error in pallet_reports['git_errors']:

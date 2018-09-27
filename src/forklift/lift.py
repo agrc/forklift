@@ -9,7 +9,7 @@ A module that contains methods to handle pallets
 import logging
 import shutil
 import socket
-from os import makedirs, path, remove, walk
+from os import listdir, makedirs, path, remove, walk
 from time import clock
 
 import arcpy
@@ -240,7 +240,7 @@ def _copy_with_overwrite(source, destination):
                 pass
 
 
-def copy_data(specific_pallets, all_pallets, config_copy_destinations):
+def copy_data(from_location, to_template, packing_slip_file, machine_name=None):
     '''
     specific_pallets: Pallet[]
     all_pallets: Pallet[]
@@ -248,79 +248,61 @@ def copy_data(specific_pallets, all_pallets, config_copy_destinations):
 
     Copies databases from either `copy_data` or `static_data` to `config_copy_destinations`.
     '''
-    #: we're lifting everything
-    if len(specific_pallets) == 0:
-        specific_pallets = all_pallets
+    report = []
+    data_being_moved = set(listdir(from_location)) - set([packing_slip_file])
 
-    #: filter out pallets whose data did not change
-    filtered_specific_pallets = []
-    for pallet in specific_pallets:
+    for source in data_being_moved:
+        source_path = path.join(from_location, source)
+        destination_path = path.join(to_template.format(machine_name), source)
+
+        log.info('copying {} to {}...'.format(source, destination_path))
+        start_seconds = clock()
         try:
-            if pallet.requires_processing() is True:
-                filtered_specific_pallets.append(pallet)
-        except Exception:
-            #: skip, we'll see the error in the report from process_pallets
-            pass
+            if path.exists(destination_path):
+                log.debug('%s exists moving', destination_path)
+                shutil.move(destination_path, destination_path + 'x')
 
-    #: no pallets to process. we are done here
-    if len(filtered_specific_pallets) == 0:
-        return ''
+            log.debug('copying source to destination')
+            if path.isfile(source_path):
+                shutil.copy(source_path, destination_path)
+            else:
+                shutil.copytree(source_path, destination_path, ignore=shutil.ignore_patterns('*.lock'))
 
-    services_affected, data_being_moved, destination_to_pallet = _hydrate_data_structures(filtered_specific_pallets, all_pallets)
+            temp_path = destination_path + 'x'
+            if path.exists(temp_path):
+                log.debug('removing temporary item: %s', temp_path)
+                if path.isfile(temp_path):
+                    remove(temp_path)
+                else:
+                    shutil.rmtree(temp_path)
 
-    #: compact before shutting down services to minimize downtime
-    for source in data_being_moved:
-        if arcpy.Describe(source).workspaceFactoryProgID.startswith('esriDataSourcesGDB.FileGDBWorkspaceFactory'):
-            log.info('compacting %s', source)
-            arcpy.Compact_management(source)
-
-    # results = _stop_services(servers)
-
-    for source in data_being_moved:
-        for destination in config_copy_destinations:
-            destination_workspace = path.join(destination, path.basename(source))
-
-            log.info('copying {} to {}...'.format(source, destination_workspace))
-            start_seconds = clock()
+            log.info('copy successful in %s', seat.format_time(clock() - start_seconds))
+        except Exception as e:
             try:
-                if path.exists(destination_workspace):
-                    log.debug('%s exists moving', destination_workspace)
-                    shutil.move(destination_workspace, destination_workspace + 'x')
+                #: There is still a lock?
+                #: The service probably wasn't shut down
+                #: if there was a problem and the temp gdb exists
+                #: since we couldn't delete it before we probably can't delete it now
+                #: so take what is in x and copy it over what it can in the original
+                #: that _should_ leave the gdb in a functioning state
+                temp_path = destination_path + 'x'
+                if path.exists(destination_path) and path.exists(temp_path):
+                    log.debug('cleaning up %s', destination_path)
+                    _copy_with_overwrite(temp_path, destination_path)
+                    if path.isfile(temp_path):
+                        remove(temp_path)
+                    else:
+                        shutil.rmtree(temp_path)
+            except Exception:
+                log.error('%s might be in a corrupted state', destination_path, exc_info=True)
+                report[destination_path] = 'might be in a corrupted state'
 
-                log.debug('copying source to destination')
-                shutil.copytree(source, destination_workspace, ignore=shutil.ignore_patterns('*.lock'))
-
-                _remove_hash_from_workspace(destination_workspace)
-
-                if path.exists(destination_workspace + 'x'):
-                    log.debug('removing temporary gdb: %s', destination_workspace + 'x')
-                    shutil.rmtree(destination_workspace + 'x')
-
-                log.info('copy successful in %s', seat.format_time(clock() - start_seconds))
-            except Exception as e:
-                try:
-                    #: There is still a lock?
-                    #: The service probably wasn't shut down
-                    #: if there was a problem and the temp gdb exists
-                    #: since we couldn't delete it before we probably can't delete it now
-                    #: so take what is in x and copy it over what it can in the original
-                    #: that _should_ leave the gdb in a functioning state
-                    if path.exists(destination_workspace) and path.exists(destination_workspace + 'x'):
-                        log.debug('cleaning up %s', destination_workspace)
-                        _copy_with_overwrite(destination_workspace + 'x', destination_workspace)
-                        shutil.rmtree(destination_workspace + 'x')
-                except Exception:
-                    log.error('%s might be in a corrupted state', destination_workspace, exc_info=True)
-
-                if source.lower() in destination_to_pallet:
-                    for pallet in destination_to_pallet[source.lower()]:
-                        pallet.success = (False, str(e))
-
-                log.error('there was an error copying %s to %s', source, destination_workspace, exc_info=True)
+            log.error('there was an error copying %s to %s', source, destination_path, exc_info=True)
+            report[destination_path] += 'there was an error copying {} to {}'.format(source, destination_path)
 
     # results += _start_services(services_affected)
 
-    # return results
+    return report
 
 
 def _remove_hash_from_workspace(workspace):

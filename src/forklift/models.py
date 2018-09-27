@@ -83,13 +83,13 @@ class Pallet(object):
         '''
         return NotImplemented
 
-    def ship(self):
-        '''Invoked whether the crates have updates or not.
+    def post_copy_process(self):
+        '''Invoked after lift.copy_data has been called only if any crates have data updates.
         '''
         return NotImplemented
 
-    def post_copy_process(self):
-        '''Invoked after lift.copy_data has been called only if any crates have data updates.
+    def ship(self):
+        '''Invoked whether the crates have updates or not.
         '''
         return NotImplemented
 
@@ -195,11 +195,15 @@ class Pallet(object):
         '''
         return {
             'name': self.name,
-            'success': self.success[0] and self.are_crates_valid(),
+            'success': self.is_ready_to_ship(),
+            'requires_processing': self.requires_processing(),
             'message': self.success[1] or '',
             'crates': [crate.get_report() for crate in self._crates if crate.get_report() is not None],
             'total_processing_time': seat.format_time(self.total_processing_time)
         }
+
+    def add_packing_slip(self, slip):
+        self.slip = slip
 
     def __repr__(self):
         '''Override for better logging. Use with %r

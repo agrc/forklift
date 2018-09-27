@@ -423,17 +423,22 @@ def _get_pallets_in_folder(folder):
 
 def _get_pallets_in_file(file_path):
     pallets = []
-    name = splitext(basename(file_path))[0]
+    file_name, extension = splitext(basename(file_path))
     folder = dirname(file_path)
+
+    specific_pallet = None
+    if ':' in extension:
+        ext, specific_pallet = extension.split(':')
+        file_path = join(folder, file_name + ext)
 
     if folder not in sys.path:
         sys.path.append(folder)
 
     try:
         try:
-            mod = sys.modules[name]
+            mod = sys.modules[file_name]
         except KeyError:
-            mod = load_source(name, file_path)
+            mod = load_source(file_name, file_path)
     except Exception as e:
         # skip modules that fail to import
         log.error('%s failed to import: %s', file_path, e, exc_info=True)
@@ -443,7 +448,12 @@ def _get_pallets_in_file(file_path):
         try:
             potential_class = getattr(mod, member)
             if issubclass(potential_class, Pallet) and potential_class != Pallet:
-                pallets.append((file_path, potential_class))
+                if specific_pallet is None:
+                    pallets.append((file_path, potential_class))
+                    continue
+
+                if potential_class.__name__ == specific_pallet:
+                    pallets.append((file_path, potential_class))
         except Exception:
             #: member was likely not a class
             pass

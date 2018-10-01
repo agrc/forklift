@@ -119,7 +119,7 @@ class TestLightSwitch(unittest.TestCase):
     def test_ensure_tries_five_times_with_failures(self, sleep):
         self.patient._fetch = Mock(return_value=(False, 'failed'))
 
-        status, message = self.patient.ensure('start')
+        status, message, services = self.patient.ensure('start')
 
         self.assertFalse(status)
         self.assertEqual(message, 'failed')
@@ -130,7 +130,7 @@ class TestLightSwitch(unittest.TestCase):
     def test_ensure_returns_formatted_problems(self, sleep):
         self.patient._fetch = Mock(return_value=(False, 'failed'))
 
-        status, message = self.patient.ensure('start')
+        status, message, services = self.patient.ensure('start')
 
         self.assertEqual('failed', message)
 
@@ -138,7 +138,7 @@ class TestLightSwitch(unittest.TestCase):
     def test_ensure_tries_until_success(self, sleep):
         self.patient._fetch = Mock(side_effect=[(False, ''), (True, '')])
 
-        status, message = self.patient.ensure('stop')
+        status, message, services = self.patient.ensure('stop')
 
         self.assertTrue(status)
         self.assertEqual(message, '')

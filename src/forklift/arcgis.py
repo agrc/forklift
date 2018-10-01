@@ -61,7 +61,7 @@ class LightSwitch(object):
 
             status, message = self._fetch(self.switch_url + what)
 
-        return None
+        return status, message, services
 
     def _fetch(self, url):
         # check to make sure that token isn't expired

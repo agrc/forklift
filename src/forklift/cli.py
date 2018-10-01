@@ -171,12 +171,12 @@ def ship_data(pallet_arg=None):
         for switch in switches:
             log.info('stopping (%s)', switch.server_label)
             #: stop server
-            services = switch.ensure('stop')
+            status, messages, services = switch.ensure('stop')
             #: copy data
             lift.copy_data(config.get_config_prop('dropoffLocation'), config.get_config_prop('shipTo'), packing_slip_file, switch.server_qualified_name)
             log.info('starting (%s)', switch.server_label)
             #: start server
-            switch.ensure('start', services)
+            status, messages, services = switch.ensure('start', services)
             #: wait period (failover logic)
             # sleep(300)
 

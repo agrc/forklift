@@ -392,9 +392,9 @@ class TestShipData(unittest.TestCase):
 
         config_prop.side_effect = mock_props
 
-        shipped = cli.ship_data()
+        report = cli.ship_data()
 
-        self.assertTrue(shipped)
+        self.assertEqual(report, [])
         copy_data.assert_not_called()
         packing_slip.assert_called_once()
 

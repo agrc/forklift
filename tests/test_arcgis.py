@@ -19,13 +19,13 @@ from forklift.arcgis import LightSwitch
 class TestLightSwitch(unittest.TestCase):
 
     def setUp(self):
-        self.patient = LightSwitch({
-            'machineName': 'grwgisdev09.state.ut.us',
+        self.patient = LightSwitch(('primary', {
+            'machineName': 'machine.name',
             'username': 'username',
             'password': 'password',
             'protocol': 'protocol',
             'port': 6080
-        })
+        }))
 
     def test_ensure_stop(self):
         _fetch_mock = Mock()
@@ -36,7 +36,7 @@ class TestLightSwitch(unittest.TestCase):
         self.patient.ensure('stop')
 
         _fetch_mock.assert_called_once()
-        _fetch_mock.assert_called_with(self.patient.switch_url, 'stop')
+        _fetch_mock.assert_called_with(self.patient.switch_url + 'stop')
 
     def test_ensure_start(self):
         _fetch_mock = Mock()
@@ -47,7 +47,7 @@ class TestLightSwitch(unittest.TestCase):
         self.patient.ensure('start')
 
         _fetch_mock.assert_called_once()
-        _fetch_mock.assert_called_with(self.patient.switch_url, 'start')
+        _fetch_mock.assert_called_with(self.patient.switch_url + 'start')
 
     @patch('forklift.arcgis.sleep')
     @patch('forklift.arcgis.requests')
@@ -180,8 +180,8 @@ class TestLightSwitch(unittest.TestCase):
 
     @raises(KeyError)
     def test_missing_vars(self):
-        self.patient = LightSwitch({'a': 1})
+        self.patient = LightSwitch(('primary', {'a': 1}))
 
     @raises(Exception)
     def test_empty_vars(self):
-        self.patient = LightSwitch({'username': None, 'password': None, 'machineName': 'test'})
+        self.patient = LightSwitch(('primary', {'username': None, 'password': None, 'machineName': 'test'}))

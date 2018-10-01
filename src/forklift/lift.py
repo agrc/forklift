@@ -94,20 +94,16 @@ def process_crates_for(pallets, update_def):
                     crate.set_result(processed_crates[crate.destination])
 
 
-def process_pallets(pallets, is_post_copy=False):
+def process_pallets(pallets):
     '''
     pallets: Pallet[]
-    is_post_copy: Boolean
 
     Loop over all pallets, check if data has changed and determine whether to process.
     Call `process` if this is not the post copy. Otherwise call `post_copy_process`.
     Finally, call ship.
     '''
 
-    if not is_post_copy:
-        verb = 'processing'
-    else:
-        verb = 'post copy processing'
+    verb = 'processing'
 
     log.info('%s pallets...', verb)
 
@@ -120,24 +116,11 @@ def process_pallets(pallets, is_post_copy=False):
 
                     arcpy.ResetEnvironments()
                     arcpy.ClearWorkspaceCache_management()
-                    if not is_post_copy:
-                        with seat.timed_pallet_process(pallet, 'process'):
-                            pallet.process()
-                    else:
-                        with seat.timed_pallet_process(pallet, 'post_copy_process'):
-                            pallet.post_copy_process()
+
+                    with seat.timed_pallet_process(pallet, 'process'):
+                        pallet.process()
 
                     log.debug('%s pallet %s', verb.replace('ing', 'ed'), seat.format_time(clock() - start_seconds))
-
-                # if not is_post_copy:
-                #     start_seconds = clock()
-                #
-                #     log.info('shipping pallet: %r', pallet)
-                #     arcpy.ResetEnvironments()
-                #     arcpy.ClearWorkspaceCache_management()
-                #     with seat.timed_pallet_process(pallet, 'ship'):
-                #         pallet.ship()
-                #     log.debug('shipped pallet %s', seat.format_time(clock() - start_seconds))
         except Exception as e:
             pallet.success = (False, e)
             log.error('error %s pallet: %s for pallet: %r', verb, e, pallet, exc_info=True)
@@ -248,7 +231,7 @@ def copy_data(from_location, to_template, packing_slip_file, machine_name=None):
 
     Copies databases from either `copy_data` or `static_data` to `config_copy_destinations`.
     '''
-    report = []
+    report = {}
     data_being_moved = set(listdir(from_location)) - set([packing_slip_file])
 
     for source in data_being_moved:
@@ -277,7 +260,7 @@ def copy_data(from_location, to_template, packing_slip_file, machine_name=None):
                     shutil.rmtree(temp_path)
 
             log.info('copy successful in %s', seat.format_time(clock() - start_seconds))
-        except Exception as e:
+        except Exception:
             try:
                 #: There is still a lock?
                 #: The service probably wasn't shut down
@@ -298,9 +281,8 @@ def copy_data(from_location, to_template, packing_slip_file, machine_name=None):
                 report[destination_path] = 'might be in a corrupted state'
 
             log.error('there was an error copying %s to %s', source, destination_path, exc_info=True)
+            report.setdefault(destination_path, '')
             report[destination_path] += 'there was an error copying {} to {}'.format(source, destination_path)
-
-    # results += _start_services(services_affected)
 
     return report
 

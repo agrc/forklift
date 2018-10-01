@@ -15,7 +15,7 @@ from os.path import (abspath, basename, dirname, exists, join, realpath,
                      splitext)
 from re import compile
 from shutil import rmtree
-from time import clock, sleep
+from time import clock
 
 import pystache
 from colorama import Fore

@@ -69,7 +69,6 @@ class LightSwitch(object):
 
         return status, message
 
-
     def validate_service_state(self):
         '''Validates that services that are configured to be started are actually started
 
@@ -98,7 +97,6 @@ class LightSwitch(object):
                 services.setdefault(self.server_qualified_name, []).append(service_path)
 
         return services
-
 
     def _execute(self, url):
         '''url: string

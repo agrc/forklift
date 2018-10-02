@@ -39,6 +39,10 @@ pallet_file_regex = compile(r'pallet.*\.py$')
 
 
 def init():
+    '''Creates the default config in the forklift-garage if it does not exists
+
+    returns the filt path to the config
+    '''
     if exists(config.config_location):
         return abspath(config.config_location)
 
@@ -46,6 +50,12 @@ def init():
 
 
 def add_repo(repo):
+    '''repo: string `username/repository`
+
+    Adds the repository to the repositories section of the config
+
+    returns a status string message
+    '''
     try:
         _validate_repo(repo, raises=True)
     except Exception as e:
@@ -55,6 +65,12 @@ def add_repo(repo):
 
 
 def remove_repo(repo):
+    '''repo: string `username/repository`
+
+    Removes the repository from the config section
+
+    returns a status string message
+    '''
     repos = _get_repos()
 
     try:
@@ -73,10 +89,16 @@ def remove_repo(repo):
 
 
 def list_pallets():
+    '''Finds all of the pallets in the warehouse
+
+    returns an array of tuples where the tuple is a file path and a pallet instance
+    '''
     return _get_pallets_in_folder(config.get_config_prop('warehouse'))
 
 
 def list_repos():
+    '''Returns a list of valid github repositories in the format of repo: [Valid] or [Invalid repo name or owner]
+    '''
     folders = _get_repos()
 
     validate_results = []
@@ -87,6 +109,21 @@ def list_repos():
 
 
 def lift_pallets(file_path=None, pallet_arg=None, skip_git=False):
+    '''
+    file_path: string - an optional path to a pallet.py file
+    pallet_arg: string - an optional argument to send to a pallet
+    skip_git: boolean - an optional argument to skip git pulling all of the repositories
+
+    The first part of the forklift process. This method updates all of the github repositories, builds all of the pallets,
+    prepares them for packaging,processes the crates, processes the pallets, drops off the data in the drop off location,
+    and then gift wraps it. It then creates a packing slip that will be used later in the ship method amd sends a report
+    about what happened.
+
+    This is the method that initiates change detection and copies data that has changed to the drop off location without
+    forklift hashes and the data is compressed and ready for production use.
+
+    The drop off location data is deleted every time lift_pallets is run.
+    '''
     log.info('starting forklift')
 
     if not skip_git:
@@ -143,6 +180,15 @@ def lift_pallets(file_path=None, pallet_arg=None, skip_git=False):
 
 
 def ship_data(pallet_arg=None):
+    '''pallet_arg: string - an optional value to pass to a pallet when it is being built
+
+    This is the second phase of the forklift process. This looks for a packing slip and data
+    in the drop off location, stops the arcgis server, copies the data to the server, starts
+    the server back up, then calls post copy process and ship on pallets that qualify.
+    A report is generated on the status of the pallets and any services that did not start
+
+    returns the report object
+    '''
     #: look for servers in config
     servers = config.get_config_prop('servers')
 
@@ -231,11 +277,45 @@ def ship_data(pallet_arg=None):
               'pallets': pallet_reports,
               'problem_services': problem_services}
     log.info('%r', report)
+
     return report
 
 
 def speedtest(pallet_location):
+    '''pallet_location: string - a file path to a pallet.py
+
+    Runs a repeatable process that is used to determine regressions or progressions in the efficiency of forklift
+
+    returns a report object
+    '''
     print(('{0}{1}Setting up speed test...{0}'.format(Fore.RESET, Fore.MAGENTA)))
+
+    def _change_data(data_path):
+        import arcpy
+
+        def field_changer(value):
+            return value[:-1] + 'X' if value else 'X'
+
+        change_field = 'FieldToChange'
+        value_field = 'UTAddPtID'
+
+        with arcpy.da.UpdateCursor(data_path, [value_field, change_field]) as cursor:
+            for row in cursor:
+                row[1] = field_changer(row[0])
+                cursor.updateRow(row)
+
+    def _prep_change_data(data_path):
+        import arcpy
+        change_field = 'FieldToChange'
+        value_field = 'UTAddPtID'
+
+        arcpy.AddField_management(data_path, change_field, 'TEXT', field_length=150)
+        where = 'OBJECTID >= 879389 and OBJECTID <= 899388'
+
+        with arcpy.da.UpdateCursor(data_path, [value_field, change_field], where) as update_cursor:
+            for row in update_cursor:
+                row[1] = row[0]
+                update_cursor.updateRow(row)
 
     #: remove logging
     log.handlers = [logging.NullHandler()]
@@ -289,6 +369,10 @@ def speedtest(pallet_location):
 
 
 def scorched_earth():
+    '''removes all of the hashed data sets from the config hashLocation property folder
+
+    This method is used when things go poorly and starting over is the only solution
+    '''
     hash_location = config.get_config_prop('hashLocation')
     for folder in [hash_location, core.scratch_gdb_path]:
         if exists(folder):
@@ -296,7 +380,46 @@ def scorched_earth():
             rmtree(folder)
 
 
+def git_update():
+    '''updates all of the github repositories in the config repositories section
+
+    returns an array containing any errors or empty array if no errors
+    '''
+    log.info('git updating (in parallel)...')
+
+    repositories = config.get_config_prop('repositories')
+    num_repos = len(repositories)
+
+    if num_repos == 0:
+        log.info('no repositories to update')
+        return []
+
+    num_processes = environ.get('FORKLIFT_POOL_PROCESSES')
+    swimmers = num_processes or config.default_num_processes
+    if swimmers > num_repos:
+        swimmers = num_repos
+
+    with Pool(swimmers) as pool:
+        results = pool.map(_clone_or_pull_repo, repositories)
+
+    for error, info in results:
+        if info is not None:
+            log.info(info)
+        if error is not None:
+            log.error(error)
+
+    return [error for error, info in results if error is not None]
+
+
 def _build_pallets(file_path, pallet_arg=None):
+    '''
+    file_path: string - the file path of a python.py file
+    pallet_args: string - an optional string to send to the constructor of a pallet
+
+    Finds pallet classes in python files and instantiates them with any `pallet_arg`'s and calls build
+
+    returns a tuple of sorted pallets and all pallets
+    '''
     if file_path is not None:
         pallet_infos = set(_get_pallets_in_file(file_path) + list_pallets())
     else:
@@ -330,6 +453,13 @@ def _build_pallets(file_path, pallet_arg=None):
 
 
 def _generate_packing_slip(status, location):
+    '''
+    status: report object
+    location: string - the drop off location folder
+
+    this pulls the pallet status from the report object and writes it to a file in the drop off location
+    for later use by the ship command
+    '''
     status = status['pallets']
 
     if not exists(location):
@@ -340,6 +470,10 @@ def _generate_packing_slip(status, location):
 
 
 def _process_packing_slip(packing_slip=None):
+    '''packing_slip: string - an optional packing slip to process otherwise the default location will be used
+
+    returns all of the pallets referenced by the packing slip
+    '''
     if packing_slip is None:
         location = join(config.get_config_prop('dropoffLocation'), packing_slip_file)
 
@@ -360,7 +494,7 @@ def _process_packing_slip(packing_slip=None):
 
 
 def _send_report_email(report_object):
-    '''Create and send report email
+    '''Create and sends the report email
     '''
     log_file = join(dirname(config.config_location), 'forklift.log')
 
@@ -371,8 +505,15 @@ def _send_report_email(report_object):
 
 
 def _clone_or_pull_repo(repo_name):
+    '''repo_name: string - a github repository username/reponame format
+
+    clones or pull's the repo passed in
+
+    returns a status tuple with None being successful or a string with the error
+    '''
     warehouse = config.get_config_prop('warehouse')
     log_message = None
+
     try:
         folder = join(warehouse, repo_name.split('/')[1])
         if not exists(folder):
@@ -390,36 +531,10 @@ def _clone_or_pull_repo(repo_name):
                     log_message = log_message + '\nno updates to pallet'
                 elif fetch_infos[0].flags in [32, 64]:
                     log_message = log_message + '\nupdated to %s', fetch_infos[0].commit.name_rev
+
         return (None, log_message)
     except Exception as e:
         return ('Git update error for {}: {}'.format(repo_name, e), log_message)
-
-
-def git_update():
-    log.info('git updating (in parallel)...')
-
-    repositories = config.get_config_prop('repositories')
-    num_repos = len(repositories)
-
-    if num_repos == 0:
-        log.info('no repositories to update')
-        return []
-
-    num_processes = environ.get('FORKLIFT_POOL_PROCESSES')
-    swimmers = num_processes or config.default_num_processes
-    if swimmers > num_repos:
-        swimmers = num_repos
-
-    with Pool(swimmers) as pool:
-        results = pool.map(_clone_or_pull_repo, repositories)
-
-    for error, info in results:
-        if info is not None:
-            log.info(info)
-        if error is not None:
-            log.error(error)
-
-    return [error for error, info in results if error is not None]
 
 
 def _get_repo(folder):
@@ -436,8 +551,17 @@ def _get_repos():
 
 
 def _validate_repo(repo, raises=False):
+    '''
+    repo: string - the owner/name of a repository
+    raises: boolean - an optional flag to raise an exception if the github repository is not valid
+
+    makes an http request to the github url to validate the repository exists
+
+    returns a validation string or an exception depending on `raises`
+    '''
     url = _repo_to_url(repo)
     response = get(url)
+
     if response.status_code == 200:
         message = '[Valid]'
     else:
@@ -445,20 +569,33 @@ def _validate_repo(repo, raises=False):
         if raises:
             raise Exception('{}: {}'.format(repo, message))
 
-    return ('{}: {}'.format(repo, message))
+    return '{}: {}'.format(repo, message)
 
 
 def _get_pallets_in_folder(folder):
+    '''folder: string - a path to a folder
+
+    finds all pallet classes in `folder` looking only in `pallet_file_regex` matching files
+
+    returns an array of tuples consisting of the file path and the pallet class object
+    '''
     pallets = []
 
-    for root, dirs, files in walk(folder):
+    for root, _, files in walk(folder):
         for file_name in files:
             if pallet_file_regex.search(file_name.lower()):
                 pallets.extend(_get_pallets_in_file(join(root, file_name)))
+
     return pallets
 
 
 def _get_pallets_in_file(file_path):
+    '''file_path: string - a path to a pallet.py file
+
+    finds all python classes that inherit from Pallet
+
+    returns an array of tuples consisting of the file path and the pallet class object
+    '''
     pallets = []
     file_name, extension = splitext(basename(file_path))
     folder = dirname(file_path)
@@ -499,6 +636,12 @@ def _get_pallets_in_file(file_path):
 
 
 def _generate_console_report(pallet_reports):
+    '''pallet_reports: object - the report object
+
+    Formats the `pallet_reports` object into a string for printing to the console with colort
+
+    returns the formatted report string
+    '''
     report_str = '{3}{3}    {4}{0}{2} out of {5}{1}{2} pallets ran successfully in {6}.{3}'.format(pallet_reports['num_success_pallets'],
                                                                                                    len(pallet_reports['pallets']), Fore.RESET, linesep,
                                                                                                    Fore.GREEN, Fore.CYAN, pallet_reports['total_time'])
@@ -531,31 +674,3 @@ def _generate_console_report(pallet_reports):
             report_str += 'crate message: {0}{1}{2}{3}'.format(color, crate['crate_message'], Fore.RESET, linesep)
 
     return report_str
-
-
-def _change_data(data_path):
-    import arcpy
-
-    def field_changer(value):
-        return value[:-1] + 'X' if value else 'X'
-
-    change_field = 'FieldToChange'
-    value_field = 'UTAddPtID'
-
-    with arcpy.da.UpdateCursor(data_path, [value_field, change_field]) as cursor:
-        for row in cursor:
-            row[1] = field_changer(row[0])
-            cursor.updateRow(row)
-
-
-def _prep_change_data(data_path):
-    import arcpy
-    change_field = 'FieldToChange'
-    value_field = 'UTAddPtID'
-
-    arcpy.AddField_management(data_path, change_field, 'TEXT', field_length=150)
-    where = 'OBJECTID >= 879389 and OBJECTID <= 899388'
-    with arcpy.da.UpdateCursor(data_path, [value_field, change_field], where) as update_cursor:
-        for row in update_cursor:
-            row[1] = row[0]
-            update_cursor.updateRow(row)

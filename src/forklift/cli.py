@@ -272,7 +272,7 @@ def scorched_earth():
             rmtree(folder)
 
 
-def _build_pallets(file_path, pallet_arg):
+def _build_pallets(file_path, pallet_arg=None):
     if file_path is not None:
         pallet_infos = set(_get_pallets_in_file(file_path) + list_pallets())
     else:
@@ -315,7 +315,7 @@ def _generate_packing_slip(status, location):
         dump(status, slip, indent=2)
 
 
-def _process_packing_slip(packing_slip=None, pallet_arg=None):
+def _process_packing_slip(packing_slip=None):
     if packing_slip is None:
         location = join(config.get_config_prop('dropoffLocation'), packing_slip_file)
 
@@ -327,7 +327,7 @@ def _process_packing_slip(packing_slip=None, pallet_arg=None):
         if not item['success']:
             continue
 
-        sorted, all_pallets = _build_pallets(item['name'], pallet_arg)
+        sorted, all_pallets = _build_pallets(item['name'])
         all_pallets[0].add_packing_slip(item)
 
         pallets.append(all_pallets[0])

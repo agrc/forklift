@@ -314,7 +314,7 @@ def _get_locations_for_dropoff(specific_pallets, all_pallets):
             continue
 
         for crate in pallet.get_crates():
-            if crate.result[0] in [Crate.UPDATED, Crate.CREATED, Crate.UPDATED_OR_CREATED_WITH_WARNINGS]:
+            if crate.was_updated():
                 normal_paths = [normalize_workspace(p) for p in pallet.copy_data]
                 for p in normal_paths:
                     destination_to_pallet.setdefault(p, []).append(pallet)

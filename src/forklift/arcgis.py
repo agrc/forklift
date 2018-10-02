@@ -44,8 +44,9 @@ class LightSwitch(object):
         base_url = '{}://{}:{}/arcgis/admin'.format(server['protocol'], server['machineName'], server['port'])
         self.token_url = '{}/generateToken'.format(base_url)
         self.switch_url = '{}/machines/{}/'.format(base_url, server['machineName'])
+        self.services_url = '{}/services'.format(base_url)
 
-    def ensure(self, what, services=None):
+    def ensure(self, what):
         '''ensures that affected_services are started or stopped with 5 attempts.
         what: string 'stop' or 'start'
         server: dictionary of server to stop
@@ -59,14 +60,14 @@ class LightSwitch(object):
             sleep(wait[tries])
             tries -= 1
 
-            status, message = self._fetch(self.switch_url + what)
+            status, message = self._execute(self.switch_url + what)
 
-        return status, message, services
+            self._started = what == 'start'
 
-    def _fetch(self, url):
-        # check to make sure that token isn't expired
-        if self.token_expire_milliseconds <= time() * 1000:
-            self._request_token()
+        return status, message
+
+    def _execute(self, url):
+        self._check_token_freshness()
 
         ok = (False, None)
         data = {'f': 'json', 'token': self.token}
@@ -84,6 +85,21 @@ class LightSwitch(object):
             return (False, t)
 
         return ok
+
+    def _fetch(self, url):
+        self._check_token_freshness()
+
+        data = {'f': 'json', 'token': self.token}
+
+        r = requests.post(url, data=data, timeout=self.timeout)
+        r.raise_for_status()
+
+        return r.json()
+
+    def _check_token_freshness(self):
+        # check to make sure that token isn't expired
+        if self.token_expire_milliseconds <= time() * 1000:
+            self._request_token()
 
     def _return_false_for_status(self, json_response):
         if 'status' in list(json_response.keys()) and json_response['status'] == 'error':
@@ -107,3 +123,28 @@ class LightSwitch(object):
 
         self.token = response_data['token']
         self.token_expire_milliseconds = int(response_data['expires'])
+
+    def validate_service_state(self):
+        if not self._started:
+            return []
+
+        #: get service paths
+        root = self._fetch(self.services_url)
+        serviceInfos = root['services']
+        for folder in root['folders']:
+            folderJson = self._fetch('{}/{}'.format(self.services_url, folder))
+            serviceInfos += folderJson['services']
+
+        #: check status of each service
+        services = {}
+        for info in serviceInfos:
+            if info['folderName'] == '/':
+                service_path = '{}.{}'.format(info['serviceName'], info['type'])
+            else:
+                service_path = '{}/{}.{}'.format(info['folderName'], info['serviceName'], info['type'])
+
+            service_status = self._fetch('{}/{}/status'.format(self.services_url, service_path))
+            if service_status['realTimeState'] != service_status['configuredState']:
+                services.setdefault(self.server_qualified_name, []).append(service_path)
+
+        return services

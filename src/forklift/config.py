@@ -49,6 +49,7 @@ def create_default_config():
             },
             'shipTo': ['c:\\forklift\\data\\production'],
             'warehouse': default_warehouse_location,
+            'serverStartWaitSeconds': 300
         }
 
         json_config_file.write(dumps(data, sort_keys=True, indent=2, separators=(',', ': ')))

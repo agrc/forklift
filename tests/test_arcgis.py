@@ -28,47 +28,78 @@ class TestLightSwitch(unittest.TestCase):
         }))
 
     def test_ensure_stop(self):
-        _fetch_mock = Mock()
-        _fetch_mock.side_effect = [(True, None)]
+        _execute_mock = Mock()
+        _execute_mock.side_effect = [(True, None)]
 
-        self.patient._fetch = _fetch_mock
+        self.patient._execute = _execute_mock
 
         self.patient.ensure('stop')
 
-        _fetch_mock.assert_called_once()
-        _fetch_mock.assert_called_with(self.patient.switch_url + 'stop')
+        _execute_mock.assert_called_once()
+        _execute_mock.assert_called_with(self.patient.switch_url + 'stop')
 
     def test_ensure_start(self):
-        _fetch_mock = Mock()
-        _fetch_mock.side_effect = [(True, None)]
+        _execute_mock = Mock()
+        _execute_mock.side_effect = [(True, None)]
 
-        self.patient._fetch = _fetch_mock
+        self.patient._execute = _execute_mock
 
         self.patient.ensure('start')
 
-        _fetch_mock.assert_called_once()
-        _fetch_mock.assert_called_with(self.patient.switch_url + 'start')
+        _execute_mock.assert_called_once()
+        _execute_mock.assert_called_with(self.patient.switch_url + 'start')
 
-    @patch('forklift.arcgis._fetch')
-    def test_vaidate_service_state(self, fetch):
+    def test_validate_service_state(self):
+
         def fake_server(value):
-            if value.endswith('arcgis/admin/services?f=json'):
-                return '{"folderName":"/","description":"Root folder","folders":["App1"],"services":[{folderName: "/",serviceName: "Service1",type: "MapServer",description: ""}, {folderName: "/",serviceName: "Service2",type: "GPServer",description: ""}]}'
-            elif value.endswith('arcgis/admin/services/App1?f=json'):
-                return '{"folderName":"/App1","description":"App folder","services":[{folderName: "/App1",serviceName: "Service3",type: "MapServer",description: ""}, {folderName: "/App1",serviceName: "Service4",type: "GPServer",description: ""}]}'
-            elif value.endswith('arcgis/admin/services/App1/Service1.MapServer/status?f=json'):
-                return '{ configuredState: "STARTED", realTimeState: "STOPPED" }'
-            elif value.endswith('arcgis/admin/services/App1/Service2.GPServer/status?f=json'):
-                return '{ configuredState: "STARTED", realTimeState: "STARTED" }'
-            elif value.endswith('arcgis/admin/services/Service3.MapServer/status?f=json'):
-                return '{ configuredState: "STARTED", realTimeState: "STOPPED" }'
-            elif value.endswith('arcgis/admin/services/Service4.GPServer/status?f=json'):
-                return '{ configuredState: "STARTED", realTimeState: "STARTED" }'
+            print(value)
+            if value.endswith('arcgis/admin/services'):
+                return {'folderName': '/',
+                        'description': 'Root folder',
+                        'folders': ['App1'],
+                        'services': [{
+                                'folderName': '/',
+                                'serviceName': 'Service1',
+                                'type': 'MapServer',
+                                'description': ''
+                            }, {
+                                'folderName': '/',
+                                'serviceName': 'Service2',
+                                'type': 'GPServer',
+                                'description': ''
+                            }]
+                        }
+            elif value.endswith('arcgis/admin/services/App1'):
+                return {'folderName': '/App1',
+                        'description': 'App folder',
+                        'services': [{
+                                'folderName': 'App1',
+                                'serviceName': 'Service3',
+                                'type': 'MapServer',
+                                'description': ''
+                            }, {
+                                'folderName': 'App1',
+                                'serviceName': 'Service4',
+                                'type': 'GPServer',
+                                'description': ''
+                            }]
+                        }
+            elif value.endswith('arcgis/admin/services/Service1.MapServer/status'):
+                return {'configuredState': 'STARTED', 'realTimeState': 'STOPPED'}
+            elif value.endswith('arcgis/admin/services/Service2.GPServer/status'):
+                return {'configuredState': 'STARTED', 'realTimeState': 'STARTED'}
+            elif value.endswith('arcgis/admin/services/App1/Service3.MapServer/status'):
+                return {'configuredState': 'STARTED', 'realTimeState': 'STOPPED'}
+            elif value.endswith('arcgis/admin/services/App1/Service4.GPServer/status'):
+                return {'configuredState': 'STARTED', 'realTimeState': 'STARTED'}
 
-        fetch.side_effect = fake_server
+        mock = Mock(side_effect=fake_server)
+        self.patient._fetch = mock
+        self.patient._started = True
+        self.server_qualified_name = 'machine.name'
 
         services = self.patient.validate_service_state()
-        self.assertEqual(services, ['App1/Service1.MapServer', 'Service3.Mapserver'])
+        self.assertEqual(services, {'machine.name': ['Service1.MapServer', 'App1/Service3.MapServer']})
 
     def test_vaidate_service_state_returns_empty_when_server_is_stopped(self):
         self.patient._started = False
@@ -143,32 +174,32 @@ class TestLightSwitch(unittest.TestCase):
 
     @patch('forklift.arcgis.sleep')
     def test_ensure_tries_five_times_with_failures(self, sleep):
-        self.patient._fetch = Mock(return_value=(False, 'failed'))
+        self.patient._execute = Mock(return_value=(False, 'failed'))
 
-        status, message, services = self.patient.ensure('start')
+        status, message = self.patient.ensure('start')
 
         self.assertFalse(status)
         self.assertEqual(message, 'failed')
-        self.assertEqual(self.patient._fetch.call_count, 5)
+        self.assertEqual(self.patient._execute.call_count, 5)
         sleep.assert_has_calls([call(0), call(2), call(4), call(8), call(12)])
 
     @patch('forklift.arcgis.sleep')
     def test_ensure_returns_formatted_problems(self, sleep):
-        self.patient._fetch = Mock(return_value=(False, 'failed'))
+        self.patient._execute = Mock(return_value=(False, 'failed'))
 
-        status, message, services = self.patient.ensure('start')
+        status, message = self.patient.ensure('start')
 
         self.assertEqual('failed', message)
 
     @patch('forklift.arcgis.sleep')
     def test_ensure_tries_until_success(self, sleep):
-        self.patient._fetch = Mock(side_effect=[(False, ''), (True, '')])
+        self.patient._execute = Mock(side_effect=[(False, ''), (True, '')])
 
-        status, message, services = self.patient.ensure('stop')
+        status, message = self.patient.ensure('stop')
 
         self.assertTrue(status)
         self.assertEqual(message, '')
-        self.assertEqual(self.patient._fetch.call_count, 2)
+        self.assertEqual(self.patient._execute.call_count, 2)
         sleep.assert_has_calls([call(0)])
 
     @patch('forklift.arcgis.requests.post')
@@ -176,10 +207,9 @@ class TestLightSwitch(unittest.TestCase):
         post.side_effect = requests.exceptions.Timeout('timed out')
 
         self.patient.token_expire_milliseconds = 9223372036854775807
-        status, message = self.patient._fetch('url')
+        status, message = self.patient._execute('url')
 
-        self.assertEqual(post.call
-        _count, 1)
+        self.assertEqual(post.call_count, 1)
         self.assertFalse(status)
         self.assertEqual(message, post.side_effect)
 
@@ -188,7 +218,7 @@ class TestLightSwitch(unittest.TestCase):
         post.side_effect = requests.exceptions.ConnectTimeout('timed out')
 
         self.patient.token_expire_milliseconds = 9223372036854775807
-        status, message = self.patient._fetch('url')
+        status, message = self.patient._execute('url')
 
         self.assertEqual(post.call_count, 1)
         self.assertFalse(status)
@@ -199,7 +229,7 @@ class TestLightSwitch(unittest.TestCase):
         post.side_effect = requests.exceptions.HTTPError('http error')
 
         self.patient.token_expire_milliseconds = 9223372036854775807
-        status, message = self.patient._fetch('url')
+        status, message = self.patient._execute('url')
 
         self.assertEqual(post.call_count, 1)
         self.assertFalse(status)

@@ -33,7 +33,8 @@ class Pallet(object):
     `pallet` (case-insensitive) somewhere in the filename.
 
     Multiple pallets with the same filename will cause issues so it's strongly recommended to keep them unique.
-    Appending the project name to the file name is the convention.'''
+    Appending the project name to the file name is the convention.
+    '''
 
     def __init__(self, arg=None):
         #: the logging module to keep track of the pallet
@@ -69,7 +70,6 @@ class Pallet(object):
         Invoked before process and ship. Any logic that could cause a pallet to error
         should be placed in here instead of the `__init__` method.
         '''
-
         return
 
     def prepare_packaging(self):
@@ -94,7 +94,8 @@ class Pallet(object):
 
     def get_crates(self):
         '''Returns an array of crates affected by the pallet. This is a self documenting way to know what data an
-        application is using.'''
+        application is using.
+        '''
         return self._crates
 
     def add_crates(self, crate_infos, defaults={}):

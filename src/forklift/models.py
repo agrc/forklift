@@ -64,13 +64,12 @@ class Pallet(object):
         self.timers = {}
 
     def build(self, configuration='Production'):
-        '''Invoked before process and ship. Any logic that could cause a pallet to error
+        '''configuration: string `Production`, `Staging`, or `Dev`
+
+        Invoked before process and ship. Any logic that could cause a pallet to error
         should be placed in here instead of the `__init__` method.
+        '''
 
-        Unlike `prepare_packaging` this method is called for every pallet reguardless of whether
-        or not they are being lifted. This is so that appropriate services are shut down during copy data.
-
-        configuration: string `Production`, `Staging`, or `Dev`'''
         return
 
     def prepare_packaging(self):
@@ -142,12 +141,15 @@ class Pallet(object):
         self.add_crates([crate_info], defaults)
 
     def validate_crate(self, crate):
-        '''Override to provide your own validation to determine whether the data within
+        '''crate: Crate
+
+        Override to provide your own validation to determine whether the data within
         a create is ready to be updated.
 
         This method should return `True` if the crate is ready for an update. Otherwise it
         should raise `exceptions.ValidationException`.
-        If this method is not overriden the default validate method within core is used.'''
+        If this method is not overriden the default validate method within core is used.
+        '''
         return NotImplemented
 
     def is_ready_to_ship(self):
@@ -156,13 +158,15 @@ class Pallet(object):
 
         Override this method to make pallets ship on a different schedule
 
-        returns: Boolean'''
+        returns: Boolean
+        '''
         return self.are_crates_valid() and self.success[0]
 
     def requires_processing(self):
         '''Returns True if any crates were updated. Returns False if there are no crates defined.
 
-        returns: Boolean'''
+        returns: Boolean
+        '''
         if not self.are_crates_valid():
             return False
 
@@ -176,7 +180,8 @@ class Pallet(object):
         '''Returns True if there are not any schema changes or errors within the crates
         associated with the pallet. Returns True if there are no crates defined.
 
-        returns: Boolean'''
+        returns: Boolean
+        '''
         for crate in self._crates:
             if crate.result[0] in [Crate.INVALID_DATA, Crate.UNHANDLED_EXCEPTION]:
                 return False
@@ -184,9 +189,17 @@ class Pallet(object):
         return True
 
     def start_timer(self, name):
+        '''name: string
+
+        sets a new time in timers
+        '''
         self.timers[name] = clock()
 
     def stop_timer(self, name):
+        '''name: string
+
+        Records a processing time and adds it to the total processing time for the pallet.
+        '''
         processing_time = self.processing_times.setdefault(name, 0)
         processing_time += clock() - self.timers[name]
 
@@ -194,7 +207,7 @@ class Pallet(object):
         self.total_processing_time += processing_time
 
     def get_report(self):
-        '''Returns a message about the result of each crate in the pallet.
+        '''Returns an object with data about the results of the pallet for use in the report.
         '''
         return {
             'name': self.name,
@@ -206,6 +219,10 @@ class Pallet(object):
         }
 
     def add_packing_slip(self, slip):
+        '''slip: object
+
+        Adds the slip to the pallet
+        '''
         self.slip = slip
 
     def __repr__(self):
@@ -287,7 +304,9 @@ class Crate(object):
             return
 
     def set_source_name(self, value):
-        '''Sets the source_name and updates the source property
+        '''value: string
+
+        Sets the source_name and updates the source property
         '''
         if value is None:
             return
@@ -296,10 +315,12 @@ class Crate(object):
         self.source = join(self.source_workspace, value)
 
     def set_result(self, value):
-        '''Sets the result of processing a crate.
-        value: (String, String)
+        '''value: (String, String)
 
-        Returns the value of what was set'''
+        Sets the result of processing a crate.
+
+        Returns the value of what was set
+        '''
         acceptable_results = [self.CREATED,
                               self.UPDATED,
                               self.INVALID_DATA,
@@ -338,7 +359,8 @@ class Crate(object):
         return self.source_describe.datasetType.lower() == 'table'
 
     def needs_reproject(self):
-
+        '''returns True if the crate needs to project between source and destination
+        '''
         if self.is_table():
             return False
 
@@ -350,13 +372,16 @@ class Crate(object):
         return needs_reproject
 
     def was_updated(self):
+        '''returns True if the crate was created or updated
+        '''
         return self.result[0] in [Crate.CREATED, Crate.UPDATED, Crate.UPDATED_OR_CREATED_WITH_WARNINGS]
 
     def _try_to_find_data_source_by_name(self):
         '''try to find the source name in the source workspace.
         if it is found, update the crate name so subsequent uses do not fail.
 
-        returns a tuple (bool, message) describing the outcome'''
+        returns a tuple (bool, message) describing the outcome
+        '''
         if '.sde' not in self.source.lower():
             return (None, 'Can\'t find data outside of sde')
 
@@ -444,10 +469,10 @@ class Changes(object):
         return self.has_adds() or self.has_deletes()
 
     def determine_deletes(self, attribute_hashes):
-        '''
-        attribute_hashes: Dictionary<string, hash> of id's and hashes that were not accessed
+        '''attribute_hashes: Dictionary<string, hash> of id's and hashes that were not accessed
 
-        returns the deletes'''
+        returns the deletes
+        '''
         self._deletes = attribute_hashes
 
         return self._deletes

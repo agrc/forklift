@@ -8,6 +8,10 @@ A module that contains helpful methods for other modules
 
 
 def format_time(seconds):
+    '''seconds: number
+
+    returns a human-friendly string describing the amount of time
+    '''
     minute = 60.00
     hour = 60.00 * minute
 
@@ -24,6 +28,8 @@ def format_time(seconds):
 
 
 class timed_pallet_process(object):
+    '''A class used to time pallet processes. For use in with statements.
+    '''
     def __init__(self, pallet, name):
         self.pallet = pallet
         self.name = name

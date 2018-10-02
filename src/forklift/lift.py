@@ -22,11 +22,19 @@ log = logging.getLogger('forklift')
 
 
 def process_checklist(config):
+    '''config: config module
+
+    removes the dropoffLocation and creates the hasLocation if needed
+    '''
     _remove_if_exists(config.get_config_prop('dropoffLocation'))
     _create_if_not_exists([config.get_config_prop('hashLocation'), config.get_config_prop('dropoffLocation')])
 
 
 def _remove_if_exists(location):
+    '''location: string - path to folder
+
+    removes the path if it exists
+    '''
     if not path.exists(location):
         return
 
@@ -34,6 +42,10 @@ def _remove_if_exists(location):
 
 
 def _create_if_not_exists(locations):
+    '''locations: string[] - array of paths
+
+    creates all of the paths contained in locations
+    '''
     for location in locations:
         if path.exists(location):
             continue
@@ -42,8 +54,7 @@ def _create_if_not_exists(locations):
 
 
 def prepare_packaging_for_pallets(pallets):
-    '''
-    pallets: Pallet[]
+    '''pallets: Pallet[]
 
     Calls prepare_packaging for pallets
     '''
@@ -62,7 +73,7 @@ def prepare_packaging_for_pallets(pallets):
 def process_crates_for(pallets, update_def):
     '''
     pallets: Pallet[]
-    update_def: Function. core.update
+    update_def: Function - core.update by default
 
     Calls update_def on all crates (excluding duplicates) in pallets
     '''
@@ -95,12 +106,9 @@ def process_crates_for(pallets, update_def):
 
 
 def process_pallets(pallets):
-    '''
-    pallets: Pallet[]
+    '''pallets: Pallet[]
 
-    Loop over all pallets, check if data has changed and determine whether to process.
-    Call `process` if this is not the post copy. Otherwise call `post_copy_process`.
-    Finally, call ship.
+    Loop over all pallets, check if data has changed, and determine whether to process.
     '''
 
     verb = 'processing'
@@ -158,6 +166,10 @@ def dropoff_data(specific_pallets, all_pallets, dropoff_location):
 
 
 def gift_wrap(location):
+    '''location: string
+
+    Scrubs the hash field from all data and compacts the geodatabases
+    '''
     arcpy.env.workspace = location
 
     workspaces = arcpy.ListWorkspaces('*', 'FileGDB')
@@ -169,7 +181,10 @@ def gift_wrap(location):
 def _move_to_dropoff(destination_and_pallet, dropoff_location):
     '''
     destination_and_pallet: string, pallet[]
-    dropoff_location: string'''
+    dropoff_location: string
+
+    Copies data from pallet destinations to dropoff location.
+    '''
     for data_source in destination_and_pallet:
         gdb_name = path.basename(data_source)
         log.info('copying {} to {}...'.format(data_source, path.join(dropoff_location, gdb_name)))
@@ -187,6 +202,13 @@ def _move_to_dropoff(destination_and_pallet, dropoff_location):
 
 
 def get_lift_status(pallets, elapsed_time, git_errors):
+    '''
+    pallets: Pallet[]
+    elapsed_time: string
+    git_errors: string[]
+
+    returns a dictionary with data formatted for use in the report
+    '''
     reports = [pallet.get_report() for pallet in pallets]
 
     return {'hostname': socket.gethostname(),
@@ -198,6 +220,12 @@ def get_lift_status(pallets, elapsed_time, git_errors):
 
 
 def _copy_with_overwrite(source, destination):
+    '''
+    source: string - path to folder
+    destination: string - path to folder
+
+    Recursively copies the data from source to destination.
+    '''
     log.info('copying with overwrite: %s to %s', source, destination)
     for src_dir, dirs, files in walk(source):
         dst_dir = src_dir.replace(source, destination, 1)
@@ -225,11 +253,14 @@ def _copy_with_overwrite(source, destination):
 
 def copy_data(from_location, to_template, packing_slip_file, machine_name=None):
     '''
-    specific_pallets: Pallet[]
-    all_pallets: Pallet[]
-    config_copy_destinations: string[]
+    from_location: string - path to folder
+    to_template: string - path with machineName template string
+    packing_slip_file: string - filename
+    machine_name: string
 
-    Copies databases from either `copy_data` or `static_data` to `config_copy_destinations`.
+    Copies data from from_location to to_template (after machineName has been subsituted).
+    If there is a problem with the copy (e.g. there are locks on existing destination data), then
+    the copy is rolled back.
     '''
     failed = {}
     successful = []
@@ -290,10 +321,10 @@ def copy_data(from_location, to_template, packing_slip_file, machine_name=None):
 
 
 def _remove_hash_from_workspace(workspace):
-    '''
-    workspace: String
+    '''workspace: String
 
-    removes the hash field from all datasets in the workspace'''
+    Removes the hash field from all datasets in the workspace
+    '''
     arcpy.env.workspace = workspace
 
     for table in arcpy.ListFeatureClasses() + arcpy.ListTables():
@@ -304,6 +335,12 @@ def _remove_hash_from_workspace(workspace):
 
 
 def _get_locations_for_dropoff(specific_pallets, all_pallets):
+    '''
+    specific_pallets: Pallet[]
+    all_pallets: Pallet[]
+
+    returns a dictionary of destination paths and the pallets that they are associated with
+    '''
     def normalize_workspace(workspace_path):
         return path.normpath(workspace_path.lower())
 

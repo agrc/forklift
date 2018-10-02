@@ -303,38 +303,6 @@ def _remove_hash_from_workspace(workspace):
     arcpy.env.workspace = None
 
 
-def _hydrate_data_structures(specific_pallets, all_pallets):
-    services_affected = set([])
-    data_being_moved = set([])
-    destination_to_pallet = {}
-
-    def normalize_workspace(workspace_path):
-        return path.normpath(workspace_path.lower())
-
-    #: get the services affected by this pallet
-    for pallet in specific_pallets:
-        for service in pallet.arcgis_services:
-            services_affected.add(service)
-
-        for workspace in pallet.copy_data:
-            data_being_moved.add(normalize_workspace(workspace))
-
-    #: append the services that share datasources
-    for pallet in all_pallets:
-        for workspace in pallet.copy_data:
-            workspace = normalize_workspace(workspace)
-            if workspace not in data_being_moved:
-                continue
-
-            for service in pallet.arcgis_services:
-                services_affected.add(service)
-
-            destination_to_pallet.setdefault(workspace, []).append(pallet)
-            break
-
-    return services_affected, data_being_moved, destination_to_pallet
-
-
 def _get_locations_for_dropoff(specific_pallets, all_pallets):
     def normalize_workspace(workspace_path):
         return path.normpath(workspace_path.lower())

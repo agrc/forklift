@@ -37,9 +37,12 @@ shape_field_index = -2
 
 def init(logger):
     '''
-    make sure forklift is ready to run. create the hashing gdb and clear out the scratch geodatabase
+    logger: object
+
+    Make sure forklift is ready to run. Create or clear out the scratch geodatabase.
     logger is passed in from cli.py (rather than just setting it via `log = logging.getLogger('forklift')`)
-    to enable other projects to use this module without colliding with the same logger'''
+    to enable other projects to use this module without colliding with the same logger
+    '''
     global log
     log = logger
 
@@ -67,8 +70,8 @@ def update(crate, validate_crate):
         One of the result string constants from models.Crate
 
     Checks to see if a crate can be updated by using validate_crate (if implemented
-    within the pallet) or check_schema otherwise. If the crate is valid it
-    then updates the data.'''
+    within the pallet) or check_schema otherwise. If the crate is valid it then updates the data.
+    '''
     arcpy.env.geographicTransformations = crate.geographic_transformation
     change_status = (Crate.NO_CHANGES, None)
 
@@ -155,11 +158,10 @@ def update(crate, validate_crate):
 
 
 def _hash(crate):
+    '''crate: Crate
+
+    returns a Changes model with deltas for the source
     '''
-    crate: Crate
-
-    returns a Changes model with deltas for the source'''
-
     shape_token = 'SHAPE@WKT'
 
     log.info('checking for changes...')
@@ -245,6 +247,10 @@ def _hash(crate):
 
 
 def _create_destination_data(crate):
+    '''crate: Crate
+
+    Creates the destination workspace (if necessary) and table/feature class.
+    '''
     if not path.exists(crate.destination_workspace):
         if crate.destination_workspace.endswith('.gdb'):
             log.warning('destination not found; creating %s', crate.destination_workspace)
@@ -270,10 +276,10 @@ def _create_destination_data(crate):
 
 
 def _get_hash_lookups(destination):
-    '''
-    destination: string path to destination data
+    '''destination: string - path to destination data
 
-    returns a hash lookup for all attributes including geometries'''
+    returns a hash lookup for all attributes including geometries
+    '''
     hash_lookup = {}
 
     with arcpy.da.SearchCursor(destination, [hash_field]) as cursor:
@@ -285,10 +291,10 @@ def _get_hash_lookups(destination):
 
 
 def check_schema(crate):
-    '''
-    crate: Crate
+    '''crate: Crate
 
-    returns: Boolean - True if the schemas match, raises ValidationException if no match'''
+    returns: Boolean - True if the schemas match, raises ValidationException if no match
+    '''
 
     def get_fields(dataset):
         field_dict = {}
@@ -355,12 +361,12 @@ def check_schema(crate):
 
 
 def _filter_fields(fields):
-    '''
-    fields: String[]
+    '''fields: String[]
 
     returns: String[]
 
-    Filters out fields that mess up the update logic.'''
+    Filters out fields that mess up the update logic.
+    '''
     new_fields = [field for field in fields if not _is_naughty_field(field)]
     new_fields.sort()
 
@@ -368,12 +374,12 @@ def _filter_fields(fields):
 
 
 def _is_naughty_field(field):
-    '''
-    field: String
+    '''field: String
 
     returns: Boolean
 
-    determines if field is a field that we want to exclude from hashing'''
+    determines if field is a field that we want to exclude from hashing
+    '''
     #: global id's do not export to file geodatabase
     #: removes objectid_ which is created by geoprocessing tasks and wouldn't be in destination source
     #: TODO: Deal with possibility of OBJECTID_* being the OIDFieldName

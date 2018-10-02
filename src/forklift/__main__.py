@@ -61,6 +61,8 @@ speedtest = join(dirname(realpath(__file__)), '..', '..', 'speedtest', 'SpeedTes
 
 
 def main():
+    '''Main entry point for program. Parse arguments and pass to cli module
+    '''
 
     args = docopt(__doc__, version='8.5.0')
     _setup_logging(args['--verbose'])
@@ -126,6 +128,13 @@ def main():
 
 
 def global_exception_handler(ex_cls, ex, tb):
+    '''
+    ex_cls: Class - the type of the exception
+    ex: object - the exception object
+    tb: Traceback
+
+    Used to handle any uncaught exceptions. Formats an error message, logs it, and sends an email.
+    '''
     import traceback
 
     log = logging.getLogger('forklift')
@@ -143,10 +152,16 @@ def global_exception_handler(ex_cls, ex, tb):
 
 
 def _add_global_error_handler():
+    '''Handle all otherwise unhandled exceptions with the function above
+    '''
     sys.excepthook = global_exception_handler
 
 
 def _setup_logging(verbose):
+    '''verbose: boolean
+
+    configures the logger
+    '''
     log = logging.getLogger('forklift')
 
     log.logThreads = 0

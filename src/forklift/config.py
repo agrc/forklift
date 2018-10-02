@@ -19,6 +19,8 @@ default_num_processes = 20
 
 
 def create_default_config():
+    '''stubs out a config file with default values
+    '''
     try:
         makedirs(dirname(config_location))
     except Exception:
@@ -58,6 +60,8 @@ def create_default_config():
 
 
 def _get_config():
+    '''returns a dictionary representing the current config file (creating one if it doesn't not already exist)
+    '''
     #: write default config if the file does not exist
     if not exists(config_location):
         create_default_config()
@@ -67,6 +71,10 @@ def _get_config():
 
 
 def get_config_prop(key):
+    '''key: string
+
+    returns the config value for the specified key
+    '''
     if key.lower() != 'servers':
         return _get_config()[key]
 
@@ -84,6 +92,15 @@ def get_config_prop(key):
 
 
 def set_config_prop(key, value, override=False):
+    '''
+    key: string
+    value: any
+    override: boolean
+
+    Sets the key for the config to the passed in value.
+
+    returns a string describing the results
+    '''
     config = _get_config()
 
     if key not in config:

@@ -131,10 +131,8 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
   - `pip install nose-cov rednose`
 - run tests
   - `nosetests --with-id --rednose --cov-config .coveragerc --with-coverage --cover-package forklift --cov-report term-missing --cover-erase`
-
-#### To rerun only failed tests
-
-`nosetests --failed --rednose --cov-config .coveragerc --with-coverage --cover-package forklift --cov-report term-missing --cover-erase`
+- rerun only failed tests
+  - `nosetests --failed --rednose --cov-config .coveragerc --with-coverage --cover-package forklift --cov-report term-missing --cover-erase`
 
 _Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) will automatically be skipped if it is not found on your system._
 

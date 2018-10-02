@@ -84,11 +84,9 @@ class TestRepos(unittest.TestCase):
             remove(config_location)
 
     def test_add_repo(self):
-        path = cli.init()
-
         cli.add_repo('agrc/forklift')
 
-        with open(path) as config:
+        with open(self.path) as config:
             self.assertEqual(['agrc/forklift'], loads(config.read())['repositories'])
 
     def test_add_repo_invalid(self):
@@ -105,7 +103,8 @@ class TestRepos(unittest.TestCase):
         with open(self.path) as config:
             self.assertEqual(loads(config.read())['repositories'], ['tests/data'])
 
-    def test_remove_repo(self):
+    @patch('forklift.cli.lift._remove_if_exists')
+    def test_remove_repo(self, lift):
         test_config_path = join(test_data_folder, 'remove_test_config.json')
 
         with open(self.path, 'w') as json_data_file, open(test_config_path) as test_config_file:
@@ -115,6 +114,15 @@ class TestRepos(unittest.TestCase):
 
         with open(self.path) as test_config_file:
             self.assertEqual(['path/two'], loads(test_config_file.read())['repositories'])
+
+    @patch('forklift.config.get_config_prop', return_value='test')
+    @patch('forklift.cli._get_repos', return_value=['path/one'])
+    @patch('forklift.cli.lift._remove_if_exists')
+    def test_deletes_repository_folder(self, lift, remove, config):
+        cli.remove_repo('path/one')
+
+        lift.assert_called_once()
+        lift.assert_called_with(join('test', 'one'))
 
     def test_remove_repo_checks_for_existing(self):
         self.assertEqual('{} is not in the repositories list!'.format('blah'), cli.remove_repo('blah'))

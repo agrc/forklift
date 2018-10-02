@@ -164,6 +164,8 @@ def ship_data(pallet_arg=None):
         log.info('only packing slip found in pickup location... shipping pallets only')
         ship_only = True
 
+    failed_copies = {}
+    successful_copies = []
     if not ship_only:
         switches = [LightSwitch(server) for server in servers.items()]
 
@@ -173,39 +175,55 @@ def ship_data(pallet_arg=None):
             #: stop server
             status, messages, services = switch.ensure('stop')
             #: copy data
-            lift.copy_data(config.get_config_prop('dropoffLocation'), config.get_config_prop('shipTo'), packing_slip_file, switch.server_qualified_name)
+            successful_copies, failed_copies = lift.copy_data(config.get_config_prop('dropoffLocation'),
+                                                              config.get_config_prop('shipTo'),
+                                                              packing_slip_file,
+                                                              switch.server_qualified_name)
+
             log.info('starting (%s)', switch.server_label)
             #: start server
             status, messages, services = switch.ensure('start', services)
             #: wait period (failover logic)
             # sleep(300)
 
-    if missing_packing_slip:
-        #: send report
-        return
+    pallet_reports = []
+    if not missing_packing_slip:
+        #: get affected pallets
+        pallets_to_ship = _process_packing_slip()
 
-    #: get affected pallets
-    pallets_to_ship = _process_packing_slip()
+        for pallet in pallets_to_ship:
+            slip = pallet.slip
 
-    report = []
+            # check to see if copy was successful
+            copy_items = [basename(item) for item in pallet.copy_data]
+            for copy_item in copy_items:
+                if copy_item in failed_copies.keys():
+                    slip['success'] = False
+                    slip['message'] += failed_copies[copy_item]
 
-    for pallet in pallets_to_ship:
-        slip = pallet.slip
-        #: run pallet lifecycle
-        #: post copy process
-        if pallet.slip['success'] and pallet.slip['requires_processing']:
-            log.info('post copy processing (%r)', pallet)
-            pallet.post_copy_process()
-            slip['post_copy_processed'] = True
+            #: run pallet lifecycle
+            #: post copy process
+            try:
+                if slip['success'] and slip['requires_processing']:
+                    log.info('post copy processing (%r)', pallet)
+                    pallet.post_copy_process()
+                    slip['post_copy_processed'] = True
 
-        if pallet.slip['success']:
-            log.info('shipping (%r)', pallet)
-            pallet.ship()
-            slip['shipped'] = True
+                if slip['success']:
+                    log.info('shipping (%r)', pallet)
+                    pallet.ship()
+                    slip['shipped'] = True
+            except Exception as e:
+                slip['success'] = False
+                slip['message'] = e
+                log.error('error for pallet: %r: %s', pallet, e, exc_info=True)
 
-        report.append(slip)
+            pallet_reports.append(slip)
 
     #: send report?
+    report = {}
+    report['data_moved'] = successful_copies
+    report['pallets'] = pallet_reports
     log.info('%r', report)
     return report
 

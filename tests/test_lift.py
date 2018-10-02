@@ -146,9 +146,9 @@ class TestLift(unittest.TestCase):
         pallet.copy_data = ['C:\\MapData\\one.gdb']
         pallet.requires_processing = Mock(return_value=True)
 
-        report = lift.copy_data('from_location', 'to_location', cli.packing_slip_file)
+        success, failed = lift.copy_data('from_location', 'to_location', cli.packing_slip_file)
 
-        self.assertTrue(report['to_location\\testfile'].startswith(error_message))
+        self.assertTrue(failed['testfile'].startswith(error_message))
 
     def test_copy_data_scrub_hash_field(self):
         copy_data_fgdb_name = 'CopyData.gdb'

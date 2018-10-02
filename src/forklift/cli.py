@@ -15,7 +15,7 @@ from os.path import (abspath, basename, dirname, exists, join, realpath,
                      splitext)
 from re import compile
 from shutil import rmtree
-from time import clock
+from time import clock, sleep
 
 import pystache
 from colorama import Fore
@@ -173,7 +173,7 @@ def ship_data(pallet_arg=None):
         for switch in switches:
             log.info('stopping (%s)', switch.server_label)
             #: stop server
-            status, messages, services = switch.ensure('stop')
+            status, messages = switch.ensure('stop')
             #: copy data
             successful_copies, failed_copies = lift.copy_data(config.get_config_prop('dropoffLocation'),
                                                               config.get_config_prop('shipTo'),
@@ -182,9 +182,10 @@ def ship_data(pallet_arg=None):
 
             log.info('starting (%s)', switch.server_label)
             #: start server
-            status, messages, services = switch.ensure('start', services)
+            status, messages = switch.ensure('start')
             #: wait period (failover logic)
-            # sleep(300)
+            sleep(config.get_config_prop('serverStartWaitSeconds'))
+            problem_services = switch.validate_service_state()
 
     pallet_reports = []
     if not missing_packing_slip:
@@ -221,9 +222,9 @@ def ship_data(pallet_arg=None):
             pallet_reports.append(slip)
 
     #: send report?
-    report = {}
-    report['data_moved'] = successful_copies
-    report['pallets'] = pallet_reports
+    report = {'data_moved': successful_copies,
+              'pallets': pallet_reports,
+              'problem_services': problem_services}
     log.info('%r', report)
     return report
 

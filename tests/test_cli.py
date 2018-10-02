@@ -394,7 +394,7 @@ class TestShipData(unittest.TestCase):
 
         report = cli.ship_data()
 
-        self.assertEqual(report, [])
+        self.assertEqual(report, {'data_moved': [], 'pallets': []})
         copy_data.assert_not_called()
         packing_slip.assert_called_once()
 
@@ -410,6 +410,7 @@ class TestShipData(unittest.TestCase):
         pallet = Mock(slip=slip)
         pallet.ship.return_value = None
         pallet.post_copy_process.return_value = None
+        pallet.copy_data = []
         packing_slip.return_value = [pallet]
 
         cli.ship_data()
@@ -429,6 +430,7 @@ class TestShipData(unittest.TestCase):
         pallet = Mock(slip=slip)
         pallet.ship.return_value = None
         pallet.post_copy_process.return_value = None
+        pallet.copy_data = []
         packing_slip.return_value = [pallet]
 
         cli.ship_data()

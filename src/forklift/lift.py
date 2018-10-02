@@ -231,7 +231,8 @@ def copy_data(from_location, to_template, packing_slip_file, machine_name=None):
 
     Copies databases from either `copy_data` or `static_data` to `config_copy_destinations`.
     '''
-    report = {}
+    failed = {}
+    successful = []
     data_being_moved = set(listdir(from_location)) - set([packing_slip_file])
 
     for source in data_being_moved:
@@ -259,6 +260,7 @@ def copy_data(from_location, to_template, packing_slip_file, machine_name=None):
                 else:
                     shutil.rmtree(temp_path)
 
+            successful.append(source)
             log.info('copy successful in %s', seat.format_time(clock() - start_seconds))
         except Exception:
             try:
@@ -278,13 +280,13 @@ def copy_data(from_location, to_template, packing_slip_file, machine_name=None):
                         shutil.rmtree(temp_path)
             except Exception:
                 log.error('%s might be in a corrupted state', destination_path, exc_info=True)
-                report[destination_path] = 'might be in a corrupted state'
+                failed[source] = 'might be in a corrupted state'
 
             log.error('there was an error copying %s to %s', source, destination_path, exc_info=True)
-            report.setdefault(destination_path, '')
-            report[destination_path] += 'there was an error copying {} to {}'.format(source, destination_path)
+            failed.setdefault(source, '')
+            failed[source] += 'there was an error copying {} to {}'.format(source, destination_path)
 
-    return report
+    return successful, failed
 
 
 def _remove_hash_from_workspace(workspace):

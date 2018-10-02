@@ -1,3 +1,4 @@
 {
-    "repositories": ["path/one", "path/two"]
+    "repositories": ["path/one", "path/two"],
+    "warehouse": "testlocation"
 }

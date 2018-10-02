@@ -64,6 +64,11 @@ def remove_repo(repo):
 
     config.set_config_prop('repositories', repos, override=True)
 
+    repository_name = repo.split('/')[1]
+    possible_path = join(config.get_config_prop('warehouse'), repository_name)
+
+    lift._remove_if_exists(possible_path)
+
     return '{} removed'.format(repo)
 
 

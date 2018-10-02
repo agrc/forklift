@@ -49,6 +49,32 @@ class TestLightSwitch(unittest.TestCase):
         _fetch_mock.assert_called_once()
         _fetch_mock.assert_called_with(self.patient.switch_url + 'start')
 
+    @patch('forklift.arcgis._fetch')
+    def test_vaidate_service_state(self, fetch):
+        def fake_server(value):
+            if value.endswith('arcgis/admin/services?f=json'):
+                return '{"folderName":"/","description":"Root folder","folders":["App1"],"services":[{folderName: "/",serviceName: "Service1",type: "MapServer",description: ""}, {folderName: "/",serviceName: "Service2",type: "GPServer",description: ""}]}'
+            elif value.endswith('arcgis/admin/services/App1?f=json'):
+                return '{"folderName":"/App1","description":"App folder","services":[{folderName: "/App1",serviceName: "Service3",type: "MapServer",description: ""}, {folderName: "/App1",serviceName: "Service4",type: "GPServer",description: ""}]}'
+            elif value.endswith('arcgis/admin/services/App1/Service1.MapServer/status?f=json'):
+                return '{ configuredState: "STARTED", realTimeState: "STOPPED" }'
+            elif value.endswith('arcgis/admin/services/App1/Service2.GPServer/status?f=json'):
+                return '{ configuredState: "STARTED", realTimeState: "STARTED" }'
+            elif value.endswith('arcgis/admin/services/Service3.MapServer/status?f=json'):
+                return '{ configuredState: "STARTED", realTimeState: "STOPPED" }'
+            elif value.endswith('arcgis/admin/services/Service4.GPServer/status?f=json'):
+                return '{ configuredState: "STARTED", realTimeState: "STARTED" }'
+
+        fetch.side_effect = fake_server
+
+        services = self.patient.validate_service_state()
+        self.assertEqual(services, ['App1/Service1.MapServer', 'Service3.Mapserver'])
+
+    def test_vaidate_service_state_returns_empty_when_server_is_stopped(self):
+        self.patient._started = False
+        services = self.patient.validate_service_state()
+        self.assertEqual(len(services), 0)
+
     @patch('forklift.arcgis.sleep')
     @patch('forklift.arcgis.requests')
     def test_fetch_requests_token_when_expired(self, request, sleep):
@@ -152,7 +178,8 @@ class TestLightSwitch(unittest.TestCase):
         self.patient.token_expire_milliseconds = 9223372036854775807
         status, message = self.patient._fetch('url')
 
-        self.assertEqual(post.call_count, 1)
+        self.assertEqual(post.call
+        _count, 1)
         self.assertFalse(status)
         self.assertEqual(message, post.side_effect)
 

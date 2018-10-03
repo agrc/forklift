@@ -7,6 +7,7 @@ A module that contains the implementation of the cli commands
 '''
 
 import logging
+import socket
 import sys
 from imp import load_source
 from json import dump, load
@@ -190,6 +191,10 @@ def ship_data(pallet_arg=None):
 
     returns the report object
     '''
+    log.info('starting forklift')
+
+    start_seconds = clock()
+
     #: look for servers in config
     servers = config.get_config_prop('servers')
 
@@ -219,26 +224,50 @@ def ship_data(pallet_arg=None):
     failed_copies = {}
     successful_copies = []
     problem_services = []
+    start_process = clock()
     if not ship_only:
         switches = [LightSwitch(server) for server in servers.items()]
 
         #: for each server
         for switch in switches:
             log.info('stopping (%s)', switch.server_label)
+            start_sub_process = clock()
+
             #: stop server
             status, messages = switch.ensure('stop')
+
+            log.info('stopping %s time: %s', switch.server_label, seat.format_time(clock() - start_sub_process))
+
+            start_sub_process = clock()
+
             #: copy data
             successful_copies, failed_copies = lift.copy_data(config.get_config_prop('dropoffLocation'),
                                                               config.get_config_prop('shipTo'),
                                                               packing_slip_file,
                                                               switch.server_qualified_name)
+            log.info('copy data time: %s', seat.format_time(clock() - start_sub_process))
 
             log.info('starting (%s)', switch.server_label)
+
+            start_sub_process = clock()
+
             #: start server
             status, messages = switch.ensure('start')
+
+            log.info('starting %s time: %s', switch.server_label, seat.format_time(clock() - start_sub_process))
+
             #: wait period (failover logic)
-            sleep(config.get_config_prop('serverStartWaitSeconds'))
+            sleep_timer = config.get_config_prop('serverStartWaitSeconds')
+            log.debug('sleeping: %s', sleep_timer)
+
+            sleep(sleep_timer)
+
+            start_sub_process = clock()
+
             problem_services = switch.validate_service_state()
+
+            log.info('validate service time: %s', seat.format_time(clock() - start_sub_process))
+        log.info('total copy time: %s', seat.format_time(clock() - start_process))
 
     pallet_reports = []
     if not missing_packing_slip:
@@ -274,9 +303,14 @@ def ship_data(pallet_arg=None):
 
             pallet_reports.append(slip)
 
-    status = {'data_moved': successful_copies,
+    elapsed_time = seat.format_time(clock() - start_seconds)
+    status = {'hostname': socket.gethostname(),
+              'total_pallets': len(pallet_reports),
               'pallets': pallet_reports,
-              'problem_services': problem_services}
+              'num_success_pallets': len([p for p in pallet_reports if p['success']]),
+              'data_moved': successful_copies,
+              'problem_services': problem_services,
+              'total_time': elapsed_time}
 
     _send_report_email(ship_template, status)
 

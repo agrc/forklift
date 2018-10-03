@@ -9,11 +9,12 @@ change them to match services that are already published to your server.
 '''
 import sys
 from os import path
-forklift_path = path.join(path.dirname(path.abspath(__file__)), r'..\src')
-sys.path.insert(0, forklift_path)
+from time import clock  # NOQA
 
 from forklift.arcgis import LightSwitch  # NOQA
-from time import clock  # NOQA
+
+forklift_path = path.join(path.dirname(path.abspath(__file__)), r'..\src')
+sys.path.insert(0, forklift_path)
 
 
 SERVICES = [

@@ -52,7 +52,7 @@ from os.path import abspath, dirname, join, realpath
 
 from docopt import docopt
 
-from . import cli, config, messaging
+from . import config, engine, messaging
 
 log_location = join(abspath(dirname(__file__)), '..', 'forklift-garage', 'forklift.log')
 detailed_formatter = logging.Formatter(fmt='%(levelname)-7s %(asctime)s %(module)10s:%(lineno)5s %(message)s',
@@ -61,7 +61,7 @@ speedtest = join(dirname(realpath(__file__)), '..', '..', 'speedtest', 'SpeedTes
 
 
 def main():
-    '''Main entry point for program. Parse arguments and pass to cli module
+    '''Main entry point for program. Parse arguments and pass to engine module
     '''
 
     args = docopt(__doc__, version='8.5.0')
@@ -75,15 +75,15 @@ def main():
 
     if args['config']:
         if args['init']:
-            message = cli.init()
+            message = engine.init()
             print(('config file: {}'.format(message)))
 
         if args['repos'] and args['<repo>']:
             if args['--add']:
-                message = cli.add_repo(args['<repo>'])
+                message = engine.add_repo(args['<repo>'])
 
             if args['--remove']:
-                message = cli.remove_repo(args['<repo>'])
+                message = engine.remove_repo(args['<repo>'])
 
             print(message)
 
@@ -92,27 +92,27 @@ def main():
             print(message)
 
         if args['repos'] and args['--list']:
-            for folder in cli.list_repos():
+            for folder in engine.list_repos():
                 print(folder)
     elif args['garage'] and args['open']:
-        startfile(dirname(cli.init()))
+        startfile(dirname(engine.init()))
     elif args['git-update']:
-        cli.git_update()
+        engine.git_update()
     elif args['lift']:
         if args['<file-path>']:
             if args['--pallet-arg']:
-                cli.lift_pallets(args['<file-path>'], args['<arg>'])
+                engine.lift_pallets(args['<file-path>'], args['<arg>'])
             else:
-                cli.lift_pallets(args['<file-path>'])
+                engine.lift_pallets(args['<file-path>'])
         else:
-            cli.lift_pallets()
+            engine.lift_pallets()
     elif args['ship']:
         if args['--pallet-arg']:
-            cli.ship_data(args['<arg>'])
+            engine.ship_data(args['<arg>'])
         else:
-            cli.ship_data()
+            engine.ship_data()
     elif args['list-pallets']:
-        pallets = cli.list_pallets()
+        pallets = engine.list_pallets()
 
         if len(pallets) == 0:
             print('No pallets found!')
@@ -120,9 +120,9 @@ def main():
             for path, pallet_class in pallets:
                 print((': '.join([path, str(pallet_class)])))
     elif args['scorched-earth']:
-        cli.scorched_earth()
+        engine.scorched_earth()
     elif args['speedtest']:
-        cli.speedtest(speedtest)
+        engine.speedtest(speedtest)
 
     shutdown()
 

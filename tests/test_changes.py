@@ -7,6 +7,7 @@ A module that contains the tests for the changes model
 '''
 
 import unittest
+
 from forklift.models import Changes
 
 

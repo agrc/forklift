@@ -9,12 +9,13 @@ A module for testing crate.py
 import unittest
 from os import path
 
-import arcpy
-from arcpy import SpatialReference, env
-from forklift.models import Crate
 from mock import patch
 from nose import SkipTest
 from xxhash import xxh64
+
+import arcpy
+from arcpy import SpatialReference, env
+from forklift.models import Crate
 
 current_folder = path.dirname(path.abspath(__file__))
 check_for_changes_fgdb = path.join(current_folder, 'data', 'checkForChanges.gdb')

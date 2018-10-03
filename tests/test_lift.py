@@ -12,7 +12,7 @@ from os import path
 from mock import Mock, patch
 
 import arcpy
-from forklift import cli, core, lift
+from forklift import core, engine, lift
 from forklift.models import Crate, Pallet
 
 fgd_describe = Mock()
@@ -146,7 +146,7 @@ class TestLift(unittest.TestCase):
         pallet.copy_data = ['C:\\MapData\\one.gdb']
         pallet.requires_processing = Mock(return_value=True)
 
-        success, failed = lift.copy_data('from_location', 'to_location', cli.packing_slip_file)
+        success, failed = lift.copy_data('from_location', 'to_location', engine.packing_slip_file)
 
         self.assertTrue(failed['testfile'].startswith(error_message))
 
@@ -163,7 +163,7 @@ class TestLift(unittest.TestCase):
 
         cleanup()
 
-        lift.copy_data(from_folder, to_folder, cli.packing_slip_file)
+        lift.copy_data(from_folder, to_folder, engine.packing_slip_file)
         lift.gift_wrap(to_folder)
 
         feature_class_fields = [field.name for field in arcpy.Describe(path.join(copied_data, 'DNROilGasWells_adds')).fields]

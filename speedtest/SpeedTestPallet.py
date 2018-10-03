@@ -7,8 +7,9 @@ A module that contains Pallets to test forklift speed. These can be thought of a
 We should be able to run them twice without errors. Once to create, and once to check for updates.
 '''
 
-from forklift.models import Pallet
 from os import path
+
+from forklift.models import Pallet
 
 data_folder = path.join(path.dirname(path.realpath(__file__)), 'data')
 destination_workspace = path.join(data_folder, 'DestinationData.gdb')

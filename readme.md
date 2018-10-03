@@ -35,7 +35,7 @@ For examples of pallets see [samples/PalletSamples.py](samples/PalletSamples.py)
 
 ### CLI
 
-Interacting with forklift is done via the [command line interface](src/forklift/cli.py). Run `forklift -h` for a list of all of the available commands.
+Interacting with forklift is done via the [command line interface](src/forklift/__main__.py). Run `forklift -h` for a list of all of the available commands.
 
 ### Config File Properties
 

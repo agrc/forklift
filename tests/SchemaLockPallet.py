@@ -6,8 +6,9 @@ SchemaLockPallet.py
 A module that contains Pallets to test forklift with data that is being used by arcgis server service.
 These can be thought of as acceptance/exploritory tests.
 '''
-from forklift.models import Pallet
 from os import path
+
+from forklift.models import Pallet
 
 data_folder = path.join(path.dirname(path.realpath(__file__)), 'data')
 

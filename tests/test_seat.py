@@ -7,6 +7,7 @@ A module that tests seat.py
 '''
 
 import unittest
+
 from forklift import seat
 
 

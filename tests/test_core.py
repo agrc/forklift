@@ -9,12 +9,13 @@ Tests for the core.py module
 import unittest
 from os import path
 
-import arcpy
-from forklift import cli, core
-from forklift.exceptions import ValidationException
-from forklift.models import Changes, Crate
 from mock import Mock, patch
 from nose import SkipTest
+
+import arcpy
+from forklift import core, engine
+from forklift.exceptions import ValidationException
+from forklift.models import Changes, Crate
 
 from . import mocks
 
@@ -48,8 +49,8 @@ class CoreTests(unittest.TestCase):
         delete_if_arcpy_exists(test_gdb)
         delete_if_arcpy_exists(test_folder)
         delete_if_arcpy_exists(duplicates_gdb_copy)
-        cli.init()
-        core.init(cli.log)
+        engine.init()
+        core.init(engine.log)
 
     def tearDown(self):
         delete_if_arcpy_exists(test_gdb)

@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # * coding: utf8 *
 '''
-test_cli.py
+test_engine.py
 
-A module that contains tests for the cli.py module
+A module that contains tests for the engine.py module
 '''
 
 import unittest
@@ -13,7 +13,7 @@ from os.path import abspath, dirname, exists, join
 
 from mock import Mock, mock_open, patch
 
-from forklift import cli, config, core
+from forklift import config, core, engine
 from forklift.models import Crate
 
 from .mocks import PoolMock
@@ -34,7 +34,7 @@ class TestConfigInit(unittest.TestCase):
             remove(config_location)
 
     def test_init_creates_default_config_file(self):
-        path = cli.init()
+        path = engine.init()
 
         self.assertTrue(exists(path))
 
@@ -64,11 +64,12 @@ class TestConfigInit(unittest.TestCase):
                         }
                     },
                     u'shipTo': [u'c:\\forklift\\data\\production'],
-                    u"warehouse": u"c:\\scheduled\\warehouse",
+                    u'warehouse': u'c:\\scheduled\\warehouse',
+                    u'serverStartWaitSeconds': 300
                 })
 
     def test_init_returns_path_for_existing_config_file(self):
-        self.assertEqual(cli.init(), cli.init())
+        self.assertEqual(engine.init(), engine.init())
 
 
 class TestRepos(unittest.TestCase):
@@ -77,60 +78,60 @@ class TestRepos(unittest.TestCase):
         if exists(config_location):
             remove(config_location)
 
-        self.path = cli.init()
+        self.path = engine.init()
 
     def tearDown(self):
         if exists(config_location):
             remove(config_location)
 
     def test_add_repo(self):
-        cli.add_repo('agrc/forklift')
+        engine.add_repo('agrc/forklift')
 
         with open(self.path) as config:
             self.assertEqual(['agrc/forklift'], loads(config.read())['repositories'])
 
     def test_add_repo_invalid(self):
-        result = cli.add_repo('bad/repo')
+        result = engine.add_repo('bad/repo')
 
         self.assertIn('[Invalid repo name or owner]', str(result))
 
-    @patch('forklift.cli._validate_repo')
+    @patch('forklift.engine._validate_repo')
     def test_add_repo_checks_for_duplicates(self, _validate_repo_mock):
         _validate_repo_mock.return_value = ''
-        cli.add_repo('tests/data')
-        cli.add_repo('tests/data')
+        engine.add_repo('tests/data')
+        engine.add_repo('tests/data')
 
         with open(self.path) as config:
             self.assertEqual(loads(config.read())['repositories'], ['tests/data'])
 
-    @patch('forklift.cli.lift._remove_if_exists')
+    @patch('forklift.engine.lift._remove_if_exists')
     def test_remove_repo(self, lift):
         test_config_path = join(test_data_folder, 'remove_test_config.json')
 
         with open(self.path, 'w') as json_data_file, open(test_config_path) as test_config_file:
             json_data_file.write(test_config_file.read())
 
-        cli.remove_repo('path/one')
+        engine.remove_repo('path/one')
 
         with open(self.path) as test_config_file:
             self.assertEqual(['path/two'], loads(test_config_file.read())['repositories'])
 
     @patch('forklift.config.get_config_prop', return_value='test')
-    @patch('forklift.cli._get_repos', return_value=['path/one'])
-    @patch('forklift.cli.lift._remove_if_exists')
+    @patch('forklift.engine._get_repos', return_value=['path/one'])
+    @patch('forklift.engine.lift._remove_if_exists')
     def test_deletes_repository_folder(self, lift, remove, config):
-        cli.remove_repo('path/one')
+        engine.remove_repo('path/one')
 
         lift.assert_called_once()
         lift.assert_called_with(join('test', 'one'))
 
     def test_remove_repo_checks_for_existing(self):
-        self.assertEqual('{} is not in the repositories list!'.format('blah'), cli.remove_repo('blah'))
+        self.assertEqual('{} is not in the repositories list!'.format('blah'), engine.remove_repo('blah'))
 
     def test_list_repos(self):
         config.set_config_prop('repositories', ['blah', 'blah2'], override=True)
 
-        result = cli.list_repos()
+        result = engine.list_repos()
 
         self.assertEqual(result, ['blah: [Invalid repo name or owner]', 'blah2: [Invalid repo name or owner]'])
 
@@ -141,7 +142,7 @@ class TestListPallets(unittest.TestCase):
         if exists(config_location):
             remove(config_location)
 
-        cli.init()
+        engine.init()
 
     def tearDown(self):
         if exists(config_location):
@@ -149,7 +150,7 @@ class TestListPallets(unittest.TestCase):
 
     def test_list_pallets(self):
         test_pallets_folder = join(test_data_folder, 'list_pallets')
-        pallets = cli._get_pallets_in_folder(test_pallets_folder)
+        pallets = engine._get_pallets_in_folder(test_pallets_folder)
 
         self.assertEqual(len(pallets), 4)
         self.assertEqual(pallets[0][0], join(test_pallets_folder, 'multiple_pallets.py'))
@@ -158,29 +159,29 @@ class TestListPallets(unittest.TestCase):
 
     def test_list_pallets_from_config(self):
         config.set_config_prop('warehouse', test_pallets_folder, override=True)
-        pallets = cli.list_pallets()
+        pallets = engine.list_pallets()
 
         self.assertEqual(len(pallets), 4)
         self.assertEqual(pallets[0][0], join(test_pallets_folder, 'multiple_pallets.py'))
         self.assertEqual(pallets[0][1].__name__, 'PalletOne')
 
     def test_list_pallets_order(self):
-        pallets = cli._get_pallets_in_file(join(test_data_folder, 'pallet_order.py'))
+        pallets = engine._get_pallets_in_file(join(test_data_folder, 'pallet_order.py'))
 
         self.assertEqual(pallets[0][1].__name__, 'PalletA')
         self.assertEqual(pallets[1][1].__name__, 'PalletB')
         self.assertEqual(pallets[2][1].__name__, 'PalletC')
 
     def test_get_specific_pallet_in_file(self):
-        pallets = cli._get_pallets_in_file(join(test_data_folder, 'pallet_order.py:PalletB'))
+        pallets = engine._get_pallets_in_file(join(test_data_folder, 'pallet_order.py:PalletB'))
         self.assertEqual(len(pallets), 1)
         self.assertEqual(pallets[0][1].__name__, 'PalletB')
 
     def test_get_pallets_in_file_same_pallet_twice(self):
         #: we should be able to import a pallet more than once from the same file
         #: use case is when you run a specific pallet that is located in the warehouse
-        pallets = cli._get_pallets_in_file(join(test_data_folder, 'duplicate_import.py'))
-        pallets2 = cli._get_pallets_in_file(join(test_data_folder, 'duplicate_import.py'))
+        pallets = engine._get_pallets_in_file(join(test_data_folder, 'duplicate_import.py'))
+        pallets2 = engine._get_pallets_in_file(join(test_data_folder, 'duplicate_import.py'))
 
         try:
             #: does not raise
@@ -192,13 +193,13 @@ class TestListPallets(unittest.TestCase):
             self.fail(e)
 
     def test_handles_build_errors(self):
-        pallets, all_pallets = cli._build_pallets(join(test_data_folder, 'BuildErrorPallet.py'), None)
+        pallets, all_pallets = engine._build_pallets(join(test_data_folder, 'BuildErrorPallet.py'), None)
 
         self.assertEqual(len([p for p in pallets if p.success[0]]), 1)
         self.assertEqual(len([p for p in pallets if not p.success[0]]), 2)
 
 
-@patch('forklift.cli.git_update')
+@patch('forklift.engine.git_update')
 @patch('forklift.lift.process_crates_for')
 @patch('forklift.lift.process_pallets')
 class TestLiftPallets(unittest.TestCase):
@@ -207,38 +208,38 @@ class TestLiftPallets(unittest.TestCase):
         if exists(config_location):
             remove(config_location)
 
-        cli.init()
+        engine.init()
 
     def tearDown(self):
         if exists(config_location):
             remove(config_location)
 
     def test_lift_pallets_with_path(self, process_pallets, process_crates_for, git_update):
-        cli.lift_pallets(join(test_pallets_folder, 'multiple_pallets.py'))
+        engine.lift_pallets(join(test_pallets_folder, 'multiple_pallets.py'))
 
         self.assertEqual(len(process_crates_for.call_args[0][0]), 2)
         self.assertEqual(len(process_pallets.call_args[0][0]), 2)
 
     def test_lift_pallets_with_out_path(self, process_pallets, process_crates_for, git_update):
         config.set_config_prop('warehouse', test_pallets_folder, override=True)
-        cli.lift_pallets()
+        engine.lift_pallets()
 
         self.assertEqual(len(process_crates_for.call_args[0][0]), 4)
         self.assertEqual(len(process_pallets.call_args[0][0]), 4)
 
     def test_lift_pallets_pallet_arg(self, process_pallets, process_crates_for, git_update):
-        cli.lift_pallets(join(test_data_folder, 'pallet_argument.py'), 'test')
+        engine.lift_pallets(join(test_data_folder, 'pallet_argument.py'), 'test')
 
         pallet = process_crates_for.call_args[0][0][0]
         self.assertEqual(pallet.arg, 'test')
 
-        cli.lift_pallets(join(test_data_folder, 'pallet_argument.py'))
+        engine.lift_pallets(join(test_data_folder, 'pallet_argument.py'))
 
         pallet = process_crates_for.call_args[0][0][0]
         self.assertEqual(pallet.arg, None)
 
     def test_lift_pallets_alphebetical_order(self, process_pallets, process_crates_for, git_update):
-        cli.lift_pallets(join(test_data_folder, 'alphabetize', 'pallet.py'))
+        engine.lift_pallets(join(test_data_folder, 'alphabetize', 'pallet.py'))
 
         order = [p.__class__.__name__ for p in process_crates_for.call_args[0][0]]
 
@@ -246,15 +247,15 @@ class TestLiftPallets(unittest.TestCase):
 
     @patch('forklift.lift.prepare_packaging_for_pallets')
     def test_lift_pallets_prepare_packaging(self, prepare_mock, process_pallets, process_crates_for, git_update):
-        cli.lift_pallets(join(test_data_folder, 'pallet_argument.py'))
+        engine.lift_pallets(join(test_data_folder, 'pallet_argument.py'))
 
         prepare_mock.assert_called_once()
 
 
-class TestCliGeneral(unittest.TestCase):
+class TestengineGeneral(unittest.TestCase):
 
     def test_repo_to_url(self):
-        self.assertEqual(cli._repo_to_url('repo'), 'https://github.com/repo.git')
+        self.assertEqual(engine._repo_to_url('repo'), 'https://github.com/repo.git')
 
 
 class TestGitUpdate(unittest.TestCase):
@@ -267,10 +268,10 @@ class TestGitUpdate(unittest.TestCase):
         if exists(config_location):
             remove(config_location)
 
-    @patch('forklift.cli.Pool', return_value=PoolMock())
+    @patch('forklift.engine.Pool', return_value=PoolMock())
     @patch('git.Repo.clone_from')
-    @patch('forklift.cli._get_repo')
-    @patch('forklift.cli._validate_repo')
+    @patch('forklift.engine._get_repo')
+    @patch('forklift.engine._validate_repo')
     def test_git_update(self, _validate_repo_mock, _get_repo_mock, clone_from_mock, poolmock):
         remote_mock = Mock()
         remote_mock.pull = Mock()
@@ -279,11 +280,11 @@ class TestGitUpdate(unittest.TestCase):
         repo_mock.remotes = [remote_mock]
         _get_repo_mock.return_value = repo_mock
         _validate_repo_mock.return_value = ''
-        cli.init()
+        engine.init()
         config.set_config_prop('warehouse', test_pallets_folder, override=True)
         config.set_config_prop('repositories', ['agrc/nested', 'agrc/forklift'])
 
-        results = cli.git_update()
+        results = engine.git_update()
 
         clone_from_mock.assert_called_once()
         remote_mock.pull.assert_called_once()
@@ -315,9 +316,9 @@ class TestPackingSlip(unittest.TestCase):
             'total_time': '5 minutes',
         }
 
-        print(cli._generate_console_report(report))
+        print(engine._generate_console_report(report))
 
-    @patch('forklift.cli.dump')
+    @patch('forklift.engine.dump')
     @patch('builtins.open', mock_open(read_data='1'))
     def test_generate_packing_slip_file(self, dump):
         good_crate = {'name': 'Good-Crate', 'result': Crate.CREATED, 'crate_message': None}
@@ -335,9 +336,9 @@ class TestPackingSlip(unittest.TestCase):
 
         report = {'total_pallets': 2, 'num_success_pallets': 1, 'git_errors': ['a git error'], 'pallets': [success, fail], 'total_time': '5 minutes'}
 
-        cli._generate_packing_slip(report, test_data_folder)
+        engine._generate_packing_slip(report, test_data_folder)
 
-        open.assert_called_with(join(test_data_folder, cli.packing_slip_file), 'w', encoding='utf-8')
+        open.assert_called_with(join(test_data_folder, engine.packing_slip_file), 'w', encoding='utf-8')
         dump.assert_called_once()
 
 
@@ -351,7 +352,7 @@ class TestScorchedEarth(unittest.TestCase):
         makedirs(test_folder)
         config.set_config_prop('hashLocation', test_hash_location)
 
-        cli.scorched_earth()
+        engine.scorched_earth()
 
         self.assertFalse(exists(core.scratch_gdb_path))
         self.assertFalse(exists(test_folder))
@@ -375,17 +376,17 @@ class TestShipData(unittest.TestCase):
   }
 ]'''
 
-    @patch('forklift.cli.listdir', return_value=[])
+    @patch('forklift.engine.listdir', return_value=[])
     def test_ship_exits_if_no_files_or_slip(self, listdir):
-        shipped = cli.ship_data()
+        shipped = engine.ship_data()
 
         self.assertFalse(shipped)
 
-    @patch('forklift.cli.exists', return_value=True)
-    @patch('forklift.cli._process_packing_slip')
+    @patch('forklift.engine.exists', return_value=True)
+    @patch('forklift.engine._process_packing_slip')
     @patch('forklift.config.get_config_prop')
     @patch('forklift.lift.copy_data')
-    @patch('forklift.cli.listdir', return_value=[cli.packing_slip_file])
+    @patch('forklift.engine.listdir', return_value=[engine.packing_slip_file])
     def test_ship_only_ships_if_only_slip_found(self, listdir, copy_data, config_prop, packing_slip, exists):
         def mock_props(value):
             if value == 'servers':
@@ -400,16 +401,16 @@ class TestShipData(unittest.TestCase):
 
         config_prop.side_effect = mock_props
 
-        report = cli.ship_data()
+        report = engine.ship_data()
 
-        self.assertEqual(report, {'data_moved': [], 'pallets': []})
+        self.assertEqual(report, {'data_moved': [], 'pallets': [], 'problem_services': []})
         copy_data.assert_not_called()
         packing_slip.assert_called_once()
 
-    @patch('forklift.cli.exists', return_value=True)
-    @patch('forklift.cli._process_packing_slip')
+    @patch('forklift.engine.exists', return_value=True)
+    @patch('forklift.engine._process_packing_slip')
     @patch('forklift.lift.copy_data')
-    @patch('forklift.cli.listdir', return_value=[cli.packing_slip_file])
+    @patch('forklift.engine.listdir', return_value=[engine.packing_slip_file])
     def test_post_process_if_success(self, listdir, copy_data, packing_slip, exists):
         slip = {
             'success': True,
@@ -421,15 +422,15 @@ class TestShipData(unittest.TestCase):
         pallet.copy_data = []
         packing_slip.return_value = [pallet]
 
-        cli.ship_data()
+        engine.ship_data()
 
         pallet.ship.assert_called_once()
         pallet.post_copy_process.assert_called_once()
 
-    @patch('forklift.cli.exists', return_value=True)
-    @patch('forklift.cli._process_packing_slip')
+    @patch('forklift.engine.exists', return_value=True)
+    @patch('forklift.engine._process_packing_slip')
     @patch('forklift.lift.copy_data')
-    @patch('forklift.cli.listdir', return_value=[cli.packing_slip_file])
+    @patch('forklift.engine.listdir', return_value=[engine.packing_slip_file])
     def test_post_process_if_not_success(self, listdir, copy_data, packing_slip, exists):
         slip = {
             'success': False,
@@ -441,7 +442,7 @@ class TestShipData(unittest.TestCase):
         pallet.copy_data = []
         packing_slip.return_value = [pallet]
 
-        cli.ship_data()
+        engine.ship_data()
 
         pallet.ship.assert_not_called()
         pallet.post_copy_process.assert_not_called()

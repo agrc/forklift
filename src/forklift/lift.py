@@ -13,10 +13,10 @@ from os import listdir, makedirs, path, remove, walk
 from time import clock
 
 import arcpy
-from forklift.models import Crate
 
 from . import seat
 from .core import hash_field
+from .models import Crate
 
 log = logging.getLogger('forklift')
 

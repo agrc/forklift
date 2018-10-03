@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # * coding: utf8 *
 '''
-lift.py
+engine.py
 
 A module that contains the implementation of the cli commands
 '''
@@ -217,6 +217,7 @@ def ship_data(pallet_arg=None):
 
     failed_copies = {}
     successful_copies = []
+    problem_services = []
     if not ship_only:
         switches = [LightSwitch(server) for server in servers.items()]
 

@@ -30,6 +30,20 @@ def send_email(to, subject, body, attachment=''):
 
     Send an email.
     '''
+    if send_emails_override == False:
+        log.info('send_emails_override is False. No email sent.')
+
+        return
+    elif send_emails_override == True:
+        pass
+    else:
+        user_email_preference = get_config_prop('sendEmails')
+
+        if user_email_preference == False:
+            log.info('forklift config is set to skip emails. No email sent.')
+
+            return
+
     email_server = get_config_prop('email')
     from_address = email_server['fromAddress']
     smtp_server = email_server['smtpServer']
@@ -37,6 +51,7 @@ def send_email(to, subject, body, attachment=''):
 
     if None in [from_address, smtp_server, smtp_port]:
         log.warn('Required environment variables for sending emails do not exist. No emails sent. See README.md for more details.')
+
         return
 
     if not isinstance(to, str):
@@ -65,12 +80,8 @@ def send_email(to, subject, body, attachment=''):
 
             message.attach(log_file_attachment)
 
-    if (send_emails_override is None and get_config_prop('sendEmails')) or \
-            (send_emails_override is not None and send_emails_override):
-        smtp = SMTP(smtp_server, smtp_port)
-        smtp.sendmail(from_address, to, message.as_string())
-        smtp.quit()
+    smtp = SMTP(smtp_server, smtp_port)
+    smtp.sendmail(from_address, to, message.as_string())
+    smtp.quit()
 
-        return smtp
-
-    log.info('sendEmails is False. No email sent.')
+    return smtp

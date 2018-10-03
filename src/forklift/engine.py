@@ -30,7 +30,8 @@ from .messaging import send_email
 from .models import Pallet
 
 log = logging.getLogger('forklift')
-template = join(abspath(dirname(__file__)), 'report_template.html')
+lift_template = join(abspath(dirname(__file__)), 'templates', 'lift.html')
+ship_template = join(abspath(dirname(__file__)), 'templates', 'ship.html')
 speedtest_destination = join(dirname(realpath(__file__)), '..', '..', 'speedtest', 'data')
 packing_slip_file = 'packing-slip.json'
 colorama_init()
@@ -169,7 +170,7 @@ def lift_pallets(file_path=None, pallet_arg=None, skip_git=False):
 
     _generate_packing_slip(status, config.get_config_prop('dropoffLocation'))
 
-    # _send_report_email(status)
+    _send_report_email(lift_template, status)
 
     report = _generate_console_report(status)
     log.info('Finished in {}.'.format(elapsed_time))
@@ -273,13 +274,15 @@ def ship_data(pallet_arg=None):
 
             pallet_reports.append(slip)
 
-    #: send report?
-    report = {'data_moved': successful_copies,
+    status = {'data_moved': successful_copies,
               'pallets': pallet_reports,
               'problem_services': problem_services}
-    log.info('%r', report)
 
-    return report
+    _send_report_email(ship_template, status)
+
+    log.info('%r', status)
+
+    return status
 
 
 def speedtest(pallet_location):
@@ -494,7 +497,7 @@ def _process_packing_slip(packing_slip=None):
     return pallets
 
 
-def _send_report_email(report_object):
+def _send_report_email(template, report_object):
     '''Create and sends the report email
     '''
     log_file = join(dirname(config.config_location), 'forklift.log')

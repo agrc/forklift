@@ -1,0 +1,57 @@
+<!-- gmail will strip the <style> tag if it's not in the <head> -->
+<head>
+  <style>
+    .error {
+      background-color: #fc7973;
+    }
+    .success {
+      background-color: #83ec8f;
+    }
+    .warning {
+      background-color: #fcc573;
+    }
+    .pull-right {
+      float: right;
+      margin-left: 20px;
+    }
+  </style>
+</head>
+<p><b>{{num_success_pallets}}</b> out of <b>{{total_pallets}}</b> pallets ran successfully in <b>{{total_time}}</b> on {{hostname}}.</p>
+<table>
+  <tbody>
+    {{#git_errors}}
+    <tr>
+      <td colspan="2" class="error">{{.}}</td>
+    </tr>
+    {{/git_errors}}
+    {{#pallets}}
+    <tr>
+      <td colspan="2" class="{{#success}}success{{/success}}{{^success}}error{{/success}}">
+        {{name}}
+        <span class="pull-right">
+          {{total_processing_time}}
+        </span>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="2"><b>{{message}}</b></td>
+    </tr>
+
+    {{#crates}}
+    <tr>
+      <td style="padding-left: 10px">{{name}}</td>
+      <td>{{result}}</td>
+    </tr>
+    {{#crate_message}}
+    <tr>
+      <td colspan="2" class="{{message_level}}" style="padding-left: 20px;"><b>{{crate_message}}</b></td>
+    </tr>
+    {{/crate_message}}
+    {{/crates}}
+
+    <tr>
+      <td></td>
+    </tr>
+    {{/pallets}}
+  </tbody>
+</table>

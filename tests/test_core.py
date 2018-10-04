@@ -321,7 +321,7 @@ class CoreTests(unittest.TestCase):
 
         core.update(crate, lambda x: True)
         with arcpy.da.UpdateCursor(crate.source, '*') as cur:
-            for row in cur:
+            for _ in cur:
                 cur.deleteRow()
                 break
 

@@ -187,7 +187,7 @@ class TestLightSwitch(unittest.TestCase):
     def test_ensure_returns_formatted_problems(self, sleep):
         self.patient._execute = Mock(return_value=(False, 'failed'))
 
-        status, message = self.patient.ensure('start')
+        _, message = self.patient.ensure('start')
 
         self.assertEqual('failed', message)
 

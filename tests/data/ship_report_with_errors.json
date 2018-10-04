@@ -1,0 +1,87 @@
+{
+    "hostname": "SomeMachineName",
+    "num_success_pallets": 3,
+    "total_pallets": 5,
+    "total_time": "4.5 hours",
+    "data_moved": ["test.gdb", "test2.gdb"],
+    "problem_services": ["{GRGISAPP1}Broadband/MapService.MapServer"],
+    "pallets": [
+        {
+            "name": "Z:\\forklift\\samples\\PalletSamples.py:StringCratePallet",
+            "success": true,
+            "message": null,
+            "total_processing_time": "45 minutes",
+            "post_copy_processed": true,
+            "shipped": true,
+            "crates": [{
+                "name": "FeatureClassOne",
+                "result": "Created table successfully."
+            }, {
+                "name": "FeatureClassTwo",
+                "result": "Warning generated during update. Data not modified.",
+                "crate_message": "Duplicate features detected!",
+                "message_level": "warning"
+            }, {
+                "name": "FeatureClassThree",
+                "result": "Warning generated during update and data updated successfully.",
+                "crate_message": "Duplicate features detected!",
+                "message_level": "warning"
+            }]
+        }, {
+            "name": "Z:\\forklift\\samples\\PalletSamples.py:ExplicitCratePallet",
+            "success": true,
+            "message": "This pallet only runs on Fridays.",
+            "total_processing_time": "45 minutes",
+            "post_copy_processed": true,
+            "shipped": true,
+            "crates": [{
+                "name": "FeatureClassOne",
+                "result": "Data updated successfully.",
+                "message_level": ""
+            }]
+        }, {
+            "name": "Z:\\forklift\\samples\\PalletSamples.py:OneValueTupleCratePallet",
+            "success": false,
+            "message": "pallet failed to run because it broke",
+            "total_processing_time": "45 minutes",
+            "post_copy_processed": true,
+            "shipped": true,
+            "crates": [{
+                "name": "FeatureClassOne",
+                "result": "Data is invalid",
+                "crate_message": "a very long message with a stack trace and all sorts of errors a very long message with a stack trace and all sorts of errors",
+                "message_level": "error"
+            }, {
+                "name": "FeatureClassOne",
+                "result": "Created table successfully."
+            }, {
+                "name": "FeatureClassTwo",
+                "result": "Created table successfully."
+            }]
+        }, {
+            "name": "Z:\\forklift\\samples\\PalletSamples.py:ShapefileCratePallet",
+            "success": false,
+            "message": "warehouse fire",
+            "total_processing_time": "45 minutes",
+            "post_copy_processed": false,
+            "shipped": false,
+            "crates": [{
+                "name": "FeatureClassOne",
+                "result": "Data is invalid",
+                "crate_message": "schema change...",
+                "message_level": "error"
+            }]
+        }, {
+            "name": "Z:\\forklift\\samples\\PalletSamples.py:SdeCratePallet",
+            "success": true,
+            "message": null,
+            "total_processing_time": "45 minutes",
+            "post_copy_processed": true,
+            "shipped": true,
+            "crates": [{
+                "name": "FeatureClassOne",
+                "result": "Data updated successfully."
+            }]
+        }
+    ]
+}

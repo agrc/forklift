@@ -1,0 +1,48 @@
+{
+    "hostname": "SomeMachineName",
+    "num_success_pallets": 3,
+    "total_pallets": 3,
+    "total_time": "4.5 hours",
+    "git_errors": [],
+    "problem_services": [],
+    "data_moved": ["test.gdb", "test2.gdb"],
+    "pallets": [
+        {
+            "name": "Z:\\forklift\\samples\\PalletSamples.py:StringCratePallet",
+            "success": true,
+            "message": null,
+            "total_processing_time": "1 hour",
+            "post_copy_processed": true,
+            "shipped": true,
+            "crates": [{
+                "name": "FeatureClassOne",
+                "result": "Created table successfully."
+            }, {
+                "name": "FeatureClassTwo",
+                "result": "Created table successfully."
+            }]
+        }, {
+            "name": "Z:\\forklift\\samples\\PalletSamples.py:ExplicitCratePallet",
+            "success": true,
+            "message": "This pallet only runs on Fridays.",
+            "total_processing_time": "0 seconds",
+            "post_copy_processed": true,
+            "shipped": true,
+            "crates": [{
+                "name": "FeatureClassOne",
+                "result": "Data updated successfully."
+            }]
+        }, {
+            "name": "Z:\\forklift\\samples\\PalletSamples.py:SdeCratePallet",
+            "success": true,
+            "message": null,
+            "total_processing_time": "45 minutes",
+            "post_copy_processed": true,
+            "shipped": true,
+            "crates": [{
+                "name": "FeatureClassOne",
+                "result": "Data updated successfully."
+            }]
+        }
+    ]
+}

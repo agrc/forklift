@@ -6,12 +6,12 @@ test_engine.py
 A module that contains tests for the engine.py module
 '''
 
-import pytest
 import unittest
 from json import loads
 from os import makedirs, remove
 from os.path import abspath, dirname, exists, join
 
+import pytest
 from mock import Mock, mock_open, patch
 
 from forklift import config, core, engine

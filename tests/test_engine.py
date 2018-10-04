@@ -10,7 +10,7 @@ import unittest
 from json import loads
 from os import makedirs, remove
 from os.path import abspath, dirname, exists, join
-
+from nose import SkipTest
 from mock import Mock, mock_open, patch
 
 from forklift import config, core, engine
@@ -252,10 +252,73 @@ class TestLiftPallets(unittest.TestCase):
         prepare_mock.assert_called_once()
 
 
-class TestengineGeneral(unittest.TestCase):
+class TestEngineGeneral(unittest.TestCase):
+    def skip(self):
+        raise SkipTest('not a test. writing to disk for inspection')
 
     def test_repo_to_url(self):
         self.assertEqual(engine._repo_to_url('repo'), 'https://github.com/repo.git')
+
+    def test_send_report_email(self):
+        self.skip()
+
+        template_dir = join(dirname(abspath(__file__)), '..', 'src', 'forklift', 'templates')
+
+        pallet_reports = [
+          {
+            'name': 'c:\\TypicalPallet.py:TypicalPallet',
+            'success': True,
+            'requires_processing': True,
+            'post_copy_processed': True,
+            'shipped': True,
+            'message': '',
+            'crates': [
+              {
+                'name': 'Counties',
+                'result': 'Created table successfully.',
+                'crate_message': '',
+                'message_level': ''
+              }
+            ],
+            'total_processing_time': '4780 ms'
+          },
+           {
+            'name': 'c:\\TypicalPallet.py:FailPallet',
+            'success': False,
+            'requires_processing': True,
+            'post_copy_processed': False,
+            'shipped': False,
+            'message': 'This pallet had all sorts of problems',
+            'crates': [
+              {
+                'name': 'Counties',
+                'result': 'Created table unsuccessfully.',
+                'crate_message': '',
+                'message_level': ''
+              }
+            ],
+            'total_processing_time': '4780 ms'
+          }
+        ]
+
+        problems = ['service1', 'service2']
+        data = ['boundaries.gdb', 'otherthing.gdb']
+        # problems = []
+        # data = []
+        ship_status = {'hostname': 'testing.host',
+                       'total_pallets': len(pallet_reports),
+                       'pallets': pallet_reports,
+                       'num_success_pallets': len([p for p in pallet_reports if p['success']]),
+                       'data_moved': data,
+                       'problem_services': problems,
+                       'total_time': '5000 ms'}
+
+        ship_template = join(template_dir, 'ship.html')
+
+        output = engine._send_report_email(ship_template, ship_status)
+        with open(join(test_data_folder, 'successful_ship.html'), 'w') as report:
+            report.write(output)
+
 
 
 class TestGitUpdate(unittest.TestCase):

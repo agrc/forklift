@@ -2,13 +2,16 @@
 <head>
   <style>
     .error {
-      background-color: #fc7973;
-    }
-    .success {
-      background-color: #83ec8f;
+      background-color: #FFE6E6;
     }
     .warning {
-      background-color: #fcc573;
+      background-color: #FFF7E6;
+    }
+    .success {
+      background-color: #E6FFE6;
+    }
+    .info {
+      background-color: #E6EEFF;
     }
     .pull-right {
       float: right;
@@ -16,41 +19,64 @@
     }
   </style>
 </head>
-<p><b>{{num_success_pallets}}</b> out of <b>{{total_pallets}}</b> pallets ran successfully in <b>{{total_time}}</b> on {{hostname}}.</p>
+<p>
+  <b>{{num_success_pallets}}</b> out of <b>{{total_pallets}}</b> pallets ran successfully in <b>{{total_time}}</b> on {{hostname}}.
+</p>
 <table>
   <tbody>
-    {{#git_errors}}
     <tr>
-      <td colspan="2" class="error">{{.}}</td>
+      <td colspan="2" class="info">
+        <b>ArcGIS Server Service Status</b>
+      </td>
     </tr>
-    {{/git_errors}}
-    {{#pallets}}
+    {{#problem_services}}
     <tr>
-      <td colspan="2" class="{{#success}}success{{/success}}{{^success}}error{{/success}}">
+      <td colspan="2" class="error" style="padding-left: 10px">{{.}}</td>
+    </tr>
+    {{/problem_services}}
+    {{^problem_services}}
+    <tr>
+        <td colspan="2" class="info" style="padding-left: 10px">All services started</td>
+    </tr>
+    {{/problem_services}}
+    <tr>
+      <td colspan="2" class="info">
+        <b>Datasets Copied</b>
+      </td>
+    </tr>
+    {{#data_moved}}
+    <tr>
+      <td colspan="2" class="info" style="padding-left: 10px">{{.}}</td>
+    </tr>
+    {{/data_moved}}
+    {{^data_moved}}
+    <tr>
+      <td colspan="2" class="info" style="padding-left: 10px">No data updated</td>
+    </tr>
+    {{/data_moved}}
+    <tr>
+      <td>&nbsp;</td>
+    </tr>
+    <tr>
+      <td colspan="2" class="info">
+        <b>Pallet Status</b>
+      </td>
+    </tr>
+    {{#pallets}}
+    <tr class="{{#success}}success{{/success}}{{^success}}error{{/success}}">
+      <td colspan="2">
         {{name}}
         <span class="pull-right">
           {{total_processing_time}}
         </span>
       </td>
     </tr>
-    <tr>
+    <tr class="{{#success}}success{{/success}}{{^success}}error{{/success}}">
+      <td><b>post copy processed</b> {{post_copy_processed}}</td>
+      <td><b>shipped:</b> {{shipped}}</td>
+    </tr>
+    <tr class="{{#success}}success{{/success}}{{^success}}error{{/success}}">
       <td colspan="2"><b>{{message}}</b></td>
-    </tr>
-
-    {{#crates}}
-    <tr>
-      <td style="padding-left: 10px">{{name}}</td>
-      <td>{{result}}</td>
-    </tr>
-    {{#crate_message}}
-    <tr>
-      <td colspan="2" class="{{message_level}}" style="padding-left: 20px;"><b>{{crate_message}}</b></td>
-    </tr>
-    {{/crate_message}}
-    {{/crates}}
-
-    <tr>
-      <td></td>
     </tr>
     {{/pallets}}
   </tbody>

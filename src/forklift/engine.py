@@ -541,6 +541,8 @@ def _send_report_email(template, report_object):
 
     send_email(config.get_config_prop('notify'), 'Forklift Report for {}'.format(report_object['hostname']), email_content, log_file)
 
+    return email_content
+
 
 def _clone_or_pull_repo(repo_name):
     '''repo_name: string - a github repository username/reponame format

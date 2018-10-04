@@ -8,7 +8,7 @@ A module that contains tests for the engine.py module
 
 import unittest
 from json import loads
-from os import makedirs, remove
+from os import makedirs, remove, rmdir
 from os.path import abspath, dirname, exists, join
 
 import pytest
@@ -21,10 +21,10 @@ from .mocks import PoolMock
 
 test_data_folder = join(dirname(abspath(__file__)), 'data')
 test_pallets_folder = join(test_data_folder, 'list_pallets')
-config.config_location = config_location = join(abspath(dirname(__file__)), 'config.json')
+config_location = config_location = join(abspath(dirname(__file__)), 'config.json')
 
 
-class TestConfigInit(unittest.TestCase):
+class CleanUpAlternativeConfig(unittest.TestCase):
 
     def setUp(self):
         if exists(config_location):
@@ -33,6 +33,9 @@ class TestConfigInit(unittest.TestCase):
     def tearDown(self):
         if exists(config_location):
             remove(config_location)
+
+
+class TestConfigInit(CleanUpAlternativeConfig):
 
     def test_init_creates_default_config_file(self):
         path = engine.init()
@@ -73,23 +76,13 @@ class TestConfigInit(unittest.TestCase):
         self.assertEqual(engine.init(), engine.init())
 
 
-class TestRepos(unittest.TestCase):
-
-    def setUp(self):
-        if exists(config_location):
-            remove(config_location)
-
-        self.path = engine.init()
-
-    def tearDown(self):
-        if exists(config_location):
-            remove(config_location)
+class TestRepos(CleanUpAlternativeConfig):
 
     def test_add_repo(self):
         engine.add_repo('agrc/forklift')
 
-        with open(self.path) as config:
-            self.assertEqual(['agrc/forklift'], loads(config.read())['repositories'])
+        with open(config.config_location) as config_file:
+            self.assertEqual(['agrc/forklift'], loads(config_file.read())['repositories'])
 
     def test_add_repo_invalid(self):
         result = engine.add_repo('bad/repo')
@@ -102,19 +95,19 @@ class TestRepos(unittest.TestCase):
         engine.add_repo('tests/data')
         engine.add_repo('tests/data')
 
-        with open(self.path) as config:
-            self.assertEqual(loads(config.read())['repositories'], ['tests/data'])
+        with open(config.config_location) as config_file:
+            self.assertEqual(loads(config_file.read())['repositories'], ['tests/data'])
 
     @patch('forklift.engine.lift._remove_if_exists')
     def test_remove_repo(self, lift):
         test_config_path = join(test_data_folder, 'remove_test_config.json')
 
-        with open(self.path, 'w') as json_data_file, open(test_config_path) as test_config_file:
+        with open(config.config_location, 'w') as json_data_file, open(test_config_path) as test_config_file:
             json_data_file.write(test_config_file.read())
 
         engine.remove_repo('path/one')
 
-        with open(self.path) as test_config_file:
+        with open(config.config_location) as test_config_file:
             self.assertEqual(['path/two'], loads(test_config_file.read())['repositories'])
 
     @patch('forklift.config.get_config_prop', return_value='test')
@@ -137,17 +130,10 @@ class TestRepos(unittest.TestCase):
         self.assertEqual(result, ['blah: [Invalid repo name or owner]', 'blah2: [Invalid repo name or owner]'])
 
 
-class TestListPallets(unittest.TestCase):
+class TestListPallets(CleanUpAlternativeConfig):
 
     def setUp(self):
-        if exists(config_location):
-            remove(config_location)
-
         engine.init()
-
-    def tearDown(self):
-        if exists(config_location):
-            remove(config_location)
 
     def test_list_pallets(self):
         test_pallets_folder = join(test_data_folder, 'list_pallets')
@@ -203,17 +189,10 @@ class TestListPallets(unittest.TestCase):
 @patch('forklift.engine.git_update')
 @patch('forklift.lift.process_crates_for')
 @patch('forklift.lift.process_pallets')
-class TestLiftPallets(unittest.TestCase):
+class TestLiftPallets(CleanUpAlternativeConfig):
 
     def setUp(self):
-        if exists(config_location):
-            remove(config_location)
-
         engine.init()
-
-    def tearDown(self):
-        if exists(config_location):
-            remove(config_location)
 
     def test_lift_pallets_with_path(self, process_pallets, process_crates_for, git_update):
         engine.lift_pallets(join(test_pallets_folder, 'multiple_pallets.py'))
@@ -314,15 +293,7 @@ class TestEngineGeneral(unittest.TestCase):
             report.write(output)
 
 
-class TestGitUpdate(unittest.TestCase):
-
-    def setUp(self):
-        if exists(config_location):
-            remove(config_location)
-
-    def tearDown(self):
-        if exists(config_location):
-            remove(config_location)
+class TestGitUpdate(CleanUpAlternativeConfig):
 
     @patch('forklift.engine.Pool', return_value=PoolMock())
     @patch('git.Repo.clone_from')
@@ -398,13 +369,16 @@ class TestPackingSlip(unittest.TestCase):
         dump.assert_called_once()
 
 
-class TestScorchedEarth(unittest.TestCase):
+class TestScorchedEarth(CleanUpAlternativeConfig):
     scratch_patch = join(test_data_folder, 'scratch.gdb')
 
     @patch('forklift.core.scratch_gdb_path', scratch_patch)
     def test_deletes_folders(self):
         test_hash_location = join(test_data_folder, 'hashLocation')
         test_folder = join(test_hash_location, 'test')
+
+        if exists(test_folder):
+            rmdir(test_folder)
         makedirs(test_folder)
         config.set_config_prop('hashLocation', test_hash_location)
 
@@ -414,7 +388,7 @@ class TestScorchedEarth(unittest.TestCase):
         self.assertFalse(exists(test_folder))
 
 
-class TestShipData(unittest.TestCase):
+class TestShipData(CleanUpAlternativeConfig):
     sample_slip = '''[
   {
     "name": "c:\\Projects\\GitHub\\forklift\\samples\\TypicalPallet.py:TypicalPallet",

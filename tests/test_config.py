@@ -8,25 +8,16 @@ A module that contains tests for config.py
 
 import unittest
 from os import remove
-from os.path import abspath, dirname, exists, join
 
 from mock import patch
 
 from forklift import config
 
-config.config_location = join(abspath(dirname(__file__)), 'config.json')
-
 
 class ConfigTest(unittest.TestCase):
-    def setUp(self):
-        if exists(config.config_location):
-            remove(config.config_location)
 
-    def tearDown(self):
-        if exists(config.config_location):
-            remove(config.config_location)
-
-    def test_set_config_prop_overrides_all_values(self):
+    @patch('forklift.config._get_config', return_value={'warehouse': ''})
+    def test_set_config_prop_overrides_all_values(self, mock_obj):
         folder = 'blah'
         config.set_config_prop('warehouse', folder, override=True)
 
@@ -34,6 +25,8 @@ class ConfigTest(unittest.TestCase):
 
     @patch('forklift.config.create_default_config', wraps=config.create_default_config)
     def test_get_config_creates_default_config(self, mock_obj):
+        remove(config.config_location)
+
         config._get_config()
 
         mock_obj.assert_called_once()

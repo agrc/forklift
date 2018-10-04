@@ -3,8 +3,8 @@
 
 <head>
   <title>Report Template Tests</title>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/mustache.js/2.2.1/mustache.js"></script>
-  <script src="//ajax.googleapis.com/ajax/libs/dojo/1.10.4/dojo/dojo.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.2.1/mustache.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/dojo/1.10.4/dojo/dojo.js"></script>
   <style>
     .container {
       border: solid 1px gray;
@@ -18,26 +18,39 @@
 
 <body>
   <h1>Report Template Tests</h1>
+  <p>Note: This page is intended to be served via http(s) (not file://).</p>
 
   <script type="text/javascript">
     require([
       'dojo/dom-construct',
 
-      'dojo/text!./data/report_with_errors.json',
-      'dojo/text!./data/report_success.json',
-      'dojo/text!../src/forklift/report_template.html'
+      'dojo/text!./data/lift_report_with_errors.json',
+      'dojo/text!./data/ship_report_with_errors.json',
+      'dojo/text!./data/lift_report_success.json',
+      'dojo/text!./data/ship_report_success.json',
+      'dojo/text!../src/forklift/templates/lift.html',
+      'dojo/text!../src/forklift/templates/ship.html'
     ], function(
       domConstruct,
 
-      testJsonErrors,
-      testJsonSuccess,
-      reportTemplate
+      liftErrorsJson,
+      shipErrorsJson,
+      liftSuccessJson,
+      shipSuccessJson,
+      liftTemplate,
+      shipTemplate
     ) {
-      [testJsonErrors, testJsonSuccess].forEach(json => {
-        var container = domConstruct.create('div', {className: 'container'}, document.body);
-        var dom = Mustache.render(reportTemplate, JSON.parse(json));
-        domConstruct.place(dom, container);
-        console.debug(dom);
+      [[liftErrorsJson, shipErrorsJson], [liftSuccessJson, shipSuccessJson]].forEach(([liftJson, shipJson]) => {
+        const container = domConstruct.create('div', {className: 'container'}, document.body);
+        domConstruct.create('h3', { textContent: 'Lift Report' }, container);
+        const liftDom = Mustache.render(liftTemplate, JSON.parse(liftJson));
+        domConstruct.place(liftDom, container);
+
+        domConstruct.create('hr', {}, container);
+
+        domConstruct.create('h3', { textContent: 'Ship Report' }, container);
+        const shipDom = Mustache.render(shipTemplate, JSON.parse(shipJson));
+        domConstruct.place(shipDom, container);
       });
     });
   </script>

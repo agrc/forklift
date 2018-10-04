@@ -253,7 +253,7 @@ def _create_destination_data(crate):
     '''
     if not path.exists(crate.destination_workspace):
         if crate.destination_workspace.endswith('.gdb'):
-            log.log.warning('destination not found; creating %s', crate.destination_workspace)
+            log.warning('destination not found; creating %s', crate.destination_workspace)
             arcpy.CreateFileGDB_management(path.dirname(crate.destination_workspace), path.basename(crate.destination_workspace))
         else:
             raise Exception('destination_workspace does not exist! {}'.format(crate.destination_workspace))

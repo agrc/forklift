@@ -445,12 +445,13 @@ class TestShipData(unittest.TestCase):
 
         self.assertFalse(shipped)
 
+    @patch('forklift.engine.socket.gethostname', return_value="test.host")
     @patch('forklift.engine.exists', return_value=True)
     @patch('forklift.engine._process_packing_slip')
     @patch('forklift.config.get_config_prop')
     @patch('forklift.lift.copy_data')
     @patch('forklift.engine.listdir', return_value=[engine.packing_slip_file])
-    def test_ship_only_ships_if_only_slip_found(self, listdir, copy_data, config_prop, packing_slip, exists):
+    def test_ship_only_ships_if_only_slip_found(self, listdir, copy_data, config_prop, packing_slip, exists, socket):
         def mock_props(value):
             if value == 'servers':
                 return [{
@@ -466,7 +467,15 @@ class TestShipData(unittest.TestCase):
 
         report = engine.ship_data()
 
-        self.assertEqual(report, {'data_moved': [], 'pallets': [], 'problem_services': []})
+        expected_report = {'hostname': 'test.host',
+                           'total_pallets': 0,
+                           'pallets': [],
+                           'num_success_pallets': 0,
+                           'data_moved': [],
+                           'problem_services': [],
+                           'total_time': '0 ms'}
+
+        self.assertEqual(report, expected_report)
         copy_data.assert_not_called()
         packing_slip.assert_called_once()
 

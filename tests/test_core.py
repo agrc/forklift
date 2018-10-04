@@ -56,7 +56,6 @@ class CoreTests(unittest.TestCase):
         delete_if_arcpy_exists(test_gdb)
         delete_if_arcpy_exists(test_folder)
         delete_if_arcpy_exists(duplicates_gdb_copy)
-        delete_if_arcpy_exists(path.join(current_folder, 'config.json'))
 
     def test_update_no_existing_destination(self):
         crate = Crate('ZipCodes', check_for_changes_gdb, test_gdb, 'ImNotHere')

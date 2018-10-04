@@ -88,7 +88,7 @@ def update(crate, validate_crate):
             if has_custom == NotImplemented:
                 check_schema(crate)
         except ValidationException as e:
-            log.warn('validation error: %s for crate %r', e, crate, exc_info=True)
+            log.warning('validation error: %s for crate %r', e, crate, exc_info=True)
             return (Crate.INVALID_DATA, e)
 
         #: create source hash and store
@@ -205,7 +205,7 @@ def _hash(crate):
             if not crate.is_table():
                 #: skip features with empty geometry
                 if row[-1] is None:
-                    log.warn('Empty geometry found in %s', row)
+                    log.warning('Empty geometry found in %s', row)
                     total_rows -= 1
                     continue
 
@@ -240,7 +240,7 @@ def _hash(crate):
     changes.total_rows = total_rows
 
     if has_dups:
-        log.warn('Duplicate features detected!')
+        log.warning('Duplicate features detected!')
         changes.has_dups = True
 
     return changes
@@ -253,17 +253,17 @@ def _create_destination_data(crate):
     '''
     if not path.exists(crate.destination_workspace):
         if crate.destination_workspace.endswith('.gdb'):
-            log.warning('destination not found; creating %s', crate.destination_workspace)
+            log.log.warning('destination not found; creating %s', crate.destination_workspace)
             arcpy.CreateFileGDB_management(path.dirname(crate.destination_workspace), path.basename(crate.destination_workspace))
         else:
             raise Exception('destination_workspace does not exist! {}'.format(crate.destination_workspace))
 
     if crate.is_table():
-        log.warn('creating new table: %s', crate.destination)
+        log.warning('creating new table: %s', crate.destination)
         arcpy.CreateTable_management(crate.destination_workspace, crate.destination_name)
         _mirror_fields(crate.source, crate.destination)
     else:
-        log.warn('creating new feature class: %s', crate.destination)
+        log.warning('creating new feature class: %s', crate.destination)
         arcpy.CreateFeatureclass_management(crate.destination_workspace,
                                             crate.destination_name,
                                             geometry_type=crate.source_describe.shapeType.upper(),
@@ -335,7 +335,7 @@ def check_schema(crate):
 
                 def truncate_field_length(field):
                     if field.length > 4000:
-                        log.warn('%s is longer than 4000 characters. Truncation may occur.', field.name)
+                        log.warning('%s is longer than 4000 characters. Truncation may occur.', field.name)
                         return 4000
                     else:
                         return field.length
@@ -348,12 +348,12 @@ def check_schema(crate):
 
     if len(missing_fields) > 0:
         msg = 'Missing fields in {}: {}'.format(crate.source, ', '.join(missing_fields))
-        log.warn(msg)
+        log.warning(msg)
 
         raise ValidationException(msg)
     elif len(mismatching_fields) > 0:
         msg = 'Mismatching fields in {}: {}'.format(crate.source, ', '.join(mismatching_fields))
-        log.warn(msg)
+        log.warning(msg)
 
         raise ValidationException(msg)
     else:

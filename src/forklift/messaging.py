@@ -50,7 +50,7 @@ def send_email(to, subject, body, attachment=''):
     smtp_port = email_server['smtpPort']
 
     if None in [from_address, smtp_server, smtp_port]:
-        log.warn('Required environment variables for sending emails do not exist. No emails sent. See README.md for more details.')
+        log.warning('Required environment variables for sending emails do not exist. No emails sent. See README.md for more details.')
 
         return
 

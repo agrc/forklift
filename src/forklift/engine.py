@@ -207,7 +207,7 @@ def ship_data(pallet_arg=None):
 
     files_and_folders = set(listdir(pickup_location))
     if not exists(pickup_location) or len(files_and_folders) == 0:
-        log.warn('no data found or packing slip found in pickup location.. exiting')
+        log.warning('no data found or packing slip found in pickup location.. exiting')
 
         return False
 

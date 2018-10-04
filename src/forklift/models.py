@@ -414,7 +414,7 @@ class Crate(object):
             #: replace name with db.owner.name
             new_name = names[0]
             self.set_source_name(new_name)
-            self.log.warn('Source name changed to %s', new_name)
+            self.log.warning('Source name changed to %s', new_name)
 
             return (True, new_name)
 

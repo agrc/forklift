@@ -21,7 +21,7 @@ class LightSwitch(object):
         'Server will not be stopped or started. See README.md for more details.'
 
         if len(server) != 2:
-            log.warn(required_fields)
+            log.warning(required_fields)
 
             raise Exception(required_fields)
 
@@ -30,7 +30,7 @@ class LightSwitch(object):
         self.server_qualified_name = server['machineName']
 
         if None in [server['username'], server['password'], server['machineName']]:
-            log.warn(required_fields)
+            log.warning(required_fields)
 
             raise Exception(required_fields)
 

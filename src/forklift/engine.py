@@ -463,8 +463,8 @@ def _build_pallets(file_path, pallet_arg=None):
     else:
         pallet_infos = list_pallets()
 
-    sorted_pallets = []
-    for pallet_location, PalletClass in pallet_infos:
+    pallets = []
+    for _, PalletClass in pallet_infos:
         try:
             if pallet_arg is not None:
                 pallet = PalletClass(pallet_arg)
@@ -478,14 +478,13 @@ def _build_pallets(file_path, pallet_arg=None):
                 pallet.success = (False, e)
                 log.error('error building pallet: %s for pallet: %r', e, pallet, exc_info=True)
 
-            if pallet_location == file_path or file_path is None:
-                sorted_pallets.append(pallet)
+            pallets.append(pallet)
         except Exception as e:
             log.error('error creating pallet class: %s. %s', PalletClass.__name__, e, exc_info=True)
 
-    sorted_pallets.sort(key=lambda p: p.__class__.__name__)
+    pallets.sort(key=lambda p: p.__class__.__name__)
 
-    return sorted_pallets
+    return pallets
 
 
 def _generate_packing_slip(status, location):

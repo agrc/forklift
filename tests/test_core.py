@@ -6,11 +6,11 @@ test_core.py
 Tests for the core.py module
 '''
 
+import pytest
 import unittest
 from os import path
 
 from mock import Mock, patch
-from nose import SkipTest
 
 import arcpy
 from forklift import core, engine
@@ -40,7 +40,7 @@ def delete_if_arcpy_exists(data):
 
 def skip_if_no_local_sde():
     if not arcpy.Exists(path.join(update_tests_sde, 'ZipCodes')):
-        raise SkipTest('No test SDE dectected, skipping test')
+        raise pytest.skip('No test SDE dectected, skipping test')
 
 
 class CoreTests(unittest.TestCase):

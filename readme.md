@@ -70,7 +70,8 @@ If the property is a list then the value is appended to the existing list.
 
 From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/arcpy/get-started/using-conda-with-arcgis-pro.htm) (`c:\Program Files\ArcGIS\Pro\bin\Python\scripts\proenv.bat`):
 
-1. Install [git](https://git-scm.com/)
+1. Install [git](https://git-scm.com/).
+1. Install [ArcGIS Pro](https://pro.arcgis.com/en/pro-app/).
 1. `pip install .\` from the directory containing `setup.py`.
 1. `forklift config init`
 1. `forklift config set --key copyDestinations --value c:\\MapData` - This is where you want your output placed.

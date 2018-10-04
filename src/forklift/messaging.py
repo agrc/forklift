@@ -30,16 +30,16 @@ def send_email(to, subject, body, attachment=''):
 
     Send an email.
     '''
-    if send_emails_override == False:
+    if send_emails_override is False:
         log.info('send_emails_override is False. No email sent.')
 
         return
-    elif send_emails_override == True:
+    elif send_emails_override is True:
         pass
     else:
         user_email_preference = get_config_prop('sendEmails')
 
-        if user_email_preference == False:
+        if user_email_preference is False:
             log.info('forklift config is set to skip emails. No email sent.')
 
             return

@@ -523,7 +523,7 @@ def _process_packing_slip(packing_slip=None):
         if not item['success']:
             continue
 
-        sorted, all_pallets = _build_pallets(item['name'])
+        _, all_pallets = _build_pallets(item['name'])
         all_pallets[0].add_packing_slip(item)
 
         pallets.append(all_pallets[0])

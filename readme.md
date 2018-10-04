@@ -127,18 +127,12 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
 #### On first run
 
 - install deps
-  - `conda install flake8 mock`
-  - `pip install nose-cov rednose`
+  - `pip install -e ".[tests]`
 - run tests
-  - `nosetests --with-id --rednose --cov-config .coveragerc --with-coverage --cover-package forklift --cov-report term-missing --cover-erase`
-- rerun only failed tests
-  - `nosetests --failed --rednose --cov-config .coveragerc --with-coverage --cover-package forklift --cov-report term-missing --cover-erase`
+  - `python setup.py develop`
+  - `pytest`
 
 _Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) will automatically be skipped if it is not found on your system._
-
-#### Linting
-
-`flake8 src/forklift tests`
 
 ## Changelog
 

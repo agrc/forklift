@@ -253,6 +253,7 @@ class TestLiftPallets(unittest.TestCase):
 
 
 class TestEngineGeneral(unittest.TestCase):
+
     def skip(self):
         raise SkipTest('not a test. writing to disk for inspection')
 
@@ -264,61 +265,56 @@ class TestEngineGeneral(unittest.TestCase):
 
         template_dir = join(dirname(abspath(__file__)), '..', 'src', 'forklift', 'templates')
 
-        pallet_reports = [
-          {
+        pallet_reports = [{
             'name': 'c:\\TypicalPallet.py:TypicalPallet',
             'success': True,
             'requires_processing': True,
             'post_copy_processed': True,
             'shipped': True,
             'message': '',
-            'crates': [
-              {
+            'crates': [{
                 'name': 'Counties',
                 'result': 'Created table successfully.',
                 'crate_message': '',
                 'message_level': ''
-              }
-            ],
+            }],
             'total_processing_time': '4780 ms'
-          },
-           {
+        },
+        {
             'name': 'c:\\TypicalPallet.py:FailPallet',
             'success': False,
             'requires_processing': True,
             'post_copy_processed': False,
             'shipped': False,
             'message': 'This pallet had all sorts of problems',
-            'crates': [
-              {
+            'crates': [{
                 'name': 'Counties',
                 'result': 'Created table unsuccessfully.',
                 'crate_message': '',
                 'message_level': ''
-              }
-            ],
+            }],
             'total_processing_time': '4780 ms'
-          }
-        ]
+        }]
 
         problems = ['service1', 'service2']
         data = ['boundaries.gdb', 'otherthing.gdb']
         # problems = []
         # data = []
-        ship_status = {'hostname': 'testing.host',
-                       'total_pallets': len(pallet_reports),
-                       'pallets': pallet_reports,
-                       'num_success_pallets': len([p for p in pallet_reports if p['success']]),
-                       'data_moved': data,
-                       'problem_services': problems,
-                       'total_time': '5000 ms'}
+        ship_status = {
+            'hostname': 'testing.host',
+            'total_pallets': len(pallet_reports),
+            'pallets': pallet_reports,
+            'num_success_pallets': len([p for p in pallet_reports if p['success']]),
+            'data_moved': data,
+            'problem_services': problems,
+            'total_time': '5000 ms'
+        }
 
         ship_template = join(template_dir, 'ship.html')
 
         output = engine._send_report_email(ship_template, ship_status)
         with open(join(test_data_folder, 'successful_ship.html'), 'w') as report:
             report.write(output)
-
 
 
 class TestGitUpdate(unittest.TestCase):
@@ -452,14 +448,10 @@ class TestShipData(unittest.TestCase):
     @patch('forklift.lift.copy_data')
     @patch('forklift.engine.listdir', return_value=[engine.packing_slip_file])
     def test_ship_only_ships_if_only_slip_found(self, listdir, copy_data, config_prop, packing_slip, exists, socket):
+
         def mock_props(value):
             if value == 'servers':
-                return [{
-                    'machineName': '0-host',
-                    'username': 'username',
-                    'password': 'password',
-                    'port': 0
-                }]
+                return [{'machineName': '0-host', 'username': 'username', 'password': 'password', 'port': 0}]
 
             return 'whatever'
 
@@ -467,13 +459,15 @@ class TestShipData(unittest.TestCase):
 
         report = engine.ship_data()
 
-        expected_report = {'hostname': 'test.host',
-                           'total_pallets': 0,
-                           'pallets': [],
-                           'num_success_pallets': 0,
-                           'data_moved': [],
-                           'problem_services': [],
-                           'total_time': '0 ms'}
+        expected_report = {
+            'hostname': 'test.host',
+            'total_pallets': 0,
+            'pallets': [],
+            'num_success_pallets': 0,
+            'data_moved': [],
+            'problem_services': [],
+            'total_time': '0 ms'
+        }
 
         self.assertEqual(report, expected_report)
         copy_data.assert_not_called()
@@ -484,10 +478,7 @@ class TestShipData(unittest.TestCase):
     @patch('forklift.lift.copy_data')
     @patch('forklift.engine.listdir', return_value=[engine.packing_slip_file])
     def test_post_process_if_success(self, listdir, copy_data, packing_slip, exists):
-        slip = {
-            'success': True,
-            'requires_processing': True
-        }
+        slip = {'success': True, 'requires_processing': True}
         pallet = Mock(slip=slip)
         pallet.ship.return_value = None
         pallet.post_copy_process.return_value = None
@@ -504,10 +495,7 @@ class TestShipData(unittest.TestCase):
     @patch('forklift.lift.copy_data')
     @patch('forklift.engine.listdir', return_value=[engine.packing_slip_file])
     def test_post_process_if_not_success(self, listdir, copy_data, packing_slip, exists):
-        slip = {
-            'success': False,
-            'requires_processing': True
-        }
+        slip = {'success': False, 'requires_processing': True}
         pallet = Mock(slip=slip)
         pallet.ship.return_value = None
         pallet.post_copy_process.return_value = None

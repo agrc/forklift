@@ -100,7 +100,7 @@ def update(crate, validate_crate):
                 #: delete unaccessed hashes
                 if changes.has_deletes():
                     log.debug('Number of rows to be deleted: %d', len(changes._deletes))
-                    status, message = change_status
+                    status, _ = change_status
                     if status != Crate.CREATED:
                         change_status = (Crate.UPDATED, None)
 

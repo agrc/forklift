@@ -6,13 +6,13 @@ test_engine.py
 A module that contains tests for the engine.py module
 '''
 
+import pytest
 import unittest
 from json import loads
 from os import makedirs, remove
 from os.path import abspath, dirname, exists, join
 
 from mock import Mock, mock_open, patch
-from nose import SkipTest
 
 from forklift import config, core, engine
 from forklift.models import Crate
@@ -255,14 +255,11 @@ class TestLiftPallets(unittest.TestCase):
 
 class TestEngineGeneral(unittest.TestCase):
 
-    def skip(self):
-        raise SkipTest('not a test. writing to disk for inspection')
-
     def test_repo_to_url(self):
         self.assertEqual(engine._repo_to_url('repo'), 'https://github.com/repo.git')
 
     def test_send_report_email(self):
-        self.skip()
+        pytest.skip()
 
         template_dir = join(dirname(abspath(__file__)), '..', 'src', 'forklift', 'templates')
 
@@ -280,8 +277,7 @@ class TestEngineGeneral(unittest.TestCase):
                 'message_level': ''
             }],
             'total_processing_time': '4780 ms'
-        },
-        {
+        }, {
             'name': 'c:\\TypicalPallet.py:FailPallet',
             'success': False,
             'requires_processing': True,

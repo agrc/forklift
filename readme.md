@@ -76,6 +76,7 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
 1. Create a conda environment for forklift `conda create --name forklift --clone arcgispro-py3`.
 1. Activate the conda environment `activate forklift`.
 1. `pip install .\` from the directory containing `setup.py`.
+1. Install the python dependencies for your pallets.
 1. `forklift config init`
 1. `forklift config set --key copyDestinations --value c:\\MapData` - This is where you want your output placed.
 1. `forklift repos --add agrc/parcels` - The agrc/parcels is the user/repo to scan for Pallets.

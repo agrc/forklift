@@ -9,3 +9,6 @@ exclude_lines =
   if __name__ == .__main__.:
   log
   print
+[run]
+omit =
+  src/forklift/__main__.py

@@ -41,15 +41,19 @@ Interacting with forklift is done via the [command line interface](src/forklift/
 
 `config.json` is created in the working directory after running `forklift config init`. It contains the following properties:
 
-- `warehouse` The folder location where all of the `repositories` will be cloned into and where forklift will scan for pallets to lift.
-- `repositories` A list of github repositories in the `<owner>/<name>` format that will be cloned/updated into the `warehouse` folder.
-- `stagingDestination` The folder location where forklift creates and manages data before being copied to `copyDestinations`. This allows data in "production" to not be affected while forklift is running and if there are any issues. Data will only be copied if all crates are processed successfully. This is a helper method for creating crates. Usage would be from within a Pallet: `os.path.join(self.staging_rack, 'the.gdb')`
-- `copyDestinations` An array of folder locations that forklift will  copy data to. This is the "production" drop off location. The data is defined in `Pallet.copy_data` and is copied upon successful processing of the pallet.
-- `configuration` A configuration string (`Production`, `Staging`, or `Dev`) that is passed to `Pallet:build` to allow a pallet to use different settings based on how forklift is being run. Defaults to `Production`.
-- `sendEmails` A boolean value that determines whether or not to send forklift summary report emails after each lift.
-- `notify` An array of emails that will be sent the summary report each time `forklift lift` is run.
+- `configuration`: A configuration string (`Production`, `Staging`, or `Dev`) that is passed to `Pallet:build` to allow a pallet to use different settings. Defaults to `Production`.
+- `warehouse`: The folder location where all of the `repositories` will be cloned into and where forklift will scan for pallets to lift by default.
+- `repositories`: A list of github repositories in the `<owner>/<name>` format that will be cloned and kept updated in the `warehouse` folder.
+- `servers`: A dictionary of ArcGIS servers that forklift is managing. See below for more details.
+- `hashLocation`: The folder location where forklift creates and manages data. This data is hashed and used to check for changes. Referencing this location within a pallet is done by: `os.path.join(self.staging_rack, 'the.gdb')`. Pallets should typically place their data in this location within their `copy_data` property.
+- `dropoffLocation`: The folder location where production ready files will be placed. This data will be compressed and will not contain any forklift artifacts.
+- `shipTo`: An array of folder locations that forklift will copy data to. This is the datas final location. Everything in the `dropoffLocation` will be copied to the `shipTo` locations during a forklift ship. `shipTo` paths are optionally formatted with the `servers.host` value if present and necessary. Place a `{}` in your `shipTo` path if you would like to use this feature. eg: `\\{}\\c$\\data`.
+- `notify`: An array of email addresses that will be sent the report each time `forklift lift` or `forklift ship` is run.
+- `email`: An object containing `fromAddress`, `smptPort`, and `smtpServer` for sending report emails.
+- `sendEmails`: A boolean value that determines whether or not to email forklift reports after each lift or ship.
+- `poolProcesses`: The integer number of processes forklift will spawn to speed up github syncronization. Defaults to 20.
 
-Any of these properties can be set via the `config set` command like so:
+Any of these properties can be set via the `config set` command:
 
 ```shell
 forklift config set --key sendEmails --value False
@@ -70,7 +74,7 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
 1. Edit the `config.json` to add the arcgis server(s) to manage. The options property will be mixed in to all of the other servers.
     - `username` ArcGIS admin username.
     - `password` ArcGIS admin password.
-    - `host` ArcGIS host address eg: `localhost`
+    - `host` ArcGIS host address eg: `myserver`. Validate this property by looking at the `machineName` property returned by `/arcgis/admin/machines?f=json`
     - `port` ArcGIS server instance port eg: 6080
     ```json
     "servers": {
@@ -80,13 +84,13 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
            "port": 6080
        },
        "primary": {
-           "host": "localhost",
+           "host": "this.is.the.qualified.name.as.seen.in.arcgis.server.machines",
        },
        "secondary": {
-           "host": "127.0.0.1"
+           "host": "this.is.the.qualified.name.as.seen.in.arcgis.server.machines"
        },
        "backup": {
-           "host": "0.0.0.0",
+           "host": "this.is.the.qualified.name.as.seen.in.arcgis.server.machines",
            "username": "test",
            "password": "password",
            "port": 6443
@@ -99,12 +103,13 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
     - `fromAddress` The from email address for emails sent by forklift.
     ```json
     "email": {
-        "smtpServer": "send.state.ut.us",
+        "smtpServer": "smpt.server.address",
         "smtpPort": 25,
         "fromAddress": "noreply@utah.gov"
     }
     ```
 1. `forklift lift`
+1. `forklift ship`
 
 `run_forklift.bat` is an example of a batch file that could be used to run forklift via the Windows Scheduler.
 

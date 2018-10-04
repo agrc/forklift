@@ -456,7 +456,7 @@ def _build_pallets(file_path, pallet_arg=None):
 
     Finds pallet classes in python files and instantiates them with any `pallet_arg`'s and calls build
 
-    returns a tuple of sorted pallets and all pallets
+    returns an array of pallet objects
     '''
     if file_path is not None:
         pallet_infos = set(_get_pallets_in_file(file_path) + list_pallets())

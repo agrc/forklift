@@ -134,34 +134,29 @@ def process_pallets(pallets):
             log.error('error %s pallet: %s for pallet: %r', verb, e, pallet, exc_info=True)
 
 
-def dropoff_data(specific_pallets, all_pallets, dropoff_location):
+def dropoff_data(pallets, dropoff_location):
     '''
-    specific_pallets: Pallet[]
-    all_pallets: Pallet[]
+    pallets: Pallet[]
     config_copy_destinations: string[]
 
     Copies scrubbed hashed data to `dropoff_location` that is ready to go to production.
     '''
-    #: we're acting on all pallets
-    if len(specific_pallets) == 0:
-        specific_pallets = all_pallets
-
     #: filter out pallets whose data did not change
-    filtered_specific_pallets = []
-    for pallet in specific_pallets:
+    filtered_pallets = []
+    for pallet in pallets:
         try:
             if pallet.requires_processing() is True:
-                filtered_specific_pallets.append(pallet)
+                filtered_pallets.append(pallet)
         except Exception:
             #: skip, we'll see the error in the report from process_pallets
             pass
 
     #: no pallets with data updates. we are done here
-    if len(filtered_specific_pallets) == 0:
+    if len(filtered_pallets) == 0:
         return
 
     #: data_source eg: C:\forklift\data\hashed\boundaries_utm.gdb
-    destination_and_pallet = _get_locations_for_dropoff(filtered_specific_pallets, all_pallets)
+    destination_and_pallet = _get_locations_for_dropoff(filtered_pallets)
     _move_to_dropoff(destination_and_pallet, dropoff_location)
 
 
@@ -334,10 +329,8 @@ def _remove_hash_from_workspace(workspace):
     arcpy.env.workspace = None
 
 
-def _get_locations_for_dropoff(specific_pallets, all_pallets):
-    '''
-    specific_pallets: Pallet[]
-    all_pallets: Pallet[]
+def _get_locations_for_dropoff(pallets):
+    '''pallets: Pallet[]
 
     returns a dictionary of destination paths and the pallets that they are associated with
     '''
@@ -346,7 +339,7 @@ def _get_locations_for_dropoff(specific_pallets, all_pallets):
 
     destination_to_pallet = {}
 
-    for pallet in set(specific_pallets + all_pallets):
+    for pallet in pallets:
         if not pallet.success[0]:
             continue
 

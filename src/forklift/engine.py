@@ -136,7 +136,7 @@ def lift_pallets(file_path=None, pallet_arg=None, skip_git=False):
     start_seconds = clock()
 
     log.debug('building pallets')
-    pallets_to_lift, all_pallets = _build_pallets(file_path, pallet_arg)
+    pallets_to_lift = _build_pallets(file_path, pallet_arg)
 
     log.debug('processing checklist')
     lift.process_checklist(config)
@@ -155,7 +155,7 @@ def lift_pallets(file_path=None, pallet_arg=None, skip_git=False):
     log.info('process_pallets time: %s', seat.format_time(clock() - start_process))
 
     start_process = clock()
-    lift.dropoff_data(pallets_to_lift, all_pallets, config.get_config_prop('dropoffLocation'))
+    lift.dropoff_data(pallets_to_lift, config.get_config_prop('dropoffLocation'))
     log.info('dropoff_data time: %s', seat.format_time(clock() - start_process))
 
     start_process = clock()
@@ -463,7 +463,6 @@ def _build_pallets(file_path, pallet_arg=None):
     else:
         pallet_infos = list_pallets()
 
-    all_pallets = []
     sorted_pallets = []
     for pallet_location, PalletClass in pallet_infos:
         try:
@@ -479,7 +478,6 @@ def _build_pallets(file_path, pallet_arg=None):
                 pallet.success = (False, e)
                 log.error('error building pallet: %s for pallet: %r', e, pallet, exc_info=True)
 
-            all_pallets.append(pallet)
             if pallet_location == file_path or file_path is None:
                 sorted_pallets.append(pallet)
         except Exception as e:
@@ -487,7 +485,7 @@ def _build_pallets(file_path, pallet_arg=None):
 
     sorted_pallets.sort(key=lambda p: p.__class__.__name__)
 
-    return (sorted_pallets, all_pallets)
+    return sorted_pallets
 
 
 def _generate_packing_slip(status, location):
@@ -523,10 +521,10 @@ def _process_packing_slip(packing_slip=None):
         if not item['success']:
             continue
 
-        _, all_pallets = _build_pallets(item['name'])
-        all_pallets[0].add_packing_slip(item)
+        pallets = _build_pallets(item['name'])
+        pallets[0].add_packing_slip(item)
 
-        pallets.append(all_pallets[0])
+        pallets.append(pallets[0])
 
     return pallets
 

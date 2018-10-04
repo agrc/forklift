@@ -10,21 +10,14 @@ import unittest
 from os import path
 
 from mock import patch
-from nose import SkipTest
 from xxhash import xxh64
 
-import arcpy
 from arcpy import SpatialReference, env
 from forklift.models import Crate
 
 current_folder = path.dirname(path.abspath(__file__))
 check_for_changes_fgdb = path.join(current_folder, 'data', 'checkForChanges.gdb')
 update_tests_sde = path.join(current_folder, 'data', 'UPDATE_TESTS.sde')
-
-
-def skip_if_no_local_sde():
-    if not arcpy.Exists(path.join(update_tests_sde, 'ZipCodes')):
-        raise SkipTest('No test SDE dectected, skipping test')
 
 
 class TestCrate(unittest.TestCase):

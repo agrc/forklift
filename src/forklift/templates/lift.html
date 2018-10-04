@@ -2,13 +2,16 @@
 <head>
   <style>
     .error {
-      background-color: #fc7973;
-    }
-    .success {
-      background-color: #83ec8f;
+      background-color: #FFE6E6;
     }
     .warning {
-      background-color: #fcc573;
+      background-color: #FFF7E6;
+    }
+    .success {
+      background-color: #E6FFE6;
+    }
+    .info {
+      background-color: #E6EEFF;
     }
     .pull-right {
       float: right;
@@ -36,7 +39,6 @@
     <tr>
       <td colspan="2"><b>{{message}}</b></td>
     </tr>
-
     {{#crates}}
     <tr>
       <td style="padding-left: 10px">{{name}}</td>
@@ -48,7 +50,6 @@
     </tr>
     {{/crate_message}}
     {{/crates}}
-
     <tr>
       <td></td>
     </tr>

@@ -6,10 +6,10 @@ test_core.py
 Tests for the core.py module
 '''
 
-import pytest
 import unittest
 from os import path
 
+import pytest
 from mock import Mock, patch
 
 import arcpy

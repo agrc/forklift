@@ -462,11 +462,11 @@ class TestShipData(unittest.TestCase):
             'pallets': [],
             'num_success_pallets': 0,
             'data_moved': [],
-            'problem_services': [],
-            'total_time': '0 ms'
+            'problem_services': []
         }
 
-        self.assertEqual(report, expected_report)
+        #: we don't care about total_time since it can vary between test runs
+        assert expected_report.items() <= report.items()
         copy_data.assert_not_called()
         packing_slip.assert_called_once()
 

@@ -10,8 +10,9 @@ import unittest
 from json import loads
 from os import makedirs, remove
 from os.path import abspath, dirname, exists, join
-from nose import SkipTest
+
 from mock import Mock, mock_open, patch
+from nose import SkipTest
 
 from forklift import config, core, engine
 from forklift.models import Crate

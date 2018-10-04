@@ -9,9 +9,9 @@ A module that tests arcgis.py
 import unittest
 from time import time
 
+import pytest
 import requests
 from mock import Mock, call, patch
-from nose.tools import raises
 
 from forklift.arcgis import LightSwitch
 
@@ -235,10 +235,10 @@ class TestLightSwitch(unittest.TestCase):
         self.assertFalse(status)
         self.assertEqual(message, post.side_effect)
 
-    @raises(KeyError)
     def test_missing_vars(self):
-        self.patient = LightSwitch(('primary', {'a': 1}))
+        with pytest.raises(KeyError):
+            self.patient = LightSwitch(('primary', {'a': 1}))
 
-    @raises(Exception)
     def test_empty_vars(self):
-        self.patient = LightSwitch(('primary', {'username': None, 'password': None, 'machineName': 'test'}))
+        with pytest.raises(Exception):
+            self.patient = LightSwitch(('primary', {'username': None, 'password': None, 'machineName': 'test'}))

@@ -41,19 +41,20 @@ Interacting with forklift is done via the [command line interface](src/forklift/
 
 `config.json` is created in the working directory after running `forklift config init`. It contains the following properties:
 
-- `configuration`: A configuration string (`Production`, `Staging`, or `Dev`) that is passed to `Pallet:build` to allow a pallet to use different settings. Defaults to `Production`.
-- `warehouse`: The folder location where all of the `repositories` will be cloned into and where forklift will scan for pallets to lift by default.
-- `repositories`: A list of github repositories in the `<owner>/<name>` format that will be cloned and kept updated in the `warehouse` folder.
-- `servers`: A dictionary of ArcGIS servers that forklift is managing. See below for more details.
-- `hashLocation`: The folder location where forklift creates and manages data. This data is hashed and used to check for changes. Referencing this location within a pallet is done by: `os.path.join(self.staging_rack, 'the.gdb')`. Pallets should typically place their data in this location within their `copy_data` property.
-- `dropoffLocation`: The folder location where production ready files will be placed. This data will be compressed and will not contain any forklift artifacts.
-- `shipTo`: An array of folder locations that forklift will copy data to. This is the datas final location. Everything in the `dropoffLocation` will be copied to the `shipTo` locations during a forklift ship. `shipTo` paths are optionally formatted with the `servers.host` value if present and necessary. Place a `{}` in your `shipTo` path if you would like to use this feature. eg: `\\{}\\c$\\data`.
-- `notify`: An array of email addresses that will be sent the report each time `forklift lift` or `forklift ship` is run.
-- `email`: An object containing `fromAddress`, `smptPort`, and `smtpServer` for sending report emails.
-- `sendEmails`: A boolean value that determines whether or not to email forklift reports after each lift or ship.
-- `poolProcesses`: The integer number of processes forklift will spawn to speed up github syncronization. Defaults to 20.
+- `configuration` - A configuration string (`Production`, `Staging`, or `Dev`) that is passed to `Pallet:build` to allow a pallet to use different settings based on how forklift is being run. Defaults to `Production`.
+- `dropoffLocation` - The folder location where production ready files will be placed. This data will be compressed and will not contain any forklift artifacts. Pallets place their data in this location within their `copy_data` property.
+- `email` - An object containing `fromAddress`, `smptPort`, and `smtpServer` for sending report emails.
+- `hashLocation` - The folder location where forklift creates and manages data. This data is hashed and used to check for changes. Referencing this location within a pallet is done by: `os.path.join(self.staging_rack, 'the.gdb')`.
+- `notify` - An array of emails that will be sent the summary report each time `forklift lift` is run.
+- `poolProcesses` - The number of parallel processes forklift will use when git cloning/pulling repositories.
+- `repositories` - A list of github repositories in the `<owner>/<name>` format that will be cloned/updated into the `warehouse` folder.
+- `sendEmails` - A boolean value that determines whether or not to send forklift summary report emails after each lift.
+- `server` - An object describing one or more production servers that data will be shipped to. See below for more information.
+- `serverStartWaitSeconds` - The number of seconds that forklift will wait after starting ArcGIS Server. Defaults to 300 (5 minutes).
+- `shipTo` - An array of folder locations that forklift will copy data to. This is the datas final location. Everything in the `dropoffLocation` will be copied to the `shipTo` locations during a forklift ship. `shipTo` paths are optionally formatted with the `servers.host` value if present and necessary. Place a `{}` in your `shipTo` path if you would like to use this feature. eg: `\\{}\\c$\\data`.
+- `warehouse` - The folder location where all of the `repositories` will be cloned into and where forklift will scan for pallets to lift.
 
-Any of these properties can be set via the `config set` command:
+Any of these properties can be set via the `config set` command like so:
 
 ```shell
 forklift config set --key sendEmails --value False

@@ -57,6 +57,14 @@ setup(
     dependency_links=[
     ],
     extras_require={
+        'tests': [
+            'pytest==3.8.*',
+            'pytest-cov==1.*',
+            'pytest-flakes==4.*',
+            'pytest-instafail==0.4.*',
+            'pytest-isort==0.2.*',
+            'pytest-pep8==1.0.*',
+        ]
     },
     entry_points={
         "console_scripts": [

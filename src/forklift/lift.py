@@ -88,7 +88,7 @@ def process_crates_for(pallets, update_def):
             for crate in pallet.get_crates():
                 log.info('crate: %s', crate.destination_name)
                 if crate.result[0] == Crate.INVALID_DATA:
-                    log.warn('result: %s', crate.result)
+                    log.warning('result: %s', crate.result)
                     continue
 
                 if crate.destination not in processed_crates:

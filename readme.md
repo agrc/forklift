@@ -81,6 +81,7 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
 1. `forklift config set --key copyDestinations --value c:\\MapData` - This is where you want your output placed.
 1. `forklift repos --add agrc/parcels` - The agrc/parcels is the user/repo to scan for Pallets.
 1. `forklift garage open` - Add all connection.sde files to the forklift garage.
+1. `forklift git-update` - Add all the secrets or supplimentary data your pallets need.
 1. Edit the `config.json` to add the arcgis server(s) to manage. The options property will be mixed in to all of the other servers.
     - `username` ArcGIS admin username.
     - `password` ArcGIS admin password.

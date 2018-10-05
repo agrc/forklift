@@ -475,7 +475,7 @@ def _build_pallets(file_path, pallet_arg=None):
                 log.debug('building pallet: %r', pallet)
                 pallet.build(config.get_config_prop('configuration'))
             except Exception as e:
-                pallet.success = (False, e)
+                pallet.success = (False, str(e))
                 log.error('error building pallet: %s for pallet: %r', e, pallet, exc_info=True)
 
             pallets.append(pallet)

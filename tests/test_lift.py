@@ -109,7 +109,7 @@ class TestLift(unittest.TestCase):
 
         lift.process_pallets([pallet])
 
-        self.assertEqual(pallet.success, (False, process_error))
+        self.assertEqual(pallet.success, (False, str(process_error)))
 
     def test_process_pallets_resets_arcpy(self):
         pallet = self.PalletMock()

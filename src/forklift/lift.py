@@ -66,7 +66,7 @@ def prepare_packaging_for_pallets(pallets):
             with seat.timed_pallet_process(pallet, 'prepare_packaging'):
                 pallet.prepare_packaging()
         except Exception as e:
-            pallet.success = (False, e)
+            pallet.success = (False, str(e))
             log.error('error preparing packaging: %s for pallet: %r', e, pallet, exc_info=True)
 
 
@@ -130,7 +130,7 @@ def process_pallets(pallets):
 
                     log.debug('%s pallet %s', verb.replace('ing', 'ed'), seat.format_time(clock() - start_seconds))
         except Exception as e:
-            pallet.success = (False, e)
+            pallet.success = (False, str(e))
             log.error('error %s pallet: %s for pallet: %r', verb, e, pallet, exc_info=True)
 
 

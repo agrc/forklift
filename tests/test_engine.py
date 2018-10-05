@@ -61,7 +61,9 @@ class TestConfigInit(CleanUpAlternativeConfig):
                     u'servers': {
                         u'options': {
                             u'protocol': u'http',
-                            u'port': 6080
+                            u'port': 6080,
+                            u'username': u'',
+                            u'password': u''
                         },
                         u'primary': {
                             u'machineName': u'machine.name.here'

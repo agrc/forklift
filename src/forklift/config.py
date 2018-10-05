@@ -43,7 +43,9 @@ def create_default_config():
             'servers': {
                 'options': {
                     'protocol': 'http',
-                    'port': 6080
+                    'port': 6080,
+                    'username': '',
+                    'password': ''
                 },
                 'primary': {
                     'machineName': 'machine.name.here'

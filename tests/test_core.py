@@ -6,6 +6,7 @@ test_core.py
 Tests for the core.py module
 '''
 
+import inspect
 import unittest
 from os import path
 
@@ -20,12 +21,9 @@ from forklift.models import Changes, Crate
 from . import mocks
 
 current_folder = path.dirname(path.abspath(__file__))
-check_for_changes_gdb = path.join(current_folder, 'data', 'checkForChanges.gdb')
-duplicates_gdb = path.join(current_folder, 'data', 'Duplicates.gdb')
-duplicates_gdb_copy = path.join(current_folder, 'data', 'DuplicatesCopy.gdb')
-check_for_changes_gdb2 = path.join(current_folder, 'data', 'checkForChanges2.gdb')
+suite_data_folder = path.join(current_folder, 'data', 'test_core')
 update_tests_sde = path.join(current_folder, 'data', 'UPDATE_TESTS.sde')
-test_gdb = path.join(current_folder, 'data', 'test.gdb')
+temp_gdb = path.join(current_folder, 'data', 'test.gdb')
 test_folder = path.join(current_folder, 'data', 'test_create_folder')
 
 
@@ -38,34 +36,45 @@ def delete_if_arcpy_exists(data):
         arcpy.Delete_management(data)
 
 
-def skip_if_no_local_sde():
-    if not arcpy.Exists(path.join(update_tests_sde, 'ZipCodes')):
-        raise pytest.skip('No test SDE dectected, skipping test')
+def get_test_gdb():
+    '''Returns a path to the fgdb for the calling test method.
+    '''
+    calling_method_name = inspect.stack()[1].function
+
+    return path.join(suite_data_folder, '{}.gdb'.format(calling_method_name))
 
 
 class CoreTests(unittest.TestCase):
 
-    def setUp(self):
-        delete_if_arcpy_exists(test_gdb)
+    @classmethod
+    def skip_if_no_local_sde(cls):
+        if not cls.has_local_sde:
+            raise pytest.skip('No test SDE dectected, skipping test')
+
+    @classmethod
+    def setUpClass(cls):
+        delete_if_arcpy_exists(temp_gdb)
         delete_if_arcpy_exists(test_folder)
-        delete_if_arcpy_exists(duplicates_gdb_copy)
         engine.init()
         core.init(engine.log)
 
+        #: check for local sde
+        cls.has_local_sde = arcpy.Exists(path.join(update_tests_sde, 'ZipCodes'))
+
     def tearDown(self):
-        delete_if_arcpy_exists(test_gdb)
-        delete_if_arcpy_exists(test_folder)
-        delete_if_arcpy_exists(duplicates_gdb_copy)
+        delete_if_arcpy_exists(temp_gdb)
 
     def test_update_no_existing_destination(self):
-        crate = Crate('ZipCodes', check_for_changes_gdb, test_gdb, 'ImNotHere')
+        test_gdb = get_test_gdb()
+        crate = Crate('ZipCodes', test_gdb, temp_gdb, 'ImNotHere')
 
         self.assertEqual(core.update(crate, lambda x: True)[0], Crate.CREATED)
         self.assertEqual(arcpy.Exists(crate.destination), True)
 
     def test_update_duplicate_features(self):
-        arcpy.Copy_management(duplicates_gdb, duplicates_gdb_copy)
-        crate = Crate('Duplicates', duplicates_gdb_copy, test_gdb, 'DuplicatesDest')
+        test_gdb = get_test_gdb()
+        arcpy.management.Copy(test_gdb, temp_gdb)
+        crate = Crate('Duplicates', temp_gdb, temp_gdb, 'DuplicatesDest')
 
         core.update(crate, lambda x: True)
 
@@ -92,13 +101,14 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(arcpy.GetCount_management(crate.destination).getOutput(0), '3')
 
     def test_deleted_destination_between_updates(self):
-        crate = Crate('ZipCodes', check_for_changes_gdb, test_gdb, 'ImNotHere')
+        test_gdb = get_test_gdb()
+        crate = Crate('ZipCodes', test_gdb, temp_gdb, 'ImNotHere')
         core.update(crate, lambda x: True)
         delete_if_arcpy_exists(crate.destination)
 
         self.assertEqual(core.update(crate, lambda x: True)[0], Crate.CREATED)
         self.assertEqual(arcpy.Exists(crate.destination), True)
-        self.assertEqual(int(arcpy.GetCount_management(crate.destination).getOutput(0)), 299)
+        self.assertEqual(int(arcpy.GetCount_management(crate.destination).getOutput(0)), 14)
 
     @patch('arcpy.Exists')
     def test_update_custom_validation_that_fails(self, arcpy_exists):
@@ -132,54 +142,61 @@ class CoreTests(unittest.TestCase):
             core._filter_fields(['shape', 'test', 'Shape_length', 'Global_ID']), ['test'])
 
     def test_hash_custom_source_key_text(self):
-        skip_if_no_local_sde()
+        self.skip_if_no_local_sde()
+        test_gdb = get_test_gdb()
 
         tbl = 'NO_OBJECTID_TEST'
 
         #: has changes
-        crate = Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, check_for_changes_gdb, tbl)
+        crate = Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, test_gdb, tbl)
         self.assertEqual(len(core._hash(crate).adds), 1)
 
         #: no changes
-        crate = Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, check_for_changes_gdb, '{}_NO_CHANGES'.format(tbl))
+        crate = Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, test_gdb, '{}_NO_CHANGES'.format(tbl))
         self.assertEqual(len(core._hash(crate).adds), 0)
 
     def test_hash_custom_source_key_float(self):
-        skip_if_no_local_sde()
+        self.skip_if_no_local_sde()
+        test_gdb = get_test_gdb()
 
         tbl = 'FLOAT_ID'
 
         #: has changes
-        crate = Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, check_for_changes_gdb, tbl)
+        crate = Crate('UPDATE_TESTS.dbo.{}'.format(tbl), update_tests_sde, test_gdb, tbl)
         changes = core._hash(crate)
         self.assertEqual(len(changes.adds), 1)
 
     def test_hash_fgdb(self):
-        def run_hash(fc1, fc2):
-            return core._hash(Crate(fc1, check_for_changes_gdb, check_for_changes_gdb, fc2))
+        test_gdb = get_test_gdb()
 
-        self.assertEqual(len(run_hash('ZipCodes', 'ZipCodes_same').adds), 0)
-        self.assertEqual(len(run_hash('ZipCodes', 'ZipCodes_same')._deletes), 0)
+        def run_hash(fc1, fc2):
+            return core._hash(Crate(fc1, test_gdb, test_gdb, fc2))
+
+        zip_changes = run_hash('ZipCodes', 'ZipCodes_same')
+        self.assertEqual(len(zip_changes.adds), 0)
+        self.assertEqual(len(zip_changes._deletes), 0)
         self.assertEqual(len(run_hash('DNROilGasWells', 'DNROilGasWells_adds').adds), 4)
-        self.assertEqual(len(run_hash('Line', 'Line_same').adds), 0)
-        self.assertEqual(len(run_hash('Line', 'Line_same')._deletes), 0)
+        line_changes = run_hash('Line', 'Line_same')
+        self.assertEqual(len(line_changes.adds), 0)
+        self.assertEqual(len(line_changes._deletes), 0)
         self.assertEqual(len(run_hash('NullShape', 'NullShape_missing_null').adds), 1)
         self.assertEqual(len(run_hash('Providers', 'Providers_adds').adds), 56)
         self.assertEqual(len(run_hash('NullDates', 'NullDates2').adds), 2)
 
     def test_hash_sde(self):
-        skip_if_no_local_sde()
+        self.skip_if_no_local_sde()
+
+        test_gdb = get_test_gdb()
 
         def run(name):
             return core._hash(
                 Crate(
                     name,
                     update_tests_sde,
-                    check_for_changes_gdb,
-                    name + '_NEW',
+                    test_gdb,
+                    name,
                     destination_coordinate_system=arcpy.SpatialReference(3857),
-                    geographic_transformation='NAD_1983_To_WGS_1984_5')
-                )
+                    geographic_transformation='NAD_1983_To_WGS_1984_5'))
 
         self.assertEqual(len(run('Parcels_Morgan')._deletes), 2)
 
@@ -187,72 +204,79 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(len(run('RuralTelcomBoundaries')._deletes), 1)
 
     def test_hash_shapefile(self):
-        data_folder = path.join(current_folder, 'data')
-        crate = Crate('shapefile.shp', data_folder, check_for_changes_gdb, 'shapefile')
+        test_data_folder = path.join(suite_data_folder, 'test_hash_shapefile')
+        fgdb = path.join(test_data_folder, 'data.gdb')
+        crate = Crate('shapefile.shp', test_data_folder, fgdb, 'shapefile')
         changes = core._hash(crate)
 
         self.assertEqual(len(changes.adds), 1)
 
     def test_schema_changes(self):
-        arcpy.Copy_management(check_for_changes_gdb, test_gdb)
+        test_gdb = get_test_gdb()
 
         with self.assertRaises(ValidationException):
-            core.check_schema(Crate('ZipCodes', test_gdb, check_for_changes_gdb, 'FieldLength'))
+            core.check_schema(Crate('ZipCodes', test_gdb, test_gdb, 'FieldLength'))
 
-        result = core.check_schema(Crate('ZipCodes', test_gdb, check_for_changes_gdb, 'ZipCodes'))
+        result = core.check_schema(Crate('ZipCodes', test_gdb, test_gdb, 'ZipCodes'))
         self.assertEqual(result, True)
 
     def test_schema_changes_in_sde(self):
-        skip_if_no_local_sde()
-        arcpy.Copy_management(check_for_changes_gdb, test_gdb)
+        self.skip_if_no_local_sde()
+        test_gdb = get_test_gdb()
 
         result = core.check_schema(Crate('FieldTypeFloat', test_gdb, update_tests_sde, 'FieldTypeFloat'))
         self.assertEqual(result, True)
 
     def test_check_schema_ignore_length_for_all_except_text(self):
-        skip_if_no_local_sde()
+        self.skip_if_no_local_sde()
+
+        test_gdb = get_test_gdb()
 
         # only worry about length on text fields
-        result = core.check_schema(Crate(r'UPDATE_TESTS.DBO.Hello\UPDATE_TESTS.DBO.DNROilGasWells', update_tests_sde, check_for_changes_gdb, 'DNROilGasWells'))
+        result = core.check_schema(Crate(r'UPDATE_TESTS.DBO.Hello\UPDATE_TESTS.DBO.DNROilGasWells', update_tests_sde, test_gdb, 'DNROilGasWells'))
         self.assertEqual(result, True)
 
     def test_check_schema_no_objectid_in_source(self):
-        skip_if_no_local_sde()
+        self.skip_if_no_local_sde()
 
-        result = core.check_schema(Crate('UPDATE_TESTS.dbo.NO_OBJECTID_TEST', update_tests_sde, check_for_changes_gdb, r'NO_OBJECTID_TEST'))
+        test_gdb = get_test_gdb()
+
+        result = core.check_schema(Crate('UPDATE_TESTS.dbo.NO_OBJECTID_TEST', update_tests_sde, test_gdb, r'NO_OBJECTID_TEST'))
         self.assertEqual(result, True)
 
     def test_check_schema_match(self):
-        with self.assertRaises(ValidationException):
-            core.check_schema(Crate('FieldLength', check_for_changes_gdb, check_for_changes_gdb, 'FieldLength2'))
+        test_gdb = get_test_gdb()
 
         with self.assertRaises(ValidationException):
-            core.check_schema(Crate('FieldType', check_for_changes_gdb, check_for_changes_gdb, 'FieldType2'))
+            core.check_schema(Crate('FieldLength', test_gdb, test_gdb, 'FieldLength2'))
 
-        self.assertEqual(core.check_schema(Crate('ZipCodes', check_for_changes_gdb, check_for_changes_gdb2, 'ZipCodes')), True)
+        with self.assertRaises(ValidationException):
+            core.check_schema(Crate('FieldType', test_gdb, test_gdb, 'FieldType2'))
+
+        self.assertTrue(core.check_schema(Crate('ZipCodes', test_gdb, test_gdb, 'ZipCodes2')))
 
     def test_move_data_table(self):
-        skip_if_no_local_sde()
+        self.skip_if_no_local_sde()
 
-        crate = Crate('Providers', update_tests_sde, test_gdb)  #: table
+        crate = Crate('Providers', update_tests_sde, temp_gdb)  #: table
 
         core.update(crate, lambda x: True)
 
         self.assertEqual(int(arcpy.GetCount_management(crate.destination).getOutput(0)), 57)
 
     def test_move_data_feature_class(self):
-        skip_if_no_local_sde()
+        self.skip_if_no_local_sde()
 
-        crate = Crate('DNROilGasWells', update_tests_sde, test_gdb)  #: feature class
+        crate = Crate('DNROilGasWells', update_tests_sde, temp_gdb)  #: feature class
 
         core.update(crate, lambda x: True)
 
         self.assertEqual(int(arcpy.GetCount_management(crate.destination).getOutput(0)), 5)
 
     def test_move_data_no_objectid(self):
-        skip_if_no_local_sde()
+        self.skip_if_no_local_sde()
 
-        crate = Crate('NO_OBJECTID_TEST', update_tests_sde, test_gdb)
+        crate = Crate('NO_OBJECTID_TEST', update_tests_sde, temp_gdb)
 
         core.update(crate, lambda x: True)
 
@@ -262,37 +286,44 @@ class CoreTests(unittest.TestCase):
                 break
 
     def test_move_data_skip_empty_geometry(self):
-        empty_geometry_gdb = path.join(current_folder, 'data', 'EmptyGeometry.gdb')
+        test_gdb = get_test_gdb()
+
         empty_points = 'EmptyPointTest'
 
-        crate = Crate(empty_points, empty_geometry_gdb, test_gdb)
+        crate = Crate(empty_points, test_gdb, temp_gdb)
 
         core.update(crate, lambda x: True)
 
         self.assertEqual(int(arcpy.GetCount_management(crate.destination).getOutput(0)), 4)
 
     def test_create_destination_data_feature_class(self):
+        test_gdb = get_test_gdb()
+
         arcpy.CreateFileGDB_management(path.join(current_folder, 'data'), 'test.gdb')
 
-        fc_crate = Crate('DNROilGasWells', check_for_changes_gdb, test_gdb)
+        fc_crate = Crate('DNROilGasWells', test_gdb, temp_gdb)
         core._create_destination_data(fc_crate)
         self.assertTrue(arcpy.Exists(fc_crate.destination))
 
     def test_create_destination_data_table(self):
+        test_gdb = get_test_gdb()
+
         arcpy.CreateFileGDB_management(path.join(current_folder, 'data'), 'test.gdb')
 
-        tbl_crate = Crate('Providers', check_for_changes_gdb, test_gdb)
+        tbl_crate = Crate('Providers', test_gdb, temp_gdb)
         core._create_destination_data(tbl_crate)
         self.assertTrue(arcpy.Exists(tbl_crate.destination))
 
     def test_create_destination_data_reproject(self):
+        test_gdb = get_test_gdb()
+
         arcpy.CreateFileGDB_management(path.join(current_folder, 'data'), 'test.gdb')
 
         spatial_reference = arcpy.SpatialReference(3857)
         fc_crate = Crate(
             'DNROilGasWells',
-            check_for_changes_gdb,
             test_gdb,
+            temp_gdb,
             destination_coordinate_system=spatial_reference,
             geographic_transformation='NAD_1983_To_WGS_1984_5')
         core._create_destination_data(fc_crate)
@@ -301,22 +332,29 @@ class CoreTests(unittest.TestCase):
 
     @patch('arcpy.CreateFileGDB_management', wraps=arcpy.CreateFileGDB_management)
     def test_create_destination_data_workspace(self, create_mock):
+        test_gdb = get_test_gdb()
+
         #: file geodatabase
-        crate = Crate('DNROilGasWells', check_for_changes_gdb, test_gdb)
+        crate = Crate('DNROilGasWells', test_gdb, temp_gdb)
         core._create_destination_data(crate)
 
         create_mock.assert_called_once()
 
     def test_create_destination_data_raises(self):
+        test_gdb = get_test_gdb()
+
         #: non-file geodatabase
-        crate = Crate('DNROilGasWells', check_for_changes_gdb, test_folder, 'test.shp')
+        crate = Crate('DNROilGasWells', test_gdb, test_folder, 'test.shp')
 
         with self.assertRaises(Exception):
             core._create_destination_data(crate)
 
+        delete_if_arcpy_exists(test_folder)
+
     def test_source_row_deleted(self):
-        arcpy.Copy_management(check_for_changes_gdb, test_gdb)
-        crate = Crate('RowDelete', test_gdb, test_gdb, 'RowDelete_Dest')
+        test_fgdb = get_test_gdb()
+        arcpy.Copy_management(test_fgdb, temp_gdb)
+        crate = Crate('RowDelete', temp_gdb, temp_gdb, 'RowDelete_Dest')
 
         core.update(crate, lambda x: True)
         with arcpy.da.UpdateCursor(crate.source, '*') as cur:
@@ -336,8 +374,9 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(arcpy.GetCount_management(crate.destination)[0], '4')
 
     def test_source_row_added(self):
-        arcpy.Copy_management(check_for_changes_gdb, test_gdb)
-        crate = Crate('RowAdd', test_gdb, test_gdb, 'RowAdd_Dest')
+        test_fgdb = get_test_gdb()
+        arcpy.Copy_management(test_fgdb, temp_gdb)
+        crate = Crate('RowAdd', temp_gdb, temp_gdb, 'RowAdd_Dest')
 
         core.update(crate, lambda x: True)
         with arcpy.da.InsertCursor(crate.source, 'URL') as cur:
@@ -353,9 +392,10 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(arcpy.GetCount_management(crate.destination)[0], '6')
 
     def test_source_row_attribute_changed(self):
+        test_fgdb = get_test_gdb()
         row_name = 'MALTA'
-        arcpy.Copy_management(check_for_changes_gdb, test_gdb)
-        crate = Crate('AttributeChange', test_gdb, test_gdb, 'AttributeChange_Dest')
+        arcpy.Copy_management(test_fgdb, temp_gdb)
+        crate = Crate('AttributeChange', temp_gdb, temp_gdb, 'AttributeChange_Dest')
 
         core.update(crate, lambda x: True)
         with arcpy.da.UpdateCursor(crate.source, 'SYMBOL', 'NAME = \'{}\''.format(row_name)) as cur:
@@ -371,9 +411,10 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(len(changes._deletes), 1)
 
     def test_source_row_geometry_changed(self):
+        test_fgdb = get_test_gdb()
         row_api = '4300311427'
-        arcpy.Copy_management(check_for_changes_gdb, test_gdb)
-        crate = Crate('GeometryChange', test_gdb, test_gdb, 'GeometryChange_Dest')
+        arcpy.Copy_management(test_fgdb, temp_gdb)
+        crate = Crate('GeometryChange', temp_gdb, temp_gdb, 'GeometryChange_Dest')
 
         core.update(crate, lambda x: True)
         with arcpy.da.UpdateCursor(crate.source, 'Shape@XY', 'API = \'{}\''.format(row_api)) as cur:
@@ -388,8 +429,9 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(len(changes._deletes), 1)
 
     def test_source_row_geometry_changed_to_none(self):
-        arcpy.Copy_management(check_for_changes_gdb, test_gdb)
-        crate = Crate('GeometryToNull', test_gdb, test_gdb, 'GeometryToNull_Dest')
+        test_fgdb = get_test_gdb()
+        arcpy.Copy_management(test_fgdb, temp_gdb)
+        crate = Crate('GeometryToNull', temp_gdb, temp_gdb, 'GeometryToNull_Dest')
 
         core.update(crate, lambda x: True)
         with arcpy.da.UpdateCursor(crate.source, 'Shape@XY') as cur:
@@ -407,7 +449,7 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(arcpy.GetCount_management(crate.destination)[0], '3')
 
     def test_check_counts(self):
-        row_counts = path.join(current_folder, 'data', 'RowCounts.gdb')
+        row_counts = get_test_gdb()
 
         #: matching
         crate = Crate('match', row_counts, row_counts, 'match')
@@ -429,10 +471,11 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(core._check_counts(crate, changes), (Crate.INVALID_DATA, 'Destination has zero rows!'))
 
     def test_mirror_fields(self):
-        arcpy.management.CreateFileGDB(path.dirname(test_gdb), path.basename(test_gdb))
-        destination = arcpy.management.CreateTable(test_gdb, 'MirrorFieldsTable')
+        test_gdb = get_test_gdb()
+        arcpy.management.CreateFileGDB(path.dirname(temp_gdb), path.basename(temp_gdb))
+        destination = arcpy.management.CreateTable(temp_gdb, 'MirrorFieldsTable')
 
-        core._mirror_fields(path.join(check_for_changes_gdb, 'MirrorFields'), destination)
+        core._mirror_fields(path.join(test_gdb, 'MirrorFields'), destination)
 
         fields = arcpy.da.Describe(destination)['fields']
 

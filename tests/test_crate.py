@@ -16,7 +16,7 @@ from arcpy import SpatialReference, env
 from forklift.models import Crate
 
 current_folder = path.dirname(path.abspath(__file__))
-check_for_changes_fgdb = path.join(current_folder, 'data', 'checkForChanges.gdb')
+test_gdb = path.join(current_folder, 'data', 'test_crate', 'data.gdb')
 update_tests_sde = path.join(current_folder, 'data', 'UPDATE_TESTS.sde')
 
 
@@ -30,15 +30,15 @@ class TestCrate(unittest.TestCase):
         self.assertEqual(crate.destination_name, 'blur')
 
     def test_destination_name_defaults_to_source(self):
-        crate = Crate('DNROilGasWells', check_for_changes_fgdb, check_for_changes_fgdb)
+        crate = Crate('DNROilGasWells', test_gdb, test_gdb)
         self.assertEqual(crate.destination_name, crate.source_name)
 
     def test_bad_destination_name(self):
-        crate = Crate('DNROilGasWells', check_for_changes_fgdb, 'destination_workspace', 'destination.Name')
+        crate = Crate('DNROilGasWells', test_gdb, 'destination_workspace', 'destination.Name')
         self.assertEqual(crate.result, (Crate.INVALID_DATA, 'Validation error with destination_name: destination.Name != destination_Name'))
 
     def test_good_destination_name(self):
-        crate = Crate('DNROilGasWells', check_for_changes_fgdb, check_for_changes_fgdb, 'destinationName')
+        crate = Crate('DNROilGasWells', test_gdb, test_gdb, 'destinationName')
         self.assertEqual(crate.result, (Crate.UNINITIALIZED, None))
 
     def test_set_result_with_valid_result_returns_result(self):

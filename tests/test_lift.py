@@ -20,7 +20,7 @@ fgd_describe.workspaceFactoryProgID = 'esriDataSourcesGDB.FileGDBWorkspaceFactor
 non_fgd_describe = Mock()
 non_fgd_describe.workspaceFactoryProgID = 'not a fgd'
 current_folder = path.dirname(path.abspath(__file__))
-check_for_changes_gdb = path.join(current_folder, 'data', 'checkForChanges.gdb')
+test_gdb = path.join(current_folder, 'data', 'test_lift', 'data.gdb')
 
 
 def describe_side_effect(workspace):
@@ -47,8 +47,8 @@ class TestLift(unittest.TestCase):
         self.assertFalse(pallet_bad.success[0])
 
     def test_process_crate_for_set_results(self):
-        crate1 = Crate('DNROilGasWells', check_for_changes_gdb, check_for_changes_gdb, 'a')
-        crate2 = Crate('DNROilGasWells', check_for_changes_gdb, check_for_changes_gdb, 'b')
+        crate1 = Crate('DNROilGasWells', test_gdb, test_gdb, 'a')
+        crate2 = Crate('DNROilGasWells', test_gdb, test_gdb, 'b')
         pallet = Pallet()
         pallet._crates = [crate1, crate2]
         update_def = Mock(return_value=(Crate.UPDATED, 'message'))
@@ -59,8 +59,8 @@ class TestLift(unittest.TestCase):
         self.assertEqual(crate2.result[0], Crate.UPDATED)
 
     def test_process_crate_doesnt_call_update_def_on_duplicate_crates(self):
-        crate1 = Crate('DNROilGasWells', check_for_changes_gdb, check_for_changes_gdb, 'a')
-        crate2 = Crate('DNROilGasWells', check_for_changes_gdb, check_for_changes_gdb, 'a')
+        crate1 = Crate('DNROilGasWells', test_gdb, test_gdb, 'a')
+        crate2 = Crate('DNROilGasWells', test_gdb, test_gdb, 'a')
         pallet = Pallet()
         pallet._crates = [crate1, crate2]
         update_def = Mock(return_value=(Crate.UPDATED, 'message'))

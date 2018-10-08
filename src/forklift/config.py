@@ -52,7 +52,7 @@ def create_default_config():
                 }
             },
             'serverStartWaitSeconds': 300,
-            'shipTo': ['c:\\forklift\\data\\production'],
+            'shipTo': 'c:\\forklift\\data\\production',
             'warehouse': default_warehouse_location
         }
 

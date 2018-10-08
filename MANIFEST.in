@@ -1,1 +1,2 @@
-include src/forklift/report_template.html
+include src/forklift/templates/lift.html
+include src/forklift/templates/ship.html

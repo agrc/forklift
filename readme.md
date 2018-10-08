@@ -55,7 +55,7 @@ Interacting with forklift is done via the [command line interface](src/forklift/
 - `sendEmails` - A boolean value that determines whether or not to send forklift summary report emails after each lift.
 - `server` - An object describing one or more production servers that data will be shipped to. See below for more information.
 - `serverStartWaitSeconds` - The number of seconds that forklift will wait after starting ArcGIS Server. Defaults to 300 (5 minutes).
-- `shipTo` - An array of folder locations that forklift will copy data to. This is the datas final location. Everything in the `dropoffLocation` will be copied to the `shipTo` locations during a forklift ship. `shipTo` paths are optionally formatted with the `servers.host` value if present and necessary. Place a `{}` in your `shipTo` path if you would like to use this feature. eg: `\\{}\\c$\\data`.
+- `shipTo` - A folder location that forklift will copy data to for each server. This is the datas' final location. Everything in the `dropoffLocation` will be copied to the `shipTo` location during a forklift ship. The `shipTo` path is optionally formatted with the `servers.host` value if present and necessary. Place a `{}` in your `shipTo` path if you would like to use this feature. eg: `\\{}\\c$\\data`.
 - `warehouse` - The folder location where all of the `repositories` will be cloned into and where forklift will scan for pallets to lift.
 
 Any of these properties can be set via the `config set` command like so:

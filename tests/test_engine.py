@@ -69,7 +69,7 @@ class TestConfigInit(CleanUpAlternativeConfig):
                             u'machineName': u'machine.name.here'
                         }
                     },
-                    u'shipTo': [u'c:\\forklift\\data\\production'],
+                    u'shipTo': u'c:\\forklift\\data\\production',
                     u'warehouse': u'c:\\scheduled\\warehouse',
                     u'serverStartWaitSeconds': 300
                 })

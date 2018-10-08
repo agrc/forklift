@@ -138,8 +138,7 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(core.update(crate, lambda c: True)[0], Crate.UNHANDLED_EXCEPTION)
 
     def test_filter_shape_fields(self):
-        self.assertEqual(
-            core._filter_fields(['shape', 'test', 'Shape_length', 'Global_ID']), ['test'])
+        self.assertEqual(core._filter_fields(['shape', 'test', 'Shape_length', 'Global_ID']), ['test'])
 
     def test_hash_custom_source_key_text(self):
         self.skip_if_no_local_sde()
@@ -196,7 +195,9 @@ class CoreTests(unittest.TestCase):
                     test_gdb,
                     name,
                     destination_coordinate_system=arcpy.SpatialReference(3857),
-                    geographic_transformation='NAD_1983_To_WGS_1984_5'))
+                    geographic_transformation='NAD_1983_To_WGS_1984_5'
+                )
+            )
 
         self.assertEqual(len(run('Parcels_Morgan')._deletes), 2)
 
@@ -321,11 +322,8 @@ class CoreTests(unittest.TestCase):
 
         spatial_reference = arcpy.SpatialReference(3857)
         fc_crate = Crate(
-            'DNROilGasWells',
-            test_gdb,
-            temp_gdb,
-            destination_coordinate_system=spatial_reference,
-            geographic_transformation='NAD_1983_To_WGS_1984_5')
+            'DNROilGasWells', test_gdb, temp_gdb, destination_coordinate_system=spatial_reference, geographic_transformation='NAD_1983_To_WGS_1984_5'
+        )
         core._create_destination_data(fc_crate)
         self.assertTrue(arcpy.Exists(fc_crate.destination))
         self.assertEqual(arcpy.Describe(fc_crate.destination).spatialReference.name, spatial_reference.name)

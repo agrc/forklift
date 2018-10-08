@@ -247,14 +247,16 @@ class Crate(object):
     UNINITIALIZED = 'This crate was never processed.'
     ERROR = 'There was an error.'  #: This can be used to manually set an error on a crate from within a pallet.
 
-    def __init__(self,
-                 source_name,
-                 source_workspace,
-                 destination_workspace,
-                 destination_name=None,
-                 destination_coordinate_system=None,
-                 geographic_transformation=None,
-                 describer=arcpy.Describe):
+    def __init__(
+        self,
+        source_name,
+        source_workspace,
+        destination_workspace,
+        destination_name=None,
+        destination_coordinate_system=None,
+        geographic_transformation=None,
+        describer=arcpy.Describe
+    ):
         #: the logging module to keep track of the crate
         self.log = logging.getLogger('forklift')
         #: the name of the source data table
@@ -322,14 +324,10 @@ class Crate(object):
 
         Returns the value of what was set
         '''
-        acceptable_results = [self.CREATED,
-                              self.UPDATED,
-                              self.INVALID_DATA,
-                              self.NO_CHANGES,
-                              self.UNHANDLED_EXCEPTION,
-                              self.UNINITIALIZED,
-                              self.WARNING,
-                              self.UPDATED_OR_CREATED_WITH_WARNINGS]
+        acceptable_results = [
+            self.CREATED, self.UPDATED, self.INVALID_DATA, self.NO_CHANGES, self.UNHANDLED_EXCEPTION, self.UNINITIALIZED, self.WARNING,
+            self.UPDATED_OR_CREATED_WITH_WARNINGS
+        ]
 
         if value[0] in acceptable_results:
             self.result = value

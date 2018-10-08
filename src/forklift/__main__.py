@@ -55,8 +55,7 @@ from docopt import docopt
 from . import config, engine, messaging
 
 log_location = join(abspath(dirname(__file__)), '..', 'forklift-garage', 'forklift.log')
-detailed_formatter = logging.Formatter(fmt='%(levelname)-7s %(asctime)s %(module)10s:%(lineno)5s %(message)s',
-                                       datefmt='%m-%d %H:%M:%S')
+detailed_formatter = logging.Formatter(fmt='%(levelname)-7s %(asctime)s %(module)10s:%(lineno)5s %(message)s', datefmt='%m-%d %H:%M:%S')
 speedtest = join(dirname(realpath(__file__)), '..', '..', 'speedtest', 'SpeedTestPallet.py')
 
 

@@ -19,27 +19,20 @@ def true_side_effect(value):
     if value == 'sendEmails':
         return True
     if value == 'email':
-        return {
-            'smtpServer': 'smtp',
-            'smtpPort': 25,
-            'fromAddress': 'noreply@utah.gov'
-        }
+        return {'smtpServer': 'smtp', 'smtpPort': 25, 'fromAddress': 'noreply@utah.gov'}
 
 
 def false_side_effect(value):
     if value == 'sendEmails':
         return False
     if value == 'email':
-        return {
-            'smtpServer': 'smtp',
-            'smtpPort': 25,
-            'fromAddress': 'noreply@utah.gov'
-        }
+        return {'smtpServer': 'smtp', 'smtpPort': 25, 'fromAddress': 'noreply@utah.gov'}
 
 
 @patch('forklift.messaging.get_config_prop')
 @patch('forklift.messaging.SMTP', autospec=True)
 class SendEmail(unittest.TestCase):
+
     def test_to_addresses(self, SMTP_mock, get_config_prop_mock):
         get_config_prop_mock.side_effect = true_side_effect
         messaging.send_emails_override = None

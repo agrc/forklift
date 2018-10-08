@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 '''
 mocks
 ----------------------------------
@@ -9,6 +8,7 @@ mock arcpy for testing
 
 
 class Describe(object):
+
     @property
     def OIDFieldName(self):
         return 'OBJECTID'
@@ -34,12 +34,14 @@ class Describe(object):
 
 
 class SpatialReference(object):
+
     @property
     def name(self):
         return ''
 
 
 class PoolMock(object):
+
     def map(self, *args):
         return list(map(*args))
 

@@ -19,13 +19,15 @@ from forklift.arcgis import LightSwitch
 class TestLightSwitch(unittest.TestCase):
 
     def setUp(self):
-        self.patient = LightSwitch(('primary', {
-            'machineName': 'machine.name',
-            'username': 'username',
-            'password': 'password',
-            'protocol': 'protocol',
-            'port': 6080
-        }))
+        self.patient = LightSwitch(
+            ('primary', {
+                'machineName': 'machine.name',
+                'username': 'username',
+                'password': 'password',
+                'protocol': 'protocol',
+                'port': 6080
+            })
+        )
 
     def test_ensure_stop(self):
         _execute_mock = Mock()
@@ -54,36 +56,38 @@ class TestLightSwitch(unittest.TestCase):
         def fake_server(value):
             print(value)
             if value.endswith('arcgis/admin/services'):
-                return {'folderName': '/',
-                        'description': 'Root folder',
-                        'folders': ['App1'],
-                        'services': [{
-                                'folderName': '/',
-                                'serviceName': 'Service1',
-                                'type': 'MapServer',
-                                'description': ''
-                            }, {
-                                'folderName': '/',
-                                'serviceName': 'Service2',
-                                'type': 'GPServer',
-                                'description': ''
-                            }]
-                        }
+                return {
+                    'folderName': '/',
+                    'description': 'Root folder',
+                    'folders': ['App1'],
+                    'services': [{
+                        'folderName': '/',
+                        'serviceName': 'Service1',
+                        'type': 'MapServer',
+                        'description': ''
+                    }, {
+                        'folderName': '/',
+                        'serviceName': 'Service2',
+                        'type': 'GPServer',
+                        'description': ''
+                    }]
+                }
             elif value.endswith('arcgis/admin/services/App1'):
-                return {'folderName': '/App1',
-                        'description': 'App folder',
-                        'services': [{
-                                'folderName': 'App1',
-                                'serviceName': 'Service3',
-                                'type': 'MapServer',
-                                'description': ''
-                            }, {
-                                'folderName': 'App1',
-                                'serviceName': 'Service4',
-                                'type': 'GPServer',
-                                'description': ''
-                            }]
-                        }
+                return {
+                    'folderName': '/App1',
+                    'description': 'App folder',
+                    'services': [{
+                        'folderName': 'App1',
+                        'serviceName': 'Service3',
+                        'type': 'MapServer',
+                        'description': ''
+                    }, {
+                        'folderName': 'App1',
+                        'serviceName': 'Service4',
+                        'type': 'GPServer',
+                        'description': ''
+                    }]
+                }
             elif value.endswith('arcgis/admin/services/Service1.MapServer/status'):
                 return {'configuredState': 'STARTED', 'realTimeState': 'STOPPED'}
             elif value.endswith('arcgis/admin/services/Service2.GPServer/status'):

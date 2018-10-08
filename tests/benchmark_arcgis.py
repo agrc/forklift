@@ -16,21 +16,11 @@ from forklift.arcgis import LightSwitch  # NOQA
 forklift_path = path.join(path.dirname(path.abspath(__file__)), r'..\src')
 sys.path.insert(0, forklift_path)
 
-
-SERVICES = [
-    ('Broadband/ExportWebMap', 'GPServer'),
-    ('Broadband/FixedCached', 'MapServer'),
-    ('Broadband/MobileCached', 'MapServer'),
-    ('Broadband/ProviderCoverage', 'MapServer'),
-    ('Broadband/WirelineCached', 'MapServer'),
-    ('PLPCO/BackgroundLayers', 'MapServer'),
-    ('PLPCO/RoadsGeneral', 'MapServer'),
-    ('PLPCO/SherlockData', 'MapServer'),
-    ('Geolocators/Roads_AddressSystem_ACSALIAS', 'GeocodeServer'),
-    ('Geolocators/Roads_AddressSystem_ALIAS1', 'GeocodeServer'),
-    ('Geolocators/Roads_AddressSystem_ALIAS2', 'GeocodeServer'),
-    ('Geolocators/Roads_AddressSystem_STREET', 'GeocodeServer')
-]
+SERVICES = [('Broadband/ExportWebMap', 'GPServer'), ('Broadband/FixedCached', 'MapServer'), ('Broadband/MobileCached', 'MapServer'),
+            ('Broadband/ProviderCoverage', 'MapServer'), ('Broadband/WirelineCached', 'MapServer'), ('PLPCO/BackgroundLayers', 'MapServer'),
+            ('PLPCO/RoadsGeneral', 'MapServer'), ('PLPCO/SherlockData', 'MapServer'), ('Geolocators/Roads_AddressSystem_ACSALIAS', 'GeocodeServer'),
+            ('Geolocators/Roads_AddressSystem_ALIAS1', 'GeocodeServer'), ('Geolocators/Roads_AddressSystem_ALIAS2', 'GeocodeServer'),
+            ('Geolocators/Roads_AddressSystem_STREET', 'GeocodeServer')]
 NUM_REPEATS = 3
 
 

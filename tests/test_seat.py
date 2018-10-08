@@ -12,6 +12,7 @@ from forklift import seat
 
 
 class TestSeat(unittest.TestCase):
+
     def test_format_time_milliseconds(self):
         self.assertEqual(seat.format_time(5.5), '5500 ms')
 

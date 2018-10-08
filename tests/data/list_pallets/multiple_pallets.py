@@ -14,12 +14,10 @@ class PalletOne(Pallet):
     def __init__(self):
         super(PalletOne, self).__init__()
 
-        self.add_crates(['fc1',
-                         'fc2',
-                         ('fc3', 'source', 'destination'),
-                         ('fc4', 'source', 'destination', 'fc4_new')],
-                        {'source_workspace': 'C:\\MapData\\UDNR.sde',
-                         'destination_workspace': 'C:\\MapData\\UDNR.gdb'})
+        self.add_crates(['fc1', 'fc2', ('fc3', 'source', 'destination'), ('fc4', 'source', 'destination', 'fc4_new')], {
+            'source_workspace': 'C:\\MapData\\UDNR.sde',
+            'destination_workspace': 'C:\\MapData\\UDNR.gdb'
+        })
 
 
 class PalletTwo(Pallet):

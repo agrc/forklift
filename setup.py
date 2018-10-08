@@ -6,10 +6,7 @@ from setuptools import find_packages, setup
 
 
 def read(*names, **kwargs):
-    return io.open(
-        join(dirname(__file__), *names),
-        encoding=kwargs.get("encoding", "utf8")
-    ).read()
+    return io.open(join(dirname(__file__), *names), encoding=kwargs.get("encoding", "utf8")).read()
 
 
 setup(
@@ -38,24 +35,13 @@ setup(
         "Programming Language :: Python :: 3 :: Only",
         "Topic :: Utilities",
     ],
-    keywords=[
-    ],
+    keywords=[],
     install_requires=[
-        'colorama==0.*',
-        'docopt==0.6.*',
-        'gitpython==2.*',
-        'ndg-httpsclient==0.*',
-        'pyasn1==0.*',
-        'pyopenssl==17.*',
-        'pystache==0.*',
-        'requests==2.*',
-        'xxhash==1.*',
-        'multiprocess==0.70.5',
-        'dill==0.2.7.1'
+        'colorama==0.*', 'docopt==0.6.*', 'gitpython==2.*', 'ndg-httpsclient==0.*', 'pyasn1==0.*', 'pyopenssl==17.*', 'pystache==0.*', 'requests==2.*',
+        'xxhash==1.*', 'multiprocess==0.70.5', 'dill==0.2.7.1'
         #: pyopenssl, ndg-httpsclient, pyasn1 are there to disable ssl warnings in requests
     ],
-    dependency_links=[
-    ],
+    dependency_links=[],
     extras_require={
         'tests': [
             'pytest==3.8.*',
@@ -66,9 +52,5 @@ setup(
             'pytest-pep8==1.0.*',
         ]
     },
-    entry_points={
-        "console_scripts": [
-            "forklift = forklift.__main__:main"
-        ]
-    }
+    entry_points={"console_scripts": ["forklift = forklift.__main__:main"]}
 )

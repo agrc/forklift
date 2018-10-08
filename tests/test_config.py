@@ -80,23 +80,8 @@ class ConfigTest(unittest.TestCase):
         }
 
         servers = config.get_config_prop('servers')
-        self.assertEqual(servers['0'], {
-            'machineName': '0-host',
-            'username': 'username',
-            'password': 'password',
-            'port': 0
-        })
+        self.assertEqual(servers['0'], {'machineName': '0-host', 'username': 'username', 'password': 'password', 'port': 0})
 
-        self.assertEqual(servers['1'], {
-            'machineName': '1-host',
-            'username': 'username',
-            'password': 'password',
-            'port': 0
-        })
+        self.assertEqual(servers['1'], {'machineName': '1-host', 'username': 'username', 'password': 'password', 'port': 0})
 
-        self.assertEqual(servers['2'], {
-            'machineName': '2-host',
-            'username': 'other-username',
-            'password': 'other-password',
-            'port': 1
-        })
+        self.assertEqual(servers['2'], {'machineName': '2-host', 'username': 'other-username', 'password': 'other-password', 'port': 1})

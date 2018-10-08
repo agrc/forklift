@@ -6,7 +6,6 @@ pallet_order.py
 A module that contains tests for pallet execution order
 '''
 
-
 from forklift.models import Pallet
 
 

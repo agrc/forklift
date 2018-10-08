@@ -119,8 +119,9 @@ def update(crate, validate_crate):
 
                     #: reproject data if source is different than destination
                     if crate.needs_reproject():
-                        changes.table = arcpy.Project_management(changes.table, changes.table + reproject_temp_suffix, crate.destination_coordinate_system,
-                                                                 crate.geographic_transformation)[0]
+                        changes.table = arcpy.Project_management(
+                            changes.table, changes.table + reproject_temp_suffix, crate.destination_coordinate_system, crate.geographic_transformation
+                        )[0]
 
                     if not crate.is_table():
                         changes.fields[shape_field_index] = changes.fields[shape_field_index].rstrip('WKT')
@@ -183,13 +184,15 @@ def _hash(crate):
         arcpy.Delete_management(temp_table)
 
     if not crate.is_table():
-        changes.table = arcpy.CreateFeatureclass_management(scratch_gdb_path,
-                                                            crate.name,
-                                                            geometry_type=crate.source_describe.shapeType.upper(),
-                                                            template=crate.source,
-                                                            has_m='SAME_AS_TEMPLATE',
-                                                            has_z='SAME_AS_TEMPLATE',
-                                                            spatial_reference=crate.source_describe.spatialReference)[0]
+        changes.table = arcpy.CreateFeatureclass_management(
+            scratch_gdb_path,
+            crate.name,
+            geometry_type=crate.source_describe.shapeType.upper(),
+            template=crate.source,
+            has_m='SAME_AS_TEMPLATE',
+            has_z='SAME_AS_TEMPLATE',
+            spatial_reference=crate.source_describe.spatialReference
+        )[0]
     else:
         changes.table = arcpy.CreateTable_management(scratch_gdb_path, crate.name)[0]
         _mirror_fields(crate.source, changes.table)
@@ -264,13 +267,15 @@ def _create_destination_data(crate):
         _mirror_fields(crate.source, crate.destination)
     else:
         log.warning('creating new feature class: %s', crate.destination)
-        arcpy.CreateFeatureclass_management(crate.destination_workspace,
-                                            crate.destination_name,
-                                            geometry_type=crate.source_describe.shapeType.upper(),
-                                            template=crate.source,
-                                            has_m='SAME_AS_TEMPLATE',
-                                            has_z='SAME_AS_TEMPLATE',
-                                            spatial_reference=crate.destination_coordinate_system or crate.source_describe.spatialReference)
+        arcpy.CreateFeatureclass_management(
+            crate.destination_workspace,
+            crate.destination_name,
+            geometry_type=crate.source_describe.shapeType.upper(),
+            template=crate.source,
+            has_m='SAME_AS_TEMPLATE',
+            has_z='SAME_AS_TEMPLATE',
+            spatial_reference=crate.destination_coordinate_system or crate.source_describe.spatialReference
+        )
 
     arcpy.AddField_management(crate.destination, hash_field, 'TEXT', field_length=hash_field_length)
 
@@ -329,8 +334,9 @@ def check_schema(crate):
         else:
             source_fld = source_fields[field_key]
             if abstract_type(source_fld.type) != abstract_type(destination_fld.type):
-                mismatching_fields.append('{}: source type of {} does not match destination type of {}'
-                                          .format(source_fld.name, source_fld.type, destination_fld.type))
+                mismatching_fields.append(
+                    '{}: source type of {} does not match destination type of {}'.format(source_fld.name, source_fld.type, destination_fld.type)
+                )
             elif source_fld.type == 'String':
 
                 def truncate_field_length(field):
@@ -343,8 +349,9 @@ def check_schema(crate):
                 source_fld.length = truncate_field_length(source_fld)
                 destination_fld.length = truncate_field_length(destination_fld)
                 if source_fld.length != destination_fld.length:
-                    mismatching_fields.append('{}: source length of {} does not match destination length of {}'
-                                              .format(source_fld.name, source_fld.length, destination_fld.length))
+                    mismatching_fields.append(
+                        '{}: source length of {} does not match destination length of {}'.format(source_fld.name, source_fld.length, destination_fld.length)
+                    )
 
     if len(missing_fields) > 0:
         msg = 'Missing fields in {}: {}'.format(crate.source, ', '.join(missing_fields))

@@ -121,7 +121,8 @@ class TestCrate(unittest.TestCase):
             source_name='Counties',
             source_workspace='Database Connections\\something.sde',
             destination_workspace='c:\\temp\\something.gdb',
-            destination_name='Counties')
+            destination_name='Counties'
+        )
 
         #: reset values because _try_to_find_data_source_by_name is called in the init
         crate.set_source_name('Counties')
@@ -147,7 +148,8 @@ class TestCrate(unittest.TestCase):
             source_name='duplicate',
             source_workspace='Database Connections\\something.sde',
             destination_workspace='c:\\something.gdb',
-            destination_name='Counties')
+            destination_name='Counties'
+        )
 
         self.assertFalse(crate._try_to_find_data_source_by_name()[0])
 
@@ -159,7 +161,8 @@ class TestCrate(unittest.TestCase):
             source_name='Counties',
             source_workspace='Database Connections\\something.sde',
             destination_workspace='c:\\something.gdb',
-            destination_name='Counties')
+            destination_name='Counties'
+        )
 
         #: reset values because _try_to_find_data_source_by_name is called in the init
         crate.set_source_name('Counties')

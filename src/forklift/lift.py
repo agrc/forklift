@@ -206,12 +206,14 @@ def get_lift_status(pallets, elapsed_time, git_errors):
     '''
     reports = [pallet.get_report() for pallet in pallets]
 
-    return {'hostname': socket.gethostname(),
-            'total_pallets': len(reports),
-            'pallets': reports,
-            'num_success_pallets': len([p for p in reports if p['success']]),
-            'git_errors': git_errors,
-            'total_time': elapsed_time}
+    return {
+        'hostname': socket.gethostname(),
+        'total_pallets': len(reports),
+        'pallets': reports,
+        'num_success_pallets': len([p for p in reports if p['success']]),
+        'git_errors': git_errors,
+        'total_time': elapsed_time
+    }
 
 
 def _copy_with_overwrite(source, destination):
@@ -334,6 +336,7 @@ def _get_locations_for_dropoff(pallets):
 
     returns a dictionary of destination paths and the pallets that they are associated with
     '''
+
     def normalize_workspace(workspace_path):
         return path.normpath(workspace_path.lower())
 

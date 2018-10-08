@@ -71,6 +71,7 @@ class ShapefileCratePallet(Pallet):
     def ship(self):
         self.send_email('stdavis@utah.gov', 'test email', 'hello')
 
+
 #
 # class SdeCratePallet(Pallet):
 #

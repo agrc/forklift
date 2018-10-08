@@ -35,9 +35,7 @@ class TestChanges(unittest.TestCase):
         self.assertFalse(self.patient.has_deletes())
 
     def test_has_deletes_is_true_with_values(self):
-        attribute_hashes = {
-            'key': 1
-        }
+        attribute_hashes = {'key': 1}
 
         self.patient.determine_deletes(attribute_hashes)
 

@@ -72,7 +72,8 @@ class TestConfigInit(CleanUpAlternativeConfig):
                     u'shipTo': u'c:\\forklift\\data\\production',
                     u'warehouse': u'c:\\scheduled\\warehouse',
                     u'serverStartWaitSeconds': 300
-                })
+                }
+            )
 
     def test_init_returns_path_for_existing_config_file(self):
         self.assertEqual(engine.init(), engine.init())
@@ -244,6 +245,7 @@ class TestEngineGeneral(unittest.TestCase):
 
         template_dir = join(dirname(abspath(__file__)), '..', 'src', 'forklift', 'templates')
 
+        # yapf: disable
         pallet_reports = [{
             'name': 'c:\\TypicalPallet.py:TypicalPallet',
             'success': True,
@@ -273,6 +275,7 @@ class TestEngineGeneral(unittest.TestCase):
             }],
             'total_processing_time': '4780 ms'
         }]
+        # yapf: enable
 
         problems = ['service1', 'service2']
         data = ['boundaries.gdb', 'otherthing.gdb']
@@ -432,14 +435,7 @@ class TestShipData(CleanUpAlternativeConfig):
 
         report = engine.ship_data()
 
-        expected_report = {
-            'hostname': 'test.host',
-            'total_pallets': 0,
-            'pallets': [],
-            'num_success_pallets': 0,
-            'data_moved': [],
-            'problem_services': []
-        }
+        expected_report = {'hostname': 'test.host', 'total_pallets': 0, 'pallets': [], 'num_success_pallets': 0, 'data_moved': [], 'problem_services': []}
 
         #: we don't care about total_time since it can vary between test runs
         assert expected_report.items() <= report.items()

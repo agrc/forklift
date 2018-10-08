@@ -12,8 +12,7 @@ import sys
 from imp import load_source
 from json import dump, load
 from os import environ, linesep, listdir, walk
-from os.path import (abspath, basename, dirname, exists, join, realpath,
-                     splitext)
+from os.path import (abspath, basename, dirname, exists, join, realpath, splitext)
 from re import compile
 from shutil import rmtree
 from time import clock, sleep
@@ -241,10 +240,9 @@ def ship_data(pallet_arg=None):
             start_sub_process = clock()
 
             #: copy data
-            successful_copies, failed_copies = lift.copy_data(config.get_config_prop('dropoffLocation'),
-                                                              config.get_config_prop('shipTo'),
-                                                              packing_slip_file,
-                                                              switch.server_qualified_name)
+            successful_copies, failed_copies = lift.copy_data(
+                config.get_config_prop('dropoffLocation'), config.get_config_prop('shipTo'), packing_slip_file, switch.server_qualified_name
+            )
             log.info('copy data time: %s', seat.format_time(clock() - start_sub_process))
 
             log.info('starting (%s)', switch.server_label)
@@ -304,13 +302,15 @@ def ship_data(pallet_arg=None):
             pallet_reports.append(slip)
 
     elapsed_time = seat.format_time(clock() - start_seconds)
-    status = {'hostname': socket.gethostname(),
-              'total_pallets': len(pallet_reports),
-              'pallets': pallet_reports,
-              'num_success_pallets': len([p for p in pallet_reports if p['success']]),
-              'data_moved': successful_copies,
-              'problem_services': problem_services,
-              'total_time': elapsed_time}
+    status = {
+        'hostname': socket.gethostname(),
+        'total_pallets': len(pallet_reports),
+        'pallets': pallet_reports,
+        'num_success_pallets': len([p for p in pallet_reports if p['success']]),
+        'data_moved': successful_copies,
+        'problem_services': problem_services,
+        'total_time': elapsed_time
+    }
 
     _send_report_email(ship_template, status)
 
@@ -679,9 +679,9 @@ def _generate_console_report(pallet_reports):
 
     returns the formatted report string
     '''
-    report_str = '{3}{3}    {4}{0}{2} out of {5}{1}{2} pallets ran successfully in {6}.{3}'.format(pallet_reports['num_success_pallets'],
-                                                                                                   len(pallet_reports['pallets']), Fore.RESET, linesep,
-                                                                                                   Fore.GREEN, Fore.CYAN, pallet_reports['total_time'])
+    report_str = '{3}{3}    {4}{0}{2} out of {5}{1}{2} pallets ran successfully in {6}.{3}'.format(
+        pallet_reports['num_success_pallets'], len(pallet_reports['pallets']), Fore.RESET, linesep, Fore.GREEN, Fore.CYAN, pallet_reports['total_time']
+    )
 
     if len(pallet_reports['git_errors']) > 0:
         for git_error in pallet_reports['git_errors']:

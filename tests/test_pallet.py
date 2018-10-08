@@ -24,23 +24,25 @@ class TestPallet(unittest.TestCase):
 
     @patch('arcpy.Describe')
     def test_name_prop(self, describe):
+
         class NamePallet(Pallet):
+
             def __init__(self):
                 super(NamePallet, self).__init__()
-                self.add_crates(['fc1',
-                                 'fc2',
-                                 ('fc3', 'source', 'destination'),
-                                 ('fc4', 'source', 'destination', 'fc4_new')],
-                                {'source_workspace': 'C:\\MapData\\UDNR.sde',
-                                 'destination_workspace': 'C:\\MapData\\UDNR.gdb'})
+                self.add_crates(['fc1', 'fc2', ('fc3', 'source', 'destination'), ('fc4', 'source', 'destination', 'fc4_new')], {
+                    'source_workspace': 'C:\\MapData\\UDNR.sde',
+                    'destination_workspace': 'C:\\MapData\\UDNR.gdb'
+                })
+
         self.assertIn('test_pallet.py:NamePallet', NamePallet().name)
 
     def test_add_crates(self):
         source = 'C:\\MapData\\UDNR.sde'
         dest = 'C:\\MapData\\UDNR.gdb'
-        self.patient.add_crates(
-            ['fc1', ('fc3', 'source'), ('fc4', 'source', 'destination', 'fc4_new')], {'source_workspace': source,
-                                                                                      'destination_workspace': dest})
+        self.patient.add_crates(['fc1', ('fc3', 'source'), ('fc4', 'source', 'destination', 'fc4_new')], {
+            'source_workspace': source,
+            'destination_workspace': dest
+        })
 
         self.assertEqual(len(self.patient.get_crates()), 3)
 
@@ -127,18 +129,20 @@ class TestPallet(unittest.TestCase):
 
     def test_add_crate_default_reproject(self):
         self.patient.add_crate(('fc1', 'source1', 'destination1', 'dest_name'))
-        self.patient.add_crate(('fc1', 'source1', 'destination1', 'dest_name'),
-                               {'source_workspace': 'hello', 'destination_workspace': 'blah'})
+        self.patient.add_crate(('fc1', 'source1', 'destination1', 'dest_name'), {'source_workspace': 'hello', 'destination_workspace': 'blah'})
 
         self.assertEqual(self.patient.get_crates()[0].destination_coordinate_system.factoryCode, 3857)
         self.assertEqual(self.patient.get_crates()[0].geographic_transformation, 'NAD_1983_To_WGS_1984_5')
         self.assertEqual(self.patient.get_crates()[1].destination_coordinate_system.factoryCode, 3857)
 
     def test_add_crate_alternative_reproject(self):
+
         class ReprojectPallet(Pallet):
+
             def __init__(self):
                 super(ReprojectPallet, self).__init__()
                 self.destination_coordinate_system = 26912
+
         pallet = ReprojectPallet()
         pallet.add_crate(('fc1', 'source1', 'destination1', 'dest_name'))
 
@@ -286,10 +290,13 @@ class TestPallet(unittest.TestCase):
 
 
 class TestPalletGetReport(unittest.TestCase):
+
     def test_successful_pallet(self):
         pallet = Pallet()
-        pallet.add_crates(['fc1', 'fc2', 'fc3'], {'source_workspace': 'Z:\\a\\path\\to\\database.sde',
-                                                  'destination_workspace': 'Z:\\a\\path\\to\\database.gdb'})
+        pallet.add_crates(['fc1', 'fc2', 'fc3'], {
+            'source_workspace': 'Z:\\a\\path\\to\\database.sde',
+            'destination_workspace': 'Z:\\a\\path\\to\\database.gdb'
+        })
         pallet.success = (True, None)
         pallet.name = 'name'
         pallet._crates[0].result = (Crate.CREATED, None)
@@ -305,8 +312,10 @@ class TestPalletGetReport(unittest.TestCase):
 
     def test_failed_pallet(self):
         pallet = Pallet()
-        pallet.add_crates(['fc4', 'fc5', 'fc6'], {'source_workspace': 'Z:\\a\\path\\to\\database.sde',
-                                                  'destination_workspace': 'Z:\\a\\path\\to\\database.gdb'})
+        pallet.add_crates(['fc4', 'fc5', 'fc6'], {
+            'source_workspace': 'Z:\\a\\path\\to\\database.sde',
+            'destination_workspace': 'Z:\\a\\path\\to\\database.gdb'
+        })
         pallet.success = (False, 'Failed message')
         pallet._crates[0].result = (Crate.UPDATED, None)
         pallet._crates[1].result = (Crate.INVALID_DATA, 'Invalid data message')

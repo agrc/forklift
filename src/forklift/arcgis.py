@@ -93,7 +93,11 @@ class LightSwitch(object):
                 service_path = '{}/{}.{}'.format(info['folderName'], info['serviceName'], info['type'])
 
             service_status = self._fetch('{}/{}/status'.format(self.services_url, service_path))
-            if service_status['realTimeState'] != service_status['configuredState']:
+
+            try:
+                if service_status['realTimeState'] != service_status['configuredState']:
+                    services.setdefault(self.server_qualified_name, []).append(service_path)
+            except KeyError:
                 services.setdefault(self.server_qualified_name, []).append(service_path)
 
         return services

@@ -260,9 +260,9 @@ class Crate(object):
         #: the name of the source data table
         self.source_name = source_name
         #: the name of the source database
-        self.source_workspace = source_workspace
+        self.source_workspace = source_workspace.lower()
         #: the name of the destination database
-        self.destination_workspace = destination_workspace
+        self.destination_workspace = destination_workspace.lower()
         #: the result of the core.update method being called on this crate
         self.result = (self.UNINITIALIZED, None)
         #: the name of the output data table

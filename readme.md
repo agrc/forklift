@@ -53,7 +53,7 @@ Interacting with forklift is done via the [command line interface](src/forklift/
 - `poolProcesses` - The number of parallel processes forklift will use when git cloning/pulling repositories.
 - `repositories` - A list of github repositories in the `<owner>/<name>` format that will be cloned/updated into the `warehouse` folder.
 - `sendEmails` - A boolean value that determines whether or not to send forklift summary report emails after each lift.
-- `server` - An object describing one or more production servers that data will be shipped to. See below for more information.
+- `servers` - An object describing one or more production servers that data will be shipped to. See below for more information.
 - `serverStartWaitSeconds` - The number of seconds that forklift will wait after starting ArcGIS Server. Defaults to 300 (5 minutes).
 - `shipTo` - A folder location that forklift will copy data to for each server. This is the datas' final location. Everything in the `dropoffLocation` will be copied to the `shipTo` location during a forklift ship. The `shipTo` path is optionally formatted with the `servers.host` value if present and necessary. Place a `{}` in your `shipTo` path if you would like to use this feature. eg: `\\{}\\c$\\data`.
 - `warehouse` - The folder location where all of the `repositories` will be cloned into and where forklift will scan for pallets to lift.

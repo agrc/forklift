@@ -386,10 +386,10 @@ class Crate(object):
 
         def filter_filenames(workspace, name):
             if workspace in names_cache:
-                log.debug('cache hit for workspace: %s', workspace)
+                self.log.debug('cache hit for workspace: %s', workspace)
                 names = names_cache[workspace]
             else:
-                log.debug('cache miss for workspace: %s', workspace)
+                self.log.debug('cache miss for workspace: %s', workspace)
                 arcpy.env.workspace = workspace
 
                 def default_to_empty(list):

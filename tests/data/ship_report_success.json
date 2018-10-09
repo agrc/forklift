@@ -4,8 +4,14 @@
     "total_pallets": 3,
     "total_time": "4.5 hours",
     "git_errors": [],
-    "problem_services": [],
-    "data_moved": ["test.gdb", "test2.gdb"],
+    "server_reports": [{
+        "name": "machineone",
+        "problem_services": [],
+        "successful_copies": ["test.gdb", "test2.gdb"],
+        "success": true,
+        "message": "",
+        "has_service_issues": false
+    }],
     "pallets": [
         {
             "name": "Z:\\forklift\\samples\\PalletSamples.py:StringCratePallet",

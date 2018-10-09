@@ -103,7 +103,7 @@ class TestLightSwitch(unittest.TestCase):
         self.server_qualified_name = 'machine.name'
 
         services = self.patient.validate_service_state()
-        self.assertEqual(services, {'machine.name': ['Service1.MapServer', 'App1/Service3.MapServer']})
+        self.assertEqual(services, ['Service1.MapServer', 'App1/Service3.MapServer'])
 
     def test_vaidate_service_state_returns_empty_when_server_is_stopped(self):
         self.patient._started = False
@@ -215,7 +215,7 @@ class TestLightSwitch(unittest.TestCase):
 
         self.assertEqual(post.call_count, 1)
         self.assertFalse(status)
-        self.assertEqual(message, post.side_effect)
+        self.assertEqual(message, str(post.side_effect))
 
     @patch('forklift.arcgis.requests.post')
     def test_handles_connection_error_gracefully(self, post):
@@ -226,7 +226,7 @@ class TestLightSwitch(unittest.TestCase):
 
         self.assertEqual(post.call_count, 1)
         self.assertFalse(status)
-        self.assertEqual(message, post.side_effect)
+        self.assertEqual(message, str(post.side_effect))
 
     @patch('forklift.arcgis.requests.post')
     def test_handles_httperror_error_gracefully(self, post):
@@ -237,7 +237,7 @@ class TestLightSwitch(unittest.TestCase):
 
         self.assertEqual(post.call_count, 1)
         self.assertFalse(status)
-        self.assertEqual(message, post.side_effect)
+        self.assertEqual(message, str(post.side_effect))
 
     def test_missing_vars(self):
         with pytest.raises(KeyError):

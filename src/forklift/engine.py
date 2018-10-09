@@ -12,7 +12,8 @@ import sys
 from imp import load_source
 from json import dump, load
 from os import environ, linesep, listdir, walk
-from os.path import (abspath, basename, dirname, exists, join, realpath, splitext)
+from os.path import (abspath, basename, dirname, exists, join, realpath,
+                     splitext)
 from re import compile
 from shutil import rmtree
 from time import clock, sleep
@@ -220,22 +221,33 @@ def ship_data(pallet_arg=None):
         log.info('only packing slip found in pickup location... shipping pallets only')
         ship_only = True
 
-    failed_copies = {}
-    successful_copies = []
-    problem_services = []
+    server_reports = []
     start_process = clock()
     if not ship_only:
         switches = [LightSwitch(server) for server in servers.items()]
 
         #: for each server
         for switch in switches:
+            server_report = {'name': switch.server_label, 'failed_copies': {}, 'successful_copies': [], 'problem_services': [], 'success': True, 'message': ''}
+
             log.info('stopping (%s)', switch.server_label)
             start_sub_process = clock()
 
             #: stop server
             status, messages = switch.ensure('stop')
-
             log.info('stopping %s time: %s', switch.server_label, seat.format_time(clock() - start_sub_process))
+
+            if status is False:
+                error_msg = '{} did not stop, skipping copy. {}'.format(switch.server_label, messages)
+                log.error(error_msg)
+                server_report['success'] = False
+                server_report['message'] = error_msg
+                continue
+
+            #: wait period (failover logic)
+            sleep_timer = config.get_config_prop('serverStartWaitSeconds')
+            log.debug('sleeping: %s', sleep_timer)
+            sleep(sleep_timer)
 
             start_sub_process = clock()
 
@@ -243,28 +255,37 @@ def ship_data(pallet_arg=None):
             successful_copies, failed_copies = lift.copy_data(
                 config.get_config_prop('dropoffLocation'), config.get_config_prop('shipTo'), packing_slip_file, switch.server_qualified_name
             )
+            server_report['successful_copies'] = successful_copies
+            server_report['failed_copies'] = failed_copies
+
             log.info('copy data time: %s', seat.format_time(clock() - start_sub_process))
 
             log.info('starting (%s)', switch.server_label)
-
             start_sub_process = clock()
 
             #: start server
             status, messages = switch.ensure('start')
-
             log.info('starting %s time: %s', switch.server_label, seat.format_time(clock() - start_sub_process))
 
-            #: wait period (failover logic)
-            sleep_timer = config.get_config_prop('serverStartWaitSeconds')
-            log.debug('sleeping: %s', sleep_timer)
+            if status is False:
+                error_msg = '{} did not restart. {}'.format(switch.server_label, messages)
+                log.error(error_msg)
+                server_report['success'] = False
+                server_report['message'] = error_msg
 
+            #: wait period (failover logic)
+            log.debug('sleeping: %s', sleep_timer)
             sleep(sleep_timer)
 
             start_sub_process = clock()
 
-            problem_services = switch.validate_service_state()
-
+            server_report['problem_services'] = switch.validate_service_state()
             log.info('validate service time: %s', seat.format_time(clock() - start_sub_process))
+            if len(server_report['problem_services']) > 0:
+                server_report['success'] = False
+                server_report['has_service_issues'] = True
+
+            server_reports.append(server_report)
         log.info('total copy time: %s', seat.format_time(clock() - start_process))
 
     pallet_reports = []
@@ -307,8 +328,7 @@ def ship_data(pallet_arg=None):
         'total_pallets': len(pallet_reports),
         'pallets': pallet_reports,
         'num_success_pallets': len([p for p in pallet_reports if p['success']]),
-        'data_moved': successful_copies,
-        'problem_services': problem_services,
+        'server_reports': server_reports,
         'total_time': elapsed_time
     }
 

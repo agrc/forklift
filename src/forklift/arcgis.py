@@ -85,7 +85,7 @@ class LightSwitch(object):
             serviceInfos += folderJson['services']
 
         #: check status of each service
-        services = {}
+        services = []
         for info in serviceInfos:
             if info['folderName'] == '/':
                 service_path = '{}.{}'.format(info['serviceName'], info['type'])
@@ -96,9 +96,9 @@ class LightSwitch(object):
 
             try:
                 if service_status['realTimeState'] != service_status['configuredState']:
-                    services.setdefault(self.server_qualified_name, []).append(service_path)
+                    services.append(service_path)
             except KeyError:
-                services.setdefault(self.server_qualified_name, []).append(service_path)
+                services.append(service_path)
 
         return services
 
@@ -121,11 +121,11 @@ class LightSwitch(object):
 
             ok = self._return_false_for_status(r.json())
         except requests.exceptions.ConnectTimeout as t:
-            return (False, t)
+            return (False, str(t))
         except requests.exceptions.Timeout as t:
-            return (False, t)
+            return (False, str(t))
         except requests.exceptions.HTTPError as t:
-            return (False, t)
+            return (False, str(t))
 
         return ok
 

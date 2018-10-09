@@ -435,7 +435,7 @@ class TestShipData(CleanUpAlternativeConfig):
 
         report = engine.ship_data()
 
-        expected_report = {'hostname': 'test.host', 'total_pallets': 0, 'pallets': [], 'num_success_pallets': 0, 'data_moved': [], 'problem_services': []}
+        expected_report = {'hostname': 'test.host', 'total_pallets': 0, 'pallets': [], 'num_success_pallets': 0, 'server_reports': []}
 
         #: we don't care about total_time since it can vary between test runs
         assert expected_report.items() <= report.items()

@@ -17,6 +17,13 @@
       float: right;
       margin-left: 20px;
     }
+    .indent {
+      padding-left: 10px;
+    }
+    table {
+      line-height: 1.5em;
+      border-collapse: collapse;
+    }
   </style>
 </head>
 <p>
@@ -24,36 +31,51 @@
 </p>
 <table>
   <tbody>
-    <tr>
-      <td colspan="2" class="info">
-        <b>ArcGIS Server Service Status</b>
-      </td>
-    </tr>
-    {{#problem_services}}
-    <tr>
-      <td colspan="2" class="error" style="padding-left: 10px">{{.}}</td>
-    </tr>
-    {{/problem_services}}
-    {{^problem_services}}
-    <tr>
-        <td colspan="2" class="info" style="padding-left: 10px">All services started</td>
-    </tr>
-    {{/problem_services}}
-    <tr>
-      <td colspan="2" class="info">
-        <b>Datasets Copied</b>
-      </td>
-    </tr>
-    {{#data_moved}}
-    <tr>
-      <td colspan="2" class="info" style="padding-left: 10px">{{.}}</td>
-    </tr>
-    {{/data_moved}}
-    {{^data_moved}}
-    <tr>
-      <td colspan="2" class="info" style="padding-left: 10px">No data updated</td>
-    </tr>
-    {{/data_moved}}
+    {{#server_reports}}
+      <tr>
+        <td colspan="2" class="info">
+          <b>ArcGIS Server Service Status: {{name}}</b>
+        </td>
+      </tr>
+      {{^success}}
+      <tr>
+        <td colspan="2" class="error indent">{{message}}</td>
+      </tr>
+      {{/success}}
+      {{#has_service_issues}}
+      <tr>
+        <td colspan="2" class="error">Problem Services</td>
+      </tr>
+      {{/has_service_issues}}
+      {{#problem_services}}
+      <tr>
+        <td colspan="2" class="error indent">{{.}}</td>
+      </tr>
+      {{/problem_services}}
+      {{^problem_services}}
+      <tr>
+          <td colspan="2" class="info indent">All services started</td>
+      </tr>
+      {{/problem_services}}
+      <tr>
+        <td colspan="2" class="info">
+          <b>Datasets Copied</b>
+        </td>
+      </tr>
+      {{#successful_copies}}
+      <tr>
+        <td colspan="2" class="info indent">{{.}}</td>
+      </tr>
+      {{/successful_copies}}
+      {{^successful_copies}}
+      <tr>
+        <td colspan="2" class="info indent">No data updated</td>
+      </tr>
+      {{/successful_copies}}
+      <tr>
+        <td>&nbsp;</td>
+      </tr>
+    {{/server_reports}}
     <tr>
       <td>&nbsp;</td>
     </tr>

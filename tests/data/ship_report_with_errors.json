@@ -3,8 +3,22 @@
     "num_success_pallets": 3,
     "total_pallets": 5,
     "total_time": "4.5 hours",
-    "data_moved": ["test.gdb", "test2.gdb"],
-    "problem_services": ["{GRGISAPP1}Broadband/MapService.MapServer"],
+    "server_reports": [{
+        "name": "machineone",
+        "problem_services": ["Broadband/MapService.MapServer", "Another/MapService.MapServer"],
+        "successful_copies": ["test.gdb", "test2.gdb"],
+        "success": false,
+        "message": "",
+        "has_service_issues": true
+    }, {
+        "name": "machinetwo",
+        "problem_services": [],
+        "successful_copies": ["test.gdb"],
+        "failed_copies": ["test2.gdb"],
+        "success": false,
+        "message": "Some Exception Text",
+        "has_service_issues": false
+    }],
     "pallets": [
         {
             "name": "Z:\\forklift\\samples\\PalletSamples.py:StringCratePallet",

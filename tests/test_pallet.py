@@ -37,8 +37,8 @@ class TestPallet(unittest.TestCase):
         self.assertIn('test_pallet.py:NamePallet', NamePallet().name)
 
     def test_add_crates(self):
-        source = 'C:\\MapData\\UDNR.sde'
-        dest = 'C:\\MapData\\UDNR.gdb'
+        source = 'c:\\mapdata\\udnr.sde'
+        dest = 'c:\\mapdata\\udnr.gdb'
         self.patient.add_crates(['fc1', ('fc3', 'source'), ('fc4', 'source', 'destination', 'fc4_new')], {
             'source_workspace': source,
             'destination_workspace': dest

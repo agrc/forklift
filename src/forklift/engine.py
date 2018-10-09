@@ -304,7 +304,8 @@ def ship_data(pallet_arg=None):
                     slip['message'] += failed_copies[copy_item]
 
             #: run pallet lifecycle
-            #: post copy process
+            slip['post_copy_processed'] = False
+            slip['shipped'] = False
             try:
                 if slip['success'] and slip['requires_processing']:
                     log.info('post copy processing (%r)', pallet)

@@ -520,10 +520,10 @@ def _process_packing_slip(packing_slip=None):
         if not item['success']:
             continue
 
-        pallets = _build_pallets(item['name'])
-        pallets[0].add_packing_slip(item)
+        pallet = _build_pallets(item['name'])[0]
+        pallet.add_packing_slip(item)
 
-        pallets.append(pallets[0])
+        pallets.append(pallet)
 
     return pallets
 

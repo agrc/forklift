@@ -459,7 +459,7 @@ def _build_pallets(file_path, pallet_arg=None):
     returns an array of pallet objects
     '''
     if file_path is not None:
-        pallet_infos = set(_get_pallets_in_file(file_path) + list_pallets())
+        pallet_infos = _get_pallets_in_file(file_path)
     else:
         pallet_infos = list_pallets()
 

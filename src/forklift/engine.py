@@ -335,9 +335,11 @@ def ship_data(pallet_arg=None):
 
     _send_report_email(ship_template, status)
 
-    log.info('%r', status)
+    report = _generate_ship_console_report(status)
 
-    return status
+    log.info('%s', report)
+
+    return report
 
 
 def speedtest(pallet_location):
@@ -696,7 +698,7 @@ def _get_pallets_in_file(file_path):
 def _generate_console_report(pallet_reports):
     '''pallet_reports: object - the report object
 
-    Formats the `pallet_reports` object into a string for printing to the console with colort
+    Formats the `pallet_reports` object into a string for printing to the console with color
 
     returns the formatted report string
     '''
@@ -730,5 +732,53 @@ def _generate_console_report(pallet_reports):
                 color = Fore.RED
 
             report_str += 'crate message: {0}{1}{2}{3}'.format(color, crate['crate_message'], Fore.RESET, linesep)
+
+    return report_str
+
+
+def _generate_ship_console_report(pallet_reports):
+    '''status: object - the report object
+
+    Formats the `pallet_reports` object into a string for printing to the console with color
+
+    returns the formatted report string
+    '''
+    report_str = '{3}{3}    {4}{0}{2} out of {5}{1}{2} pallets ran successfully in {6}.{3}'.format(
+        pallet_reports['num_success_pallets'], pallet_reports['total_pallets'], Fore.RESET, linesep, Fore.GREEN, Fore.CYAN, pallet_reports['total_time']
+    )
+
+    for report in pallet_reports['server_reports']:
+        color = Fore.GREEN
+        if not report['success']:
+            color = Fore.RED
+
+        report_str += '{1}ArcGIS Server Service Status for {2}{0}{3}{1}'.format(report['name'], linesep, Fore.CYAN, Fore.RESET)
+
+        if report.get('has_service_issues', False):
+            report_str += '  {1}Problem Services{2}{0}'.format(linesep, Fore.RED, Fore.RESET)
+
+            for service in report['problem_services']:
+                report_str += '    {1}{0}{2}{3}'.format(service, Fore.RED, Fore.RESET, linesep)
+        else:
+            report_str += '    {0}All services started{1}{2}'.format(Fore.GREEN, Fore.RESET, linesep)
+
+        report_str += '  Datasets Copied{0}'.format(linesep)
+        if len(report['successful_copies']) < 1:
+            report_str += '    {0}No data updated{1}{2}'.format(Fore.RED, Fore.RESET, linesep)
+        else:
+            for data in report['successful_copies']:
+                report_str += '    {2}{0}{3}{1}'.format(data, linesep, Fore.CYAN, Fore.RESET)
+
+    report_str += '{0}Pallet Report{0}'.format(linesep)
+    for report in pallet_reports['pallets']:
+        color = Fore.GREEN
+        if not report['success']:
+            color = Fore.RED
+
+        report_str += '  {0}{1}{2} ({4}){3}'.format(color, report['name'], Fore.RESET, linesep, report['total_processing_time'])
+        report_str += '  Post Copy Processed: {2}{0}{3}    Shipped: {2}{1}{3}{4}'.format(report['post_copy_processed'], report['shipped'], Fore.CYAN, Fore.RESET, linesep)
+
+        if report['message']:
+            report_str += '  pallet message: {}{}{}{}'.format(Fore.RED, report['message'], Fore.RESET, linesep)
 
     return report_str

@@ -99,7 +99,7 @@ def update(crate, validate_crate):
             with arcpy.da.Editor(crate.destination_workspace):
                 #: delete unaccessed hashes
                 if changes.has_deletes():
-                    log.debug('Number of rows to be deleted: %d', len(changes._deletes))
+                    log.debug('number of rows to be deleted: %d', len(changes._deletes))
                     status, _ = change_status
                     if status != Crate.CREATED:
                         change_status = (Crate.UPDATED, None)
@@ -112,7 +112,7 @@ def update(crate, validate_crate):
 
                 #: add new/updated rows
                 if changes.has_adds():
-                    log.debug('Number of rows to be added: %d', len(changes.adds))
+                    log.debug('number of rows to be added: %d', len(changes.adds))
                     status, message = change_status
                     if status != Crate.CREATED:
                         change_status = (Crate.UPDATED, None)
@@ -138,12 +138,12 @@ def update(crate, validate_crate):
                             cursor.insertRow(row)
 
             if changes.has_dups:
-                change_status = (Crate.UPDATED_OR_CREATED_WITH_WARNINGS, 'Duplicate features detected!')
+                change_status = (Crate.UPDATED_OR_CREATED_WITH_WARNINGS, 'duplicate features detected!')
         else:
-            log.debug('No changes found.')
+            log.debug('no changes found.')
 
             if changes.has_dups:
-                change_status = (Crate.WARNING, 'Duplicate features detected!')
+                change_status = (Crate.WARNING, 'duplicate features detected!')
 
         #: sanity check the row counts between source and destination
         count_status = _check_counts(crate, changes)
@@ -208,7 +208,7 @@ def _hash(crate):
             if not crate.is_table():
                 #: skip features with empty geometry
                 if row[-1] is None:
-                    log.warning('Empty geometry found in %s', row)
+                    log.warning('empty geometry found in %s', row)
                     total_rows -= 1
                     continue
 
@@ -243,7 +243,7 @@ def _hash(crate):
     changes.total_rows = total_rows
 
     if has_dups:
-        log.warning('Duplicate features detected!')
+        log.warning('duplicate features detected!')
         changes.has_dups = True
 
     return changes

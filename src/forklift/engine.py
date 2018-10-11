@@ -174,7 +174,7 @@ def lift_pallets(file_path=None, pallet_arg=None, skip_git=False):
     _send_report_email(lift_template, status)
 
     report = _generate_console_report(status)
-    log.info('Finished in {}.'.format(elapsed_time))
+    log.info('finished in {}.'.format(elapsed_time))
 
     log.info('%s', report)
 

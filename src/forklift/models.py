@@ -41,8 +41,8 @@ class Pallet(object):
         self._crates = []
         #: the status of the pallet (successful: Bool, message: string)
         self.success = (True, None)
-        #: a list databases or folders that you want forklift to copy to `destinationDestinations`
-        #: after a successful process & ship
+        #: a list databases or folders that you want forklift to copy to `dropoffLocations`
+        #: after a successful process
         self.copy_data = []
         #: a list of tuples describing arcgis server services that should be shut down before copying data in `copy_data`
         #: the format of the tuple is two strings: `('<Folder>/<ServiceName>', '<ServiceType>')`

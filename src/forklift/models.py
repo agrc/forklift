@@ -9,7 +9,6 @@ A module that contains the model classes for forklift
 import logging
 from inspect import getsourcefile
 from os.path import dirname, join
-from pprint import PrettyPrinter
 from time import clock
 
 from xxhash import xxh64
@@ -19,7 +18,6 @@ import arcpy
 from . import config, seat
 from .messaging import send_email
 
-pprinter = PrettyPrinter(indent=4, width=40)
 names_cache = {}
 
 
@@ -424,21 +422,8 @@ class Crate(object):
     def __repr__(self):
         '''Override for better logging. Use with %r
         '''
-        spatial_reference = None
-        if hasattr(self.destination_coordinate_system, 'name'):
-            spatial_reference = self.destination_coordinate_system.name
 
-        return pprinter.pformat({
-            'source': self.source,
-            'destination': self.destination,
-            'result': self.result,
-            'source_name': self.source_name,
-            'source_workspace': self.source_workspace,
-            'destination_name': self.destination_name,
-            'destination_workspace': self.destination_workspace,
-            'destination_coordinate_system': spatial_reference,
-            'geographic_transformation': self.geographic_transformation
-        })
+        return "source: [{}] source_workspace: [{}] destination: [{}]".format(self.source, self. source_workspace, self.destination)
 
 
 class Changes(object):

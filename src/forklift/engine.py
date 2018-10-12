@@ -222,6 +222,7 @@ def ship_data(pallet_arg=None):
         ship_only = True
 
     server_reports = []
+    all_failed_copies = {}
     start_process = clock()
     if not ship_only:
         switches = [LightSwitch(server) for server in servers.items()]
@@ -257,6 +258,7 @@ def ship_data(pallet_arg=None):
             )
             server_report['successful_copies'] = successful_copies
             server_report['failed_copies'] = failed_copies
+            all_failed_copies.update(failed_copies)
 
             log.info('copy data time: %s', seat.format_time(clock() - start_sub_process))
 
@@ -299,9 +301,9 @@ def ship_data(pallet_arg=None):
             # check to see if copy was successful
             copy_items = [basename(item) for item in pallet.copy_data]
             for copy_item in copy_items:
-                if copy_item in failed_copies.keys():
+                if copy_item in all_failed_copies.keys():
                     slip['success'] = False
-                    slip['message'] += failed_copies[copy_item]
+                    slip['message'] += all_failed_copies[copy_item]
 
             #: run pallet lifecycle
             slip['post_copy_processed'] = False

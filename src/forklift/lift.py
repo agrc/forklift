@@ -325,7 +325,7 @@ def _remove_hash_from_workspace(workspace):
     arcpy.env.workspace = workspace
 
     for table in arcpy.ListFeatureClasses() + arcpy.ListTables():
-        log.debug(table)
+        log.debug('scrubbing hash field from: %s', table)
         arcpy.DeleteField_management(table, hash_field)
 
     arcpy.env.workspace = None

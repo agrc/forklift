@@ -87,9 +87,9 @@ def update(crate, validate_crate):
             has_custom = validate_crate(crate)
             if has_custom == NotImplemented:
                 check_schema(crate)
-        except ValidationException as e:
+        except Exception as e:
             log.warning('validation error: %s for crate %r', e, crate, exc_info=True)
-            return (Crate.INVALID_DATA, e)
+            return (Crate.INVALID_DATA, str(e))
 
         #: create source hash and store
         changes = _hash(crate)

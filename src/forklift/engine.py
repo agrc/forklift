@@ -293,7 +293,7 @@ def ship_data(pallet_arg=None):
     pallet_reports = []
     if not missing_packing_slip:
         #: get affected pallets
-        pallets_to_ship = _process_packing_slip()
+        pallets_to_ship = _process_packing_slip(None, pallet_arg)
 
         for pallet in pallets_to_ship:
             slip = pallet.slip
@@ -529,7 +529,7 @@ def _generate_packing_slip(status, location):
         dump(status, slip, indent=2)
 
 
-def _process_packing_slip(packing_slip=None):
+def _process_packing_slip(packing_slip=None, pallet_arg=None):
     '''packing_slip: string - an optional packing slip to process otherwise the default location will be used
 
     returns all of the pallets referenced by the packing slip
@@ -545,7 +545,7 @@ def _process_packing_slip(packing_slip=None):
         if not item['success']:
             continue
 
-        pallet = _build_pallets(item['name'])[0]
+        pallet = _build_pallets(item['name'], pallet_arg)[0]
         pallet.add_packing_slip(item)
 
         pallets.append(pallet)

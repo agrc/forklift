@@ -348,7 +348,13 @@ class Crate(object):
         else:
             message_level = ''
 
-        return {'name': self.destination_name, 'result': self.result[0], 'crate_message': self.result[1] or '', 'message_level': message_level}
+        return {'name': self.destination_name,
+                'result': self.result[0],
+                'crate_message': self.result[1] or '',
+                'message_level': message_level,
+                'source': self.source,
+                'destination': self.destination,
+                'was_updated': self.was_updated()}
 
     def is_table(self):
         '''returns True if the crate defines a table

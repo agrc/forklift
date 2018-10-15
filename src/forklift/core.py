@@ -150,7 +150,7 @@ def update(crate, validate_crate):
 
         return count_status or change_status
     except Exception as e:
-        log.error('unhandled exception: %s for crate %r', e, crate, exc_info=True)
+        log.error('unhandled exception: %s for crate %r', str(e), crate, exc_info=True)
 
         return (Crate.UNHANDLED_EXCEPTION, e)
     finally:

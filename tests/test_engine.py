@@ -417,13 +417,14 @@ class TestShipData(CleanUpAlternativeConfig):
 
         self.assertFalse(shipped)
 
+    @patch('forklift.engine._generate_ship_console_report')
     @patch('forklift.engine.socket.gethostname', return_value="test.host")
     @patch('forklift.engine.exists', return_value=True)
     @patch('forklift.engine._process_packing_slip')
     @patch('forklift.config.get_config_prop')
     @patch('forklift.lift.copy_data')
     @patch('forklift.engine.listdir', return_value=[engine.packing_slip_file])
-    def test_ship_only_ships_if_only_slip_found(self, listdir, copy_data, config_prop, packing_slip, exists, socket):
+    def test_ship_only_ships_if_only_slip_found(self, listdir, copy_data, config_prop, packing_slip, exists, socket, generate_mock):
 
         def mock_props(value):
             if value == 'servers':
@@ -433,20 +434,21 @@ class TestShipData(CleanUpAlternativeConfig):
 
         config_prop.side_effect = mock_props
 
-        report = engine.ship_data()
+        engine.ship_data()
 
         expected_report = {'hostname': 'test.host', 'total_pallets': 0, 'pallets': [], 'num_success_pallets': 0, 'server_reports': []}
 
         #: we don't care about total_time since it can vary between test runs
-        assert expected_report.items() <= report.items()
+        assert expected_report.items() <= generate_mock.call_args[0][0].items()
         copy_data.assert_not_called()
         packing_slip.assert_called_once()
 
+    @patch('forklift.engine._generate_ship_console_report', return_value='')
     @patch('forklift.engine.exists', return_value=True)
     @patch('forklift.engine._process_packing_slip')
     @patch('forklift.lift.copy_data')
     @patch('forklift.engine.listdir', return_value=[engine.packing_slip_file])
-    def test_post_process_if_success(self, listdir, copy_data, packing_slip, exists):
+    def test_post_process_if_success(self, listdir, copy_data, packing_slip, exists, generate_mock):
         slip = {'success': True, 'requires_processing': True}
         pallet = Mock(slip=slip)
         pallet.ship.return_value = None
@@ -459,11 +461,12 @@ class TestShipData(CleanUpAlternativeConfig):
         pallet.ship.assert_called_once()
         pallet.post_copy_process.assert_called_once()
 
+    @patch('forklift.engine._generate_ship_console_report', return_value='')
     @patch('forklift.engine.exists', return_value=True)
     @patch('forklift.engine._process_packing_slip')
     @patch('forklift.lift.copy_data')
     @patch('forklift.engine.listdir', return_value=[engine.packing_slip_file])
-    def test_post_process_if_not_success(self, listdir, copy_data, packing_slip, exists):
+    def test_post_process_if_not_success(self, listdir, copy_data, packing_slip, exists, generate_mock):
         slip = {'success': False, 'requires_processing': True}
         pallet = Mock(slip=slip)
         pallet.ship.return_value = None

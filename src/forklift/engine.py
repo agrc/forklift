@@ -778,7 +778,9 @@ def _generate_ship_console_report(pallet_reports):
             color = Fore.RED
 
         report_str += '  {0}{1}{2} ({4}){3}'.format(color, report['name'], Fore.RESET, linesep, report['total_processing_time'])
-        report_str += '  Post Copy Processed: {2}{0}{3}    Shipped: {2}{1}{3}{4}'.format(report['post_copy_processed'], report['shipped'], Fore.CYAN, Fore.RESET, linesep)
+        report_str += '  Post Copy Processed: {2}{0}{3}    Shipped: {2}{1}{3}{4}'.format(
+            report['post_copy_processed'], report['shipped'], Fore.CYAN, Fore.RESET, linesep
+        )
 
         if report['message']:
             report_str += '  pallet message: {}{}{}{}'.format(Fore.RED, report['message'], Fore.RESET, linesep)

@@ -477,7 +477,7 @@ def git_update():
 def _build_pallets(file_path, pallet_arg=None):
     '''
     file_path: string - the file path of a python.py file
-    pallet_args: string - an optional string to send to the constructor of a pallet
+    pallet_arg: string - an optional string to send to the constructor of a pallet
 
     Finds pallet classes in python files and instantiates them with any `pallet_arg`'s and calls build
 
@@ -531,6 +531,7 @@ def _generate_packing_slip(status, location):
 
 def _process_packing_slip(packing_slip=None, pallet_arg=None):
     '''packing_slip: string - an optional packing slip to process otherwise the default location will be used
+    pallet_arg: string - an optional string to send to the constructor of a pallet
 
     returns all of the pallets referenced by the packing slip
     '''

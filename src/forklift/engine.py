@@ -301,7 +301,7 @@ def ship_data(pallet_arg=None):
             # check to see if copy was successful
             copy_items = [basename(item) for item in pallet.copy_data]
             for copy_item in copy_items:
-                if copy_item in all_failed_copies.keys():
+                if copy_item in all_failed_copies:
                     slip['success'] = False
                     slip['message'] += all_failed_copies[copy_item]
 

@@ -27,7 +27,7 @@
   </style>
 </head>
 <p>
-  <b>{{num_success_pallets}}</b> out of <b>{{total_pallets}}</b> pallets ran successfully in <b>{{total_time}}</b> on {{hostname}}.
+  <strong>{{num_success_pallets}}</strong> out of <strong>{{total_pallets}}</strong> pallets ran successfully in <strong>{{total_time}}</strong> on {{hostname}}.
 </p>
 <table>
   <tbody>
@@ -94,11 +94,11 @@
       </td>
     </tr>
     <tr class="{{#success}}success{{/success}}{{^success}}error{{/success}}">
-      <td><b>post copy processed:</b> {{post_copy_processed}}</td>
-      <td><b>shipped:</b> {{shipped}}</td>
+      <td><strong>post copy processed:</strong> {{post_copy_processed}}</td>
+      <td><strong>shipped:</strong> {{shipped}}</td>
     </tr>
     <tr class="{{#success}}success{{/success}}{{^success}}error{{/success}}">
-      <td colspan="2"><b>{{message}}</b></td>
+      <td colspan="2"><strong>{{message}}</strong></td>
     </tr>
     {{/pallets}}
   </tbody>

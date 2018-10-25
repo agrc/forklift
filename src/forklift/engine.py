@@ -541,6 +541,8 @@ def _process_packing_slip(packing_slip=None, pallet_arg=None):
         with open(location, 'r', encoding='utf-8') as slip:
             packing_slip = load(slip)
 
+    log.info('packing slip contents: %s', packing_slip)
+
     pallets = []
     for item in packing_slip:
         if not item['success']:

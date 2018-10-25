@@ -293,7 +293,7 @@ class TestEngineGeneral(unittest.TestCase):
 
         ship_template = join(template_dir, 'ship.html')
 
-        output = engine._send_report_email(ship_template, ship_status)
+        output = engine._send_report_email(ship_template, ship_status, 'Shipping')
         with open(join(test_data_folder, 'successful_ship.html'), 'w') as report:
             report.write(output)
 

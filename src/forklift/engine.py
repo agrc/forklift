@@ -171,7 +171,7 @@ def lift_pallets(file_path=None, pallet_arg=None, skip_git=False):
 
     _generate_packing_slip(status, config.get_config_prop('dropoffLocation'))
 
-    _send_report_email(lift_template, status)
+    _send_report_email(lift_template, status, 'Lifting')
 
     report = _generate_console_report(status)
     log.info('finished in {}.'.format(elapsed_time))
@@ -335,7 +335,7 @@ def ship_data(pallet_arg=None):
         'total_time': elapsed_time
     }
 
-    _send_report_email(ship_template, status)
+    _send_report_email(ship_template, status, 'Shipping')
 
     report = _generate_ship_console_report(status)
 
@@ -556,15 +556,18 @@ def _process_packing_slip(packing_slip=None, pallet_arg=None):
     return pallets
 
 
-def _send_report_email(template, report_object):
+def _send_report_email(template, report_object, subject):
     '''Create and sends the report email
+    template: string - the file path to a pystache template
+    report_object: obj - the template model
+    subject: string - a string to insert into the email subject line
     '''
     log_file = join(dirname(config.config_location), 'forklift.log')
 
     with open(template, 'r') as template_file:
         email_content = pystache.render(template_file.read(), report_object)
 
-    send_email(config.get_config_prop('notify'), 'Forklift Report for {}'.format(report_object['hostname']), email_content, log_file)
+    send_email(config.get_config_prop('notify'), 'Forklift {} Report for {}'.format(subject, report_object['hostname']), email_content, log_file)
 
     return email_content
 

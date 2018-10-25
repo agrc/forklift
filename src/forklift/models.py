@@ -211,6 +211,7 @@ class Pallet(object):
         return {
             'name': self.name,
             'success': self.success[0] and self.are_crates_valid(),
+            'is_ready_to_ship': self.is_ready_to_ship(),
             'requires_processing': self.requires_processing(),
             'message': self.success[1] or '',
             'crates': [crate.get_report() for crate in self._crates if crate.get_report() is not None],

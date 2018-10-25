@@ -12,10 +12,9 @@ from os import makedirs, remove, rmdir
 from os.path import abspath, dirname, exists, join
 
 import pytest
-from mock import Mock, mock_open, patch
-
 from forklift import config, core, engine
 from forklift.models import Crate
+from mock import Mock, mock_open, patch
 
 from .mocks import PoolMock
 
@@ -362,16 +361,39 @@ class TestPackingSlip(unittest.TestCase):
             'success': True,
             'message': None,
             'crates': [good_crate, good_crate, warn_crate],
-            'total_processing_time': '1 hr'
+            'total_processing_time': '1 hr',
+            'is_ready_to_ship': True
         }
-        fail = {'name': 'Fail Pallet', 'success': False, 'message': 'What Happened?!', 'crates': [bad_crate, good_crate], 'total_processing_time': '2 hrs'}
+        fail = {
+            'name': 'Fail Pallet',
+            'success': False,
+            'message': 'What Happened?!',
+            'crates': [bad_crate, good_crate],
+            'total_processing_time': '2 hrs',
+            'is_ready_to_ship': True
+        }
+        not_ready_to_ship = {
+            'name': 'Successful Pallet',
+            'success': True,
+            'message': None,
+            'crates': [good_crate, good_crate, warn_crate],
+            'total_processing_time': '1 hr',
+            'is_ready_to_ship': False
+        }
 
-        report = {'total_pallets': 2, 'num_success_pallets': 1, 'git_errors': ['a git error'], 'pallets': [success, fail], 'total_time': '5 minutes'}
+        report = {
+            'total_pallets': 3,
+            'num_success_pallets': 1,
+            'git_errors': ['a git error'],
+            'pallets': [success, fail, not_ready_to_ship],
+            'total_time': '5 minutes'
+        }
 
         engine._generate_packing_slip(report, test_data_folder)
 
         open.assert_called_with(join(test_data_folder, engine.packing_slip_file), 'w', encoding='utf-8')
         dump.assert_called_once()
+        self.assertEqual(len(dump.call_args[0][0]), 2)
 
 
 class TestScorchedEarth(CleanUpAlternativeConfig):

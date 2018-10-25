@@ -520,7 +520,7 @@ def _generate_packing_slip(status, location):
     this pulls the pallet status from the report object and writes it to a file in the drop off location
     for later use by the ship command
     '''
-    status = status['pallets']
+    status = [report for report in status['pallets'] if report['is_ready_to_ship']]
 
     if not exists(location):
         return

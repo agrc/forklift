@@ -63,7 +63,7 @@ def main():
     '''Main entry point for program. Parse arguments and pass to engine module
     '''
 
-    args = docopt(__doc__, version='8.5.0')
+    args = docopt(__doc__, version='9.0.0')
     _setup_logging(args['--verbose'])
     _add_global_error_handler()
 

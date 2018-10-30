@@ -11,7 +11,7 @@ def read(*names, **kwargs):
 
 setup(
     name="forklift",
-    version="8.5.0",
+    version="9.0.0",
     license="MIT",
     description="CLI tool for managing automated tasks.",
     long_description="",

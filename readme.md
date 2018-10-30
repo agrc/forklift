@@ -152,6 +152,22 @@ _Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) w
 
 ## Changelog
 
+### 9.0.0
+
+- Added `--send-emails` override option for both lift and ship commands.
+- Added `ERROR` as a possible result type for crates.
+- Removed unused crate property, `source_primary_key`
+- BREAKING CHANGE: Split up lift and ship to be independant commands.
+    - Replaced arcgis server env variables with config.json properties to allow for managing a silo'd architecture or multiple machines not in a cluster 
+    - Replaced env variables with config.json properties for consistency.
+    - Ship now shuts down the entire ArcGIS Server machine rather than specific services. It also now does this one machine at time to minimize downtime.
+    - Removed static data processing since it can now be accomplished by dropping the data into the dropoff folder.
+- Removed tox because it's incompatible with conda.
+- Enhanced the remove repo command to also delete the repository folder from disk ([#134](https://github.com/agrc/forklift/issues/134)).
+- Removed the check for python version 3.
+- Switched from nose to pytest for running tests.
+
+
 ### 8.5.0
 
 - Add support for m & z values in the destination geometry ([#223](https://github.com/agrc/forklift/issues/223)).

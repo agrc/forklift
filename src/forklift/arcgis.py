@@ -120,11 +120,7 @@ class LightSwitch(object):
             r.raise_for_status()
 
             ok = self._return_false_for_status(r.json())
-        except requests.exceptions.ConnectTimeout as t:
-            return (False, str(t))
-        except requests.exceptions.Timeout as t:
-            return (False, str(t))
-        except requests.exceptions.HTTPError as t:
+        except Exception as t:
             return (False, str(t))
 
         return ok

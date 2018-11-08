@@ -110,7 +110,10 @@ class LightSwitch(object):
 
         Retuns a tuple with a boolean status and a message
         '''
-        self._check_token_freshness()
+        try:
+            self._check_token_freshness()
+        except Exception as t:
+            return (False, str(t))
 
         ok = (False, None)
         data = {'f': 'json', 'token': self.token}

@@ -78,10 +78,9 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
 1. `pip install .\` from the directory containing `setup.py`.
 1. Install the python dependencies for your pallets.
 1. `forklift config init`
-1. `forklift config set --key copyDestinations --value c:\\MapData` - This is where you want your output placed. ???What
 1. `forklift config repos --add agrc/parcels` - The agrc/parcels is the user/repo to scan for Pallets.
 1. `forklift garage open` - Opens garage directory. Copy all connection.sde files to the forklift garage.
-1. `forklift git-update` - Add all the secrets or supplimentary data your pallets need. ???What
+1. `forklift git-update` - Updates pallet repos. Add any secrets or supplimentary data your pallets need that is not in source control.
 1. Edit the `config.json` to add the arcgis server(s) to manage. The options property will be mixed in to all of the other servers.
     - `username` ArcGIS admin username.
     - `password` ArcGIS admin password.

@@ -14,9 +14,9 @@ A python CLI tool for managing and organizing the repetitive tasks involved with
 
 ## Usage
 
-The work that forklift does is defined by [Pallets](src/forklift/models.py). `forklift.models.Pallet` is a base class that allows the user to define a job for forklift to perform by creating a new class that inherits from `Pallet`. Each pallet should have `Pallet` in it's file name and be unique from it's other pallets.
+The work that forklift does is defined by [Pallets](src/forklift/models.py). `forklift.models.Pallet` is a base class that allows the user to define a job for forklift to perform by creating a new class that inherits from `Pallet`. Each pallet should have `Pallet` in it's file name and be unique among other pallets run by forklift.
 
-A Pallet can have zero or more [Crates](src/forklift/models.py). `forklift.models.Crate` is a class that defines data that needs to be moved from one location to another (reprojecting to web mercator by default). Crates are created by calling the `add_crates` (or `add_crate`) methods within the `build` method on the pallet. For example:
+A Pallet can have zero or more [Crates](src/forklift/models.py). `forklift.models.Crate` is a class that defines data that will be moved from one location to another (reprojecting to web mercator by default). Crates are created by calling the `add_crates` (or `add_crate`) methods within the `build` method on the pallet. For example:
 
 ```python
 class MyPallet(Pallet):
@@ -48,7 +48,7 @@ Interacting with forklift is done via the [command line interface](src/forklift/
 - `configuration` - A configuration string (`Production`, `Staging`, or `Dev`) that is passed to `Pallet:build` to allow a pallet to use different settings based on how forklift is being run. Defaults to `Production`.
 - `dropoffLocation` - The folder location where production ready files will be placed. This data will be compressed and will not contain any forklift artifacts. Pallets place their data in this location within their `copy_data` property.
 - `email` - An object containing `fromAddress`, `smptPort`, and `smtpServer` for sending report emails.
-- `hashLocation` - The folder location where forklift creates and manages data. This data is hashed and used to check for changes. Referencing this location within a pallet is done by: `os.path.join(self.staging_rack, 'the.gdb')`.
+- `hashLocation` - The folder location where forklift creates and manages data. This data contains hash digests that are used to check for changes. Referencing this location within a pallet is done by: `os.path.join(self.staging_rack, 'the.gdb')`.
 - `notify` - An array of emails that will be sent the summary report each time `forklift lift` is run.
 - `poolProcesses` - The number of parallel processes forklift will use when git cloning/pulling repositories.
 - `repositories` - A list of github repositories in the `<owner>/<name>` format that will be cloned/updated into the `warehouse` folder.
@@ -78,10 +78,10 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
 1. `pip install .\` from the directory containing `setup.py`.
 1. Install the python dependencies for your pallets.
 1. `forklift config init`
-1. `forklift config set --key copyDestinations --value c:\\MapData` - This is where you want your output placed.
-1. `forklift repos --add agrc/parcels` - The agrc/parcels is the user/repo to scan for Pallets.
-1. `forklift garage open` - Add all connection.sde files to the forklift garage.
-1. `forklift git-update` - Add all the secrets or supplimentary data your pallets need.
+1. `forklift config set --key copyDestinations --value c:\\MapData` - This is where you want your output placed. ???What
+1. `forklift config repos --add agrc/parcels` - The agrc/parcels is the user/repo to scan for Pallets.
+1. `forklift garage open` - Opens garage directory. Copy all connection.sde files to the forklift garage.
+1. `forklift git-update` - Add all the secrets or supplimentary data your pallets need. ???What
 1. Edit the `config.json` to add the arcgis server(s) to manage. The options property will be mixed in to all of the other servers.
     - `username` ArcGIS admin username.
     - `password` ArcGIS admin password.

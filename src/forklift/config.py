@@ -15,7 +15,6 @@ log = logging.getLogger('forklift')
 config_location = join(abspath(dirname(__file__)), '..', 'forklift-garage', 'config.json')
 default_warehouse_location = 'c:\\scheduled\\warehouse'
 default_staging_location = 'c:\\scheduled\\staging'
-default_num_processes = 20
 
 
 def create_default_config():
@@ -37,7 +36,6 @@ def create_default_config():
             },
             'hashLocation': 'c:\\forklift\\data\\hashed',
             'notify': ['stdavis@utah.gov', 'sgourley@utah.gov'],
-            'poolProcesses': default_num_processes,
             'repositories': [],
             'sendEmails': False,
             'servers': {

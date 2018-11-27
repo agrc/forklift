@@ -12,11 +12,10 @@ from os import makedirs, remove, rmdir
 from os.path import abspath, dirname, exists, join
 
 import pytest
-from forklift import config, core, engine
-from forklift.models import Crate
 from mock import Mock, mock_open, patch
 
-from .mocks import PoolMock
+from forklift import config, core, engine
+from forklift.models import Crate
 
 test_data_folder = join(dirname(abspath(__file__)), 'data')
 test_pallets_folder = join(test_data_folder, 'list_pallets')
@@ -54,7 +53,6 @@ class TestConfigInit(CleanUpAlternativeConfig):
                     },
                     u'hashLocation': u'c:\\forklift\\data\\hashed',
                     u'notify': [u'stdavis@utah.gov', u'sgourley@utah.gov'],
-                    u'poolProcesses': 20,
                     u'repositories': [],
                     u'sendEmails': False,
                     u'servers': {
@@ -299,11 +297,10 @@ class TestEngineGeneral(unittest.TestCase):
 
 class TestGitUpdate(CleanUpAlternativeConfig):
 
-    @patch('forklift.engine.Pool', return_value=PoolMock())
     @patch('git.Repo.clone_from')
     @patch('forklift.engine._get_repo')
     @patch('forklift.engine._validate_repo')
-    def test_git_update(self, _validate_repo_mock, _get_repo_mock, clone_from_mock, poolmock):
+    def test_git_update(self, _validate_repo_mock, _get_repo_mock, clone_from_mock):
         remote_mock = Mock()
         remote_mock.pull = Mock()
         remote_mock.pull.return_value = []

@@ -50,7 +50,6 @@ Interacting with forklift is done via the [command line interface](src/forklift/
 - `email` - An object containing `fromAddress`, `smptPort`, and `smtpServer` for sending report emails.
 - `hashLocation` - The folder location where forklift creates and manages data. This data contains hash digests that are used to check for changes. Referencing this location within a pallet is done by: `os.path.join(self.staging_rack, 'the.gdb')`.
 - `notify` - An array of emails that will be sent the summary report each time `forklift lift` is run.
-- `poolProcesses` - The number of parallel processes forklift will use when git cloning/pulling repositories.
 - `repositories` - A list of github repositories in the `<owner>/<name>` format that will be cloned/updated into the `warehouse` folder.
 - `sendEmails` - A boolean value that determines whether or not to send forklift summary report emails after each lift.
 - `servers` - An object describing one or more production servers that data will be shipped to. See below for more information.
@@ -157,7 +156,7 @@ _Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) w
 - Added `ERROR` as a possible result type for crates.
 - Removed unused crate property, `source_primary_key`
 - BREAKING CHANGE: Split up lift and ship to be independant commands.
-    - Replaced arcgis server env variables with config.json properties to allow for managing a silo'd architecture or multiple machines not in a cluster 
+    - Replaced arcgis server env variables with config.json properties to allow for managing a silo'd architecture or multiple machines not in a cluster
     - Replaced env variables with config.json properties for consistency.
     - Ship now shuts down the entire ArcGIS Server machine rather than specific services. It also now does this one machine at time to minimize downtime.
     - Removed static data processing since it can now be accomplished by dropping the data into the dropoff folder.

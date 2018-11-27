@@ -38,15 +38,3 @@ class SpatialReference(object):
     @property
     def name(self):
         return ''
-
-
-class PoolMock(object):
-
-    def map(self, *args):
-        return list(map(*args))
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        pass

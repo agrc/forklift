@@ -11,7 +11,7 @@ import socket
 import sys
 from imp import load_source
 from json import dump, load
-from os import environ, linesep, listdir, walk
+from os import linesep, listdir, walk
 from os.path import (abspath, basename, dirname, exists, join, realpath,
                      splitext)
 from re import compile
@@ -22,7 +22,6 @@ import pystache
 from colorama import Fore
 from colorama import init as colorama_init
 from git import Repo
-from multiprocess import Pool
 from requests import get
 
 from . import config, core, lift, seat
@@ -448,7 +447,7 @@ def git_update():
 
     returns an array containing any errors or empty array if no errors
     '''
-    log.info('git updating (in parallel)...')
+    log.info('git updating...')
 
     repositories = config.get_config_prop('repositories')
     num_repos = len(repositories)
@@ -457,13 +456,7 @@ def git_update():
         log.info('no repositories to update')
         return []
 
-    num_processes = environ.get('FORKLIFT_POOL_PROCESSES')
-    swimmers = num_processes or config.default_num_processes
-    if swimmers > num_repos:
-        swimmers = num_repos
-
-    with Pool(swimmers) as pool:
-        results = pool.map(_clone_or_pull_repo, repositories)
+    results = map(_clone_or_pull_repo, repositories)
 
     for error, info in results:
         if info is not None:

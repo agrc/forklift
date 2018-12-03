@@ -14,7 +14,6 @@ from os.path import abspath, dirname, exists, join
 log = logging.getLogger('forklift')
 config_location = join(abspath(dirname(__file__)), '..', 'forklift-garage', 'config.json')
 default_warehouse_location = 'c:\\scheduled\\warehouse'
-default_staging_location = 'c:\\scheduled\\staging'
 
 
 def create_default_config():

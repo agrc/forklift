@@ -67,7 +67,7 @@ class TestConfigInit(CleanUpAlternativeConfig):
                         }
                     },
                     u'shipTo': u'c:\\forklift\\data\\production',
-                    u'warehouse': u'c:\\scheduled\\warehouse',
+                    u'warehouse': u'c:\\forklift\\warehouse',
                     u'serverStartWaitSeconds': 300
                 }
             )

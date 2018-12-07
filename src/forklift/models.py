@@ -344,7 +344,7 @@ class Crate(object):
 
         if status in [self.WARNING, self.UNINITIALIZED, self.UPDATED_OR_CREATED_WITH_WARNINGS]:
             message_level = 'warning'
-        elif status in [self.UNHANDLED_EXCEPTION, self.INVALID_DATA]:
+        elif status in [self.UNHANDLED_EXCEPTION, self.INVALID_DATA, self.ERROR]:
             message_level = 'error'
         else:
             message_level = ''

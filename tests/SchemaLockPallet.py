@@ -18,8 +18,6 @@ class SchemaLockedPallet(Pallet):
     def __init__(self):
         super(SchemaLockedPallet, self).__init__()
 
-        self.arcgis_services = [('forklift/SchemaLock', 'MapServer')]
-
         source_workspace = path.join(data_folder, 'NewSchemaData.gdb')
         destination_workspace = path.join(data_folder, 'SchemaLock.gdb')
         copy_to = destination_workspace
@@ -33,8 +31,6 @@ class NoSchemaLockPallet(Pallet):
 
     def __init__(self):
         super(NoSchemaLockPallet, self).__init__()
-
-        self.arcgis_services = [('forklift/NoSchemaLock', 'MapServer')]
 
         source_workspace = path.join(data_folder, 'NewSchemaData.gdb')
         destination_workspace = path.join(data_folder, 'NoSchemaLock.gdb')

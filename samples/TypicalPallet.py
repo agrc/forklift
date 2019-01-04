@@ -11,8 +11,6 @@ class TypicalPallet(Pallet):
     def __init__(self):
         super(TypicalPallet, self).__init__()
 
-        self.arcgis_services = [('Service', 'MapServer')]
-
         self.boundaries_utm = path.join(self.staging_rack, 'boundaries_utm.gdb')
 
         self.copy_data = [self.boundaries_utm]

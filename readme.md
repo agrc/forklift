@@ -150,6 +150,14 @@ _Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) w
 
 ## Changelog
 
+### 9.0.1
+- Better requests to ArcGIS Server and handling of errors.
+- Docs: Better getting started steps.
+- Removed multiprocess for git-update. Forklift was randomly hanging on git-update.
+- Make default warehouse location consistent with other default paths.
+- Account for `ERROR` result in crate report.
+- Allow pallets that don't have any crates to copy data to dropoff by overriding `requires_processing`.
+
 ### 9.0.0
 
 - Added `--send-emails` override option for both lift and ship commands.

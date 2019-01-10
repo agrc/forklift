@@ -343,15 +343,9 @@ def _get_locations_for_dropoff(pallets):
     destination_to_pallet = {}
 
     for pallet in pallets:
-        if not pallet.success[0]:
-            continue
-
-        for crate in pallet.get_crates():
-            if crate.was_updated():
-                normal_paths = [normalize_workspace(p) for p in pallet.copy_data]
-                for p in normal_paths:
-                    destination_to_pallet.setdefault(p, []).append(pallet)
-
-                break
+        if pallet.success[0] and pallet.requires_processing():
+            normal_paths = [normalize_workspace(p) for p in pallet.copy_data]
+            for p in normal_paths:
+                destination_to_pallet.setdefault(p, []).append(pallet)
 
     return destination_to_pallet

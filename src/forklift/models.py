@@ -472,7 +472,7 @@ class Changes(object):
         return self._deletes
 
 
-class Change_Logging(object):
+class ChangeLogging(object):
     '''A module to enable change logging.
     '''
 
@@ -509,3 +509,30 @@ class Change_Logging(object):
                 'field_length': 25
             }
         ]
+    
+    def get_change_log_feature(self, geometry_type_string):
+        geometry_changes_name = '{}_{}'.format(geometry_type_string, self.log_day.replace('-', '_'))
+        geometry_changes_feature = join(self.change_gdb, geometry_changes_name)
+        if not arcpy.Exists(self.change_gdb):
+            arcpy.management.CreateFileGDB(config.get_config_prop('hashLocation'), self.gdb_name)
+        if not arcpy.Exists(geometry_changes_feature):
+            arcpy.management.CreateFeatureclass(
+                self.change_gdb,
+                geometry_changes_name,
+                geometry_type_string,
+                spatial_reference=self.spatial_reference)
+            for field in self.field_info:
+                field = dict(field)
+                field['in_table'] = geometry_changes_feature
+                arcpy.management.AddField(**field)
+        
+        return geometry_changes_feature
+    
+    def get_full_update_geomtery(self, geometry_type_string, extent):
+        if geometry_type_string.upper() == 'POLYGON':
+            return extent.polygon
+        elif geometry_type_string.upper() == 'POLYLINE':
+            line_points = [arcpy.Point(extent.XMin, extent.YMin), arcpy.Point(extent.XMax, extent.YMax)]
+            return arcpy.Polyline(arcpy.Array(line_points), extent.spatialReference)
+        elif geometry_type_string.upper() in ['POINT', 'MULTIPOINT']:
+            return arcpy.PointGeometry(extent.polygon.centroid, extent.spatialReference)

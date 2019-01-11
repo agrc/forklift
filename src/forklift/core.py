@@ -17,7 +17,7 @@ from arcgisscripting import ExecuteError
 from. import config
 from .config import config_location
 from .exceptions import ValidationException
-from .models import Changes, Crate, Change_Logging
+from .models import Changes, Crate, ChangeLogging
 
 log = None
 
@@ -36,7 +36,7 @@ scratch_gdb_path = path.join(garage, _scratch_gdb)
 
 shape_field_index = -2
 
-change_logging = Change_Logging()
+change_logging = ChangeLogging()
 
 def init(logger):
     '''
@@ -100,7 +100,7 @@ def update(crate, validate_crate):
         if changes.has_changes():
             
             log_changes = False
-            if not crate.is_table() and crate.source not in change_logging.sources:
+            if config.get_config_prop('changeLogging') and not crate.is_table() and crate.source not in change_logging.sources:
                 log_changes = True
                 change_logging.sources.append(crate.source)
 
@@ -153,7 +153,7 @@ def update(crate, validate_crate):
 
                         for row in cursor:
                             if row[0] in changes._deletes:
-                                ins_cursor.insertRow(row + [Change_Logging.CHANGES_DELETE])
+                                ins_cursor.insertRow(row + [ChangeLogging.CHANGES_DELETE])
                                 cursor.deleteRow()
                 
                 if log_changes:
@@ -165,7 +165,7 @@ def update(crate, validate_crate):
                         changes_transformation = changes_transformation[0]
                     
                     geometry_type = crate.source_describe.shapeType.upper()
-                    change_log_feature = _get_change_log_feature(geometry_type, change_logging.log_day)
+                    change_log_feature = change_logging.get_change_log_feature(geometry_type)
                     fields = [f['field_name'] for f in change_logging.field_info]
                     fields.append('SHAPE@')
                     
@@ -173,13 +173,13 @@ def update(crate, validate_crate):
                         #Full update
                         destination_describe = arcpy.Describe(crate.destination)
                         destination_extent = destination_describe.extent
-                        shape = _get_full_update_geomtery(geometry_type, destination_extent)
+                        shape = change_logging.get_full_update_geomtery(geometry_type, destination_extent)
                         shape = shape.projectAs(change_logging.spatial_reference, changes_transformation)
                         full_update_row = (
                             crate.source_name,
                             crate.source[-change_logging.source_field_length:],
                             change_logging.log_day,
-                            Change_Logging.CHANGES_FULL,
+                            ChangeLogging.CHANGES_FULL,
                             shape)
                         with arcpy.da.InsertCursor(change_log_feature, fields) as cursor:
                             cursor.insertRow(full_update_row)
@@ -302,7 +302,7 @@ def _hash(crate):
             if digest not in attribute_hashes:
                 #: update or add
                 #: insert into temp table
-                insert_cursor.insertRow(row + (digest, Change_Logging.CHANGES_ADD))
+                insert_cursor.insertRow(row + (digest, ChangeLogging.CHANGES_ADD))
                 #: add to adds
                 changes.adds[digest] = None
             else:
@@ -519,30 +519,3 @@ def _mirror_fields(source, destination):
         add_fields.append([field.name, TYPES[field.type], field.aliasName, field.length])
 
     arcpy.management.AddFields(destination, add_fields)
-
-def _get_change_log_feature(geometry_type_string, day_suffix):
-    geometry_changes_name = '{}_{}'.format(geometry_type_string, day_suffix.replace('-', '_'))
-    geometry_changes_feature = path.join(change_logging.change_gdb, geometry_changes_name)
-    if not arcpy.Exists(change_logging.change_gdb):
-        arcpy.management.CreateFileGDB(config.get_config_prop('hashLocation'), change_logging.gdb_name)
-    if not arcpy.Exists(geometry_changes_feature):
-        arcpy.management.CreateFeatureclass(
-            change_logging.change_gdb,
-            geometry_changes_name,
-            geometry_type_string,
-            spatial_reference=change_logging.spatial_reference)
-        for field_info in change_logging.field_info:
-            field_info = dict(field_info)
-            field_info['in_table'] = geometry_changes_feature
-            arcpy.management.AddField(**field_info)
-    
-    return geometry_changes_feature
-
-def _get_full_update_geomtery(geometry_type_string, extent):
-    if geometry_type_string.upper() == 'POLYGON':
-        return extent.polygon
-    elif geometry_type_string.upper() == 'POLYLINE':
-        line_points = [arcpy.Point(extent.XMin, extent.YMin), arcpy.Point(extent.XMax, extent.YMax)]
-        return arcpy.Polyline(arcpy.Array(line_points), extent.spatialReference)
-    elif geometry_type_string.upper() in ['POINT', 'MULTIPOINT']:
-        return arcpy.PointGeometry(extent.polygon.centroid, extent.spatialReference)

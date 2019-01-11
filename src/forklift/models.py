@@ -10,6 +10,7 @@ import logging
 from inspect import getsourcefile
 from os.path import dirname, join
 from time import clock
+from time import strftime
 
 from xxhash import xxh64
 
@@ -469,3 +470,42 @@ class Changes(object):
         self._deletes = attribute_hashes
 
         return self._deletes
+
+
+class Change_Logging(object):
+    '''A module to enable change logging.
+    '''
+
+    CHANGES_ADD = 'add'
+    CHANGES_DELETE = 'delete'
+    CHANGES_FULL = 'full'
+
+    def __init__(self):
+        self.sources = []
+        self.log_day = strftime("%Y-%m-%d")
+        self.type_field = 'change_type'
+        self.gdb_name = self.log_day + '_changes.gdb'
+        self.change_gdb = join(config.get_config_prop('hashLocation'), self.gdb_name)
+        self.spatial_reference = arcpy.SpatialReference(3857)
+        self.source_field_length = 300
+        self.field_info = [
+            {
+                'field_name': 'source_name',
+                'field_type': 'TEXT',
+                'field_length': 50
+            },
+            {
+                'field_name': 'source',
+                'field_type': 'TEXT',
+                'field_length': self.source_field_length
+            },
+            {
+                'field_name': 'day',
+                'field_type': 'DATE'
+            },
+            {
+                'field_name': self.type_field,
+                'field_type': 'TEXT',
+                'field_length': 25
+            }
+        ]

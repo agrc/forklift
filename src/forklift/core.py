@@ -17,7 +17,7 @@ from arcgisscripting import ExecuteError
 from. import config
 from .config import config_location
 from .exceptions import ValidationException
-from .models import Changes, Crate
+from .models import Changes, Crate, Change_Logging
 
 log = None
 
@@ -36,37 +36,7 @@ scratch_gdb_path = path.join(garage, _scratch_gdb)
 
 shape_field_index = -2
 
-changes_sources = []
-changes_day_time = strftime("%Y%m%d%H%M%S")
-changes_day = strftime("%Y-%m-%d")
-changes_type_field = 'change_type'
-CHANGES_ADD = 'add'
-CHANGES_DELETE = 'delete'
-CHANGES_FULL = 'full'
-changelog_gdb_name = changes_day + '_changes.gdb'
-changelog_gdb = path.join(config.get_config_prop('hashLocation'), changelog_gdb_name)
-changelog_spatial_reference = arcpy.SpatialReference(3857)
-changelog_field_info = [
-    {
-        'field_name': 'source_name',
-        'field_type': 'TEXT',
-        'field_length': 50
-    },
-    {
-        'field_name': 'source',
-        'field_type': 'TEXT',
-        'field_length': 300
-    },
-    {
-        'field_name': 'day',
-        'field_type': 'DATE'
-    },
-    {
-        'field_name': changes_type_field,
-        'field_type': 'TEXT',
-        'field_length': 25
-    }
-]
+change_logging = Change_Logging()
 
 def init(logger):
     '''
@@ -130,9 +100,9 @@ def update(crate, validate_crate):
         if changes.has_changes():
             
             log_changes = False
-            if not crate.is_table() and crate.source not in changes_sources:
+            if not crate.is_table() and crate.source not in change_logging.sources:
                 log_changes = True
-                changes_sources.append(crate.source)
+                change_logging.sources.append(crate.source)
 
             log.debug('starting edit session...')
             with arcpy.da.Editor(crate.destination_workspace):
@@ -174,38 +144,43 @@ def update(crate, validate_crate):
                     
                     delete_fields = [hash_field]
                     if log_changes:
+                        delete_fields.extend(changes.fields)
                         delete_fields.append('SHAPE@')
                         
                     log.debug('deleting from destintation table')
                     with arcpy.da.UpdateCursor(crate.destination, delete_fields) as cursor,\
-                            arcpy.da.InsertCursor(changes.table, delete_fields + [changes_type_field]) as ins_cursor:
+                            arcpy.da.InsertCursor(changes.table, delete_fields + [change_logging.type_field]) as ins_cursor:
 
                         for row in cursor:
                             if row[0] in changes._deletes:
-                                ins_cursor.insertRow(row + [CHANGES_DELETE])
+                                ins_cursor.insertRow(row + [Change_Logging.CHANGES_DELETE])
                                 cursor.deleteRow()
                 
                 if log_changes:
                     changes_transformation = arcpy.ListTransformations(
-                        crate.destination_coordinate_system, changelog_spatial_reference)
+                        crate.destination_coordinate_system, change_logging.spatial_reference)
                     if len(changes_transformation) == 0:
                         changes_transformation = None
                     else:
                         changes_transformation = changes_transformation[0]
                     
                     geometry_type = crate.source_describe.shapeType.upper()
-                    change_log_feature = _get_change_log_feature(geometry_type, changes_day)
-                    fields = [f['field_name'] for f in changelog_field_info]
+                    change_log_feature = _get_change_log_feature(geometry_type, change_logging.log_day)
+                    fields = [f['field_name'] for f in change_logging.field_info]
                     fields.append('SHAPE@')
                     
                     if len(changes.adds) == changes.total_rows:
                         #Full update
-                        print('Update {}'.format(CHANGES_FULL))
                         destination_describe = arcpy.Describe(crate.destination)
                         destination_extent = destination_describe.extent
                         shape = _get_full_update_geomtery(geometry_type, destination_extent)
-                        shape = shape.projectAs(changelog_spatial_reference, changes_transformation)
-                        full_update_row = (crate.source_name, crate.source[-300:], changes_day, CHANGES_FULL, shape)
+                        shape = shape.projectAs(change_logging.spatial_reference, changes_transformation)
+                        full_update_row = (
+                            crate.source_name,
+                            crate.source[-change_logging.source_field_length:],
+                            change_logging.log_day,
+                            Change_Logging.CHANGES_FULL,
+                            shape)
                         with arcpy.da.InsertCursor(change_log_feature, fields) as cursor:
                             cursor.insertRow(full_update_row)
                     else:
@@ -214,15 +189,19 @@ def update(crate, validate_crate):
                         change_reproject = arcpy.Project_management(
                                 changes.table,
                                 changes.table + change_project_suffix,
-                                changelog_spatial_reference,
+                                change_logging.spatial_reference,
                                 changes_transformation
                             )[0]
 
-                        with arcpy.da.SearchCursor(change_reproject, [changes_type_field, 'SHAPE@']) as changes_cursor,\
+                        with arcpy.da.SearchCursor(change_reproject, [change_logging.type_field, 'SHAPE@']) as changes_cursor,\
                                 arcpy.da.InsertCursor(change_log_feature, fields) as cursor:
                             for row in changes_cursor:
                                 change_type, shape = row
-                                log_row = (crate.source_name, crate.source[-300:], changes_day, change_type, shape)
+                                log_row = (
+                                    crate.source_name,
+                                    crate.source[-change_logging.source_field_length:],
+                                    change_logging.log_day,
+                                    change_type, shape)
                                 cursor.insertRow(log_row)
 
                     # Insert reprojected features into change feature
@@ -288,12 +267,12 @@ def _hash(crate):
         _mirror_fields(crate.source, changes.table)
 
     arcpy.AddField_management(changes.table, hash_field, 'TEXT', field_length=hash_field_length)
-    arcpy.AddField_management(changes.table, changes_type_field, 'TEXT', field_length=hash_field_length)
+    arcpy.AddField_management(changes.table, change_logging.type_field, 'TEXT', field_length=hash_field_length)
 
     has_dups = False
     
     with arcpy.da.SearchCursor(crate.source, [field for field in fields if field != hash_field]) as cursor, \
-            arcpy.da.InsertCursor(changes.table, changes.fields + [changes_type_field]) as insert_cursor:
+            arcpy.da.InsertCursor(changes.table, changes.fields + [change_logging.type_field]) as insert_cursor:
 
         for row in cursor:
             total_rows += 1
@@ -323,7 +302,7 @@ def _hash(crate):
             if digest not in attribute_hashes:
                 #: update or add
                 #: insert into temp table
-                insert_cursor.insertRow(row + (digest, CHANGES_ADD))
+                insert_cursor.insertRow(row + (digest, Change_Logging.CHANGES_ADD))
                 #: add to adds
                 changes.adds[digest] = None
             else:
@@ -543,16 +522,16 @@ def _mirror_fields(source, destination):
 
 def _get_change_log_feature(geometry_type_string, day_suffix):
     geometry_changes_name = '{}_{}'.format(geometry_type_string, day_suffix.replace('-', '_'))
-    geometry_changes_feature = path.join(changelog_gdb, geometry_changes_name)
-    if not arcpy.Exists(changelog_gdb):
-        arcpy.CreateFileGDB_management(config.get_config_prop('hashLocation'), changelog_gdb_name)
+    geometry_changes_feature = path.join(change_logging.change_gdb, geometry_changes_name)
+    if not arcpy.Exists(change_logging.change_gdb):
+        arcpy.CreateFileGDB_management(config.get_config_prop('hashLocation'), change_logging.gdb_name)
     if not arcpy.Exists(geometry_changes_feature):
         arcpy.CreateFeatureclass_management(
-            changelog_gdb,
+            change_logging.change_gdb,
             geometry_changes_name,
             geometry_type_string,
-            spatial_reference=changelog_spatial_reference)
-        for field_info in changelog_field_info:
+            spatial_reference=change_logging.spatial_reference)
+        for field_info in change_logging.field_info:
             field_info = dict(field_info)
             field_info['in_table'] = geometry_changes_feature
             arcpy.AddField_management(**field_info)

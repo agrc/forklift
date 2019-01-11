@@ -53,13 +53,13 @@ def init(logger):
     if arcpy.Exists(scratch_gdb_path):
         log.info('%s exists, deleting', scratch_gdb_path)
         try:
-            arcpy.Delete_management(scratch_gdb_path)
+            arcpy.management.Delete(scratch_gdb_path)
         except ExecuteError:
             #: swallow error thrown by Pro 2.0
             pass
 
     log.info('creating: %s', scratch_gdb_path)
-    arcpy.CreateFileGDB_management(garage, _scratch_gdb)
+    arcpy.management.CreateFileGDB(garage, _scratch_gdb)
 
     arcpy.ClearEnvironment('workspace')
 
@@ -116,7 +116,7 @@ def update(crate, validate_crate):
 
                     #: reproject data if source is different than destination
                     if crate.needs_reproject():
-                        changes.table = arcpy.Project_management(
+                        changes.table = arcpy.management.Project(
                             changes.table, changes.table + reproject_temp_suffix, crate.destination_coordinate_system, crate.geographic_transformation
                         )[0]
 
@@ -186,7 +186,7 @@ def update(crate, validate_crate):
                     else:
                         #Partial(normal) update
                         change_project_suffix = reproject_temp_suffix + '_changes'
-                        change_reproject = arcpy.Project_management(
+                        change_reproject = arcpy.management.Project(
                                 changes.table,
                                 changes.table + change_project_suffix,
                                 change_logging.spatial_reference,
@@ -224,7 +224,7 @@ def update(crate, validate_crate):
         return (Crate.UNHANDLED_EXCEPTION, e)
     finally:
         arcpy.ResetEnvironments()
-        arcpy.ClearWorkspaceCache_management()
+        arcpy.management.ClearWorkspaceCache()
 
 
 def _hash(crate):
@@ -250,10 +250,10 @@ def _hash(crate):
 
     temp_table = path.join(scratch_gdb_path, crate.name)
     if arcpy.Exists(temp_table):
-        arcpy.Delete_management(temp_table)
+        arcpy.management.Delete(temp_table)
 
     if not crate.is_table():
-        changes.table = arcpy.CreateFeatureclass_management(
+        changes.table = arcpy.management.CreateFeatureclass(
             scratch_gdb_path,
             crate.name,
             geometry_type=crate.source_describe.shapeType.upper(),
@@ -263,11 +263,11 @@ def _hash(crate):
             spatial_reference=crate.source_describe.spatialReference
         )[0]
     else:
-        changes.table = arcpy.CreateTable_management(scratch_gdb_path, crate.name)[0]
+        changes.table = arcpy.management.CreateTable(scratch_gdb_path, crate.name)[0]
         _mirror_fields(crate.source, changes.table)
 
-    arcpy.AddField_management(changes.table, hash_field, 'TEXT', field_length=hash_field_length)
-    arcpy.AddField_management(changes.table, change_logging.type_field, 'TEXT', field_length=hash_field_length)
+    arcpy.management.AddField(changes.table, hash_field, 'TEXT', field_length=hash_field_length)
+    arcpy.management.AddField(changes.table, change_logging.type_field, 'TEXT', field_length=hash_field_length)
 
     has_dups = False
     
@@ -329,17 +329,17 @@ def _create_destination_data(crate):
     if not path.exists(crate.destination_workspace):
         if crate.destination_workspace.endswith('.gdb'):
             log.warning('destination not found; creating %s', crate.destination_workspace)
-            arcpy.CreateFileGDB_management(path.dirname(crate.destination_workspace), path.basename(crate.destination_workspace))
+            arcpy.management.CreateFileGDB(path.dirname(crate.destination_workspace), path.basename(crate.destination_workspace))
         else:
             raise Exception('destination_workspace does not exist! {}'.format(crate.destination_workspace))
 
     if crate.is_table():
         log.warning('creating new table: %s', crate.destination)
-        arcpy.CreateTable_management(crate.destination_workspace, crate.destination_name)
+        arcpy.management.CreateTable(crate.destination_workspace, crate.destination_name)
         _mirror_fields(crate.source, crate.destination)
     else:
         log.warning('creating new feature class: %s', crate.destination)
-        arcpy.CreateFeatureclass_management(
+        arcpy.management.CreateFeatureclass(
             crate.destination_workspace,
             crate.destination_name,
             geometry_type=crate.source_describe.shapeType.upper(),
@@ -349,7 +349,7 @@ def _create_destination_data(crate):
             spatial_reference=crate.destination_coordinate_system or crate.source_describe.spatialReference
         )
 
-    arcpy.AddField_management(crate.destination, hash_field, 'TEXT', field_length=hash_field_length)
+    arcpy.management.AddField(crate.destination, hash_field, 'TEXT', field_length=hash_field_length)
 
 
 def _get_hash_lookups(destination):
@@ -477,7 +477,7 @@ def _check_counts(crate, changes):
         message: String - warning message if any
     '''
 
-    destination_rows = int(arcpy.GetCount_management(crate.destination).getOutput(0))
+    destination_rows = int(arcpy.management.GetCount(crate.destination).getOutput(0))
     source_rows = changes.total_rows
 
     if not source_rows == destination_rows:
@@ -524,9 +524,9 @@ def _get_change_log_feature(geometry_type_string, day_suffix):
     geometry_changes_name = '{}_{}'.format(geometry_type_string, day_suffix.replace('-', '_'))
     geometry_changes_feature = path.join(change_logging.change_gdb, geometry_changes_name)
     if not arcpy.Exists(change_logging.change_gdb):
-        arcpy.CreateFileGDB_management(config.get_config_prop('hashLocation'), change_logging.gdb_name)
+        arcpy.management.CreateFileGDB(config.get_config_prop('hashLocation'), change_logging.gdb_name)
     if not arcpy.Exists(geometry_changes_feature):
-        arcpy.CreateFeatureclass_management(
+        arcpy.management.CreateFeatureclass(
             change_logging.change_gdb,
             geometry_changes_name,
             geometry_type_string,
@@ -534,7 +534,7 @@ def _get_change_log_feature(geometry_type_string, day_suffix):
         for field_info in change_logging.field_info:
             field_info = dict(field_info)
             field_info['in_table'] = geometry_changes_feature
-            arcpy.AddField_management(**field_info)
+            arcpy.management.AddField(**field_info)
     
     return geometry_changes_feature
 

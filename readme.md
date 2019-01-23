@@ -71,7 +71,9 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
 
 1. Install [git](https://git-scm.com/).
 1. Install [ArcGIS Pro](https://pro.arcgis.com/en/pro-app/).
-1. Add ArcGIS Pro to your path `c:\Program Files\ArcGIS\Pro\bin\Python\scripts\`.
+1. Add ArcGIS Pro to your path.
+   - If installed for all users: `c:\Program Files\ArcGIS\Pro\bin\Python\scripts\`.
+   - If install for single user: `C:\Users\{USER}\AppData\Local\Programs\ArcGIS\Pro\bin\Python\Scripts`.
 1. Create a conda environment for forklift `conda create --name forklift --clone arcgispro-py3`.
 1. Activate the conda environment `activate forklift`.
 1. `pip install .\` from the directory containing `setup.py`.

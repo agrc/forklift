@@ -45,7 +45,7 @@ setup(
     extras_require={
         'tests': [
             'pytest==3.8.*',
-            'pytest-cov==1.*',
+            'pytest-cov==2.*',
             'pytest-flakes==4.*',
             'pytest-instafail==0.4.*',
             'pytest-isort==0.2.*',

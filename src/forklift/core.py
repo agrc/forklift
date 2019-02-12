@@ -152,7 +152,7 @@ def update(crate, validate_crate):
     except Exception as e:
         log.error('unhandled exception: %s for crate %r', str(e), crate, exc_info=True)
 
-        return (Crate.UNHANDLED_EXCEPTION, e)
+        return (Crate.UNHANDLED_EXCEPTION, str(e))
     finally:
         arcpy.ResetEnvironments()
         arcpy.ClearWorkspaceCache_management()

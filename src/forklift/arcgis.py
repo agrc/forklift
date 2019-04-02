@@ -169,7 +169,7 @@ class LightSwitch(object):
 
         data = {'f': 'json', 'token': self.token}
 
-        r = requests.post(url, data=data, timeout=self.timeout)
+        r = requests.post(url, data=data, timeout=self.timeout, verify=False)
         r.raise_for_status()
 
         data = r.json()
@@ -208,7 +208,7 @@ class LightSwitch(object):
         '''
         data = {'username': self.username, 'password': self.password, 'client': 'requestip', 'expiration': 60, 'f': 'json'}
 
-        response = requests.post(self.token_url, data=data)
+        response = requests.post(self.token_url, data=data, verify=False)
         response.raise_for_status()
 
         response_data = response.json()

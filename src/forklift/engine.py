@@ -567,6 +567,7 @@ def _send_report_email(template, report_object, subject):
 
 def _clone_or_pull_repo(repo_name):
     '''repo_name: string - a github repository username/reponame format
+                  or an object with host and repo with the username/reponame syntax
 
     clones or pull's the repo passed in
 
@@ -574,12 +575,23 @@ def _clone_or_pull_repo(repo_name):
     '''
     warehouse = config.get_config_prop('warehouse')
     log_message = None
+    shorthand = True
 
     try:
-        folder = join(warehouse, repo_name.split('/')[1])
+        if isinstance(repo_name, str):
+            folder = join(warehouse, repo_name.split('/')[1])
+        else:
+            shorthand = False
+            folder = join(warehouse, repo_name.repo.split('/')[1])
+
         if not exists(folder):
             log_message = 'git cloning: {}'.format(repo_name)
-            repo = Repo.clone_from(_repo_to_url(repo_name), join(warehouse, folder))
+
+            if shorthand:
+                repo = Repo.clone_from(_repo_to_url(repo_name), join(warehouse, folder))
+            else:
+                repo = Repo.clone_from('{}{}.git'.format(repo_name.host, repo_name.reponame), join(warehouse, folder))
+
             repo.close()
         else:
             log_message = 'git updating: {}'.format(repo_name)

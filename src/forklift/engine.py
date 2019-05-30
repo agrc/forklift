@@ -582,25 +582,27 @@ def _clone_or_pull_repo(repo_name):
     warehouse = config.get_config_prop('warehouse')
     log_message = None
     shorthand = True
+    safe_repo_name = None
 
     try:
         if isinstance(repo_name, str):
             folder = join(warehouse, repo_name.split('/')[1])
         else:
             shorthand = False
-            folder = join(warehouse, repo_name.repo.split('/')[1])
+            folder = join(warehouse, repo_name['repo'].split('/')[1])
+
+        if shorthand:
+            safe_repo_name = repo_name
+        else:
+            safe_repo_name = repo_name['repo']
 
         if not exists(folder):
-            log_message = 'git cloning: {}'.format(repo_name)
+            repo = Repo.clone_from(_repo_to_url(repo_name, shorthand), join(warehouse, folder))
 
-            if shorthand:
-                repo = Repo.clone_from(_repo_to_url(repo_name), join(warehouse, folder))
-            else:
-                repo = Repo.clone_from('{}{}.git'.format(repo_name.host, repo_name.reponame), join(warehouse, folder))
-
+            log_message = 'git cloning: {}'.format(safe_repo_name)
             repo.close()
         else:
-            log_message = 'git updating: {}'.format(repo_name)
+            log_message = 'git updating: {}'.format(safe_repo_name)
             repo = _get_repo(folder)
             origin = repo.remotes[0]
             fetch_infos = origin.pull()
@@ -613,7 +615,7 @@ def _clone_or_pull_repo(repo_name):
 
         return (None, log_message)
     except Exception as e:
-        return ('Git update error for {}: {}'.format(repo_name, e), log_message)
+        return ('Git update error for {}: {}'.format(safe_repo_name, e), log_message)
 
 
 def _get_repo(folder):
@@ -621,7 +623,10 @@ def _get_repo(folder):
     return Repo(folder)
 
 
-def _repo_to_url(repo):
+def _repo_to_url(repo, shorthand=False):
+    if shorthand:
+        return 'https://forklift:{}@{}{}.git'.format(repo['token'], repo['host'], repo['repo'])
+
     return 'https://github.com/{}.git'.format(repo)
 
 

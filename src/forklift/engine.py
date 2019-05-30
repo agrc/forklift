@@ -627,11 +627,11 @@ def _get_repo(folder):
     return Repo(folder)
 
 
-def _repo_to_url(repo, shorthand=False):
+def _repo_to_url(repo, shorthand=True):
     if shorthand:
-        return 'https://forklift:{}@{}{}.git'.format(repo['token'], repo['host'], repo['repo'])
+        return 'https://github.com/{}.git'.format(repo)
 
-    return 'https://github.com/{}.git'.format(repo)
+    return 'https://forklift:{}@{}{}.git'.format(repo['token'], repo['host'], repo['repo'])
 
 
 def _get_repos():

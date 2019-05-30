@@ -567,7 +567,13 @@ def _send_report_email(template, report_object, subject):
 
 def _clone_or_pull_repo(repo_name):
     '''repo_name: string - a github repository username/reponame format
-                  or an object with host and repo with the username/reponame syntax
+                  or an object with host, repo, and access token with the username/reponame syntax
+
+                  "repositories": [{
+                    "host": "gitlabs.com/",
+                    "repo": "name/repo",
+                    "token": "personal access token with `read_repository` access only"
+                  }]
 
     clones or pull's the repo passed in
 

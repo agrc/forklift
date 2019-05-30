@@ -584,6 +584,10 @@ def _clone_or_pull_repo(repo_name):
     shorthand = True
     safe_repo_name = None
 
+    FAST_FORWARD = 64
+    FORCED_UPDATE = 32
+    HEAD_UPTODATE = 4
+
     try:
         if isinstance(repo_name, str):
             folder = join(warehouse, repo_name.split('/')[1])
@@ -608,9 +612,9 @@ def _clone_or_pull_repo(repo_name):
             fetch_infos = origin.pull()
 
             if len(fetch_infos) > 0:
-                if fetch_infos[0].flags == 4:
+                if fetch_infos[0].flags == HEAD_UPTODATE:
                     log_message = log_message + '\nno updates to pallet'
-                elif fetch_infos[0].flags in [32, 64]:
+                elif fetch_infos[0].flags in [FORCED_UPDATE, FAST_FORWARD]:
                     log_message = log_message + '\nupdated to %s', fetch_infos[0].commit.name_rev
 
         return (None, log_message)

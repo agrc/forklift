@@ -475,7 +475,9 @@ def gift_wrap(destination, source=None):
         source = config.get_config_prop('hashLocation')
 log.info('copying data from %s to %s', source, destination)
     copytree(source, destination)
+	log.info('gift-wrapping data')
     lift.gift_wrap(destination)
+    log.info('gift-wrapping completed successfully')
 
 
 def _build_pallets(file_path, pallet_arg=None):

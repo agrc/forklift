@@ -12,8 +12,8 @@ import sys
 from imp import load_source
 from json import dump, load
 from os import linesep, listdir, walk
-from os.path import (abspath, basename, dirname, exists, join, realpath,
-                     splitext)
+from os.path import (abspath, basename, dirname, exists, join, normpath,
+                     realpath, splitext)
 from re import compile
 from shutil import copytree, rmtree
 from time import clock, sleep
@@ -42,7 +42,7 @@ pallet_file_regex = compile(r'pallet.*\.py$')
 def init():
     '''Creates the default config in the forklift-garage if it does not exists
 
-    returns the filt path to the config
+    returns the full path to the config
     '''
     if exists(config.config_location):
         return abspath(config.config_location)
@@ -180,7 +180,7 @@ def lift_pallets(file_path=None, pallet_arg=None, skip_git=False):
     return report
 
 
-def ship_data(pallet_arg=None):
+def ship_data(pallet_arg=None, by_service=False):
     '''pallet_arg: string - an optional value to pass to a pallet when it is being built
 
     This is the second phase of the forklift process. This looks for a packing slip and data
@@ -223,8 +223,12 @@ def ship_data(pallet_arg=None):
     server_reports = []
     all_failed_copies = {}
     start_process = clock()
+
     if not ship_only:
         switches = [LightSwitch(server) for server in servers.items()]
+
+        if by_service:
+            all_pallets = _build_pallets(None, pallet_arg)
 
         #: for each server
         for switch in switches:
@@ -233,8 +237,14 @@ def ship_data(pallet_arg=None):
             log.info('stopping (%s)', switch.server_label)
             start_sub_process = clock()
 
-            #: stop server
-            status, messages = switch.ensure('stop')
+            #: stop server or services
+            if by_service:
+                data_being_moved = set(listdir(config.get_config_prop('dropoffLocation'))) - set([packing_slip_file])
+                services_affected = _get_affected_services(data_being_moved, all_pallets)
+                status, messages = switch.ensure_services('off', services_affected)
+            else:
+                status, messages = switch.ensure('stop')
+
             log.info('stopping %s time: %s', switch.server_label, seat.format_time(clock() - start_sub_process))
 
             if status is False:
@@ -265,7 +275,11 @@ def ship_data(pallet_arg=None):
             start_sub_process = clock()
 
             #: start server
-            status, messages = switch.ensure('start')
+            if by_service:
+                status, messages = switch.ensure_services('on', services_affected)
+            else:
+                status, messages = switch.ensure('start')
+
             log.info('starting %s time: %s', switch.server_label, seat.format_time(clock() - start_sub_process))
 
             if status is False:
@@ -480,6 +494,23 @@ def gift_wrap(destination, source=None):
     log.info('gift-wrapping data')
     lift.gift_wrap(destination)
     log.info('gift-wrapping completed successfully')
+
+
+def move_dropoff_data(copy_to_temp):
+    dropoff = config.get_config_prop('dropoffLocation')
+    temp = dropoff + '_x'
+
+    source = temp
+    destination = dropoff
+
+    if copy_to_temp:
+        source = dropoff
+        destination = temp
+
+    lift._remove_if_exists(destination)
+
+    log.info('copying data from %s to %s', source, destination)
+    copytree(source, destination)
 
 
 def _build_pallets(file_path, pallet_arg=None):
@@ -827,3 +858,24 @@ def _generate_ship_console_report(pallet_reports):
             report_str += '  pallet message: {}{}{}{}'.format(Fore.RED, report['message'], Fore.RESET, linesep)
 
     return report_str
+
+
+def _get_affected_services(data_being_moved, all_pallets):
+    #: return a list of services that are affected by the data in data_being_moved
+    services_affected = set([])
+
+    def normalize_workspace(workspace_path):
+        return normpath(workspace_path.lower())
+
+    #: append the services that share datasources
+    for pallet in all_pallets:
+        for workspace in pallet.copy_data:
+            workspace = basename(normalize_workspace(workspace))
+            if workspace not in data_being_moved:
+                continue
+
+            for service in pallet.arcgis_services:
+                services_affected.add(service)
+            break
+
+    return services_affected

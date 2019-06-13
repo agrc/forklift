@@ -497,3 +497,20 @@ class TestShipData(CleanUpAlternativeConfig):
 
         pallet.ship.assert_not_called()
         pallet.post_copy_process.assert_not_called()
+
+
+class TestGetAffectedServices(unittest.TestCase):
+    def test_gets_list_of_services(self):
+        service1 = ('a', 'b')
+        service2 = ('c', 'd')
+        service3 = ('e', 'f')
+        pallet1 = Mock(copy_data=['path/to/gdb1', 'path/to/gdb2'], arcgis_services=[service1])
+        pallet2 = Mock(copy_data=['path/to/gdb1'], arcgis_services=[service2])
+        pallet3 = Mock(copy_data=['path/to/gdb3'], arcgis_services=[service3])
+
+        services_affected = engine._get_affected_services(['gdb1'], [pallet1, pallet2, pallet3])
+
+        assert len(services_affected) == 2
+        assert service1 in services_affected
+        assert service2 in services_affected
+        assert service3 not in services_affected

@@ -11,12 +11,13 @@ Usage:
     forklift config set --key <key> --value <value>
     forklift garage open
     forklift git-update
-    forklift lift [<file-path>] [--pallet-arg <arg>] [--verbose] [--skip-emails|--send-emails]
-    forklift ship [--verbose] [--pallet-arg <arg>] [--skip-emails|--send-emails]
+    forklift lift [<file-path>] [--pallet-arg <arg>] [--verbose] [--skip-emails|--send-emails] [--preserve-drop-off-data]
+    forklift ship [--verbose] [--pallet-arg <arg>] [--skip-emails|--send-emails] [--by-service]
     forklift list-pallets
     forklift scorched-earth
     forklift gift-wrap --output <file-path> [--input <file-path2>]
     forklift speedtest
+    forklift special-delivery <file-path> [--pallet-arg <arg>] [--verbose]
 
 Arguments:
     repo            The name of a GitHub repository in <owner>/<name> format.
@@ -37,12 +38,21 @@ Examples:
     forklift lift --send-emails                             Force sending emails. Overrides `sendEmails` config as True.
     forklift lift path/to/pallet_file.py                    Run a specific pallet.
     forklift lift path/to/pallet_file.py --pallet-arg arg   Run a specific pallet with "arg" as an initialization parameter.
+    forklift lift --preserve-drop-off-data                  Does not clear out existing data in `dropoffLocation`. [not yet implemented]
     forklift ship                                           Moves data from the drop off location to the ship to location.
+    forklift ship --by-service path/to/pallet_file.py       Shuts down only those services that are related to the data that was changed
+                                                            related to the pallet(s) in the passed in file rather than shutting down the
+                                                            entire server before pushing data. [not yet implemented]
     forklift list-pallets                                   Outputs the list of pallets from the config.
     forklift scorched-earth                                 WARNING!!! Deletes all data in `config.stagingDestination` as well as the
                                                             `hashes.gdb` & `scratch.gdb` file geodatabases.
     forklift gift-wrap --output path/to/folder              Gift wraps everything in `config.hashLocation`
     forklift speedtest                                      Test the speed on a predefined pallet.
+    forklift special-delivery path/to/pallet_file.py        Lifts and ships a single file's worth of pallets without messing with
+                                                            any existing data in `dropoffLocation`. During shipping, it also shuts
+                                                            down only the services that use the data that was updated rather than
+                                                            the entire ArcGIS Server instance. Note: this will only work for pallets
+                                                            that are in the warehouse.
 '''
 
 import faulthandler
@@ -126,6 +136,25 @@ def main():
         engine.gift_wrap(args['<file-path>'], args['<file-path2>'])
     elif args['speedtest']:
         engine.speedtest(speedtest)
+    elif args['special-delivery']:
+        warehouse = config.get_config_prop('warehouse').lower()
+
+        if not abspath(args['<file-path>']).lower().startswith(abspath(warehouse)):
+            print('Pallet must be located in the warehouse!')
+
+            return
+
+        engine.move_dropoff_data(True)
+
+        try:
+            if args['--pallet-arg']:
+                engine.lift_pallets(args['<file-path>'], args['<arg>'])
+            else:
+                engine.lift_pallets(args['<file-path>'])
+
+            engine.ship_data(args['<arg>'], True)
+        finally:
+            engine.move_dropoff_data(False)
 
     shutdown()
 

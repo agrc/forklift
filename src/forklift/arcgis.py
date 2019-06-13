@@ -41,6 +41,9 @@ class LightSwitch(object):
         self.token = None
         self.timeout = 120
 
+        self.tries = 4
+        self.wait = [12, 8, 4, 2, 1]
+
         base_url = '{}://{}:{}/arcgis/admin'.format(server['protocol'], server['machineName'], server['port'])
         self.token_url = '{}/generateToken'.format(base_url)
         self.switch_url = '{}/machines/{}/'.format(base_url, server['machineName'])
@@ -55,19 +58,53 @@ class LightSwitch(object):
 
         returns the services that still did not do what was requested
         '''
-        tries = 4
-        wait = [12, 8, 4, 2, 0]
         status = False
 
-        while not status and tries >= 0:
-            sleep(wait[tries])
-            tries -= 1
+        while not status and self.tries >= 0:
+            sleep(self.wait[self.tries])
+            self.tries -= 1
 
             status, message = self._execute(self.switch_url + what)
 
             self._started = what == 'start'
 
         return status, message
+
+    def ensure_services(self, what, affected_services):
+        '''ensures that affected_services are started or stopped with 5 attempts.
+        what: string 'off' or 'on'
+        affected_services: list { service_name, service_type }
+        returns the services that still did not do what was requested'''
+
+        def act_on_service(service_info):
+            #: logs within this context do not show up in the console or log file
+            service_name, service_type = service_info
+            if what == 'off':
+                status, message = self.turn_off(service_name, service_type)
+            else:
+                status, message = self.turn_on(service_name, service_type)
+
+            if not status:
+                return (service_name, service_type)
+
+            return None
+
+        def get_service_names(services):
+            return ', '.join([name + '.' + service for name, service in affected_services])
+
+        while len(affected_services) > 0 and self.tries >= 0:
+            sleep(self.wait[self.tries])
+            self.tries -= 1
+
+            affected_services = [act_on_service(service) for service in affected_services]
+            affected_services = [service for service in affected_services if service is not None]
+
+            if len(affected_services) > 0:
+                log.debug('retrying %s', get_service_names(affected_services))
+
+        self._started = what == 'on'
+
+        return (len(affected_services) == 0, get_service_names(affected_services))
 
     def validate_service_state(self):
         '''Validates that services that are configured to be started are actually started
@@ -79,14 +116,14 @@ class LightSwitch(object):
 
         #: get service paths
         root = self._fetch(self.services_url)
-        serviceInfos = root['services']
+        service_infos = root['services']
         for folder in root['folders']:
-            folderJson = self._fetch('{}/{}'.format(self.services_url, folder))
-            serviceInfos += folderJson['services']
+            folder_json = self._fetch('{}/{}'.format(self.services_url, folder))
+            service_infos += folder_json['services']
 
         #: check status of each service
         services = []
-        for info in serviceInfos:
+        for info in service_infos:
             if info['folderName'] == '/':
                 service_path = '{}.{}'.format(info['serviceName'], info['type'])
             else:
@@ -102,27 +139,24 @@ class LightSwitch(object):
 
         return services
 
+    def turn_off(self, service, type):
+        return self._flip_switch(service, type, 'stop')
+
+    def turn_on(self, service, type):
+        return self._flip_switch(service, type, 'start')
+
     def _execute(self, url):
         '''url: string
 
-        Posts to `url` ensuring a succussful status after getting a token from server.
+        Posts to `url` ensuring a successful status after getting a token from server.
         Does not return any response data from the server.
 
-        Retuns a tuple with a boolean status and a message
+        Returns a tuple with a boolean status and a message
         '''
-        try:
-            self._check_token_freshness()
-        except Exception as t:
-            return (False, str(t))
-
-        ok = (False, None)
-        data = {'f': 'json', 'token': self.token}
+        ok = (True, None)
 
         try:
-            r = requests.post(url, data=data, timeout=self.timeout)
-            r.raise_for_status()
-
-            ok = self._return_false_for_status(r.json())
+            self._fetch(url)
         except Exception as t:
             return (False, str(t))
 
@@ -130,11 +164,6 @@ class LightSwitch(object):
 
     def _fetch(self, url):
         '''url: string
-
-        Posts to `url` ensuring a succussful status after getting a token from server.
-        Returns the response data from the server.
-
-        Retuns the json response from the server
         '''
         self._check_token_freshness()
 
@@ -143,7 +172,13 @@ class LightSwitch(object):
         r = requests.post(url, data=data, timeout=self.timeout)
         r.raise_for_status()
 
-        return r.json()
+        data = r.json()
+        ok, message = self._return_false_for_status(data)
+
+        if ok:
+            return data
+
+        raise Exception(message)
 
     def _check_token_freshness(self):
         '''checks the token expiration and requests a new one if it has expired
@@ -152,9 +187,9 @@ class LightSwitch(object):
             self._request_token()
 
     def _return_false_for_status(self, json_response):
-        '''json_reponse: string - a json payload from a server
+        '''json_response: string - a json payload from a server
 
-        looks for a status in the json reponse and makes sure it does not contain an error
+        looks for a status in the json response and makes sure it does not contain an error
 
         Returns a tuple with a boolean status and a message
         '''
@@ -181,3 +216,9 @@ class LightSwitch(object):
 
         self.token = response_data['token']
         self.token_expire_milliseconds = int(response_data['expires'])
+
+    def _flip_switch(self, service, service_type, what):
+        log.debug('flipping switch for %s/%s (%s)', service, service_type, what)
+        url = '{}/{}.{}/{}'.format(self.services_url, service, service_type, what)
+
+        return self._execute(url)

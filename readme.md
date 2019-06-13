@@ -96,6 +96,7 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
     - `password` ArcGIS admin password.
     - `host` ArcGIS host address eg: `myserver`. Validate this property by looking at the `machineName` property returned by `/arcgis/admin/machines?f=json`
     - `port` ArcGIS server instance port eg: 6080
+
     ```json
     "servers": {
        "options": {
@@ -117,10 +118,12 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
        }
     }
     ```
+
 1. Edit the `config.json` to add the email notification properties. _(This is required for sending email reports)_
     - `smtpServer` The SMTP server that you want to send emails with.
     - `smtpPort` The SMTP port number.
     - `fromAddress` The from email address for emails sent by forklift.
+
     ```json
     "email": {
         "smtpServer": "smpt.server.address",
@@ -128,6 +131,7 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
         "fromAddress": "noreply@utah.gov"
     }
     ```
+
 1. `forklift lift`
 1. `forklift ship`
 
@@ -162,6 +166,7 @@ _Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) w
 ## Changelog
 
 ### 9.0.1
+
 - Better requests to ArcGIS Server and handling of errors.
 - Docs: Better getting started steps.
 - Removed multiprocess for git-update. Forklift was randomly hanging on git-update.
@@ -175,15 +180,14 @@ _Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) w
 - Added `ERROR` as a possible result type for crates.
 - Removed unused crate property, `source_primary_key`
 - BREAKING CHANGE: Split up lift and ship to be independant commands.
-    - Replaced arcgis server env variables with config.json properties to allow for managing a silo'd architecture or multiple machines not in a cluster
-    - Replaced env variables with config.json properties for consistency.
-    - Ship now shuts down the entire ArcGIS Server machine rather than specific services. It also now does this one machine at time to minimize downtime.
-    - Removed static data processing since it can now be accomplished by dropping the data into the dropoff folder.
+  - Replaced arcgis server env variables with config.json properties to allow for managing a silo'd  architecture or multiple machines not in a cluster
+  - Replaced env variables with config.json properties for consistency.
+  - Ship now shuts down the entire ArcGIS Server machine rather than specific services. It also now does this one machine at time to minimize downtime.
+  - Removed static data processing since it can now be accomplished by dropping the data into the dropoff folder.
 - Removed tox because it's incompatible with conda.
 - Enhanced the remove repo command to also delete the repository folder from disk ([#134](https://github.com/agrc/forklift/issues/134)).
 - Removed the check for python version 3.
 - Switched from nose to pytest for running tests.
-
 
 ### 8.5.0
 

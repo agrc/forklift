@@ -15,6 +15,7 @@ Usage:
     forklift ship [--verbose] [--pallet-arg <arg>] [--skip-emails|--send-emails]
     forklift list-pallets
     forklift scorched-earth
+    forklift gift-wrap --output <file-path> [--input <file-path2>]
     forklift speedtest
 
 Arguments:
@@ -40,6 +41,7 @@ Examples:
     forklift list-pallets                                   Outputs the list of pallets from the config.
     forklift scorched-earth                                 WARNING!!! Deletes all data in `config.stagingDestination` as well as the
                                                             `hashes.gdb` & `scratch.gdb` file geodatabases.
+    forklift gift-wrap --output path/to/folder              Gift wraps everything in `config.hashLocation`
     forklift speedtest                                      Test the speed on a predefined pallet.
 '''
 
@@ -120,6 +122,8 @@ def main():
                 print((': '.join([path, str(pallet_class)])))
     elif args['scorched-earth']:
         engine.scorched_earth()
+    elif args['gift-wrap']:
+        engine.gift_wrap(args['<file-path>'], args['<file-path2>'])
     elif args['speedtest']:
         engine.speedtest(speedtest)
 

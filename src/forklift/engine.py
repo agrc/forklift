@@ -15,7 +15,7 @@ from os import linesep, listdir, walk
 from os.path import (abspath, basename, dirname, exists, join, realpath,
                      splitext)
 from re import compile
-from shutil import rmtree
+from shutil import copytree, rmtree
 from time import clock, sleep
 
 import pystache
@@ -465,6 +465,17 @@ def git_update():
             log.error(error)
 
     return [error for error, info in results if error is not None]
+
+
+def gift_wrap(destination, source=None):
+    if exists(destination):
+        destination = join(destination, 'gift-wrapped')
+
+    if source is None:
+        source = config.get_config_prop('hashLocation')
+
+    copytree(source, destination)
+    lift.gift_wrap(destination)
 
 
 def _build_pallets(file_path, pallet_arg=None):

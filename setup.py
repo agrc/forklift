@@ -38,7 +38,7 @@ setup(
     keywords=[],
     install_requires=[
         'colorama==0.*', 'docopt==0.6.*', 'gitpython==2.*', 'ndg-httpsclient==0.*', 'pyasn1==0.*', 'pyopenssl==17.*', 'pystache==0.*', 'requests>=2.20.0',
-        'xxhash==1.*', 'multiprocess==0.70.5', 'dill==0.2.7.1'
+        'xxhash==1.*'
         #: pyopenssl, ndg-httpsclient, pyasn1 are there to disable ssl warnings in requests
     ],
     dependency_links=[],
@@ -50,6 +50,7 @@ setup(
             'pytest-instafail==0.4.*',
             'pytest-isort==0.2.*',
             'pytest-pep8==1.0.*',
+            'mock==3.*',
         ]
     },
     entry_points={"console_scripts": ["forklift = forklift.__main__:main"]}

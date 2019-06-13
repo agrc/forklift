@@ -185,7 +185,7 @@ class TestLightSwitch(unittest.TestCase):
         self.assertFalse(status)
         self.assertEqual(message, 'failed')
         self.assertEqual(self.patient._execute.call_count, 5)
-        sleep.assert_has_calls([call(0), call(2), call(4), call(8), call(12)])
+        sleep.assert_has_calls([call(1), call(2), call(4), call(8), call(12)])
 
     @patch('forklift.arcgis.sleep')
     def test_ensure_returns_formatted_problems(self, sleep):
@@ -204,7 +204,7 @@ class TestLightSwitch(unittest.TestCase):
         self.assertTrue(status)
         self.assertEqual(message, '')
         self.assertEqual(self.patient._execute.call_count, 2)
-        sleep.assert_has_calls([call(0)])
+        sleep.assert_has_calls([call(1)])
 
     @patch('forklift.arcgis.requests.post')
     def test_handles_timeout_gracefully(self, post):

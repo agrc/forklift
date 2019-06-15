@@ -90,7 +90,7 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
 1. `forklift config init`
 1. `forklift config repos --add agrc/parcels` - The agrc/parcels is the user/repo to scan for Pallets.
 1. `forklift garage open` - Opens garage directory. Copy all connection.sde files to the forklift garage.
-1. `forklift git-update` - Updates pallet repos. Add any secrets or supplimentary data your pallets need that is not in source control.
+1. `forklift git-update` - Updates pallet repos. Add any secrets or supplementary data your pallets need that is not in source control.
 1. Edit the `config.json` to add the arcgis server(s) to manage. The options property will be mixed in to all of the other servers.
     - `username` ArcGIS admin username.
     - `password` ArcGIS admin password.
@@ -156,7 +156,7 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
 #### On first run
 
 - install deps
-  - `pip install -e ".[tests]`
+  - `pip install -e ".[tests]"`
 - run tests
   - `python setup.py develop`
   - `pytest`
@@ -179,7 +179,7 @@ _Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) w
 - Added `--send-emails` override option for both lift and ship commands.
 - Added `ERROR` as a possible result type for crates.
 - Removed unused crate property, `source_primary_key`
-- BREAKING CHANGE: Split up lift and ship to be independant commands.
+- BREAKING CHANGE: Split up lift and ship to be independent commands.
   - Replaced arcgis server env variables with config.json properties to allow for managing a silo'd  architecture or multiple machines not in a cluster
   - Replaced env variables with config.json properties for consistency.
   - Ship now shuts down the entire ArcGIS Server machine rather than specific services. It also now does this one machine at time to minimize downtime.

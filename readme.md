@@ -165,6 +165,19 @@ _Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) w
 
 ## Changelog
 
+### 9.1.0
+
+- feat: allow for non github repos
+- feat: create cli option for gift-wrapping data
+- feat: implement special-delivery command lift
+- docs: location for user install
+- docs: markdown lint fixes
+- fix: CVE-2018-18074 More information
+- fix: return unhandled crate exceptions as strings
+- fix: update version of pytest-cov
+- fix: url creation based on shorthand
+- fix: use PAT, dict syntax, and log repo name without token
+
 ### 9.0.1
 
 - Better requests to ArcGIS Server and handling of errors.

@@ -17,9 +17,10 @@ from mock import Mock, mock_open, patch
 from forklift import config, core, engine
 from forklift.models import Crate
 
-test_data_folder = join(dirname(abspath(__file__)), 'data')
+test_folder = dirname(abspath(__file__))
+test_data_folder = join(test_folder, 'data')
 test_pallets_folder = join(test_data_folder, 'list_pallets')
-config_location = config_location = join(abspath(dirname(__file__)), 'config.json')
+config_location = config_location = join(test_folder, 'config.json')
 
 
 class CleanUpAlternativeConfig(unittest.TestCase):
@@ -137,7 +138,7 @@ class TestListPallets(CleanUpAlternativeConfig):
 
     def test_list_pallets(self):
         test_pallets_folder = join(test_data_folder, 'list_pallets')
-        pallets = engine._get_pallets_in_folder(test_pallets_folder)
+        pallets, _ = engine._get_pallets_in_folder(test_pallets_folder)
 
         self.assertEqual(len(pallets), 4)
         self.assertEqual(pallets[0][0], join(test_pallets_folder, 'multiple_pallets.py'))
@@ -146,29 +147,29 @@ class TestListPallets(CleanUpAlternativeConfig):
 
     def test_list_pallets_from_config(self):
         config.set_config_prop('warehouse', test_pallets_folder, override=True)
-        pallets = engine.list_pallets()
+        pallets, _ = engine.list_pallets()
 
         self.assertEqual(len(pallets), 4)
         self.assertEqual(pallets[0][0], join(test_pallets_folder, 'multiple_pallets.py'))
         self.assertEqual(pallets[0][1].__name__, 'PalletOne')
 
     def test_list_pallets_order(self):
-        pallets = engine._get_pallets_in_file(join(test_data_folder, 'pallet_order.py'))
+        pallets, _ = engine._get_pallets_in_file(join(test_data_folder, 'pallet_order.py'))
 
         self.assertEqual(pallets[0][1].__name__, 'PalletA')
         self.assertEqual(pallets[1][1].__name__, 'PalletB')
         self.assertEqual(pallets[2][1].__name__, 'PalletC')
 
     def test_get_specific_pallet_in_file(self):
-        pallets = engine._get_pallets_in_file(join(test_data_folder, 'pallet_order.py:PalletB'))
+        pallets, _ = engine._get_pallets_in_file(join(test_data_folder, 'pallet_order.py:PalletB'))
         self.assertEqual(len(pallets), 1)
         self.assertEqual(pallets[0][1].__name__, 'PalletB')
 
     def test_get_pallets_in_file_same_pallet_twice(self):
         #: we should be able to import a pallet more than once from the same file
         #: use case is when you run a specific pallet that is located in the warehouse
-        pallets = engine._get_pallets_in_file(join(test_data_folder, 'duplicate_import.py'))
-        pallets2 = engine._get_pallets_in_file(join(test_data_folder, 'duplicate_import.py'))
+        pallets, _ = engine._get_pallets_in_file(join(test_data_folder, 'duplicate_import.py'))
+        pallets2, _ = engine._get_pallets_in_file(join(test_data_folder, 'duplicate_import.py'))
 
         try:
             #: does not raise
@@ -180,10 +181,15 @@ class TestListPallets(CleanUpAlternativeConfig):
             self.fail(e)
 
     def test_handles_build_errors(self):
-        pallets = engine._build_pallets(join(test_data_folder, 'BuildErrorPallet.py'), None)
+        pallets, _ = engine._build_pallets(join(test_data_folder, 'BuildErrorPallet.py'), None)
 
         self.assertEqual(len([p for p in pallets if p.success[0]]), 1)
         self.assertEqual(len([p for p in pallets if not p.success[0]]), 2)
+
+    def test_pallet_with_import_error(self):
+        _, import_error = engine._get_pallets_in_file(join(test_folder, 'PalletWithSyntaxErrors.py'))
+
+        self.assertRegexpMatches(import_error, 'expected an indented block')
 
 
 @patch('forklift.engine.git_update')
@@ -342,6 +348,7 @@ class TestPackingSlip(unittest.TestCase):
             'git_errors': ['a git error'],
             'pallets': [success, fail],
             'total_time': '5 minutes',
+            'import_errors': ['an import error']
         }
 
         print(engine._generate_console_report(report))

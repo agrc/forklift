@@ -135,7 +135,7 @@ def lift_pallets(file_path=None, pallet_arg=None, skip_git=False):
     start_seconds = clock()
 
     log.debug('building pallets')
-    pallets_to_lift = _build_pallets(file_path, pallet_arg)
+    pallets_to_lift, import_errors = _build_pallets(file_path, pallet_arg)
 
     log.debug('processing checklist')
     lift.process_checklist(config)
@@ -166,7 +166,7 @@ def lift_pallets(file_path=None, pallet_arg=None, skip_git=False):
         log.debug('processing times (in seconds) for %r: %s', pallet, pallet.processing_times)
 
     elapsed_time = seat.format_time(clock() - start_seconds)
-    status = lift.get_lift_status(pallets_to_lift, elapsed_time, git_errors)
+    status = lift.get_lift_status(pallets_to_lift, elapsed_time, git_errors, import_errors)
 
     _generate_packing_slip(status, config.get_config_prop('dropoffLocation'))
 
@@ -522,10 +522,13 @@ def _build_pallets(file_path, pallet_arg=None):
 
     returns an array of pallet objects
     '''
+    import_errors = []
     if file_path is not None:
-        pallet_infos = _get_pallets_in_file(file_path)
+        pallet_infos, import_error = _get_pallets_in_file(file_path)
+        if import_error is not None:
+            import_errors.append(import_error)
     else:
-        pallet_infos = list_pallets()
+        pallet_infos, import_errors = list_pallets()
 
     pallets = []
     for _, PalletClass in pallet_infos:
@@ -548,7 +551,7 @@ def _build_pallets(file_path, pallet_arg=None):
 
     pallets.sort(key=lambda p: p.__class__.__name__)
 
-    return pallets
+    return pallets, import_errors
 
 
 def _generate_packing_slip(status, location):
@@ -714,13 +717,18 @@ def _get_pallets_in_folder(folder):
     returns an array of tuples consisting of the file path and the pallet class object
     '''
     pallets = []
+    import_errors = []
 
     for root, _, files in walk(folder):
         for file_name in files:
             if pallet_file_regex.search(file_name.lower()):
-                pallets.extend(_get_pallets_in_file(join(root, file_name)))
+                new_pallets, import_error = _get_pallets_in_file(join(root, file_name))
+                pallets.extend(new_pallets)
 
-    return pallets
+                if import_error is not None:
+                    import_errors.append(import_error)
+
+    return pallets, import_errors
 
 
 def _get_pallets_in_file(file_path):
@@ -728,7 +736,9 @@ def _get_pallets_in_file(file_path):
 
     finds all python classes that inherit from Pallet
 
-    returns an array of tuples consisting of the file path and the pallet class object
+    returns tuple with the first value being an array of tuples consisting of
+    the file path and the pallet class object and the second value being any
+    import error that may have been thrown while trying to import the pallet.
     '''
     pallets = []
     file_name, extension = splitext(basename(file_path))
@@ -750,7 +760,7 @@ def _get_pallets_in_file(file_path):
     except Exception as e:
         # skip modules that fail to import
         log.error('%s failed to import: %s', file_path, e, exc_info=True)
-        return []
+        return ([], 'pallet failed to import: {}, {}'.format(file_path, e))
 
     for member in dir(mod):
         try:
@@ -766,7 +776,7 @@ def _get_pallets_in_file(file_path):
             #: member was likely not a class
             pass
 
-    return pallets
+    return (pallets, None)
 
 
 def _generate_console_report(pallet_reports):
@@ -783,6 +793,10 @@ def _generate_console_report(pallet_reports):
     if len(pallet_reports['git_errors']) > 0:
         for git_error in pallet_reports['git_errors']:
             report_str += '{}{}{}'.format(Fore.RED, git_error, linesep)
+
+    if len(pallet_reports['import_errors']) > 0:
+        for import_error in pallet_reports['import_errors']:
+            report_str += '{}{}{}'.format(Fore.RED, import_error, linesep)
 
     for report in pallet_reports['pallets']:
         color = Fore.GREEN

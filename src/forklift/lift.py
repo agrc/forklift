@@ -196,11 +196,12 @@ def _move_to_dropoff(destination_and_pallet, dropoff_location):
             log.error('there was an error copying %s to %s', data_source, path.join(dropoff_location, gdb_name), exc_info=True)
 
 
-def get_lift_status(pallets, elapsed_time, git_errors):
+def get_lift_status(pallets, elapsed_time, git_errors, import_errors):
     '''
     pallets: Pallet[]
     elapsed_time: string
     git_errors: string[]
+    import_errors: string[]
 
     returns a dictionary with data formatted for use in the report
     '''
@@ -212,7 +213,8 @@ def get_lift_status(pallets, elapsed_time, git_errors):
         'pallets': reports,
         'num_success_pallets': len([p for p in reports if p['success']]),
         'git_errors': git_errors,
-        'total_time': elapsed_time
+        'total_time': elapsed_time,
+        'import_errors': import_errors
     }
 
 

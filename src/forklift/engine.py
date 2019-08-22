@@ -464,21 +464,22 @@ def git_update():
     log.info('git updating...')
 
     repositories = config.get_config_prop('repositories')
-    num_repos = len(repositories)
 
-    if num_repos == 0:
+    if len(repositories) == 0:
         log.info('no repositories to update')
         return []
 
-    results = map(_clone_or_pull_repo, repositories)
+    errors = []
+    for repo in repositories:
+        error, info = _clone_or_pull_repo(repo)
 
-    for error, info in results:
         if info is not None:
             log.info(info)
         if error is not None:
             log.error(error)
+            errors.append(error)
 
-    return [error for error, info in results if error is not None]
+    return errors
 
 
 def gift_wrap(destination, source=None):

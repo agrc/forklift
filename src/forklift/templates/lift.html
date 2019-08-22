@@ -33,6 +33,11 @@
       <td colspan="2" class="error">{{.}}</td>
     </tr>
     {{/git_errors}}
+    {{#import_errors}}
+    <tr>
+      <td colspan="2" class="error">{{.}}</td>
+    </tr>
+    {{/import_errors}}
     {{#pallets}}
     <tr>
       <td colspan="2" class="{{#success}}success{{/success}}{{^success}}error{{/success}}">

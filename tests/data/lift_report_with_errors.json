@@ -72,5 +72,8 @@
                 "result": "Data updated successfully."
             }]
         }
+    ],
+    "import_errors": [
+        "pallet failed to import: X:\\forklift\\tests\\PalletWithSyntaxErrors.py, expected an indented block (PalletWithSyntaxErrors.py, line 6)"
     ]
 }

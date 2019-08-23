@@ -228,7 +228,7 @@ def ship_data(pallet_arg=None, by_service=False):
         switches = [LightSwitch(server) for server in servers.items()]
 
         if by_service:
-            all_pallets = _build_pallets(None, pallet_arg)
+            all_pallets, _ = _build_pallets(None, pallet_arg)
 
         #: for each server
         for switch in switches:
@@ -591,7 +591,7 @@ def _process_packing_slip(packing_slip=None, pallet_arg=None):
         if not item['success']:
             continue
 
-        pallet = _build_pallets(item['name'], pallet_arg)[0]
+        pallet = _build_pallets(item['name'], pallet_arg)[0][0]
         pallet.add_packing_slip(item)
 
         pallets.append(pallet)

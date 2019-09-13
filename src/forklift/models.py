@@ -225,6 +225,10 @@ class Pallet(object):
         '''
         self.slip = slip
 
+        crate_objects_by_name = {crate.destination_name: crate for crate in self.get_crates()}
+        for slip_crate in slip['crates']:
+            crate_objects_by_name[slip_crate['name']].result = [slip_crate['result']]
+
     def __repr__(self):
         '''Override for better logging. Use with %r
         '''

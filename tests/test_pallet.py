@@ -345,3 +345,38 @@ class TestPalletGetReport(unittest.TestCase):
         self.assertEqual(round(pallet.total_processing_time), 5)
         self.assertEqual(round(pallet.processing_times[first]), 2)
         self.assertEqual(round(pallet.processing_times[second]), 3)
+
+
+class TestPalletAddPackingSlip(unittest.TestCase):
+    def test_successful_crate(self):
+        slip = {
+            "name": "c:\\forklift\\warehouse\\warehouse\\sgid\\AGOLPallet.py:AGOLPallet",
+            "success": True,
+            "is_ready_to_ship": True,
+            "requires_processing": True,
+            "message": "",
+            "crates": [
+                {
+                    "name": "fc5",
+                    "result": "Data updated successfully.",
+                    "crate_message": "",
+                    "message_level": "",
+                    "source": "c:\\users\\agrc-arcgis\\appdata\\local\\esri\\conda\\envs\\forklift\\lib\\site-packages\\forklift\\..\\forklift-garage\\sgid10.sde\\SGID10.BOUNDARIES.ZipCodes",
+                    "destination": "\\\\168.177.251.105\\agrc\\sgid_to_agol\\sgid10mercator.gdb\\ZipCodes",
+                    "was_updated": True
+                }
+            ],
+            "total_processing_time": "55.06 seconds"
+        }
+        pallet = Pallet()
+        pallet.add_crates(['fc4', 'fc5', 'fc6'], {
+            'source_workspace': 'Z:\\a\\path\\to\\database.sde',
+            'destination_workspace': 'Z:\\a\\path\\to\\database.gdb'
+        })
+
+        self.assertFalse(pallet.get_crates()[1].was_updated())
+
+        pallet.add_packing_slip(slip)
+
+        self.assertTrue(pallet.get_crates()[1].was_updated())
+        self.assertEqual(pallet.get_crates()[1].result[0], Crate.UPDATED)

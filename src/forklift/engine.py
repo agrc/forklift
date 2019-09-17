@@ -322,12 +322,12 @@ def ship_data(pallet_arg=None, by_service=False):
             slip['post_copy_processed'] = False
             slip['shipped'] = False
             try:
-                if slip['success'] and slip['requires_processing']:
+                if slip['success'] or slip['ship_on_fail'] and slip['requires_processing']:
                     log.info('post copy processing (%r)', pallet)
                     pallet.post_copy_process()
                     slip['post_copy_processed'] = True
 
-                if slip['success']:
+                if slip['success'] or slip['ship_on_fail']:
                     log.info('shipping (%r)', pallet)
                     pallet.ship()
                     slip['shipped'] = True
@@ -563,7 +563,7 @@ def _generate_packing_slip(status, location):
     this pulls the pallet status from the report object and writes it to a file in the drop off location
     for later use by the ship command
     '''
-    status = [report for report in status['pallets'] if report['is_ready_to_ship']]
+    status = [report for report in status['pallets'] if report['is_ready_to_ship'] or report['ship_on_fail']]
 
     if not exists(location):
         return
@@ -588,7 +588,7 @@ def _process_packing_slip(packing_slip=None, pallet_arg=None):
 
     pallets = []
     for item in packing_slip:
-        if not item['success']:
+        if not item['success'] and not item['ship_on_fail']:
             continue
 
         pallet = _build_pallets(item['name'], pallet_arg)[0][0]

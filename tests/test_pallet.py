@@ -361,8 +361,8 @@ class TestPalletAddPackingSlip(unittest.TestCase):
                     "result": "Data updated successfully.",
                     "crate_message": "",
                     "message_level": "",
-                    "source": "c:\\users\\agrc-arcgis\\appdata\\local\\esri\\conda\\envs\\forklift\\lib\\site-packages\\forklift\\..\\forklift-garage\\sgid10.sde\\SGID10.BOUNDARIES.ZipCodes",
-                    "destination": "\\\\168.177.251.105\\agrc\\sgid_to_agol\\sgid10mercator.gdb\\ZipCodes",
+                    "source": "C:\\\\forklift-garage\\sgid10.sde\\SGID10.BOUNDARIES.ZipCodes",
+                    "destination": "\\\\123.456.789.123\\agrc\\sgid_to_agol\\sgid10mercator.gdb\\ZipCodes",
                     "was_updated": True
                 }
             ],

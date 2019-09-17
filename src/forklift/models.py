@@ -34,7 +34,10 @@ class Pallet(object):
     Appending the project name to the file name is the convention.
     '''
 
-    def __init__(self, arg=None):
+    #: set this property to True if you want this pallet to be shipped regardless of it's result.
+    ship_on_fail = False
+
+    def __init__(self):
         #: the logging module to keep track of the pallet
         self.log = logging.getLogger('forklift')
         #: the table names for all dependent data for an application
@@ -213,6 +216,7 @@ class Pallet(object):
             'success': self.success[0] and self.are_crates_valid(),
             'is_ready_to_ship': self.is_ready_to_ship(),
             'requires_processing': self.requires_processing(),
+            'ship_on_fail': self.ship_on_fail,
             'message': self.success[1] or '',
             'crates': [crate.get_report() for crate in self._crates if crate.get_report() is not None],
             'total_processing_time': seat.format_time(self.total_processing_time)

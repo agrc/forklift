@@ -364,6 +364,7 @@ class TestPackingSlip(unittest.TestCase):
             'name': 'Successful Pallet',
             'success': True,
             'message': None,
+            'ship_on_fail': False,
             'crates': [good_crate, good_crate, warn_crate],
             'total_processing_time': '1 hr',
             'is_ready_to_ship': True
@@ -371,6 +372,7 @@ class TestPackingSlip(unittest.TestCase):
         fail = {
             'name': 'Fail Pallet',
             'success': False,
+            'ship_on_fail': False,
             'message': 'What Happened?!',
             'crates': [bad_crate, good_crate],
             'total_processing_time': '2 hrs',
@@ -379,6 +381,7 @@ class TestPackingSlip(unittest.TestCase):
         not_ready_to_ship = {
             'name': 'Successful Pallet',
             'success': True,
+            'ship_on_fail': False,
             'message': None,
             'crates': [good_crate, good_crate, warn_crate],
             'total_processing_time': '1 hr',
@@ -398,6 +401,15 @@ class TestPackingSlip(unittest.TestCase):
         open.assert_called_with(join(test_data_folder, engine.packing_slip_file), 'w', encoding='utf-8')
         dump.assert_called_once()
         self.assertEqual(len(dump.call_args[0][0]), 2)
+
+    @patch('forklift.engine._build_pallets', return_data=1)
+    def test_process_packing_slip(self, mock):
+        with open(join(test_data_folder, 'test_engine', 'packing-slip.json')) as slip_file:
+            packing_slip = loads(slip_file.read())
+
+            pallets = engine._process_packing_slip(packing_slip)
+
+            self.assertEqual(len(pallets), 2)
 
 
 class TestScorchedEarth(CleanUpAlternativeConfig):

@@ -39,6 +39,7 @@ class SendEmail(unittest.TestCase):
 
         smtp = messaging.send_email(['one@utah.gov', 'two@utah.gov'], '', '', attachment='None')
 
+        # pylint: disable=no-member
         self.assertEqual(smtp.sendmail.call_args[0][1], ['one@utah.gov', 'two@utah.gov'])
 
         smtp = messaging.send_email('one@utah.gov', '', '', attachment='None')
@@ -51,6 +52,7 @@ class SendEmail(unittest.TestCase):
 
         smtp = messaging.send_email('hello@utah.gov', 'subject', 'body', attachment='None')
 
+        # pylint: disable=no-member
         self.assertIn('Subject: subject', smtp.sendmail.call_args[0][2])
         self.assertIn('body', smtp.sendmail.call_args[0][2])
 
@@ -62,6 +64,7 @@ class SendEmail(unittest.TestCase):
 
         smtp = messaging.send_email('hello@utah.gov', 'subject', message, attachment='None')
 
+        # pylint: disable=no-member
         self.assertIn('test', smtp.sendmail.call_args[0][2])
 
     def test_send_emails_false(self, SMTP_mock, get_config_prop_mock):

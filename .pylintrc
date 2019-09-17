@@ -1,0 +1,14 @@
+[MASTER]
+max-line-length = 160
+ignore =
+  .git,
+  conf.py,
+  old,
+  build,
+  dist,
+  PalletWithSyntaxErrors.py
+errors-only=true
+
+#: ignore no-member errors
+generated-members = arcpy,env
+ignored-modules = arcgisscripting

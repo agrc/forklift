@@ -120,6 +120,7 @@ class TestLift(unittest.TestCase):
         def modify_workspace(value):
             arcpy.env.workspace = value
 
+        # pylint: disable=assignment-from-no-return
         pallet.ship.side_effect = modify_workspace('forklift')
         pallet.success = (True,)
 

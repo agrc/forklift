@@ -398,6 +398,7 @@ class TestPackingSlip(unittest.TestCase):
 
         engine._generate_packing_slip(report, test_data_folder)
 
+        # pylint: disable=no-member
         open.assert_called_with(join(test_data_folder, engine.packing_slip_file), 'w', encoding='utf-8')
         dump.assert_called_once()
         self.assertEqual(len(dump.call_args[0][0]), 2)

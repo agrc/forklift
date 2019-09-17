@@ -25,19 +25,19 @@ NUM_REPEATS = 3
 
 
 def main():
-    light_switch = LightSwitch()
+    light_switch = LightSwitch(None)
 
     print('ensuring that services are on to begin with...')
-    light_switch.ensure('on', SERVICES)
+    light_switch.ensure_services('on', SERVICES)
 
     def benchmark():
         start = clock()
 
         print('stopping services...')
-        light_switch.ensure('off', SERVICES)
+        light_switch.ensure_services('off', SERVICES)
 
         print('restarting services...')
-        light_switch.ensure('on', SERVICES)
+        light_switch.ensure_services('on', SERVICES)
 
         return clock() - start
 

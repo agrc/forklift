@@ -28,7 +28,7 @@ class RunablePallet(Pallet):
 
 if __name__ == '__main__':
     pallet = RunablePallet()
-    pallet.init_standalone()
+    pallet.configure_standalone_logging()
     pallet.build()
     pallet.lift()
     pallet.ship()

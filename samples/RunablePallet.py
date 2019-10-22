@@ -16,7 +16,7 @@ from forklift.models import Pallet
 
 
 class RunablePallet(Pallet):
-    def build(self):
+    def build(self, configuration):
         self.log.info('building pallet')
 
     def lift(self):
@@ -29,6 +29,6 @@ class RunablePallet(Pallet):
 if __name__ == '__main__':
     pallet = RunablePallet()
     pallet.configure_standalone_logging()
-    pallet.build()
+    pallet.build('Dev')
     pallet.lift()
     pallet.ship()

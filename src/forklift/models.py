@@ -272,7 +272,7 @@ class Crate(object):
         destination_name=None,
         destination_coordinate_system=None,
         geographic_transformation=None,
-        describer=arcpy.Describe
+        describer=arcpy.da.Describe
     ):
         #: the logging module to keep track of the crate
         self.log = logging.getLogger('forklift')
@@ -378,7 +378,7 @@ class Crate(object):
     def is_table(self):
         '''returns True if the crate defines a table
         '''
-        return self.source_describe.datasetType.lower() == 'table'
+        return self.source_describe['datasetType'].lower() == 'table'
 
     def needs_reproject(self):
         '''returns True if the crate needs to project between source and destination
@@ -389,7 +389,7 @@ class Crate(object):
         if self.destination_coordinate_system is None:
             needs_reproject = False
         else:
-            needs_reproject = self.destination_coordinate_system.name != self.source_describe.spatialReference.name
+            needs_reproject = self.destination_coordinate_system.name != self.source_describe['spatialReference'].name
 
         return needs_reproject
 

@@ -187,11 +187,11 @@ def _hash(crate):
         changes.table = arcpy.CreateFeatureclass_management(
             scratch_gdb_path,
             crate.name,
-            geometry_type=crate.source_describe.shapeType.upper(),
+            geometry_type=crate.source_describe['shapeType'].upper(),
             template=crate.source,
             has_m='SAME_AS_TEMPLATE',
             has_z='SAME_AS_TEMPLATE',
-            spatial_reference=crate.source_describe.spatialReference
+            spatial_reference=crate.source_describe['spatialReference']
         )[0]
     else:
         changes.table = arcpy.CreateTable_management(scratch_gdb_path, crate.name)[0]
@@ -270,11 +270,11 @@ def _create_destination_data(crate):
         arcpy.CreateFeatureclass_management(
             crate.destination_workspace,
             crate.destination_name,
-            geometry_type=crate.source_describe.shapeType.upper(),
+            geometry_type=crate.source_describe['shapeType'].upper(),
             template=crate.source,
             has_m='SAME_AS_TEMPLATE',
             has_z='SAME_AS_TEMPLATE',
-            spatial_reference=crate.destination_coordinate_system or crate.source_describe.spatialReference
+            spatial_reference=crate.destination_coordinate_system or crate.source_describe['spatialReference']
         )
 
     arcpy.AddField_management(crate.destination, hash_field, 'TEXT', field_length=hash_field_length)

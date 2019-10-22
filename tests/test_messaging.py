@@ -37,12 +37,12 @@ class SendEmail(unittest.TestCase):
         get_config_prop_mock.side_effect = true_side_effect
         messaging.send_emails_override = None
 
-        smtp = messaging.send_email(['one@utah.gov', 'two@utah.gov'], '', '', attachment='None')
+        smtp = messaging.send_email(['one@utah.gov', 'two@utah.gov'], '', '')
 
         # pylint: disable=no-member
         self.assertEqual(smtp.sendmail.call_args[0][1], ['one@utah.gov', 'two@utah.gov'])
 
-        smtp = messaging.send_email('one@utah.gov', '', '', attachment='None')
+        smtp = messaging.send_email('one@utah.gov', '', '')
 
         self.assertEqual(smtp.sendmail.call_args[0][1], 'one@utah.gov')
 
@@ -50,7 +50,7 @@ class SendEmail(unittest.TestCase):
         get_config_prop_mock.side_effect = true_side_effect
         messaging.send_emails_override = None
 
-        smtp = messaging.send_email('hello@utah.gov', 'subject', 'body', attachment='None')
+        smtp = messaging.send_email('hello@utah.gov', 'subject', 'body')
 
         # pylint: disable=no-member
         self.assertIn('Subject: subject', smtp.sendmail.call_args[0][2])
@@ -62,7 +62,7 @@ class SendEmail(unittest.TestCase):
         message.attach(MIMEText('<p>test</p>', 'html'))
         message.attach(MIMEText('test'))
 
-        smtp = messaging.send_email('hello@utah.gov', 'subject', message, attachment='None')
+        smtp = messaging.send_email('hello@utah.gov', 'subject', message)
 
         # pylint: disable=no-member
         self.assertIn('test', smtp.sendmail.call_args[0][2])
@@ -70,25 +70,25 @@ class SendEmail(unittest.TestCase):
     def test_send_emails_false(self, SMTP_mock, get_config_prop_mock):
         get_config_prop_mock.side_effect = false_side_effect
 
-        self.assertIsNone(messaging.send_email('hello@utah.gov', 'subject', 'body', attachment='None'))
+        self.assertIsNone(messaging.send_email('hello@utah.gov', 'subject', 'body'))
 
     def test_send_emails_override(self, SMTP_mock, get_config_prop_mock):
         get_config_prop_mock.side_effect = false_side_effect
         messaging.send_emails_override = False
 
-        self.assertIsNone(messaging.send_email('hello@utah.gov', 'subject', 'body', attachment='None'))
+        self.assertIsNone(messaging.send_email('hello@utah.gov', 'subject', 'body'))
 
         get_config_prop_mock.return_value = True
         messaging.send_emails_override = False
 
-        self.assertIsNone(messaging.send_email('hello@utah.gov', 'subject', 'body', attachment='None'))
+        self.assertIsNone(messaging.send_email('hello@utah.gov', 'subject', 'body'))
 
         get_config_prop_mock.return_value = True
         messaging.send_emails_override = True
 
-        self.assertIsNotNone(messaging.send_email('hello@utah.gov', 'subject', 'body', attachment='None'))
+        self.assertIsNotNone(messaging.send_email('hello@utah.gov', 'subject', 'body'))
 
         get_config_prop_mock.side_effect = false_side_effect
         messaging.send_emails_override = True
 
-        self.assertIsNotNone(messaging.send_email('hello@utah.gov', 'subject', 'body', attachment='None'))
+        self.assertIsNotNone(messaging.send_email('hello@utah.gov', 'subject', 'body'))

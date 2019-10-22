@@ -21,12 +21,12 @@ log = logging.getLogger('forklift')
 send_emails_override = None
 
 
-def send_email(to, subject, body, attachment=''):
+def send_email(to, subject, body, attachments=[]):
     '''
     to: string | string[]
     subject: string
     body: string | MIMEMultipart
-    attachment: string - the path to a text file to attach.
+    attachments: string[] - paths to text files to attach to the email
 
     Send an email.
     '''
@@ -69,16 +69,17 @@ def send_email(to, subject, body, attachment=''):
     message['From'] = from_address
     message['To'] = to_addresses
 
-    if isfile(attachment):
-        with (open(attachment, 'rb')) as log_file, io.BytesIO() as encoded_log:
-            gzipper = gzip.GzipFile(mode='wb', fileobj=encoded_log)
-            gzipper.writelines(log_file)
-            gzipper.close()
+    for path in attachments:
+        if isfile(path):
+            with (open(path, 'rb')) as log_file, io.BytesIO() as encoded_log:
+                gzipper = gzip.GzipFile(mode='wb', fileobj=encoded_log)
+                gzipper.writelines(log_file)
+                gzipper.close()
 
-            log_file_attachment = MIMEApplication(encoded_log.getvalue(), 'x-gzip')
-            log_file_attachment.add_header('Content-Disposition', 'attachment; filename="{}"'.format(basename(attachment + '.gz')))
+                attachment = MIMEApplication(encoded_log.getvalue(), 'x-gzip')
+                attachment.add_header('Content-Disposition', 'attachment; filename="{}"'.format(basename(path + '.gz')))
 
-            message.attach(log_file_attachment)
+                message.attach(attachment)
 
     smtp = SMTP(smtp_server, smtp_port)
     smtp.sendmail(from_address, to, message.as_string())

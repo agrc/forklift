@@ -69,7 +69,7 @@ class ShapefileCratePallet(Pallet):
         self.add_crate('myshape', {'source_workspace': source_workspace, 'destination_workspace': destination_workspace})
 
     def ship(self):
-        self.send_email('stdavis@utah.gov', 'test email', 'hello')
+        self.send_email('test@utah.gov', 'test email', 'hello')
 
 
 #

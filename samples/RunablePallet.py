@@ -22,7 +22,7 @@ class RunablePallet(Pallet):
     def ship(self):
         self.log.info('shipping pallet')
 
-        self.send_email('stdavis@utah.gov', 'test subject', 'hello body')
+        self.send_email('test@utah.gov', 'test subject', 'hello body')
 
 
 if __name__ == '__main__':

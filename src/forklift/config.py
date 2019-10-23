@@ -34,7 +34,7 @@ def create_default_config():
                 'fromAddress': 'noreply@utah.gov'
             },
             'hashLocation': 'c:\\forklift\\data\\hashed',
-            'notify': ['stdavis@utah.gov', 'sgourley@utah.gov'],
+            'notify': ['test@utah.gov'],
             'repositories': [],
             'sendEmails': False,
             'servers': {

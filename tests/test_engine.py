@@ -53,7 +53,7 @@ class TestConfigInit(CleanUpAlternativeConfig):
                         u'fromAddress': u'noreply@utah.gov'
                     },
                     u'hashLocation': u'c:\\forklift\\data\\hashed',
-                    u'notify': [u'stdavis@utah.gov', u'sgourley@utah.gov'],
+                    u'notify': [u'test@utah.gov'],
                     u'repositories': [],
                     u'sendEmails': False,
                     u'servers': {

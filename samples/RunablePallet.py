@@ -19,16 +19,14 @@ class RunablePallet(Pallet):
     def build(self, configuration):
         self.log.info('building pallet')
 
-    def lift(self):
-        self.log.info('lifting pallet')
-
     def ship(self):
         self.log.info('shipping pallet')
+
+        self.send_email('stdavis@utah.gov', 'test subject', 'hello body')
 
 
 if __name__ == '__main__':
     pallet = RunablePallet()
     pallet.configure_standalone_logging()
     pallet.build('Dev')
-    pallet.lift()
     pallet.ship()

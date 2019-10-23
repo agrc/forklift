@@ -15,6 +15,8 @@ from email.mime.text import MIMEText
 from os.path import basename, isfile
 from smtplib import SMTP
 
+import pkg_resources
+
 from .config import get_config_prop
 
 log = logging.getLogger('forklift')
@@ -64,6 +66,9 @@ def send_email(to, subject, body, attachments=[]):
         message.attach(MIMEText(body, 'html'))
     else:
         message = body
+
+    version = MIMEText(f'<p>Forklift version: {pkg_resources.require("forklift")[0].version}</p>', 'html')
+    message.attach(version)
 
     message['Subject'] = subject
     message['From'] = from_address

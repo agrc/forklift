@@ -2,6 +2,7 @@
 # * coding: utf8 *
 
 from os import path
+from time import sleep
 
 from forklift.models import Pallet
 
@@ -23,3 +24,9 @@ class TypicalPallet(Pallet):
         source_workspace = path.join(data_folder, 'SourceData.gdb')
 
         self.add_crates(['Counties'], {'source_workspace': source_workspace, 'destination_workspace': self.boundaries_utm})
+
+    def ship(self):
+        sleep(1)
+
+    def post_copy_process(self):
+        sleep(1)

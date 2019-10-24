@@ -310,6 +310,7 @@ def ship_data(pallet_arg=None, by_service=False):
 
         for pallet in pallets_to_ship:
             slip = pallet.slip
+            slip['total_processing_time'] = 0
 
             # check to see if copy was successful
             copy_items = [basename(item) for item in pallet.copy_data]
@@ -324,18 +325,23 @@ def ship_data(pallet_arg=None, by_service=False):
             try:
                 if slip['success'] or slip['ship_on_fail'] and slip['requires_processing']:
                     log.info('post copy processing (%r)', pallet)
-                    pallet.post_copy_process()
+                    with seat.timed_pallet_process(pallet, 'post-copy-process'):
+                        pallet.post_copy_process()
+
                     slip['post_copy_processed'] = True
 
                 if slip['success'] or slip['ship_on_fail']:
                     log.info('shipping (%r)', pallet)
-                    pallet.ship()
+                    with seat.timed_pallet_process(pallet, 'ship'):
+                        pallet.ship()
+
                     slip['shipped'] = True
             except Exception as e:
                 slip['success'] = False
                 slip['message'] = e
                 log.error('error for pallet: %r: %s', pallet, e, exc_info=True)
 
+            slip['total_processing_time'] = seat.format_time(pallet.total_processing_time)
             pallet_reports.append(slip)
 
     elapsed_time = seat.format_time(clock() - start_seconds)

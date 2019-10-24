@@ -165,6 +165,24 @@ _Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) w
 
 ## Changelog
 
+### 9.2.0
+
+#### features
+
+- allow shipping of pallets that did not lift all crates successfully #294
+- replace flake8 and pep8 with pylint
+- add init_standalone to allow pallets to be run more easily outside of forklift
+- add packing slip to report email
+- add forklift version to email
+
+#### bug fixes
+
+- disable ssl cert validation to gis servers
+- show pallet import errors in report
+- show git update errors in report
+- apply create results to packing slip for use in ship
+- show post_copy_process and ship times in ship report
+
 ### 9.1.0
 
 - feat: allow for non github repos

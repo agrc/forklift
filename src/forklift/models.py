@@ -109,14 +109,14 @@ class Pallet(object):
         Given an array of strings or tuples this method will create and add a `Crate` to the `_crates` list.
 
         If a `crate_infos` index is a string, a `Crate` is created with the value as `source_name` and `destination_name`.
-        It is expected for `defaults` to contain `source_workspace` and `destination_workspace` vaules.
+        It is expected for `defaults` to contain `source_workspace` and `destination_workspace` values.
 
         If a `crate_infos` index is a tuple, the values are zipped with the `crate_param_names` list.
 
         If a tuple has 1 value, the value will be set to `source_name` and `destination_name`.
-        The `defaults` need to contain `source_workspace` and `destination_workspace` vaules.
+        The `defaults` need to contain `source_workspace` and `destination_workspace` values.
         If a tuple has 2 values, the first value is set to `source_name` and `destination_name`. The second value sets
-        the `source_workspace` and `defaults` needs to contain `destination_workspace`. `source_workspace` is overriden.
+        the `source_workspace` and `defaults` needs to contain `destination_workspace`. `source_workspace` is overridden.
         If a tuple has 3 values, the first value is set to `source_name` and `destination_name`. The second value sets
         the `source_workspace`. The third value sets `destination_workspace`. `defaults` is unused.
         If a tuple has 4 values, the first value is set to `source_name`. The second value sets `source_workspace`.
@@ -150,7 +150,7 @@ class Pallet(object):
 
         This method should return `True` if the crate is ready for an update. Otherwise it
         should raise `exceptions.ValidationException`.
-        If this method is not overriden the default validate method within core is used.
+        If this method is not overridden the default validate method within core is used.
         '''
         return NotImplemented
 
@@ -354,7 +354,7 @@ class Crate(object):
         return self.result
 
     def get_report(self):
-        '''Returns the relavant info related to this crate that is shown on the report as a dictionary
+        '''Returns the relevant info related to this crate that is shown on the report as a dictionary
         '''
         status = self.result[0]
         if status == self.NO_CHANGES:
@@ -442,7 +442,7 @@ class Crate(object):
             return (True, new_name)
 
         if len(names) > 1:
-            return (False, 'Duplcate names: {}'.format(','.join(names)))
+            return (False, 'Duplicate names: {}'.format(','.join(names)))
 
     def __repr__(self):
         '''Override for better logging. Use with %r

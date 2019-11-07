@@ -1,5 +1,10 @@
 # 🚜📦✨ forklift
 
+![conda](https://img.shields.io/badge/conda-arcgispro--py3-blue)
+![python](https://img.shields.io/badge/python-3.6-blue)
+![license](https://img.shields.io/badge/license-MIT-green)
+![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/agrc/forklift?sort=semver)
+
 A python CLI tool for managing and organizing the repetitive tasks involved with keeping remote geodatabases in sync with their sources. In other words, it is a tool to tame your scheduled task nightmare.
 
 ![basically forklift](https://user-images.githubusercontent.com/325813/46423176-3bf40300-c6f3-11e8-9ab6-32d78edca9e6.png)

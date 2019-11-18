@@ -891,7 +891,7 @@ def _generate_ship_console_report(pallet_reports):
         )
 
         if report['message']:
-            report_str += '  pallet message: {}{}{}{}'.format(Fore.RED, report['message'], Fore.RESET, linesep)
+            report_str += '  pallet message: {}{}{}{}'.format(color, report['message'], Fore.RESET, linesep)
 
     return report_str
 

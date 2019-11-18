@@ -489,7 +489,7 @@ class TestShipData(CleanUpAlternativeConfig):
     @patch('forklift.engine.listdir', return_value=[engine.packing_slip_file])
     def test_post_process_if_success(self, listdir, copy_data, packing_slip, exists, generate_mock):
         slip = {'success': True, 'requires_processing': True}
-        pallet = Mock(slip=slip)
+        pallet = Mock(slip=slip, total_processing_time=3)
         pallet.ship.return_value = None
         pallet.post_copy_process.return_value = None
         pallet.copy_data = []
@@ -507,7 +507,7 @@ class TestShipData(CleanUpAlternativeConfig):
     @patch('forklift.engine.listdir', return_value=[engine.packing_slip_file])
     def test_post_process_if_not_success(self, listdir, copy_data, packing_slip, exists, generate_mock):
         slip = {'success': False, 'requires_processing': True}
-        pallet = Mock(slip=slip)
+        pallet = Mock(slip=slip, total_processing_time=3)
         pallet.ship.return_value = None
         pallet.post_copy_process.return_value = None
         pallet.copy_data = []

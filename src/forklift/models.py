@@ -319,7 +319,7 @@ class Crate(object):
 
         try:
             self.source_describe = describer(self.source)
-        except IOError as e:
+        except Exception as e:
             self.result = (Crate.INVALID_DATA, e)
             return
 

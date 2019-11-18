@@ -336,6 +336,11 @@ def ship_data(pallet_arg=None, by_service=False):
                         pallet.ship()
 
                     slip['shipped'] = True
+
+                #: update pallet result for report in case the result was set
+                #: during post_copy_process or ship
+                slip['success'] = pallet.result[0]
+                slip['message'] += pallet.result[1]
             except Exception as e:
                 slip['success'] = False
                 slip['message'] = e

@@ -170,6 +170,13 @@ _Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) w
 
 ## Changelog
 
+### 9.2.1
+
+#### bug fixes
+
+- use status color for pallet message in ship report
+- update ship report with correct pallet status
+
 ### 9.2.0
 
 #### features

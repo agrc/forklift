@@ -339,8 +339,9 @@ def ship_data(pallet_arg=None, by_service=False):
 
                 #: update pallet result for report in case the result was set
                 #: during post_copy_process or ship
-                slip['success'] = pallet.result[0]
-                slip['message'] += pallet.result[1]
+                slip['success'] = pallet.success[0]
+                if pallet.success[1] is not None:
+                    slip['message'] += pallet.success[1]
             except Exception as e:
                 slip['success'] = False
                 slip['message'] = e

@@ -15,44 +15,47 @@ Usage:
     forklift ship [--verbose] [--pallet-arg <arg>] [--skip-emails|--send-emails] [--by-service]
     forklift list-pallets
     forklift scorched-earth
-    forklift gift-wrap --output <file-path> [--input <file-path2>]
+    forklift gift-wrap --output <folder-path> [--input <fgdb-path>]
     forklift speedtest
     forklift special-delivery <file-path> [--pallet-arg <arg>] [--verbose]
 
 Arguments:
     repo            The name of a GitHub repository in <owner>/<name> format.
     file-path       A path to a file that defines one or multiple pallets.
+    fgdb-path       A path to a file geodatabase.
+    folder-path     A path to a folder.
     pallet-arg      A string to be used as an optional initialization parameter to the pallet.
 
 Examples:
-    forklift config init                                    Creates the config file.
-    forklift config repos --add agrc/ugs-chemistry          Adds a path to the config. Checks for duplicates.
-    forklift config repos --list                            Outputs the list of pallet folder paths in your config file.
-    forklift config repos --remove agrc/ugs-chemistry       Removes a path from the config.
-    forklift config set --key <key> --value <value>         Sets a key in the config with a value.
-    forklift garage open                                    Opens the garage folder with explorer.
-    forklift git-update                                     Pulls the latest updates to all git repositories.
-    forklift lift                                           The main entry for running all of pallets found in the warehouse folder.
-    forklift lift --verbose                                 Print DEBUG statements to the console.
-    forklift lift --skip-emails                             Skip sending emails. Overrides `sendEmails` config as False.
-    forklift lift --send-emails                             Force sending emails. Overrides `sendEmails` config as True.
-    forklift lift path/to/pallet_file.py                    Run a specific pallet.
-    forklift lift path/to/pallet_file.py --pallet-arg arg   Run a specific pallet with "arg" as an initialization parameter.
-    forklift lift --preserve-drop-off-data                  Does not clear out existing data in `dropoffLocation`. [not yet implemented]
-    forklift ship                                           Moves data from the drop off location to the ship to location.
-    forklift ship --by-service path/to/pallet_file.py       Shuts down only those services that are related to the data that was changed
-                                                            related to the pallet(s) in the passed in file rather than shutting down the
-                                                            entire server before pushing data. [not yet implemented]
-    forklift list-pallets                                   Outputs the list of pallets from the config.
-    forklift scorched-earth                                 WARNING!!! Deletes all data in `config.stagingDestination` as well as the
-                                                            `hashes.gdb` & `scratch.gdb` file geodatabases.
-    forklift gift-wrap --output path/to/folder              Gift wraps everything in `config.hashLocation`
-    forklift speedtest                                      Test the speed on a predefined pallet.
-    forklift special-delivery path/to/pallet_file.py        Lifts and ships a single file's worth of pallets without messing with
-                                                            any existing data in `dropoffLocation`. During shipping, it also shuts
-                                                            down only the services that use the data that was updated rather than
-                                                            the entire ArcGIS Server instance. Note: this will only work for pallets
-                                                            that are in the warehouse.
+    forklift config init                                                    Creates the config file.
+    forklift config repos --add agrc/ugs-chemistry                          Adds a path to the config. Checks for duplicates.
+    forklift config repos --list                                            Outputs the list of pallet folder paths in your config file.
+    forklift config repos --remove agrc/ugs-chemistry                       Removes a path from the config.
+    forklift config set --key <key> --value <value>                         Sets a key in the config with a value.
+    forklift garage open                                                    Opens the garage folder with explorer.
+    forklift git-update                                                     Pulls the latest updates to all git repositories.
+    forklift lift                                                           The main entry for running all of pallets found in the warehouse folder.
+    forklift lift --verbose                                                 Print DEBUG statements to the console.
+    forklift lift --skip-emails                                             Skip sending emails. Overrides `sendEmails` config as False.
+    forklift lift --send-emails                                             Force sending emails. Overrides `sendEmails` config as True.
+    forklift lift path/to/pallet_file.py                                    Run a specific pallet.
+    forklift lift path/to/pallet_file.py --pallet-arg arg                   Run a specific pallet with "arg" as an initialization parameter.
+    forklift lift --preserve-drop-off-data                                  Does not clear out existing data in `dropoffLocation`. [not yet implemented]
+    forklift ship                                                           Moves data from the drop off location to the ship to location.
+    forklift ship --by-service path/to/pallet_file.py                       Shuts down only those services that are related to the data that was changed
+                                                                            related to the pallet(s) in the passed in file rather than shutting down the
+                                                                            entire server before pushing data. [not yet implemented]
+    forklift list-pallets                                                   Outputs the list of pallets from the config.
+    forklift scorched-earth                                                 WARNING!!! Deletes all data in `config.stagingDestination` as well as the
+                                                                            `hashes.gdb` & `scratch.gdb` file geodatabases.
+    forklift gift-wrap --output path/to/folder                              Gift wraps everything in `config.hashLocation`
+    forklift gift-wrap --output path/to/folder --input path/to/fgdb.gdb     Gift wraps `path\to\fgdb.gdb`
+    forklift speedtest                                                      Test the speed on a predefined pallet.
+    forklift special-delivery path/to/pallet_file.py                        Lifts and ships a single file's worth of pallets without messing with
+                                                                            any existing data in `dropoffLocation`. During shipping, it also shuts
+                                                                            down only the services that use the data that was updated rather than
+                                                                            the entire ArcGIS Server instance. Note: this will only work for pallets
+                                                                            that are in the warehouse.
 '''
 
 import faulthandler
@@ -133,7 +136,7 @@ def main():
     elif args['scorched-earth']:
         engine.scorched_earth()
     elif args['gift-wrap']:
-        engine.gift_wrap(args['<file-path>'], args['<file-path2>'])
+        engine.gift_wrap(args['<folder-path>'], args['<fgdb-path>'])
     elif args['speedtest']:
         engine.speedtest(speedtest)
     elif args['special-delivery']:

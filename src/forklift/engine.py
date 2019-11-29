@@ -494,15 +494,32 @@ def git_update():
     return errors
 
 
-def gift_wrap(destination, source=None):
+def gift_wrap(destination, source=None, pallet_path=None):
+    '''
+    destination: string - the path to the output folder
+    source: string - the path to a file geodatabase
+    pallet_path: string - the path to a pallet file
+
+    Copies FGDBs from source or as defined by copy_data in pallet or in hashing directory
+    and then scrubs the forklift hash field from them
+    '''
     if exists(destination):
         destination = join(destination, 'gift-wrapped')
 
-    if source is None:
-        source = config.get_config_prop('hashLocation')
+    sources = []
+    if pallet_path is not None:
+        pallets, _ = _build_pallets(pallet_path)
+        for pallet in pallets:
+            for gdb in pallet.copy_data:
+                sources.append(gdb)
+    elif source is not None:
+        sources.append(source)
+    else:
+        sources.append(config.get_config_prop('hashLocation'))
 
-    log.info('copying data from %s to %s', source, destination)
-    copytree(source, destination)
+    for copy_source in sources:
+        log.info('copying data from %s to %s', copy_source, destination)
+        lift.copy_with_overwrite(copy_source, join(destination, basename(copy_source)))
 
     log.info('gift-wrapping data')
     lift.gift_wrap(destination)
@@ -533,7 +550,7 @@ def _build_pallets(file_path, pallet_arg=None):
 
     Finds pallet classes in python files and instantiates them with any `pallet_arg`'s and calls build
 
-    returns an array of pallet objects
+    returns a tuple of an array of pallet objects and import errors
     '''
     import_errors = []
     if file_path is not None:

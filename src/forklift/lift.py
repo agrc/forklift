@@ -218,7 +218,7 @@ def get_lift_status(pallets, elapsed_time, git_errors, import_errors):
     }
 
 
-def _copy_with_overwrite(source, destination):
+def copy_with_overwrite(source, destination):
     '''
     source: string - path to folder
     destination: string - path to folder
@@ -303,7 +303,7 @@ def copy_data(from_location, to_template, packing_slip_file, machine_name=None):
                 temp_path = destination_path + 'x'
                 if path.exists(destination_path) and path.exists(temp_path):
                     log.debug('cleaning up %s', destination_path)
-                    _copy_with_overwrite(temp_path, destination_path)
+                    copy_with_overwrite(temp_path, destination_path)
                     if path.isfile(temp_path):
                         remove(temp_path)
                     else:

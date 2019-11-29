@@ -15,7 +15,7 @@ Usage:
     forklift ship [--verbose] [--pallet-arg <arg>] [--skip-emails|--send-emails] [--by-service]
     forklift list-pallets
     forklift scorched-earth
-    forklift gift-wrap --output <folder-path> [--input <fgdb-path>]
+    forklift gift-wrap --output <folder-path> [--input <fgdb-path>|--pallet <file-path>] [--verbose]
     forklift speedtest
     forklift special-delivery <file-path> [--pallet-arg <arg>] [--verbose]
 
@@ -50,6 +50,7 @@ Examples:
                                                                             `hashes.gdb` & `scratch.gdb` file geodatabases.
     forklift gift-wrap --output path/to/folder                              Gift wraps everything in `config.hashLocation`
     forklift gift-wrap --output path/to/folder --input path/to/fgdb.gdb     Gift wraps `path\to\fgdb.gdb`
+    forklift gift-wrap --output path/to/folder --pallet pallet_file.py      Gift wraps all data (as defined by `copy_data`) in pallets defined in pallet_file.py
     forklift speedtest                                                      Test the speed on a predefined pallet.
     forklift special-delivery path/to/pallet_file.py                        Lifts and ships a single file's worth of pallets without messing with
                                                                             any existing data in `dropoffLocation`. During shipping, it also shuts
@@ -136,7 +137,7 @@ def main():
     elif args['scorched-earth']:
         engine.scorched_earth()
     elif args['gift-wrap']:
-        engine.gift_wrap(args['<folder-path>'], args['<fgdb-path>'])
+        engine.gift_wrap(args['<folder-path>'], args['<fgdb-path>'], args['<file-path>'])
     elif args['speedtest']:
         engine.speedtest(speedtest)
     elif args['special-delivery']:

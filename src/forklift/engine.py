@@ -242,13 +242,15 @@ def ship_data(pallet_arg=None, by_service=False):
                 data_being_moved = set(listdir(config.get_config_prop('dropoffLocation'))) - set([packing_slip_file])
                 services_affected = _get_affected_services(data_being_moved, all_pallets)
                 status, messages = switch.ensure_services('off', services_affected)
+                item_being_acted_upon = ', '.join([service_info[0] for service_info in services_affected])
             else:
                 status, messages = switch.ensure('stop')
+                item_being_acted_upon = switch.server_label
 
-            log.info('stopping %s time: %s', switch.server_label, seat.format_time(clock() - start_sub_process))
+            log.info('stopping %s time: %s', item_being_acted_upon, seat.format_time(clock() - start_sub_process))
 
             if status is False:
-                error_msg = '{} did not stop, skipping copy. {}'.format(switch.server_label, messages)
+                error_msg = '{} did not stop, skipping copy. {}'.format(item_being_acted_upon, messages)
                 log.error(error_msg)
                 server_report['success'] = False
                 server_report['message'] = error_msg
@@ -271,7 +273,7 @@ def ship_data(pallet_arg=None, by_service=False):
 
             log.info('copy data time: %s', seat.format_time(clock() - start_sub_process))
 
-            log.info('starting (%s)', switch.server_label)
+            log.info('starting (%s)', item_being_acted_upon)
             start_sub_process = clock()
 
             #: start server
@@ -280,10 +282,10 @@ def ship_data(pallet_arg=None, by_service=False):
             else:
                 status, messages = switch.ensure('start')
 
-            log.info('starting %s time: %s', switch.server_label, seat.format_time(clock() - start_sub_process))
+            log.info('starting %s time: %s', item_being_acted_upon, seat.format_time(clock() - start_sub_process))
 
             if status is False:
-                error_msg = '{} did not restart. {}'.format(switch.server_label, messages)
+                error_msg = '{} did not restart. {}'.format(item_being_acted_upon, messages)
                 log.error(error_msg)
                 server_report['success'] = False
                 server_report['message'] = error_msg

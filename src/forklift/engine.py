@@ -505,9 +505,6 @@ def gift_wrap(destination, source=None, pallet_path=None):
     Copies FGDBs from source or as defined by copy_data in pallet or in hashing directory
     and then scrubs the forklift hash field from them
     '''
-    if exists(destination):
-        destination = join(destination, 'gift-wrapped')
-
     sources = []
     if pallet_path is not None:
         pallets, _ = _build_pallets(pallet_path)

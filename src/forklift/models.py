@@ -233,13 +233,13 @@ class Pallet(object):
         for slip_crate in slip['crates']:
             crate_objects_by_name[slip_crate['name']].result = [slip_crate['result']]
 
-    def configure_standalone_logging(self):
+    def configure_standalone_logging(self, level=logging.INFO):
         '''set up logger for running the pallet as a standalone script outside of the forklift process
         '''
         logging.basicConfig(
             format='%(levelname)s %(asctime)s %(lineno)s %(message)s',
             datefmt='%H:%M:%S',
-            level=logging.INFO
+            level=level
         )
         self.log = logging
 

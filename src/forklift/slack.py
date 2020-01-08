@@ -5,9 +5,12 @@ slack.py
 A module that holds the constructs for using the slack api
 '''
 
+import math
 from abc import ABC, abstractmethod
+from datetime import datetime
 from enum import Enum
 from json import dumps
+
 
 MAX_BLOCKS = 50
 MAX_CONTEXT_ELEMENTS = 10
@@ -38,7 +41,7 @@ def lift_report_to_blocks(report):
     if percent == 100:
         percent = ':100:'
     else:
-        percent += ' success'
+        percent = f'{str(math.floor(percent))} success'
 
     message.add(
         ContextBlock([

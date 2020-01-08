@@ -26,8 +26,9 @@ from requests import get
 
 from . import config, core, lift, seat
 from .arcgis import LightSwitch
-from .messaging import send_email
+from .messaging import send_email, send_to_slack
 from .models import Pallet
+from .slack import lift_report_to_blocks
 
 log = logging.getLogger('forklift')
 lift_template = join(abspath(dirname(__file__)), 'templates', 'lift.html')
@@ -171,6 +172,7 @@ def lift_pallets(file_path=None, pallet_arg=None, skip_git=False):
     _generate_packing_slip(status, config.get_config_prop('dropoffLocation'))
 
     _send_report_email(lift_template, status, 'Lifting', include_packing_slip=True)
+    _send_report_to_slack(status, 'Lifting')
 
     report = _generate_console_report(status)
     log.info('finished in {}.'.format(elapsed_time))
@@ -651,6 +653,25 @@ def _send_report_email(template, report_object, subject, include_packing_slip=Fa
                attachments)
 
     return email_content
+
+
+def _send_report_to_slack(status, operation):
+    url = None
+
+    try:
+        url = get_config_prop('slackWebhookUrl'):
+    except: Exception
+        pass
+
+    if url is None:
+        return
+
+    messages = []
+
+    if operation = 'Lifting':
+        messages = lift_report_to_blocks(status)
+
+    send_to_slack(url, messages)
 
 
 def _clone_or_pull_repo(repo_name):

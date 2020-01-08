@@ -41,7 +41,7 @@ def lift_report_to_blocks(report):
     if percent == 100:
         percent = ':100:'
     else:
-        percent = f'{str(math.floor(percent))} success'
+        percent = f'{str(math.floor(percent))}% success'
 
     message.add(
         ContextBlock([
@@ -83,6 +83,7 @@ def lift_report_to_blocks(report):
         crate_elements = []
 
         for crate in pallet['crates']:
+            show_message = False
             if crate['result'] in ['Data updated successfully.', 'Created table successfully.', 'No changes found.']:
                 result = '🟢'
             elif crate['result'] in ['Warning generated during update and data updated successfully.']:
@@ -90,9 +91,13 @@ def lift_report_to_blocks(report):
             elif crate['result'] == 'Warning generated during update. Data not modified.':
                 result = '🔵'
             else:
+                show_message = True
                 result = ':fire:'
 
             text = f'{result} *{crate["name"]}*'
+            if show_message:
+                text += '\n' + crate['crate_message']
+
             crate_elements.append(text)
 
             if len(crate_elements) == MAX_CONTEXT_ELEMENTS:
@@ -164,6 +169,7 @@ class SectionBlock(Block):
 
     def __init__(self, text=None, fields=None):
         super().__init__(block=BlockType.SECTION)
+        self.fields = []
 
         if text is not None:
             self.text = Text.to_text(text, MAX_LENGTH_SECTION)
@@ -176,7 +182,7 @@ class SectionBlock(Block):
         if self.text:
             section['text'] = self.text._resolve()
 
-        if self.fields:
+        if self.fields and len(self.fields) > 0:
             section['fields'] = [field._resolve() for field in self.fields]
 
         return section

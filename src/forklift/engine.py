@@ -659,7 +659,6 @@ def _send_report_email(template, report_object, subject, include_packing_slip=Fa
 def _send_report_to_slack(status, operation):
     url = None
 
-    import pdb; pdb.set_trace()
     try:
         url = get_config_prop('slackWebhookUrl')
     except Exception:

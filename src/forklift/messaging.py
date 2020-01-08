@@ -16,6 +16,7 @@ from os.path import basename, isfile
 from smtplib import SMTP
 
 import pkg_resources
+import requests
 
 from .config import get_config_prop
 

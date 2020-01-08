@@ -91,3 +91,21 @@ def send_email(to, subject, body, attachments=[]):
     smtp.quit()
 
     return smtp
+
+def send_to_slack(url, messages):
+    '''sends a message to the webhook url
+    messages: the blocks to send to slack split at the maximum value of 50'''
+
+    if messages is None or url is None:
+        return
+
+    if not isinstance(messages, list):
+        messages = [messages]
+
+    for message in messages:
+        response = requests.post(
+            url, data=message, headers={'Content-Type': 'application/json'}
+        )
+
+        if response.status_code != 200:
+            raise ValueError(f'Request to slack returned an error {response.status_code}, the response is: {response.text}')

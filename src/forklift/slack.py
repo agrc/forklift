@@ -42,7 +42,7 @@ def lift_report_to_blocks(report):
 
     message.add(
         ContextBlock([
-            f'*{datetime.now().strftime('%B %d, %Y')}*',
+            f'*{datetime.now().strftime("%B %d, %Y")}*',
             report['hostname'],
             f'*{report["num_success_pallets"]}* of *{report["total_pallets"]}* pallets ran successfully',
             f'{percent}',

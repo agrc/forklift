@@ -659,8 +659,8 @@ def _send_report_to_slack(status, operation):
     url = None
 
     try:
-        url = get_config_prop('slackWebhookUrl'):
-    except: Exception
+        url = get_config_prop('slackWebhookUrl')
+    except Exception:
         pass
 
     if url is None:
@@ -668,7 +668,7 @@ def _send_report_to_slack(status, operation):
 
     messages = []
 
-    if operation = 'Lifting':
+    if operation == 'Lifting':
         messages = lift_report_to_blocks(status)
 
     send_to_slack(url, messages)

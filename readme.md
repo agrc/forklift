@@ -70,6 +70,7 @@ Interacting with forklift is done via the [command line interface](src/forklift/
 - `serverStartWaitSeconds` - The number of seconds that forklift will wait after starting ArcGIS Server. Defaults to 300 (5 minutes).
 - `shipTo` - A folder location that forklift will copy data to for each server. This is the datas' final location. Everything in the `dropoffLocation` will be copied to the `shipTo` location during a forklift ship. The `shipTo` path is optionally formatted with the `servers.host` value if present and necessary. Place a `{}` in your `shipTo` path if you would like to use this feature. eg: `\\\\{}\\c$\\data`.
 - `warehouse` - The folder location where all of the `repositories` will be cloned into and where forklift will scan for pallets to lift.
+- `slackWebhookUrl` - If you have a slack channel, you can login to the admin website and create a webhook url. If you set this property forklift will send reports to that channel.
 
 Any of these properties can be set via the `config set` command like so:
 

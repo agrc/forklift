@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from enum import Enum
 from json import dumps
-
+from .models import Crate
 
 MAX_BLOCKS = 50
 MAX_CONTEXT_ELEMENTS = 10
@@ -84,11 +84,11 @@ def lift_report_to_blocks(report):
 
         for crate in pallet['crates']:
             show_message = False
-            if crate['result'] in ['Data updated successfully.', 'Created table successfully.', 'No changes found.']:
+            if crate['result'] in [Crate.CREATED, Crate.UPDATED, Crate.NO_CHANGES]:
                 result = '🟢'
-            elif crate['result'] in ['Warning generated during update and data updated successfully.']:
+            elif crate['result'] in [Crate.UPDATED_OR_CREATED_WITH_WARNINGS]:
                 result = '🟡'
-            elif crate['result'] == 'Warning generated during update. Data not modified.':
+            elif crate['result'] == Crate.WARNING:
                 result = '🔵'
             else:
                 show_message = True

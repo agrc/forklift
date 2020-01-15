@@ -29,7 +29,7 @@ from .arcgis import LightSwitch
 from .config import get_config_prop
 from .messaging import send_email, send_to_slack
 from .models import Pallet
-from .slack import lift_report_to_blocks
+from .slack import lift_report_to_blocks, ship_report_to_blocks
 
 log = logging.getLogger('forklift')
 lift_template = join(abspath(dirname(__file__)), 'templates', 'lift.html')
@@ -366,6 +366,7 @@ def ship_data(pallet_arg=None, by_service=False):
     }
 
     _send_report_email(ship_template, status, 'Shipping')
+    _send_report_to_slack(status, 'Shipping')
 
     report = _generate_ship_console_report(status)
 
@@ -671,6 +672,8 @@ def _send_report_to_slack(status, operation):
 
     if operation == 'Lifting':
         messages = lift_report_to_blocks(status)
+    else:
+        messages = ship_report_to_blocks(status)
 
     send_to_slack(url, messages)
 

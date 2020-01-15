@@ -31,7 +31,7 @@ def split(arr, size):
 
 
 def lift_report_to_blocks(report):
-    '''turns the forklift lift report object into blocks
+    '''turns the forklift lift report object into slack blocks
     '''
     message = Message()
 
@@ -106,6 +106,95 @@ def lift_report_to_blocks(report):
 
         if len(crate_elements) > 0:
             message.add(ContextBlock(crate_elements))
+
+    return message.get_messages()
+
+
+def ship_report_to_blocks(report):
+    '''turns the forklift ship report object into slack blocks
+    '''
+        message = Message()
+
+    message.add(SectionBlock(f':tractor:       :rocket: *Forklift Ship Report* :rocket:      :tractor:'))
+
+    percent = report['num_success_pallets'] / report['total_pallets'] * 100
+    if percent == 100:
+        percent = ':100:'
+    else:
+        percent = f'{str(math.floor(percent))}% success'
+
+    message.add(
+        ContextBlock([
+            f'*{datetime.now().strftime("%B %d, %Y")}*',
+            report['hostname'],
+            f'*{report["num_success_pallets"]}* of *{report["total_pallets"]}* pallets ran successfully',
+            f'{percent}',
+            f'total time: *{report["total_time"]}*',
+        ])
+    )
+
+    message.add(DividerBlock())
+
+    if report['server_reports'] and len(report['server_reports']) > 0:
+        for server_status in report['server_reports']:
+
+            success = ':fire:'
+            if server_status['success']:
+                success = ':white_check_mark:'
+
+            message.add(SectionBlock(f'{success} *{server_status["name"]}*'))
+
+            if server_status['has_service_issues']:
+                items = split(server_status['problem_services'], MAX_CONTEXT_ELEMENTS)
+
+                for item in items:
+                    message.add(ContextBlock(item))
+            else:
+                message.add(ContextBlock([':rocket: All services started']))
+
+            if len(server_status['message']) > 0:
+                message.add(ContextBlock([server_status['message']]))
+
+            message.add(SectionBlock('Datasets shipped'))
+
+            shipped_data = ['No data updated']
+            if len(server_status['successful_copies']) > 0:
+                shipped_data = server_status['successful_copies']
+
+            items = split(shipped_data, MAX_CONTEXT_ELEMENTS)
+
+            for item in items:
+                message.add(ContextBlock(item))
+
+            message.add(DividerBlock())
+
+    message.add(SectionBlock('*Pallets Report*'))
+
+    for pallet in report['pallets']:
+        success = ':fire:'
+
+        if pallet['success']:
+            success = ':heavy_check_mark:'
+
+        message.add(SectionBlock(f'{success} *{pallet["name"].split(":")[2]}*'))
+
+        post_copy_processed = shipped = ':red_circle:'
+        if pallet['post_copy_processed']:
+            post_copy_processed = ':white_check_mark:'
+        if pallet['shipped']:
+            shipped = ':white_check_mark:'
+
+        elements = [pallet['total_processing_time']]
+
+        if pallet['message']:
+            elements.append(pallet['message'])
+
+        elements.append(f'Post copy processed: {post_copy_processed}')
+        elements.append(f'Shipped: {shipped}')
+
+        items = split(elements, MAX_CONTEXT_ELEMENTS)
+        for item in items:
+            message.add(ContextBlock(item))
 
     return message.get_messages()
 

@@ -113,7 +113,7 @@ def lift_report_to_blocks(report):
 def ship_report_to_blocks(report):
     '''turns the forklift ship report object into slack blocks
     '''
-        message = Message()
+    message = Message()
 
     message.add(SectionBlock(f':tractor:       :rocket: *Forklift Ship Report* :rocket:      :tractor:'))
 

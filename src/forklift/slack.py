@@ -144,7 +144,7 @@ def ship_report_to_blocks(report):
 
             message.add(SectionBlock(f'{success} *{server_status["name"]}*'))
 
-            if server_status['has_service_issues']:
+            if server_status.get('has_service_issues', False):
                 items = split(server_status['problem_services'], MAX_CONTEXT_ELEMENTS)
 
                 for item in items:

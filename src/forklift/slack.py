@@ -243,7 +243,7 @@ class Text():
 
     @staticmethod
     def to_text(text, max_length=None):
-        if max_length and len(text) > max_length:
+        if max_length and len(str(text)) > max_length:
             text = text[:max_length]
 
         return Text(text=text)

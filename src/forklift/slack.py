@@ -10,6 +10,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from enum import Enum
 from json import dumps
+
 from .models import Crate
 
 MAX_BLOCKS = 50
@@ -30,6 +31,18 @@ def split(arr, size):
     return result
 
 
+def _safely_access(report, prop):
+    if prop not in report:
+        return None
+
+    value = report[prop]
+
+    if isinstance(value, Exception):
+        return str(value)
+
+    return value
+
+
 def lift_report_to_blocks(report):
     '''turns the forklift lift report object into slack blocks
     '''
@@ -37,7 +50,7 @@ def lift_report_to_blocks(report):
 
     message.add(SectionBlock(f':tractor:       :package: *Forklift Lift Report* :package:      :tractor:'))
 
-    percent = report['num_success_pallets'] / report['total_pallets'] * 100
+    percent = _safely_access(report, 'num_success_pallets') / _safely_access(report, 'total_pallets') * 100
     if percent == 100:
         percent = ':100:'
     else:
@@ -46,57 +59,57 @@ def lift_report_to_blocks(report):
     message.add(
         ContextBlock([
             f'*{datetime.now().strftime("%B %d, %Y")}*',
-            report['hostname'],
-            f'*{report["num_success_pallets"]}* of *{report["total_pallets"]}* pallets ran successfully',
+            _safely_access(report, 'hostname'),
+            f'*{_safely_access(report, "num_success_pallets")}* of *{_safely_access(report, "total_pallets")}* pallets ran successfully',
             f'{percent}',
-            f'total time: *{report["total_time"]}*',
+            f'total time: *{_safely_access(report, "total_time")}*',
         ])
     )
 
     message.add(DividerBlock())
 
-    if report['git_errors']:
+    if _safely_access(report, 'git_errors'):
         git_block = SectionBlock('git errors')
 
-        for error in report['git_errors']:
+        for error in _safely_access(report, 'git_errors'):
             git_block.fields.append(error)
 
         message.add(git_block)
 
-    if report['import_errors']:
+    if _safely_access(report, 'import_errors'):
         import_block = SectionBlock('python import errors')
 
-        for error in report['import_errors']:
+        for error in _safely_access(report, 'import_errors'):
             import_block.fields.append(error)
 
         message.add(import_block)
 
-    for pallet in report['pallets']:
+    for pallet in _safely_access(report, 'pallets'):
         success = ':fire:'
 
-        if pallet['success']:
+        if _safely_access(pallet, 'success'):
             success = ':heavy_check_mark:'
 
-        message.add(SectionBlock(f'{success} *{pallet["name"].split(":")[2]}*'))
-        message.add(ContextBlock([f'{pallet["total_processing_time"]}{"  |  " + pallet["message"] if pallet["message"] else ""}']))
+        message.add(SectionBlock(f'{success} *{_safely_access(pallet, "name").split(":")[2]}*'))
+        message.add(ContextBlock([f'{_safely_access(pallet, "total_processing_time")}{"  |  " + _safely_access(pallet, "message") if _safely_access(pallet, "message") else ""}']))
 
         crate_elements = []
 
-        for crate in pallet['crates']:
+        for crate in _safely_access(pallet, 'crates'):
             show_message = False
-            if crate['result'] in [Crate.CREATED, Crate.UPDATED, Crate.NO_CHANGES]:
+            if _safely_access(crate, 'result') in [Crate.CREATED, Crate.UPDATED, Crate.NO_CHANGES]:
                 result = '🟢'
-            elif crate['result'] in [Crate.UPDATED_OR_CREATED_WITH_WARNINGS]:
+            elif _safely_access(crate, 'result') in [Crate.UPDATED_OR_CREATED_WITH_WARNINGS]:
                 result = '🟡'
-            elif crate['result'] == Crate.WARNING:
+            elif _safely_access(crate, 'result') == Crate.WARNING:
                 result = '🔵'
             else:
                 show_message = True
                 result = ':fire:'
 
-            text = f'{result} *{crate["name"]}*'
+            text = f'{result} *{_safely_access(crate, "name")}*'
             if show_message:
-                text += '\n' + crate['crate_message']
+                text += '\n' + _safely_access(crate, 'crate_message')
 
             crate_elements.append(text)
 
@@ -117,7 +130,7 @@ def ship_report_to_blocks(report):
 
     message.add(SectionBlock(f':tractor:       :rocket: *Forklift Ship Report* :rocket:      :tractor:'))
 
-    percent = report['num_success_pallets'] / report['total_pallets'] * 100
+    percent = _safely_access(report, 'num_success_pallets') / _safely_access(report, 'total_pallets') * 100
     if percent == 100:
         percent = ':100:'
     else:
@@ -126,40 +139,40 @@ def ship_report_to_blocks(report):
     message.add(
         ContextBlock([
             f'*{datetime.now().strftime("%B %d, %Y")}*',
-            report['hostname'],
-            f'*{report["num_success_pallets"]}* of *{report["total_pallets"]}* pallets ran successfully',
+            _safely_access(report, 'hostname'),
+            f'*{_safely_access(report, "num_success_pallets")}* of *{_safely_access(report, "total_pallets")}* pallets ran successfully',
             f'{percent}',
-            f'total time: *{report["total_time"]}*',
+            f'total time: *{_safely_access(report, "total_time")}*',
         ])
     )
 
     message.add(DividerBlock())
 
-    if report['server_reports'] and len(report['server_reports']) > 0:
-        for server_status in report['server_reports']:
+    if _safely_access(report, 'server_reports') and len(_safely_access(report, 'server_reports')) > 0:
+        for server_status in _safely_access(report, 'server_reports'):
 
             success = ':fire:'
-            if server_status['success']:
+            if _safely_access(server_status, 'success'):
                 success = ':white_check_mark:'
 
-            message.add(SectionBlock(f'{success} *{server_status["name"]}*'))
+            message.add(SectionBlock(f'{success} *{_safely_access(server_status, "name")}*'))
 
             if server_status.get('has_service_issues', False):
-                items = split(server_status['problem_services'], MAX_CONTEXT_ELEMENTS)
+                items = split(_safely_access(server_status, 'problem_services'), MAX_CONTEXT_ELEMENTS)
 
                 for item in items:
                     message.add(ContextBlock(item))
             else:
                 message.add(ContextBlock([':rocket: All services started']))
 
-            if len(server_status['message']) > 0:
-                message.add(ContextBlock([server_status['message']]))
+            if len(_safely_access(server_status, 'message')) > 0:
+                message.add(ContextBlock([_safely_access(server_status, 'message')]))
 
             message.add(SectionBlock('Datasets shipped'))
 
             shipped_data = ['No data updated']
-            if len(server_status['successful_copies']) > 0:
-                shipped_data = server_status['successful_copies']
+            if len(_safely_access(server_status, 'successful_copies')) > 0:
+                shipped_data = _safely_access(server_status, 'successful_copies')
 
             items = split(shipped_data, MAX_CONTEXT_ELEMENTS)
 
@@ -170,24 +183,24 @@ def ship_report_to_blocks(report):
 
     message.add(SectionBlock('*Pallets Report*'))
 
-    for pallet in report['pallets']:
+    for pallet in _safely_access(report, 'pallets'):
         success = ':fire:'
 
-        if pallet['success']:
+        if _safely_access(pallet, 'success'):
             success = ':heavy_check_mark:'
 
-        message.add(SectionBlock(f'{success} *{pallet["name"].split(":")[2]}*'))
+        message.add(SectionBlock(f'{success} *{_safely_access(pallet, "name").split(":")[2]}*'))
 
         post_copy_processed = shipped = ':red_circle:'
-        if pallet['post_copy_processed']:
+        if _safely_access(pallet, 'post_copy_processed'):
             post_copy_processed = ':white_check_mark:'
-        if pallet['shipped']:
+        if _safely_access(pallet, 'shipped'):
             shipped = ':white_check_mark:'
 
-        elements = [pallet['total_processing_time']]
+        elements = [_safely_access(pallet, 'total_processing_time')]
 
-        if pallet['message']:
-            elements.append(pallet['message'])
+        if _safely_access(pallet, 'message'):
+            elements.append(_safely_access(pallet, 'message'))
 
         elements.append(f'Post copy processed: {post_copy_processed}')
         elements.append(f'Shipped: {shipped}')
@@ -243,7 +256,7 @@ class Text():
 
     @staticmethod
     def to_text(text, max_length=None):
-        if max_length and len(str(text)) > max_length:
+        if max_length and len(text) > max_length:
             text = text[:max_length]
 
         return Text(text=text)

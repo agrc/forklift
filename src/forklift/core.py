@@ -8,10 +8,10 @@ Tools for updating the data associated with a models.Crate
 
 from os import path
 
-from arcgisscripting import ExecuteError
 from xxhash import xxh64
 
 import arcpy
+from arcgisscripting import ExecuteError
 
 from .config import config_location
 from .exceptions import ValidationException

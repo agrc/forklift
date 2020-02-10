@@ -164,12 +164,14 @@ class Pallet(object):
         '''
         return self.are_crates_valid() and self.success[0]
 
-    def requires_processing(self):
-        '''Returns True if any crates were updated. Returns False if there are no crates defined.
+    def requires_processing(self, ignore_errors=False):
+        '''ignore_errors: Boolean
+
+        Returns True if any crates were updated. Returns False if there are no crates defined.
 
         returns: Boolean
         '''
-        if not self.are_crates_valid():
+        if not ignore_errors and not self.are_crates_valid():
             return False
 
         for crate in self._crates:

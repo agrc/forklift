@@ -90,7 +90,7 @@ def lift_report_to_blocks(report):
         if _safely_access(pallet, 'success'):
             success = ':heavy_check_mark:'
 
-        message.add(SectionBlock(f'{success} *{_safely_access(pallet, "name").split(":")[2]}*'))
+        message.add(SectionBlock(f'{success} *{_safely_access(pallet, "name").split(":")[1]}*'))
         message.add(ContextBlock([f'{_safely_access(pallet, "total_processing_time")}{"  |  " + _safely_access(pallet, "message") if _safely_access(pallet, "message") else ""}']))
 
         crate_elements = []
@@ -162,7 +162,7 @@ def ship_report_to_blocks(report):
 
                 for item in items:
                     message.add(ContextBlock(item))
-            else:
+            elif _safely_access(server_status, 'success'):
                 message.add(ContextBlock([':rocket: All services started']))
 
             if len(_safely_access(server_status, 'message')) > 0:
@@ -189,7 +189,7 @@ def ship_report_to_blocks(report):
         if _safely_access(pallet, 'success'):
             success = ':heavy_check_mark:'
 
-        message.add(SectionBlock(f'{success} *{_safely_access(pallet, "name").split(":")[2]}*'))
+        message.add(SectionBlock(f'{success} *{_safely_access(pallet, "name").split(":")[1]}*'))
 
         post_copy_processed = shipped = ':red_circle:'
         if _safely_access(pallet, 'post_copy_processed'):

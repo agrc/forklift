@@ -15,53 +15,55 @@ data_folder = path.join(path.dirname(path.realpath(__file__)), 'data')
 destination_workspace = path.join(data_folder, 'SampleDestination.gdb')
 
 
-# class StringCratePallet(Pallet):
-#
-#     def __init__(self):
-#         #: this is required to initialize the Pallet base class properties
-#         super(StringCratePallet, self).__init__()
-#
-#         self.copy_data = [destination_workspace]
-#
-#     def build(self, configuration):
-#         source_workspace = path.join(data_folder, 'agrc@sgid10.sde')
-#
-#         self.add_crate('Counties', {'source_workspace': source_workspace, 'destination_workspace': destination_workspace})
-#
-#
-# class ExplicitCratePallet(Pallet):
-#
-#     def __init__(self):
-#         #: this is required to initialize the Pallet base class properties
-#         super(ExplicitCratePallet, self).__init__()
-#
-#         self.copy_data = [destination_workspace]
-#
-#     def build(self, configuration):
-#         source_workspace = path.join(data_folder, 'agrc@sgid10.sde')
-#
-#         crate_info = ('AvalanchePaths', source_workspace, destination_workspace, 'AvyPaths')
-#         self.add_crate(crate_info)
-#
-#
-# class OneValueTupleCratePallet(Pallet):
-#
-#     def __init__(self):
-#         #: this is required to initialize the Pallet base class properties
-#         super(OneValueTupleCratePallet, self).__init__()
-#
-#     def build(self, configuration):
-#         source_workspace = path.join(data_folder, 'agrc@sgid10.sde')
-#
-#         crate_info = ('AvalanchePaths')
-#         self.add_crate(crate_info, {'source_workspace': source_workspace, 'destination_workspace': destination_workspace})
-#
-#
+class StringCratePallet(Pallet):
+
+    def __init__(self):
+        #: this is required to initialize the Pallet base class properties
+        super().__init__()
+
+        self.copy_data = [destination_workspace]
+
+    def build(self, configuration):
+        source_workspace = path.join(data_folder, 'agrc@sgid10.sde')
+
+        self.add_crate('Counties', {'source_workspace': source_workspace, 'destination_workspace': destination_workspace})
+
+
+class ExplicitCratePallet(Pallet):
+
+    def __init__(self):
+        #: this is required to initialize the Pallet base class properties
+        super().__init__()
+
+        self.copy_data = [destination_workspace]
+
+    def build(self, configuration):
+        source_workspace = path.join(data_folder, 'agrc@sgid10.sde')
+
+        crate_info = ('AvalanchePaths', source_workspace, destination_workspace, 'AvyPaths')
+        self.add_crate(crate_info)
+
+
+class OneValueTupleCratePallet(Pallet):
+
+    def __init__(self):
+        #: this is required to initialize the Pallet base class properties
+        super().__init__()
+
+    def build(self, configuration):
+        source_workspace = path.join(data_folder, 'agrc@sgid10.sde')
+
+        crate_info = ('AvalanchePaths')
+        self.add_crate(crate_info, {'source_workspace': source_workspace, 'destination_workspace': destination_workspace})
+
+
 class ShapefileCratePallet(Pallet):
 
     def __init__(self):
         #: this is required to initialize the Pallet base class properties
-        super(ShapefileCratePallet, self).__init__()
+        super().__init__()
+
+        self.copy_data = [destination_workspace]
 
     def build(self, configuration):
         source_workspace = path.join(data_folder, 'myshape.shp')
@@ -72,15 +74,10 @@ class ShapefileCratePallet(Pallet):
         self.send_email('test@utah.gov', 'test email', 'hello')
 
 
-#
-# class SdeCratePallet(Pallet):
-#
-#     def __init__(self):
-#         #: this is required to initialize the Pallet base class properties
-#         super(SdeCratePallet, self).__init__()
-#
-#     def build(self, configuration):
-#         destination_workspace = path.join(data_folder, 'UPDATE_TESTS.sde')
-#         source_workspace = path.join(data_folder, 'agrc@sgid10.sde')
-#
-#         self.add_crate('Counties', {'source_workspace': source_workspace, 'destination_workspace': destination_workspace})
+class SdeCratePallet(Pallet):
+
+    def build(self, configuration):
+        destination_workspace = path.join(data_folder, 'UPDATE_TESTS.sde')
+        source_workspace = path.join(data_folder, 'agrc@sgid10.sde')
+
+        self.add_crate('Counties', {'source_workspace': source_workspace, 'destination_workspace': destination_workspace})

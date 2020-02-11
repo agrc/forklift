@@ -61,6 +61,7 @@ Examples:
 
 import faulthandler
 import logging.config
+import socket
 import sys
 from logging import shutdown
 from os import linesep, makedirs, startfile
@@ -184,7 +185,7 @@ def global_exception_handler(ex_cls, ex, tb):
     log.error(error)
 
     log_file = join(dirname(config.config_location), 'forklift.log')
-    messaging.send_email(config.get_config_prop('notify'), 'Forklift Error', error, [log_file])
+    messaging.send_email(config.get_config_prop('notify'), f'Forklift Error on {socket.gethostname()}', error, [log_file])
 
 
 def _add_global_error_handler():

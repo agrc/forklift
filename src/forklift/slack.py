@@ -72,7 +72,7 @@ def lift_report_to_blocks(report):
         git_block = SectionBlock('git errors')
 
         for error in _safely_access(report, 'git_errors'):
-            git_block.fields.append(error)
+            git_block.fields.append(Text.to_text(error, MAX_LENGTH_SECTION_FIELD))
 
         message.add(git_block)
 
@@ -80,7 +80,7 @@ def lift_report_to_blocks(report):
         import_block = SectionBlock('python import errors')
 
         for error in _safely_access(report, 'import_errors'):
-            import_block.fields.append(error)
+            import_block.fields.append(Text.to_text(error, MAX_LENGTH_SECTION_FIELD))
 
         message.add(import_block)
 

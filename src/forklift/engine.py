@@ -26,7 +26,7 @@ from requests import get
 
 from . import config, core, lift, seat
 from .arcgis import LightSwitch
-from .config import get_config_prop
+from .config import get_config_prop, config_location
 from .messaging import send_email, send_to_slack
 from .models import Pallet
 from .slack import lift_report_to_blocks, ship_report_to_blocks
@@ -148,7 +148,9 @@ def lift_pallets(file_path=None, pallet_arg=None, skip_git=False):
 
     start_process = clock()
     core.init(log)
-    lift.process_crates_for(pallets_to_lift, core.update)
+
+    change_detection = lift.get_change_detection(config.get_config_prop('changeDetectionTables'), dirname(config_location))
+    lift.process_crates_for(pallets_to_lift, core.update, change_detection)
     log.info('process_crates time: %s', seat.format_time(clock() - start_process))
 
     start_process = clock()

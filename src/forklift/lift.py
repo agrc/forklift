@@ -14,7 +14,7 @@ from time import clock
 
 import arcpy
 
-from . import seat
+from . import seat, config
 from .core import hash_field
 from .models import Crate
 
@@ -70,10 +70,11 @@ def prepare_packaging_for_pallets(pallets):
             log.error('error preparing packaging: %s for pallet: %r', e, pallet, exc_info=True)
 
 
-def process_crates_for(pallets, update_def):
+def process_crates_for(pallets, update_def, changeDetection):
     '''
     pallets: Pallet[]
     update_def: Function - core.update by default
+    changeDetection: Dictionary containing table names and current hashes
 
     Calls update_def on all crates (excluding duplicates) in pallets
     '''
@@ -95,7 +96,7 @@ def process_crates_for(pallets, update_def):
                     log.debug('%r', crate)
                     start_seconds = clock()
 
-                    processed_crates[crate.destination] = crate.set_result(update_def(crate, pallet.validate_crate))
+                    processed_crates[crate.destination] = crate.set_result(update_def(crate, pallet.validate_crate, changeDetection))
 
                     log.debug('finished crate %s', seat.format_time(clock() - start_seconds))
                     log.info('result: %s', crate.result)
@@ -351,3 +352,22 @@ def _get_locations_for_dropoff(pallets):
                 destination_to_pallet.setdefault(p, []).append(pallet)
 
     return destination_to_pallet
+
+
+def get_change_detection(table_paths, root):
+    '''table_paths: string[] - paths to change detection tables relative to the garage
+    root: string - path to root directory where table_paths is relative to
+
+    returns a dictionary of table names to hashes
+    '''
+    data = {}
+
+    for table_path in table_paths:
+        log.info(f'getting change detection data from: {table_path}')
+        with arcpy.da.SearchCursor(path.join(root, table_path), ['table_name', 'hash']) as cursor:
+            for table_name, hash_value in cursor:
+                if table_name in data:
+                    raise Exception(f'duplicate table name found in change detection tables: {table_name}')
+                data[table_name] = hash_value
+
+    return data

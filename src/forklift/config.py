@@ -26,6 +26,7 @@ def create_default_config():
 
     with open(config_location, 'w') as json_config_file:
         data = {
+            'changeDetectionTables': [],
             'configuration': 'Production',
             'dropoffLocation': 'c:\\forklift\\data\\receiving',
             'email': {

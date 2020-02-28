@@ -50,7 +50,7 @@ Interacting with forklift is done via the [command line interface](src/forklift/
 
 `config.json` is created in the working directory after running `forklift config init`. It contains the following properties:
 
-- `changeDetectionTables` - An array of strings that are paths to change detection tables relative to the garage folder (e.g. `SGID.sde\\SGID.META.ChangeDetection`). A match between the source table name of a crate and a name from this table will cause forklift to skip hashing and use the values in the change detection table to determine if a crate's data needs to be updated. Each tables should have the following fields:
+- `changeDetectionTables` - An array of strings that are paths to change detection tables relative to the garage folder (e.g. `SGID.sde\\SGID.META.ChangeDetection`). A match between the source table name of a crate and a name from this table will cause forklift to skip hashing and use the values in the change detection table to determine if a crate's data needs to be updated. Each table should have the following fields:
   - `table_name` - A string field that contains a lower-cased, fully-qualified table name (e.g. `sgid.boundaries.counties`).
   - `hash` - A string that represents a unique hash of the entirety of the data in the table such that any change to data in the table will result in a new value.
 - `configuration` - A configuration string (`Production`, `Staging`, or `Dev`) that is passed to `Pallet:build` to allow a pallet to use different settings based on how forklift is being run. Defaults to `Production`.

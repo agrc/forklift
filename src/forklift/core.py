@@ -61,13 +61,14 @@ def init(logger):
     arcpy.ClearEnvironment('workspace')
 
 
-def update(crate, validate_crate):
+def update(crate, validate_crate, change_detection):
     '''
     crate: models.Crate
     validate_crate: models.Pallet.validate_crate
+    change_detection: ChangeDetection
 
-    returns: String
-        One of the result string constants from models.Crate
+    returns: (string, string)
+        One of the result string constants from models.Crate and an optional message
 
     Checks to see if a crate can be updated by using validate_crate (if implemented
     within the pallet) or check_schema otherwise. If the crate is valid it then updates the data.
@@ -78,7 +79,7 @@ def update(crate, validate_crate):
     try:
         if not arcpy.Exists(crate.destination):
             log.debug('%s does not exist. creating', crate.destination)
-            _create_destination_data(crate)
+            _create_destination_data(crate, skip_hash_field=change_detection.has_table(crate.source_name))
 
             change_status = (Crate.CREATED, None)
 
@@ -91,13 +92,20 @@ def update(crate, validate_crate):
             log.warning('validation error: %s for crate %r', e, crate, exc_info=True)
             return (Crate.INVALID_DATA, str(e))
 
-        #: create source hash and store
-        changes = _hash(crate)
+        #: use change detection data if it exists for this table
+        if change_detection.has_table(crate.source_name):
+            if change_detection.has_changed(crate.source_name):
+                return change_detection.update(crate)
+            else:
+                return change_status
+        else:
+            #: create source hash and store
+            changes = _hash(crate)
 
         if changes.has_changes():
             log.debug('starting edit session...')
             with arcpy.da.Editor(crate.destination_workspace):
-                #: delete unaccessed hashes
+                #: delete un-accessed hashes
                 if changes.has_deletes():
                     log.debug('number of rows to be deleted: %d', len(changes._deletes))
                     status, _ = change_status
@@ -249,7 +257,7 @@ def _hash(crate):
     return changes
 
 
-def _create_destination_data(crate):
+def _create_destination_data(crate, skip_hash_field=False):
     '''crate: Crate
 
     Creates the destination workspace (if necessary) and table/feature class.
@@ -277,7 +285,8 @@ def _create_destination_data(crate):
             spatial_reference=crate.destination_coordinate_system or crate.source_describe['spatialReference']
         )
 
-    arcpy.AddField_management(crate.destination, hash_field, 'TEXT', field_length=hash_field_length)
+    if not skip_hash_field:
+        arcpy.AddField_management(crate.destination, hash_field, 'TEXT', field_length=hash_field_length)
 
 
 def _get_hash_lookups(destination):

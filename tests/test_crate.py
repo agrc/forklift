@@ -135,11 +135,6 @@ class TestCrate(unittest.TestCase):
         self.assertEqual(crate.destination_name, 'Counties')
         self.assertEqual(crate.source, path.join(crate.source_workspace, crate.source_name))
 
-    def test_try_to_find_data_source_by_name_returns_None_if_not_sde(self):
-        crate = Crate(source_name='something.shp', source_workspace='c:\\temp', destination_workspace='c:\\something.gdb', destination_name='Counties')
-
-        self.assertIsNone(crate._try_to_find_data_source_by_name()[0])
-
     @patch('arcpy.ListTables')
     def test_try_to_find_data_source_by_name_returns_False_if_duplicate(self, list_tables):
         list_tables.return_value = ['db.owner.Counties', 'db.owner2.Counties']

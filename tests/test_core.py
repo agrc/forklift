@@ -15,6 +15,7 @@ from mock import Mock, patch
 
 import arcpy
 from forklift import core, engine
+from forklift.change_detection import ChangeDetection
 from forklift.exceptions import ValidationException
 from forklift.models import Changes, Crate
 
@@ -44,12 +45,14 @@ def get_test_gdb():
     return path.join(suite_data_folder, '{}.gdb'.format(calling_method_name))
 
 
+
+change_detection = ChangeDetection([], 'blah')
 class CoreTests(unittest.TestCase):
 
     @classmethod
     def skip_if_no_local_sde(cls):
         if not cls.has_local_sde:
-            raise pytest.skip('No test SDE dectected, skipping test')
+            raise pytest.skip('No test SDE detected, skipping test')
 
     @classmethod
     def setUpClass(cls):
@@ -68,7 +71,7 @@ class CoreTests(unittest.TestCase):
         test_gdb = get_test_gdb()
         crate = Crate('ZipCodes', test_gdb, temp_gdb, 'ImNotHere')
 
-        self.assertEqual(core.update(crate, lambda x: True)[0], Crate.CREATED)
+        self.assertEqual(core.update(crate, lambda x: True, change_detection)[0], Crate.CREATED)
         self.assertEqual(arcpy.Exists(crate.destination), True)
 
     def test_update_duplicate_features(self):
@@ -76,7 +79,7 @@ class CoreTests(unittest.TestCase):
         arcpy.management.Copy(test_gdb, temp_gdb)
         crate = Crate('Duplicates', temp_gdb, temp_gdb, 'DuplicatesDest')
 
-        core.update(crate, lambda x: True)
+        core.update(crate, lambda x: True, change_detection)
 
         self.assertEqual(arcpy.GetCount_management(crate.destination).getOutput(0), '4')
 
@@ -86,7 +89,7 @@ class CoreTests(unittest.TestCase):
                 delete_cursor.deleteRow()
                 break
 
-        core.update(crate, lambda x: True)
+        core.update(crate, lambda x: True, change_detection)
 
         self.assertEqual(arcpy.GetCount_management(crate.destination).getOutput(0), '3')
 
@@ -97,16 +100,16 @@ class CoreTests(unittest.TestCase):
                 update_cursor.updateRow(row)
                 break
 
-        self.assertEqual(core.update(crate, lambda x: True)[0], Crate.UPDATED_OR_CREATED_WITH_WARNINGS)
+        self.assertEqual(core.update(crate, lambda x: True, change_detection)[0], Crate.UPDATED_OR_CREATED_WITH_WARNINGS)
         self.assertEqual(arcpy.GetCount_management(crate.destination).getOutput(0), '3')
 
     def test_deleted_destination_between_updates(self):
         test_gdb = get_test_gdb()
         crate = Crate('ZipCodes', test_gdb, temp_gdb, 'ImNotHere')
-        core.update(crate, lambda x: True)
+        core.update(crate, lambda x: True, change_detection)
         delete_if_arcpy_exists(crate.destination)
 
-        self.assertEqual(core.update(crate, lambda x: True)[0], Crate.CREATED)
+        self.assertEqual(core.update(crate, lambda x: True, change_detection)[0], Crate.CREATED)
         self.assertEqual(arcpy.Exists(crate.destination), True)
         self.assertEqual(int(arcpy.GetCount_management(crate.destination).getOutput(0)), 14)
 
@@ -115,7 +118,7 @@ class CoreTests(unittest.TestCase):
         arcpy_exists.return_value = True
         crate = Crate('', '', '', describer=mocks.Describe)
 
-        self.assertEqual(core.update(crate, raise_validation_exception)[0], Crate.INVALID_DATA)
+        self.assertEqual(core.update(crate, raise_validation_exception, change_detection)[0], Crate.INVALID_DATA)
 
     @patch('arcpy.Exists')
     def test_update_default_validation_that_fails(self, arcpy_exists):
@@ -127,7 +130,7 @@ class CoreTests(unittest.TestCase):
 
         crate = Crate('', '', '', describer=mocks.Describe)
 
-        self.assertEqual(core.update(crate, custom)[0], Crate.INVALID_DATA)
+        self.assertEqual(core.update(crate, custom, change_detection)[0], Crate.INVALID_DATA)
 
     @patch('arcpy.Exists')
     def test_update_error(self, arcpy_exists):
@@ -135,7 +138,7 @@ class CoreTests(unittest.TestCase):
 
         crate = Crate('', '', '', describer=mocks.Describe)
 
-        self.assertEqual(core.update(crate, lambda c: True)[0], Crate.UNHANDLED_EXCEPTION)
+        self.assertEqual(core.update(crate, lambda c: True, change_detection)[0], Crate.UNHANDLED_EXCEPTION)
 
     def test_filter_shape_fields(self):
         self.assertEqual(core._filter_fields(['shape', 'test', 'Shape_length', 'Global_ID']), ['test'])
@@ -261,7 +264,7 @@ class CoreTests(unittest.TestCase):
 
         crate = Crate('Providers', update_tests_sde, temp_gdb)  #: table
 
-        core.update(crate, lambda x: True)
+        core.update(crate, lambda x: True, change_detection)
 
         self.assertEqual(int(arcpy.GetCount_management(crate.destination).getOutput(0)), 57)
 
@@ -270,7 +273,7 @@ class CoreTests(unittest.TestCase):
 
         crate = Crate('DNROilGasWells', update_tests_sde, temp_gdb)  #: feature class
 
-        core.update(crate, lambda x: True)
+        core.update(crate, lambda x: True, change_detection)
 
         self.assertEqual(int(arcpy.GetCount_management(crate.destination).getOutput(0)), 5)
 
@@ -279,7 +282,7 @@ class CoreTests(unittest.TestCase):
 
         crate = Crate('NO_OBJECTID_TEST', update_tests_sde, temp_gdb)
 
-        core.update(crate, lambda x: True)
+        core.update(crate, lambda x: True, change_detection)
 
         with arcpy.da.SearchCursor(crate.destination, '*') as cur:
             for row in cur:
@@ -293,7 +296,7 @@ class CoreTests(unittest.TestCase):
 
         crate = Crate(empty_points, test_gdb, temp_gdb)
 
-        core.update(crate, lambda x: True)
+        core.update(crate, lambda x: True, change_detection)
 
         self.assertEqual(int(arcpy.GetCount_management(crate.destination).getOutput(0)), 4)
 
@@ -354,7 +357,7 @@ class CoreTests(unittest.TestCase):
         arcpy.Copy_management(test_fgdb, temp_gdb)
         crate = Crate('RowDelete', temp_gdb, temp_gdb, 'RowDelete_Dest')
 
-        core.update(crate, lambda x: True)
+        core.update(crate, lambda x: True, change_detection)
         with arcpy.da.UpdateCursor(crate.source, '*') as cur:
             for _ in cur:
                 cur.deleteRow()
@@ -367,7 +370,7 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(len(changes.adds), 0)
         self.assertEqual(len(changes._deletes), 1)
 
-        core.update(crate, lambda x: True)
+        core.update(crate, lambda x: True, change_detection)
 
         self.assertEqual(arcpy.GetCount_management(crate.destination)[0], '4')
 
@@ -376,7 +379,7 @@ class CoreTests(unittest.TestCase):
         arcpy.Copy_management(test_fgdb, temp_gdb)
         crate = Crate('RowAdd', temp_gdb, temp_gdb, 'RowAdd_Dest')
 
-        core.update(crate, lambda x: True)
+        core.update(crate, lambda x: True, change_detection)
         with arcpy.da.InsertCursor(crate.source, 'URL') as cur:
             cur.insertRow(('newrow',))
 
@@ -385,7 +388,7 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(len(changes.adds), 1)
         self.assertEqual(len(changes._deletes), 0)
 
-        core.update(crate, lambda x: True)
+        core.update(crate, lambda x: True, change_detection)
 
         self.assertEqual(arcpy.GetCount_management(crate.destination)[0], '6')
 
@@ -395,7 +398,7 @@ class CoreTests(unittest.TestCase):
         arcpy.Copy_management(test_fgdb, temp_gdb)
         crate = Crate('AttributeChange', temp_gdb, temp_gdb, 'AttributeChange_Dest')
 
-        core.update(crate, lambda x: True)
+        core.update(crate, lambda x: True, change_detection)
         with arcpy.da.UpdateCursor(crate.source, 'SYMBOL', 'NAME = \'{}\''.format(row_name)) as cur:
             for row in cur:
                 row[0] = 99
@@ -414,7 +417,7 @@ class CoreTests(unittest.TestCase):
         arcpy.Copy_management(test_fgdb, temp_gdb)
         crate = Crate('GeometryChange', temp_gdb, temp_gdb, 'GeometryChange_Dest')
 
-        core.update(crate, lambda x: True)
+        core.update(crate, lambda x: True, change_detection)
         with arcpy.da.UpdateCursor(crate.source, 'Shape@XY', 'API = \'{}\''.format(row_api)) as cur:
             for row in cur:
                 row[0] = (row[0][0] + 10, row[0][1] + 10)
@@ -431,7 +434,7 @@ class CoreTests(unittest.TestCase):
         arcpy.Copy_management(test_fgdb, temp_gdb)
         crate = Crate('GeometryToNull', temp_gdb, temp_gdb, 'GeometryToNull_Dest')
 
-        core.update(crate, lambda x: True)
+        core.update(crate, lambda x: True, change_detection)
         with arcpy.da.UpdateCursor(crate.source, 'Shape@XY') as cur:
             for row in cur:
                 row[0] = None
@@ -442,7 +445,7 @@ class CoreTests(unittest.TestCase):
 
         self.assertEqual(len(changes._deletes), 1)
 
-        core.update(crate, lambda x: True)
+        core.update(crate, lambda x: True, change_detection)
 
         self.assertEqual(arcpy.GetCount_management(crate.destination)[0], '3')
 

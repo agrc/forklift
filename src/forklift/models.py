@@ -298,7 +298,7 @@ class Crate(object):
         #: crate_valid_table_name using env.workspace for the rules
         temp = arcpy.env.workspace
         arcpy.env.workspace = destination_workspace
-        valid_destination_name = arcpy.ValidateTableName(self.destination_name)
+        valid_destination_name = arcpy.ValidateTableName(self.destination_name, self.destination_workspace)
         arcpy.env.workspace = temp
 
         if valid_destination_name != self.destination_name:
@@ -319,11 +319,11 @@ class Crate(object):
         #: the full path to the source data
         self.source = join(source_workspace, source_name)
 
+        if '.sde' in self.source.lower():
+            self._try_to_find_data_source_by_name()
         if not arcpy.Exists(self.source):
-            status, message = self._try_to_find_data_source_by_name()
-            if not status:
-                self.result = (Crate.INVALID_DATA, message)
-                return
+            self.result = (Crate.INVALID_DATA, 'source data is inaccessible')
+            return
 
         try:
             self.source_describe = describer(self.source)
@@ -412,8 +412,6 @@ class Crate(object):
 
         returns a tuple (bool, message) describing the outcome
         '''
-        if '.sde' not in self.source.lower():
-            return (None, 'Can\'t find data outside of sde')
 
         def filter_filenames(workspace, name):
             if workspace in names_cache:

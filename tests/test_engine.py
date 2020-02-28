@@ -45,6 +45,7 @@ class TestConfigInit(CleanUpAlternativeConfig):
             config_dict = loads(config.read())
             self.assertEqual(
                 config_dict, {
+                    u'changeDetectionTables': [],
                     u'configuration': u'Production',
                     u'dropoffLocation': u'c:\\forklift\\data\\receiving',
                     u'email': {

@@ -10,7 +10,6 @@ import unittest
 from os import path
 
 from mock import Mock, patch
-from pytest import raises
 
 import arcpy
 from forklift import core, engine, lift
@@ -189,26 +188,3 @@ class TestLift(unittest.TestCase):
         self.assertEqual(report['total_pallets'], 3)
         self.assertEqual(report['num_success_pallets'], 2)
         self.assertEqual(report['git_errors'], git_errors)
-
-
-class TestChangeDetection(unittest.TestCase):
-    test_data_folder = path.join(current_folder, 'data')
-
-    def test_get_change_detection_returns_data(self):
-        result = lift.get_change_detection(['UPDATE_TESTS.sde\\dbo.ChangeDetection'], self.test_data_folder)
-        expected = {'update_tests.dbo.counties': '15025682769743833084',
-                    'update_tests.dbo.providers': '2263551499779312307'}
-
-        self.assertEqual(result, expected)
-
-    def test_throw_on_duplicate_table_name(self):
-        tables = ['UPDATE_TESTS.sde\\dbo.ChangeDetection', 'UPDATE_TESTS.sde\\dbo.ChangeDetectionWithDup']
-
-        with raises(Exception):
-            assert lift.get_change_detection(tables, self.test_data_folder)
-
-    def test_throw_on_bad_path(self):
-        tables = ['UPDATE_TESTS.sde\\dbo.ChangeDetection', 'UPDATE_TESTS.sde\\dbo.BadPath']
-
-        with raises(Exception):
-            assert lift.get_change_detection(tables, self.test_data_folder)

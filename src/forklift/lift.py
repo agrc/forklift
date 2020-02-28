@@ -14,7 +14,7 @@ from time import clock
 
 import arcpy
 
-from . import seat, config
+from . import change_detection, config, seat
 from .core import hash_field
 from .models import Crate
 
@@ -26,9 +26,12 @@ def process_checklist(config):
 
     removes the dropoffLocation and creates the hasLocation if needed
     '''
+    hash_location = config.get_config_prop('hashLocation')
     _remove_if_exists(config.get_config_prop('dropoffLocation'))
-    _create_if_not_exists([config.get_config_prop('hashLocation'), config.get_config_prop('dropoffLocation')])
-
+    _create_if_not_exists([hash_location, config.get_config_prop('dropoffLocation')])
+    if not arcpy.Exists(path.join(hash_location, change_detection.hash_fgdb_name)):
+        log.debug('creating change detection fgdb')
+        arcpy.management.CreateFileGDB(hash_location, change_detection.hash_fgdb_name)
 
 def _remove_if_exists(location):
     '''location: string - path to folder
@@ -70,11 +73,11 @@ def prepare_packaging_for_pallets(pallets):
             log.error('error preparing packaging: %s for pallet: %r', e, pallet, exc_info=True)
 
 
-def process_crates_for(pallets, update_def, changeDetection):
+def process_crates_for(pallets, update_def, change_detection=None):
     '''
     pallets: Pallet[]
     update_def: Function - core.update by default
-    changeDetection: Dictionary containing table names and current hashes
+    change_detection: Dictionary containing table names and current hashes
 
     Calls update_def on all crates (excluding duplicates) in pallets
     '''
@@ -96,7 +99,7 @@ def process_crates_for(pallets, update_def, changeDetection):
                     log.debug('%r', crate)
                     start_seconds = clock()
 
-                    processed_crates[crate.destination] = crate.set_result(update_def(crate, pallet.validate_crate, changeDetection))
+                    processed_crates[crate.destination] = crate.set_result(update_def(crate, pallet.validate_crate, change_detection))
 
                     log.debug('finished crate %s', seat.format_time(clock() - start_seconds))
                     log.info('result: %s', crate.result)
@@ -352,22 +355,3 @@ def _get_locations_for_dropoff(pallets):
                 destination_to_pallet.setdefault(p, []).append(pallet)
 
     return destination_to_pallet
-
-
-def get_change_detection(table_paths, root):
-    '''table_paths: string[] - paths to change detection tables relative to the garage
-    root: string - path to root directory where table_paths is relative to
-
-    returns a dictionary of table names to hashes
-    '''
-    data = {}
-
-    for table_path in table_paths:
-        log.info(f'getting change detection data from: {table_path}')
-        with arcpy.da.SearchCursor(path.join(root, table_path), ['table_name', 'hash']) as cursor:
-            for table_name, hash_value in cursor:
-                if table_name in data:
-                    raise Exception(f'duplicate table name found in change detection tables: {table_name}')
-                data[table_name] = hash_value
-
-    return data

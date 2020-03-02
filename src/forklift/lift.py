@@ -118,7 +118,7 @@ def process_pallets(pallets):
     for pallet in pallets:
         try:
             if pallet.is_ready_to_ship():  #: checks for schema changes or errors
-                if pallet.requires_processing() and pallet.success[0]:  #: checks for data that was updated
+                if pallet.requires_processing():  #: checks for data that was updated
                     log.info('%s pallet: %r', verb, pallet)
                     start_seconds = clock()
 

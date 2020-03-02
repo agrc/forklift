@@ -34,8 +34,12 @@ class Pallet(object):
     Appending the project name to the file name is the convention.
     '''
 
-    #: set this property to True if you want this pallet to be shipped regardless of it's result.
+    #: Set this property to True if you want this pallet to be shipped regardless of it's result.
     ship_on_fail = False
+
+    #: Set this property to True if you want this pallet to process regardless of it's result
+    #: API Fail: You also need to overwrite `is_ready_to_ship` to force it to return True for this property to work. :(
+    process_on_fail = False
 
     def __init__(self):
         #: the logging module to keep track of the pallet
@@ -169,7 +173,7 @@ class Pallet(object):
 
         returns: Boolean
         '''
-        if not self.are_crates_valid():
+        if not self.are_crates_valid() and not self.process_on_fail:
             return False
 
         for crate in self._crates:

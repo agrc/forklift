@@ -283,17 +283,6 @@ class TestPallet(unittest.TestCase):
 
         self.assertFalse(self.patient.requires_processing())
 
-    def test_requires_processing_crates_ingore_errors(self):
-        updated = Crate('', '', '', '')
-        updated.result = (Crate.UPDATED, None)
-
-        unhandled_exception = Crate('', '', '', '')
-        unhandled_exception.result = (Crate.UNHANDLED_EXCEPTION, None)
-
-        self.patient._crates = [updated, updated, unhandled_exception]
-
-        self.assertTrue(self.patient.requires_processing(ignore_errors=True))
-
     def test_not_implemented(self):
         self.assertEqual(self.patient.process(), NotImplemented)
         self.assertEqual(self.patient.ship(), NotImplemented)

@@ -150,7 +150,11 @@ def lift_pallets(file_path=None, pallet_arg=None, skip_git=False):
     start_process = clock()
     core.init(log)
 
-    change_detection = ChangeDetection(config.get_config_prop('changeDetectionTables'), dirname(config_location))
+    try:
+        change_tables = config.get_config_prop('changeDetectionTables')
+    except KeyError:
+        change_tables = []
+    change_detection = ChangeDetection(change_tables, dirname(config_location))
     lift.process_crates_for(pallets_to_lift, core.update, change_detection)
     log.info('process_crates time: %s', seat.format_time(clock() - start_process))
 

@@ -380,3 +380,34 @@ class TestPalletAddPackingSlip(unittest.TestCase):
 
         self.assertTrue(pallet.get_crates()[1].was_updated())
         self.assertEqual(pallet.get_crates()[1].result[0], Crate.UPDATED)
+
+    def test_missing_crate(self):
+        slip = {
+            "name": "c:\\forklift\\warehouse\\warehouse\\sgid\\AGOLPallet.py:AGOLPallet",
+            "success": True,
+            "is_ready_to_ship": True,
+            "requires_processing": True,
+            "message": "",
+            "crates": [
+                {
+                    "name": "fc5",
+                    "result": "Data updated successfully.",
+                    "crate_message": "",
+                    "message_level": "",
+                    "source": "C:\\\\forklift-garage\\sgid10.sde\\SGID10.BOUNDARIES.ZipCodes",
+                    "destination": "\\\\123.456.789.123\\agrc\\sgid_to_agol\\sgid10mercator.gdb\\ZipCodes",
+                    "was_updated": True
+                }
+            ],
+            "total_processing_time": "55.06 seconds"
+        }
+        pallet = Pallet()
+        pallet.add_crates(['fc4', 'fc6'], {
+            'source_workspace': 'Z:\\a\\path\\to\\database.sde',
+            'destination_workspace': 'Z:\\a\\path\\to\\database.gdb'
+        })
+
+        pallet.add_packing_slip(slip)
+
+        #: this is basically here to make sure that add_packing_slip doesn't throw an exception
+        self.assertFalse(pallet.get_crates()[1].was_updated())

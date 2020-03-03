@@ -235,7 +235,11 @@ class Pallet(object):
 
         crate_objects_by_name = {crate.destination_name: crate for crate in self.get_crates()}
         for slip_crate in slip['crates']:
-            crate_objects_by_name[slip_crate['name']].result = [slip_crate['result']]
+            try:
+                crate_objects_by_name[slip_crate['name']].result = [slip_crate['result']]
+            except KeyError:
+                #: if the crate is not in the packing list, leave it uninitialized
+                pass
 
     def configure_standalone_logging(self, level=logging.INFO):
         '''set up logger for running the pallet as a standalone script outside of the forklift process

@@ -70,7 +70,8 @@ class ChangeDetection(object):
         log.info(f'truncating {crate.destination}')
         arcpy.management.TruncateTable(crate.destination)
 
-        arcpy.management.Append(crate.source, crate.destination, 'TEST')
+        with arcpy.EnvManager(geographicTransformations=crate.geographic_transformation):
+            arcpy.management.Append(crate.source, crate.destination, 'TEST')
 
         table_name = crate.source_name.lower()
         with arcpy.da.UpdateCursor(self.hash_table, [hash_field], where_clause=f'{table_name_field} = \'{table_name}\'') as cursor:

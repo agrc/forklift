@@ -432,7 +432,7 @@ class Crate(object):
                 names_cache[workspace] = names
 
             #: could get a value like db.owner.***name and db.owner.name so filter on name
-            return [fc for fc in names if fc.split('.')[2] == self.source_name]
+            return [fc for fc in names if fc.split('.')[-1] == self.source_name]
 
         names = filter_filenames(self.source_workspace, self.source_name)
 

@@ -12,8 +12,8 @@ from os import path
 from mock import patch
 from xxhash import xxh64
 
-from arcpy import SpatialReference, env
-from forklift.models import Crate
+# from arcpy import SpatialReference, env
+from forklift.models import Crate, names_cache
 
 current_folder = path.dirname(path.abspath(__file__))
 test_gdb = path.join(current_folder, 'data', 'test_crate', 'data.gdb')
@@ -69,7 +69,7 @@ class TestCrate(unittest.TestCase):
         self.assertEqual(crate.source_name, 'foo')
         self.assertEqual(crate.source, path.join('bar', 'foo'))
 
-    def test_crate_ctor_doesnt_alter_destination_name(self):
+    def test_crate_ctor_does_not_alter_destination_name(self):
         source_name = 'name'
         source_workspace = 'does not matter'
         destination_workspace = env.scratchGDB
@@ -112,63 +112,6 @@ class TestCrate(unittest.TestCase):
         hash = source_name + '_' + xxh64(path.join(destination_workspace, source_name)).hexdigest()
 
         self.assertEqual(crate.name, hash)
-
-    @patch('arcpy.ListFeatureClasses')
-    def test_try_to_find_data_source_by_name_returns_and_updates_feature_name(self, list_feature_classes):
-        list_feature_classes.return_value = ['db.owner.Counties']
-
-        crate = Crate(
-            source_name='Counties',
-            source_workspace='Database Connections\\something.sde',
-            destination_workspace='c:\\temp\\something.gdb',
-            destination_name='Counties'
-        )
-
-        #: reset values because _try_to_find_data_source_by_name is called in the init
-        crate.set_source_name('Counties')
-
-        ok, name = crate._try_to_find_data_source_by_name()
-
-        self.assertTrue(ok)
-        self.assertEqual(name, 'db.owner.Counties')
-        self.assertEqual(crate.source_name, name)
-        self.assertEqual(crate.destination_name, 'Counties')
-        self.assertEqual(crate.source, path.join(crate.source_workspace, crate.source_name))
-
-    @patch('arcpy.ListTables')
-    def test_try_to_find_data_source_by_name_returns_False_if_duplicate(self, list_tables):
-        list_tables.return_value = ['db.owner.Counties', 'db.owner2.Counties']
-
-        crate = Crate(
-            source_name='duplicate',
-            source_workspace='Database Connections\\something.sde',
-            destination_workspace='c:\\something.gdb',
-            destination_name='Counties'
-        )
-
-        self.assertFalse(crate._try_to_find_data_source_by_name()[0])
-
-    @patch('arcpy.ListFeatureClasses')
-    def test_try_to_find_data_source_by_name_filters_common_duplicates(self, list_feature_classes):
-        list_feature_classes.return_value = ['db.owner.Counties', 'db.owner.duplicateCounties']
-
-        crate = Crate(
-            source_name='Counties',
-            source_workspace='Database Connections\\something.sde',
-            destination_workspace='c:\\something.gdb',
-            destination_name='Counties'
-        )
-
-        #: reset values because _try_to_find_data_source_by_name is called in the init
-        crate.set_source_name('Counties')
-
-        ok, name = crate._try_to_find_data_source_by_name()
-
-        self.assertTrue(ok)
-        self.assertEqual(name, 'db.owner.Counties')
-        self.assertEqual(crate.source_name, name)
-        self.assertEqual(crate.destination_name, 'Counties')
-        self.assertEqual(crate.source, path.join(crate.source_workspace, crate.source_name))
 
     def test_get_report(self):
         crate = Crate('foo', 'bar', 'baz', 'goo')
@@ -219,3 +162,86 @@ class TestCrate(unittest.TestCase):
 
         crate.result = (Crate.UPDATED_OR_CREATED_WITH_WARNINGS, None)
         self.assertTrue(crate.was_updated())
+
+
+class TestTryFindSourceName(unittest.TestCase):
+    def tearDown(self):
+        names_cache.clear()
+
+    @patch('arcpy.ListFeatureClasses')
+    def test_try_to_find_data_source_by_name_returns_and_updates_feature_name(self, list_feature_classes):
+        list_feature_classes.return_value = ['db.owner.Counties']
+
+        crate = Crate(
+            source_name='Counties',
+            source_workspace='Database Connections\\something.sde',
+            destination_workspace='c:\\temp\\something.gdb',
+            destination_name='Counties'
+        )
+
+        #: reset values because _try_to_find_data_source_by_name is called in the init
+        crate.set_source_name('Counties')
+
+        ok, name = crate._try_to_find_data_source_by_name()
+
+        self.assertTrue(ok)
+        self.assertEqual(name, 'db.owner.Counties')
+        self.assertEqual(crate.source_name, name)
+        self.assertEqual(crate.destination_name, 'Counties')
+        self.assertEqual(crate.source, path.join(crate.source_workspace, crate.source_name))
+
+    @patch('arcpy.ListTables')
+    def test_try_to_find_data_source_by_name_returns_False_if_duplicate(self, list_tables):
+        list_tables.return_value = ['db.owner.Counties', 'db.owner2.Counties']
+
+        crate = Crate(
+            source_name='duplicate',
+            source_workspace='Database Connections\\something.sde',
+            destination_workspace='c:\\something.gdb',
+            destination_name='Counties'
+        )
+
+        self.assertFalse(crate._try_to_find_data_source_by_name()[0])
+
+    @patch('arcpy.ListFeatureClasses')
+    def test_try_to_find_data_source_by_name_filters_common_duplicates(self, list_feature_classes):
+        list_feature_classes.return_value = ['db.owner.Counties', 'db.owner.duplicateCounties']
+        crate = Crate(
+            source_name='Counties',
+            source_workspace='Database Connections\\something.sde',
+            destination_workspace='c:\\something.gdb',
+            destination_name='Counties'
+        )
+
+        #: reset values because _try_to_find_data_source_by_name is called in the init
+        crate.set_source_name('Counties')
+
+        ok, name = crate._try_to_find_data_source_by_name()
+
+        self.assertTrue(ok)
+        self.assertEqual(name, 'db.owner.Counties')
+        self.assertEqual(crate.source_name, name)
+        self.assertEqual(crate.destination_name, 'Counties')
+        self.assertEqual(crate.source, path.join(crate.source_workspace, crate.source_name))
+
+    @patch('arcpy.ListFeatureClasses')
+    def test_try_to_find_data_source_by_name_oracle_no_schema(self, list_feature_classes):
+        list_feature_classes.return_value = ['db.ZipCodes']
+        crate = Crate(
+            source_name='ZipCodes',
+            source_workspace='Database Connections\\something.sde',
+            destination_workspace='c:\\temp\\something.gdb'
+        )
+
+        #: reset values because _try_to_find_data_source_by_name is called in the init
+        crate.set_source_name('ZipCodes')
+
+        ok, name = crate._try_to_find_data_source_by_name()
+
+        self.assertTrue(ok)
+        self.assertEqual(name, 'db.ZipCodes')
+        self.assertEqual(crate.source_name, name)
+        self.assertEqual(crate.destination_name, 'ZipCodes')
+        self.assertEqual(crate.source, path.join(crate.source_workspace, crate.source_name))
+
+        names_cache.clear()

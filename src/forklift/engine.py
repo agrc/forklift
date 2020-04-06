@@ -685,7 +685,10 @@ def _send_report_to_slack(status, operation):
     else:
         messages = ship_report_to_blocks(status)
 
-    send_to_slack(url, messages)
+    try:
+        send_to_slack(url, messages)
+    except Exception as exc:
+        log.error(f'Error posting report to slack: {exc}')
 
 
 def _clone_or_pull_repo(repo_name):

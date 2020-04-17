@@ -316,7 +316,7 @@ def check_schema(crate):
         for field in arcpy.ListFields(dataset):
             #: don't worry about comparing managed fields
             if not _is_naughty_field(field.name, describe):
-                field_dict[field.name.upper()] = field
+                field_dict[field.name] = field
 
         return field_dict
 
@@ -333,7 +333,7 @@ def check_schema(crate):
     destination_fields = get_fields(crate.destination, arcpy.da.Describe(crate.destination))
 
     for field_key in list(destination_fields.keys()):
-        if field_key == hash_field.upper():
+        if field_key == hash_field:
             continue
         # make sure that all fields from destination are in source
         # not sure that we care if there are fields in source that are not in destination

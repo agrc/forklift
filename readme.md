@@ -174,6 +174,8 @@ _Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) w
 
 To run a specific test or suite: `pytest -k <test/suite name>`
 
+If you have pip installed forklift into your current environment, you may need to uninstall it to get tests to see recent updates to the source code.
+
 ## Changelog
 
 ### 9.2.1

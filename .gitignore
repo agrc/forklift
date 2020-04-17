@@ -45,3 +45,4 @@ speedtest/data/hashes.gdb/*
 speedtest/data/scratch.gdb/*
 
 .vscode
+.pyHistory

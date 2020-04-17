@@ -310,12 +310,12 @@ def check_schema(crate):
     returns: Boolean - True if the schemas match, raises ValidationException if no match
     '''
 
-    def get_fields(dataset):
+    def get_fields(dataset, describe):
         field_dict = {}
 
         for field in arcpy.ListFields(dataset):
             #: don't worry about comparing managed fields
-            if not _is_naughty_field(field.name):
+            if not _is_naughty_field(field.name, describe):
                 field_dict[field.name.upper()] = field
 
         return field_dict
@@ -329,8 +329,8 @@ def check_schema(crate):
     log.info('checking schema...')
     missing_fields = []
     mismatching_fields = []
-    source_fields = get_fields(crate.source)
-    destination_fields = get_fields(crate.destination)
+    source_fields = get_fields(crate.source, crate.source_describe)
+    destination_fields = get_fields(crate.destination, arcpy.da.Describe(crate.destination))
 
     for field_key in list(destination_fields.keys()):
         if field_key == hash_field.upper():
@@ -389,7 +389,7 @@ def _filter_fields(fields):
     return new_fields
 
 
-def _is_naughty_field(field):
+def _is_naughty_field(field, describe=None):
     '''field: String
 
     returns: Boolean
@@ -398,8 +398,14 @@ def _is_naughty_field(field):
     '''
     #: global id's do not export to file geodatabase
     #: removes objectid_ which is created by geoprocessing tasks and wouldn't be in destination source
-    #: TODO: Deal with possibility of OBJECTID_* being the OIDFieldName
-    return 'SHAPE' in field.upper() or field.upper() in ['GLOBAL_ID', 'GLOBALID'] or field.startswith('OBJECTID')
+    skip_fields = ['GLOBAL_ID', 'GLOBALID']
+
+    if describe is not None:
+        for prop in ['shapeFieldName', 'lengthFieldName', 'OIDFieldName']:
+            if prop in describe:
+                skip_fields.append(describe[prop].upper())
+    field = field.upper()
+    return 'SHAPE' in field or field in skip_fields or field.startswith('OBJECTID')
 
 
 def _check_counts(crate, changes):

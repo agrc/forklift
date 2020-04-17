@@ -172,6 +172,8 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
 
 _Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) will automatically be skipped if it is not found on your system._
 
+To run a specific test or suite: `pytest -k <test/suite name>`
+
 ## Changelog
 
 ### 9.2.1

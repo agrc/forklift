@@ -11,13 +11,13 @@ import unittest
 from os import path
 
 import pytest
-from mock import Mock, patch
-
-import arcpy
 from forklift import core, engine
 from forklift.change_detection import ChangeDetection
 from forklift.exceptions import ValidationException
 from forklift.models import Changes, Crate
+from mock import Mock, patch
+
+import arcpy
 
 from . import mocks
 
@@ -222,6 +222,12 @@ class CoreTests(unittest.TestCase):
             core.check_schema(Crate('ZipCodes', test_gdb, test_gdb, 'FieldLength'))
 
         result = core.check_schema(Crate('ZipCodes', test_gdb, test_gdb, 'ZipCodes'))
+        self.assertEqual(result, True)
+
+    def test_schema_ignore_non_standard_shape_length_fields(self):
+        test_gdb = get_test_gdb()
+
+        result = core.check_schema(Crate('DirectionalSurveyHeaderSource', test_gdb, test_gdb, 'DirectionalSurveyHeaderDestination'))
         self.assertEqual(result, True)
 
     def test_schema_changes_in_sde(self):

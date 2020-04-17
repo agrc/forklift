@@ -11,13 +11,13 @@ import unittest
 from os import path
 
 import pytest
+from mock import Mock, patch
+
+import arcpy
 from forklift import core, engine
 from forklift.change_detection import ChangeDetection
 from forklift.exceptions import ValidationException
 from forklift.models import Changes, Crate
-from mock import Mock, patch
-
-import arcpy
 
 from . import mocks
 
@@ -223,6 +223,12 @@ class CoreTests(unittest.TestCase):
 
         result = core.check_schema(Crate('ZipCodes', test_gdb, test_gdb, 'ZipCodes'))
         self.assertEqual(result, True)
+
+    def test_schema_changes_field_case_differences(self):
+        test_gdb = get_test_gdb()
+
+        with self.assertRaises(ValidationException):
+            core.check_schema(Crate('lower', test_gdb, test_gdb, 'UPPER'))
 
     def test_schema_ignore_non_standard_shape_length_fields(self):
         test_gdb = get_test_gdb()

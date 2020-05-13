@@ -398,14 +398,14 @@ def _is_naughty_field(field, describe=None):
     '''
     #: global id's do not export to file geodatabase
     #: removes objectid_ which is created by geoprocessing tasks and wouldn't be in destination source
-    skip_fields = ['GLOBAL_ID', 'GLOBALID']
+    skip_fields = ['global_id', 'globalid']
 
     if describe is not None:
         for prop in ['shapeFieldName', 'lengthFieldName', 'OIDFieldName']:
             if prop in describe:
-                skip_fields.append(describe[prop].upper())
-    field = field.upper()
-    return 'SHAPE' in field or field in skip_fields or field.startswith('OBJECTID')
+                skip_fields.append(describe[prop].lower())
+    field = field.lower()
+    return 'shape' in field or field in skip_fields or field.startswith('objectid')
 
 
 def _check_counts(crate, changes):

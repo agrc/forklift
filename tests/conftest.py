@@ -58,7 +58,7 @@ def test_gdb(request, tmp_path):
             zip_file.extractall(tmp_path)
             yield str(tmp_path / f'{request.function.__name__}.gdb')
     else:
-        yield None
+        raise MissingTestData(original_gdb, original_zip)
 
     #: Cleaning up tmp_path is not needed. Automatically cleaned up after a few runs
     #: ref: https://github.com/pytest-dev/pytest/issues/543
@@ -78,3 +78,13 @@ def zip_gdb(source_gdb, destination_zip):
                 if Path(file_name).suffix not in ['.lock']:
                     full_name = Path(root) / file_name
                     zip_file.write(full_name, Path(full_name.parent.name) / full_name.name)
+
+
+class MissingTestData(Exception):
+    '''raised when the test_gdb fixture can't find either a fgdb or zip file that matches the current test name
+    '''
+
+    def __init__(self, gdb_path, zip_path):
+        self.gdb_path = gdb_path
+        self.zip_path = zip_path
+        self.message = f'Could not find {gdb_path} or {zip_path}!'

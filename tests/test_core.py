@@ -224,18 +224,6 @@ class CoreTests(unittest.TestCase):
         result = core.check_schema(Crate('ZipCodes', test_gdb, test_gdb, 'ZipCodes'))
         self.assertEqual(result, True)
 
-    def test_schema_changes_field_case_differences(self):
-        test_gdb = get_test_gdb()
-
-        with self.assertRaises(ValidationException):
-            core.check_schema(Crate('lower', test_gdb, test_gdb, 'UPPER'))
-
-    def test_schema_ignore_non_standard_shape_length_fields(self):
-        test_gdb = get_test_gdb()
-
-        result = core.check_schema(Crate('DirectionalSurveyHeaderSource', test_gdb, test_gdb, 'DirectionalSurveyHeaderDestination'))
-        self.assertEqual(result, True)
-
     def test_schema_changes_in_sde(self):
         self.skip_if_no_local_sde()
         test_gdb = get_test_gdb()
@@ -497,3 +485,14 @@ class CoreTests(unittest.TestCase):
         for field in fields:
             if field.name == 'TEST_TEXT':
                 self.assertEqual(field.length, 25)
+
+
+def test_schema_changes_field_case_differences(test_gdb):
+    with pytest.raises(ValidationException):
+        core.check_schema(Crate('lower', test_gdb, test_gdb, 'UPPER'))
+
+
+def test_schema_ignore_non_standard_shape_length_fields(test_gdb):
+    result = core.check_schema(Crate('DirectionalSurveyHeaderSource', test_gdb, test_gdb, 'DirectionalSurveyHeaderDestination'))
+
+    assert result

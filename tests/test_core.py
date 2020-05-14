@@ -121,9 +121,9 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(core.update(crate, raise_validation_exception, change_detection)[0], Crate.INVALID_DATA)
 
     @patch('arcpy.Exists')
+    @patch('forklift.core.check_schema', Mock(side_effect=ValidationException()))
     def test_update_default_validation_that_fails(self, arcpy_exists):
         arcpy_exists.return_value = True
-        core.check_schema = Mock(side_effect=ValidationException())
 
         def custom(crate):
             return NotImplemented

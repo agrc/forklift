@@ -146,6 +146,13 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
 
 `run_forklift.bat` is an example of a batch file that could be used to run forklift via the Windows Scheduler.
 
+### Upgrading Forklift
+
+From the root of the forklift source code folder:
+1. Activate forklift environment: `activate forklift`
+1. Pull any new updates from GitHub: `git pull origin master`
+1. Pip install with the upgrade option: `pip install .\ -U`
+
 ## Development Usage
 
 - create new env

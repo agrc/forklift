@@ -153,6 +153,23 @@ From the root of the forklift source code folder:
 1. Pull any new updates from GitHub: `git pull origin master`
 1. Pip install with the upgrade option: `pip install .\ -U`
 
+### Upgrading ArcGIS Pro
+
+1. Upgrade ArcGIS Pro
+1. Copy the `forklift-garage` folder to a temporary location.
+1. Activate forklift environment: `activate forklift`
+1. Export conda packages: `conda env export > env.yaml`
+1. Export pip packages: `pip freeze > requirements.txt`
+1. Remove and make not of any packages in `requirements.txt` that are not published to pypi such as forklift.
+1. Deactivate forklift environment: `deactivate`
+1. Remove forklift environment: `conda remove --name forklift --all`
+1. Create new forklift environment: `conda create --clone arcgispro-py3 --name forklift --pinned`
+1. Activate new environment: `activate forklift`
+1. Reinstall conda packages: `conda env update -n forklift -f env.yaml`
+1. Reinstall pip packages: `pip install -r requirements.txt`
+1. Copy the `forklift-garage` folder to the site-packages folder of the newly created environment.
+1. Reinstall forklift and any other missing pip package (from root of project): `pip install .\`
+
 ## Development Usage
 
 - create new env

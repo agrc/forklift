@@ -4,6 +4,7 @@
 forklift
 
 Usage:
+    forklift build [<file-path>] [--pallet-arg <arg>] [--verbose]
     forklift config init
     forklift config repos --add <repo>
     forklift config repos --list
@@ -27,6 +28,8 @@ Arguments:
     pallet-arg      A string to be used as an optional initialization parameter to the pallet.
 
 Examples:
+    forklift build                                                          Builds pallets without lifting or shipping. This is used for testing
+                                                                            and finding missing packages in your conda environment.
     forklift config init                                                    Creates the config file.
     forklift config repos --add agrc/ugs-chemistry                          Adds a path to the config. Checks for duplicates.
     forklift config repos --list                                            Outputs the list of pallet folder paths in your config file.
@@ -65,10 +68,11 @@ import sys
 from logging import shutdown
 from os import linesep, makedirs, startfile
 from os.path import abspath, dirname, join, realpath
+from time import perf_counter
 
 from docopt import docopt
 
-from . import config, engine, messaging
+from . import config, engine, messaging, seat
 
 log_location = join(abspath(dirname(__file__)), '..', 'forklift-garage', 'forklift.log')
 detailed_formatter = logging.Formatter(fmt='%(levelname)-7s %(asctime)s %(module)10s:%(lineno)5s %(message)s', datefmt='%m-%d %H:%M:%S')
@@ -88,7 +92,20 @@ def main():
     elif args['--send-emails']:
         messaging.send_emails_override = True
 
-    if args['config']:
+    if args['build']:
+        start = perf_counter()
+        if args['<file-path>']:
+            if args['--pallet-arg']:
+                pallets, import_errors = engine.build_pallets(args['<file-path>'], args['<arg>'])
+            else:
+                pallets, import_errors = engine.build_pallets(args['<file-path>'])
+        else:
+            pallets, import_errors = engine.build_pallets(None)
+
+        print(f'build time: {seat.format_time(perf_counter() - start)}')
+        print(f'pallets: {pallets}')
+        print(f'import errors: {import_errors}')
+    elif args['config']:
         if args['init']:
             message = engine.init()
             print(('config file: {}'.format(message)))

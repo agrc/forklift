@@ -12,10 +12,9 @@ from os import makedirs, remove, rmdir
 from os.path import abspath, dirname, exists, join
 
 import pytest
-from mock import Mock, mock_open, patch
-
 from forklift import config, core, engine
 from forklift.models import Crate
+from mock import Mock, mock_open, patch
 
 test_folder = dirname(abspath(__file__))
 test_data_folder = join(test_folder, 'data')
@@ -182,7 +181,7 @@ class TestListPallets(CleanUpAlternativeConfig):
             self.fail(e)
 
     def test_handles_build_errors(self):
-        pallets, _ = engine._build_pallets(join(test_data_folder, 'BuildErrorPallet.py'), None)
+        pallets, _ = engine.build_pallets(join(test_data_folder, 'BuildErrorPallet.py'), None)
 
         self.assertEqual(len([p for p in pallets if p.success[0]]), 1)
         self.assertEqual(len([p for p in pallets if not p.success[0]]), 2)

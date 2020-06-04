@@ -9,7 +9,7 @@ A module that contains the model classes for forklift
 import logging
 from inspect import getsourcefile
 from os.path import dirname, join
-from time import clock
+from time import perf_counter
 
 from xxhash import xxh64
 
@@ -200,7 +200,7 @@ class Pallet(object):
 
         sets a new time in timers
         '''
-        self.timers[name] = clock()
+        self.timers[name] = perf_counter()
 
     def stop_timer(self, name):
         '''name: string
@@ -208,7 +208,7 @@ class Pallet(object):
         Records a processing time and adds it to the total processing time for the pallet.
         '''
         processing_time = self.processing_times.setdefault(name, 0)
-        processing_time += clock() - self.timers[name]
+        processing_time += perf_counter() - self.timers[name]
 
         self.processing_times[name] = processing_time
         self.total_processing_time += processing_time

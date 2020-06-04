@@ -16,7 +16,7 @@ from os.path import (abspath, basename, dirname, exists, join, normpath,
                      realpath, splitext)
 from re import compile
 from shutil import copytree, rmtree
-from time import clock, sleep
+from time import perf_counter, sleep
 
 import pystache
 from colorama import Fore
@@ -135,7 +135,7 @@ def lift_pallets(file_path=None, pallet_arg=None, skip_git=False):
     else:
         git_errors = []
 
-    start_seconds = clock()
+    start_seconds = perf_counter()
 
     log.debug('building pallets')
     pallets_to_lift, import_errors = build_pallets(file_path, pallet_arg)
@@ -143,11 +143,11 @@ def lift_pallets(file_path=None, pallet_arg=None, skip_git=False):
     log.debug('processing checklist')
     lift.process_checklist(config)
 
-    start_process = clock()
+    start_process = perf_counter()
     lift.prepare_packaging_for_pallets(pallets_to_lift)
-    log.info('prepare_packaging_for_pallets time: %s', seat.format_time(clock() - start_process))
+    log.info('prepare_packaging_for_pallets time: %s', seat.format_time(perf_counter() - start_process))
 
-    start_process = clock()
+    start_process = perf_counter()
     core.init(log)
 
     try:
@@ -156,25 +156,25 @@ def lift_pallets(file_path=None, pallet_arg=None, skip_git=False):
         change_tables = []
     change_detection = ChangeDetection(change_tables, dirname(config_location))
     lift.process_crates_for(pallets_to_lift, core.update, change_detection)
-    log.info('process_crates time: %s', seat.format_time(clock() - start_process))
+    log.info('process_crates time: %s', seat.format_time(perf_counter() - start_process))
 
-    start_process = clock()
+    start_process = perf_counter()
     lift.process_pallets(pallets_to_lift)
-    log.info('process_pallets time: %s', seat.format_time(clock() - start_process))
+    log.info('process_pallets time: %s', seat.format_time(perf_counter() - start_process))
 
-    start_process = clock()
+    start_process = perf_counter()
     lift.dropoff_data(pallets_to_lift, config.get_config_prop('dropoffLocation'))
-    log.info('dropoff_data time: %s', seat.format_time(clock() - start_process))
+    log.info('dropoff_data time: %s', seat.format_time(perf_counter() - start_process))
 
-    start_process = clock()
+    start_process = perf_counter()
     lift.gift_wrap(config.get_config_prop('dropoffLocation'))
-    log.info('gift wrapping data time: %s', seat.format_time(clock() - start_process))
+    log.info('gift wrapping data time: %s', seat.format_time(perf_counter() - start_process))
 
     #: log process times for each pallet
     for pallet in pallets_to_lift:
         log.debug('processing times (in seconds) for %r: %s', pallet, pallet.processing_times)
 
-    elapsed_time = seat.format_time(clock() - start_seconds)
+    elapsed_time = seat.format_time(perf_counter() - start_seconds)
     status = lift.get_lift_status(pallets_to_lift, elapsed_time, git_errors, import_errors)
 
     _generate_packing_slip(status, config.get_config_prop('dropoffLocation'))
@@ -202,7 +202,7 @@ def ship_data(pallet_arg=None, by_service=False):
     '''
     log.info('starting forklift')
 
-    start_seconds = clock()
+    start_seconds = perf_counter()
 
     #: look for servers in config
     servers = config.get_config_prop('servers')
@@ -232,7 +232,7 @@ def ship_data(pallet_arg=None, by_service=False):
 
     server_reports = []
     all_failed_copies = {}
-    start_process = clock()
+    start_process = perf_counter()
 
     if not ship_only:
         switches = [LightSwitch(server) for server in servers.items()]
@@ -245,7 +245,7 @@ def ship_data(pallet_arg=None, by_service=False):
             server_report = {'name': switch.server_label, 'failed_copies': {}, 'successful_copies': [], 'problem_services': [], 'success': True, 'message': ''}
 
             log.info('stopping (%s)', switch.server_label)
-            start_sub_process = clock()
+            start_sub_process = perf_counter()
 
             #: stop server or services
             if by_service:
@@ -257,7 +257,7 @@ def ship_data(pallet_arg=None, by_service=False):
                 status, messages = switch.ensure('stop')
                 item_being_acted_upon = switch.server_label
 
-            log.info('stopping %s time: %s', item_being_acted_upon, seat.format_time(clock() - start_sub_process))
+            log.info('stopping %s time: %s', item_being_acted_upon, seat.format_time(perf_counter() - start_sub_process))
 
             if status is False:
                 error_msg = '{} did not stop, skipping copy. {}'.format(item_being_acted_upon, messages)
@@ -272,7 +272,7 @@ def ship_data(pallet_arg=None, by_service=False):
             log.debug('sleeping: %s', sleep_timer)
             sleep(sleep_timer)
 
-            start_sub_process = clock()
+            start_sub_process = perf_counter()
 
             #: copy data
             successful_copies, failed_copies = lift.copy_data(
@@ -282,10 +282,10 @@ def ship_data(pallet_arg=None, by_service=False):
             server_report['failed_copies'] = failed_copies
             all_failed_copies.update(failed_copies)
 
-            log.info('copy data time: %s', seat.format_time(clock() - start_sub_process))
+            log.info('copy data time: %s', seat.format_time(perf_counter() - start_sub_process))
 
             log.info('starting (%s)', item_being_acted_upon)
-            start_sub_process = clock()
+            start_sub_process = perf_counter()
 
             #: start server
             if by_service:
@@ -293,7 +293,7 @@ def ship_data(pallet_arg=None, by_service=False):
             else:
                 status, messages = switch.ensure('start')
 
-            log.info('starting %s time: %s', item_being_acted_upon, seat.format_time(clock() - start_sub_process))
+            log.info('starting %s time: %s', item_being_acted_upon, seat.format_time(perf_counter() - start_sub_process))
 
             if status is False:
                 error_msg = '{} did not restart. {}'.format(item_being_acted_upon, messages)
@@ -307,16 +307,16 @@ def ship_data(pallet_arg=None, by_service=False):
             log.debug('sleeping: %s', sleep_timer)
             sleep(sleep_timer)
 
-            start_sub_process = clock()
+            start_sub_process = perf_counter()
 
             server_report['problem_services'] = switch.validate_service_state()
-            log.info('validate service time: %s', seat.format_time(clock() - start_sub_process))
+            log.info('validate service time: %s', seat.format_time(perf_counter() - start_sub_process))
             if len(server_report['problem_services']) > 0:
                 server_report['success'] = False
                 server_report['has_service_issues'] = True
 
             server_reports.append(server_report)
-        log.info('total copy time: %s', seat.format_time(clock() - start_process))
+        log.info('total copy time: %s', seat.format_time(perf_counter() - start_process))
 
     pallet_reports = []
     if not missing_packing_slip:
@@ -365,7 +365,7 @@ def ship_data(pallet_arg=None, by_service=False):
             slip['total_processing_time'] = seat.format_time(pallet.total_processing_time)
             pallet_reports.append(slip)
 
-    elapsed_time = seat.format_time(clock() - start_seconds)
+    elapsed_time = seat.format_time(perf_counter() - start_seconds)
     status = {
         'hostname': socket.gethostname(),
         'total_pallets': len(pallet_reports),
@@ -447,17 +447,17 @@ def speedtest(pallet_location):
 
     print(('{0}{1}Tests ready starting dry run...{0}'.format(Fore.RESET, Fore.MAGENTA)))
 
-    start_seconds = clock()
+    start_seconds = perf_counter()
     dry_report = lift_pallets(pallet_location, skip_git=True)
-    dry_run = seat.format_time(clock() - start_seconds)
+    dry_run = seat.format_time(perf_counter() - start_seconds)
 
     print(('{0}{1}Changing data...{0}'.format(Fore.RESET, Fore.MAGENTA)))
     _change_data(join(speedtest_destination, 'ChangeSourceData.gdb', 'AddressPoints'))
 
     print(('{0}{1}Repeating test...{0}'.format(Fore.RESET, Fore.MAGENTA)))
-    start_seconds = clock()
+    start_seconds = perf_counter()
     repeat_report = lift_pallets(pallet_location, skip_git=True)
-    repeat = seat.format_time(clock() - start_seconds)
+    repeat = seat.format_time(perf_counter() - start_seconds)
 
     #: clean up so git state is unchanged
     if arcpy.Exists(join(speedtest_destination, 'DestinationData.gdb')):

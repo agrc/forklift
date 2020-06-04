@@ -9,7 +9,7 @@ change them to match services that are already published to your server.
 '''
 import sys
 from os import path
-from time import clock  # NOQA
+from time import perf_counter  # NOQA
 
 from forklift.arcgis import LightSwitch  # NOQA
 
@@ -31,7 +31,7 @@ def main():
     light_switch.ensure_services('on', SERVICES)
 
     def benchmark():
-        start = clock()
+        start = perf_counter()
 
         print('stopping services...')
         light_switch.ensure_services('off', SERVICES)
@@ -39,7 +39,7 @@ def main():
         print('restarting services...')
         light_switch.ensure_services('on', SERVICES)
 
-        return clock() - start
+        return perf_counter() - start
 
     sum_times = 0
     for i in range(1, NUM_REPEATS + 1):

@@ -10,7 +10,7 @@ import logging
 import shutil
 import socket
 from os import listdir, makedirs, path, remove, walk
-from time import clock
+from time import perf_counter
 
 import arcpy
 
@@ -97,11 +97,11 @@ def process_crates_for(pallets, update_def, change_detection=None):
 
                 if crate.destination not in processed_crates:
                     log.debug('%r', crate)
-                    start_seconds = clock()
+                    start_seconds = perf_counter()
 
                     processed_crates[crate.destination] = crate.set_result(update_def(crate, pallet.validate_crate, change_detection))
 
-                    log.debug('finished crate %s', seat.format_time(clock() - start_seconds))
+                    log.debug('finished crate %s', seat.format_time(perf_counter() - start_seconds))
                     log.info('result: %s', crate.result)
                 else:
                     log.info('skipping crate')
@@ -124,7 +124,7 @@ def process_pallets(pallets):
             if pallet.is_ready_to_ship():  #: checks for schema changes or errors
                 if pallet.requires_processing():  #: checks for data that was updated
                     log.info('%s pallet: %r', verb, pallet)
-                    start_seconds = clock()
+                    start_seconds = perf_counter()
 
                     arcpy.ResetEnvironments()
                     arcpy.ClearWorkspaceCache_management()
@@ -132,7 +132,7 @@ def process_pallets(pallets):
                     with seat.timed_pallet_process(pallet, 'process'):
                         pallet.process()
 
-                    log.debug('%s pallet %s', verb.replace('ing', 'ed'), seat.format_time(clock() - start_seconds))
+                    log.debug('%s pallet %s', verb.replace('ing', 'ed'), seat.format_time(perf_counter() - start_seconds))
         except Exception as e:
             pallet.success = (False, str(e))
             log.error('error %s pallet: %s for pallet: %r', verb, e, pallet, exc_info=True)
@@ -187,11 +187,11 @@ def _move_to_dropoff(destination_and_pallet, dropoff_location):
     for data_source in destination_and_pallet:
         gdb_name = path.basename(data_source)
         log.info('copying {} to {}...'.format(data_source, path.join(dropoff_location, gdb_name)))
-        start_seconds = clock()
+        start_seconds = perf_counter()
         try:
             log.debug('copying source to destination')
             shutil.copytree(data_source, path.join(dropoff_location, gdb_name), ignore=shutil.ignore_patterns('*.lock'))
-            log.info('copy successful in %s', seat.format_time(clock() - start_seconds))
+            log.info('copy successful in %s', seat.format_time(perf_counter() - start_seconds))
         except Exception as e:
             if data_source.lower() in destination_and_pallet:
                 for pallet in destination_and_pallet[data_source.lower()]:
@@ -274,7 +274,7 @@ def copy_data(from_location, to_template, packing_slip_file, machine_name=None):
         destination_path = path.join(to_template.format(machine_name), source)
 
         log.info('copying {} to {}...'.format(source, destination_path))
-        start_seconds = clock()
+        start_seconds = perf_counter()
         try:
             if path.exists(destination_path):
                 log.debug('%s exists moving', destination_path)
@@ -295,7 +295,7 @@ def copy_data(from_location, to_template, packing_slip_file, machine_name=None):
                     shutil.rmtree(temp_path)
 
             successful.append(source)
-            log.info('copy successful in %s', seat.format_time(clock() - start_seconds))
+            log.info('copy successful in %s', seat.format_time(perf_counter() - start_seconds))
         except Exception:
             try:
                 #: There is still a lock?

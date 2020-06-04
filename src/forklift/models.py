@@ -331,7 +331,7 @@ class Crate(object):
                 self.source_describe = describer(self.source)
                 describes_cache[self.source.lower()] = self.source_describe
         except Exception as e:
-            self.result = (Crate.INVALID_DATA, e)
+            self.result = (Crate.INVALID_DATA, str(e))
 
             return
 

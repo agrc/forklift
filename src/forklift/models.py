@@ -322,9 +322,6 @@ class Crate(object):
 
         if '.sde' in self.source.lower():
             self._try_to_find_data_source_by_name()
-        if not arcpy.Exists(self.source):
-            self.result = (Crate.INVALID_DATA, 'source data is inaccessible')
-            return
 
         try:
             if self.source.lower() in describes_cache:
@@ -335,6 +332,7 @@ class Crate(object):
                 describes_cache[self.source.lower()] = self.source_describe
         except Exception as e:
             self.result = (Crate.INVALID_DATA, e)
+
             return
 
     def set_source_name(self, value):
@@ -445,6 +443,7 @@ class Crate(object):
         if names is None or len(names) < 1:
             not_found_message = 'No source data found for {}'.format(self.source)
             self.log.debug(not_found_message)
+
             return (False, not_found_message)
 
         if len(names) == 1:

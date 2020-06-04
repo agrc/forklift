@@ -4,7 +4,7 @@
 forklift
 
 Usage:
-    forklift build [<file-path>] [--pallet-arg <arg>] [--verbose]
+    forklift build [<file-path>] [--profile] [--pallet-arg <arg>] [--verbose]
     forklift config init
     forklift config repos --add <repo>
     forklift config repos --list
@@ -68,7 +68,6 @@ import sys
 from logging import shutdown
 from os import linesep, makedirs, startfile
 from os.path import abspath, dirname, join, realpath
-from time import perf_counter
 
 from docopt import docopt
 
@@ -92,19 +91,24 @@ def main():
     elif args['--send-emails']:
         messaging.send_emails_override = True
 
-    if args['build']:
-        start = perf_counter()
+    def run_build():
         if args['<file-path>']:
             if args['--pallet-arg']:
-                pallets, import_errors = engine.build_pallets(args['<file-path>'], args['<arg>'])
+                pallets, import_errors = engine.build_pallets(args["<file-path>"], args["<arg>"])
             else:
-                pallets, import_errors = engine.build_pallets(args['<file-path>'])
+                pallets, import_errors = engine.build_pallets(args["<file-path>"])
         else:
             pallets, import_errors = engine.build_pallets(None)
 
-        print(f'build time: {seat.format_time(perf_counter() - start)}')
         print(f'pallets: {pallets}')
         print(f'import errors: {import_errors}')
+
+    if args['build']:
+        if args['--profile']:
+            import cProfile
+            cProfile.runctx('run_build()', globals(), locals(), sort='cumulative')
+        else:
+            run_build()
     elif args['config']:
         if args['init']:
             message = engine.init()

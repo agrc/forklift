@@ -19,6 +19,7 @@ from . import config, seat
 from .messaging import send_email
 
 names_cache = {}
+describes_cache = {}
 
 
 class Pallet(object):
@@ -326,7 +327,12 @@ class Crate(object):
             return
 
         try:
-            self.source_describe = describer(self.source)
+            if self.source.lower() in describes_cache:
+                self.log.debug('describes cache hit')
+                self.source_describe = describes_cache[self.source.lower()]
+            else:
+                self.source_describe = describer(self.source)
+                describes_cache[self.source.lower()] = self.source_describe
         except Exception as e:
             self.result = (Crate.INVALID_DATA, e)
             return

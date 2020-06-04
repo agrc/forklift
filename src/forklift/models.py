@@ -437,7 +437,9 @@ class Crate(object):
         names = filter_filenames(self.source_workspace, self.source_name)
 
         if names is None or len(names) < 1:
-            return (False, 'No source data found for {}'.format(self.source))
+            not_found_message = 'No source data found for {}'.format(self.source)
+            self.log.debug(not_found_message)
+            return (False, not_found_message)
 
         if len(names) == 1:
             #: replace name with db.owner.name

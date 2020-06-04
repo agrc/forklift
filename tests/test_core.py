@@ -11,13 +11,13 @@ import unittest
 from os import path
 
 import pytest
-from mock import Mock, patch
-
-import arcpy
 from forklift import core, engine
 from forklift.change_detection import ChangeDetection
 from forklift.exceptions import ValidationException
 from forklift.models import Changes, Crate
+from mock import Mock, patch
+
+import arcpy
 
 from . import mocks
 

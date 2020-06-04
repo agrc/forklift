@@ -8,13 +8,13 @@ import logging
 import unittest
 from os import path
 
-from pytest import raises
-
-import arcpy
 from forklift import core
 from forklift.change_detection import (ChangeDetection, _get_hashes,
                                        hash_field, table_name_field)
 from forklift.models import Crate
+from pytest import raises
+
+import arcpy
 
 current_folder = path.dirname(path.abspath(__file__))
 test_data_folder = path.join(current_folder, 'data')

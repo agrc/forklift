@@ -12,9 +12,10 @@ from os import makedirs, remove, rmdir
 from os.path import abspath, dirname, exists, join
 
 import pytest
+from mock import Mock, mock_open, patch
+
 from forklift import config, core, engine
 from forklift.models import Crate
-from mock import Mock, mock_open, patch
 
 test_folder = dirname(abspath(__file__))
 test_data_folder = join(test_folder, 'data')

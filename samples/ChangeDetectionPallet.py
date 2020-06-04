@@ -9,8 +9,9 @@ have `UPDATE_TESTS.sde\\ChangeDetection` in it's array.
 '''
 from os.path import join
 
-import arcpy
 from forklift.models import Pallet
+
+import arcpy
 
 
 class ChangeDetectionPallet(Pallet):

@@ -138,7 +138,7 @@ def lift_pallets(file_path=None, pallet_arg=None, skip_git=False):
     start_seconds = clock()
 
     log.debug('building pallets')
-    pallets_to_lift, import_errors = _build_pallets(file_path, pallet_arg)
+    pallets_to_lift, import_errors = build_pallets(file_path, pallet_arg)
 
     log.debug('processing checklist')
     lift.process_checklist(config)
@@ -238,7 +238,7 @@ def ship_data(pallet_arg=None, by_service=False):
         switches = [LightSwitch(server) for server in servers.items()]
 
         if by_service:
-            all_pallets, _ = _build_pallets(None, pallet_arg)
+            all_pallets, _ = build_pallets(None, pallet_arg)
 
         #: for each server
         for switch in switches:
@@ -521,7 +521,7 @@ def gift_wrap(destination, source=None, pallet_path=None):
     '''
     sources = []
     if pallet_path is not None:
-        pallets, _ = _build_pallets(pallet_path)
+        pallets, _ = build_pallets(pallet_path)
         for pallet in pallets:
             for gdb in pallet.copy_data:
                 sources.append(gdb)
@@ -556,7 +556,7 @@ def move_dropoff_data(copy_to_temp):
     copytree(source, destination)
 
 
-def _build_pallets(file_path, pallet_arg=None):
+def build_pallets(file_path, pallet_arg=None):
     '''
     file_path: string - the file path of a python.py file
     pallet_arg: string - an optional string to send to the constructor of a pallet
@@ -633,7 +633,7 @@ def _process_packing_slip(packing_slip=None, pallet_arg=None):
         if not item['success'] and not item['ship_on_fail']:
             continue
 
-        pallet = _build_pallets(item['name'], pallet_arg)[0][0]
+        pallet = build_pallets(item['name'], pallet_arg)[0][0]
         pallet.add_packing_slip(item)
 
         pallets.append(pallet)

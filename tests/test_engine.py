@@ -403,7 +403,7 @@ class TestPackingSlip(unittest.TestCase):
         dump.assert_called_once()
         self.assertEqual(len(dump.call_args[0][0]), 2)
 
-    @patch('forklift.engine._build_pallets', return_data=1)
+    @patch('forklift.engine.build_pallets', return_data=1)
     def test_process_packing_slip(self, mock):
         with open(join(test_data_folder, 'test_engine', 'packing-slip.json')) as slip_file:
             packing_slip = loads(slip_file.read())

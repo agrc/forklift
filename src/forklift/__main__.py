@@ -60,6 +60,19 @@ Examples:
                                                                             will only work for pallets that are in the warehouse.
     forklift speedtest                                                      Test the speed on a predefined pallet.
 '''
+#: check for Pro license
+try:
+    import arcpy
+except RuntimeError as exception:
+    import socket
+    from . import messaging, config
+
+    messaging.send_emails_override = True
+    messaging.send_email(config.get_config_prop('notify'), f'Forklift Error on {socket.gethostname()}', str(exception))
+
+    print('ERROR: Cannot import arcpy! This is usually caused by ArcGIS Pro not having a valid license.')
+    exit(1)
+
 
 import faulthandler
 import logging.config

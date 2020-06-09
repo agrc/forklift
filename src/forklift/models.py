@@ -320,7 +320,8 @@ class Crate(object):
         #: the full path to the source data
         self.source = join(source_workspace, source_name)
 
-        if '.sde' in self.source.lower():
+        #: try to find the full-qualified source name if it doesn't have any "."s in it
+        if '.sde' in self.source.lower() and '.' not in self.source_name:
             self._try_to_find_data_source_by_name()
 
         try:
@@ -442,7 +443,6 @@ class Crate(object):
 
         if names is None or len(names) < 1:
             not_found_message = 'No source data found for {}'.format(self.source)
-            self.log.debug(not_found_message)
 
             return (False, not_found_message)
 

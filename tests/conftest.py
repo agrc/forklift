@@ -11,6 +11,7 @@ from shutil import copytree, rmtree
 from zipfile import ZIP_DEFLATED, ZipFile
 
 import pytest
+
 from forklift import config
 
 temp_config = path.join(path.abspath(path.dirname(__file__)), 'config.json')

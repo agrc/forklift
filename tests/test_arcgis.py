@@ -11,8 +11,9 @@ from time import time
 
 import pytest
 import requests
-from forklift.arcgis import LightSwitch
 from mock import Mock, call, patch
+
+from forklift.arcgis import LightSwitch
 
 
 class TestLightSwitch(unittest.TestCase):

@@ -10,8 +10,9 @@ import unittest
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-from forklift import messaging
 from mock import patch
+
+from forklift import messaging
 
 
 def true_side_effect(value):

@@ -9,8 +9,9 @@ A module that contains tests for the pallet module.
 import unittest
 from time import sleep
 
-from forklift.models import Crate, Pallet
 from mock import patch
+
+from forklift.models import Crate, Pallet
 
 
 class TestPallet(unittest.TestCase):

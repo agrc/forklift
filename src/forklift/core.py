@@ -94,7 +94,7 @@ def update(crate, validate_crate, change_detection):
 
         #: use change detection data if it exists for this table
         if change_detection.has_table(crate.source_name):
-            if change_detection.has_changed(crate.source_name):
+            if change_detection.has_changed(crate.source_name) or change_status[0] == Crate.CREATED:
                 return change_detection.update(crate)
             else:
                 return change_status

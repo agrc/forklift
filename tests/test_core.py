@@ -9,9 +9,10 @@ Tests for the core.py module
 import inspect
 import unittest
 from os import path
+from pathlib import Path
 
 import pytest
-from mock import Mock, patch
+from mock import MagicMock, Mock, patch
 
 import arcpy
 from forklift import core, engine
@@ -127,6 +128,20 @@ def test_update_error(arcpy_exists):
     crate = Crate('', '', '', describer=mocks.Describe)
 
     assert core.update(crate, lambda c: True, CHANGE_DETECTION)[0] == Crate.UNHANDLED_EXCEPTION
+
+def test_update_new_dataset_with_change_detection(test_gdb):
+    change_detection = ChangeDetection([], 'blah')
+    change_detection.has_table = MagicMock(name='has_table', return_value=True)
+    change_detection.has_changed = MagicMock(name='has_changed', return_value=False)
+
+    crate = Crate('Counties', test_gdb, test_gdb, 'Counties_Destination')
+
+    core.update(crate, lambda c: True, change_detection)
+
+    source_count = arcpy.management.GetCount(str(Path(test_gdb) / 'Counties'))[0]
+    destination_count = arcpy.management.GetCount(str(Path(test_gdb) / 'Counties_Destination'))[0]
+
+    assert source_count == destination_count
 
 def test_filter_shape_fields():
     assert core._filter_fields(['shape', 'test', 'Shape_length', 'Global_ID']) == ['test']

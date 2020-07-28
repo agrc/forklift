@@ -51,6 +51,8 @@ class Pallet(object):
         self.success = (True, None)
         #: a list databases or folders that you want forklift to copy to `dropoffLocations`
         #: after a successful process
+        #: note that all items will be copied regardless of whether or not individual crates
+        #: were updated
         self.copy_data = []
         #: a list of tuples describing arcgis server services that should be shut down before copying data in `copy_data`
         #: the format of the tuple is two strings: `('<Folder>/<ServiceName>', '<ServiceType>')`

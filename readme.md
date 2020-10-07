@@ -160,7 +160,7 @@ From the root of the forklift source code folder:
 1. Activate forklift environment: `activate forklift`
 1. Export conda packages: `conda env export > env.yaml`
 1. Export pip packages: `pip freeze > requirements.txt`
-1. Remove and make not of any packages in `requirements.txt` that are not published to pypi such as forklift.
+1. Remove and make note of any packages in `requirements.txt` that are not published to pypi such as forklift.
 1. Deactivate forklift environment: `deactivate`
 1. Remove forklift environment: `conda remove --name forklift --all`
 1. Create new forklift environment: `conda create --clone arcgispro-py3 --name forklift --pinned`

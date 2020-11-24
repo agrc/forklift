@@ -65,7 +65,8 @@ try:
     import arcpy
 except RuntimeError as exception:
     import socket
-    from . import messaging, config
+
+    from . import config, messaging
 
     messaging.send_emails_override = True
     messaging.send_email(config.get_config_prop('notify'), f'Forklift Error on {socket.gethostname()}', str(exception))
@@ -95,7 +96,7 @@ def main():
     '''Main entry point for program. Parse arguments and pass to engine module
     '''
 
-    args = docopt(__doc__, version='9.2.1')
+    args = docopt(__doc__, version='9.3.0')
     _setup_logging(args['--verbose'])
     _add_global_error_handler()
 

@@ -92,8 +92,9 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
 1. Add ArcGIS Pro to your path.
    - If installed for all users: `c:\Program Files\ArcGIS\Pro\bin\Python\scripts\`.
    - If install for single user: `C:\Users\{USER}\AppData\Local\Programs\ArcGIS\Pro\bin\Python\Scripts`.
-1. Create a conda environment for forklift `conda create --name forklift --clone arcgispro-py3`.
+1. Create a conda environment for forklift `conda create --name forklift`.
 1. Activate the conda environment `activate forklift`.
+1. `conda install arcpy -c esri`
 1. `pip install .\` from the directory containing `setup.py`.
 1. Install the python dependencies for your pallets.
 1. `forklift config init`
@@ -156,6 +157,11 @@ From the root of the forklift source code folder:
 ### Upgrading ArcGIS Pro
 
 1. Upgrade ArcGIS Pro
+
+There is no second step if you originally created a fresh conda environment (not cloned from `arcgispro-py3`) and installed arcpy via `conda install arcpy -c esri`.
+
+If you do need to recreate the forklift environment from scratch, follow these steps:
+
 1. Copy the `forklift-garage` folder to a temporary location.
 1. Activate forklift environment: `activate forklift`
 1. Export conda packages: `conda env export > env.yaml`

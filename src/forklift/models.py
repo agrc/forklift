@@ -86,7 +86,7 @@ class Pallet(object):
         return
 
     def process(self):
-        '''Invoked if any crates have data updates.
+        '''Invoked during lift if any crates have data updates.
         '''
         return NotImplemented
 

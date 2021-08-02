@@ -24,6 +24,7 @@ hash_field = 'hash'
 class ChangeDetection(object):
     '''A class that models data obtained from the change detection tables
     '''
+
     def __init__(self, table_paths, root_folder, hash_table=hash_table):
         self.hash_table = hash_table
         if not arcpy.Exists(hash_table):
@@ -67,11 +68,22 @@ class ChangeDetection(object):
         elif crate.result[0] == Crate.CREATED:
             status = Crate.CREATED
 
-        log.info(f'truncating {crate.destination}')
-        arcpy.management.TruncateTable(crate.destination)
+        if (_has_globalid_field(crate.source)):
+            log.info(f'deleting and copying {crate.destination}')
+            with arcpy.EnvManager(
+                geographicTransformations=crate.geographic_transformation,
+                preserveGlobalIds=True,
+                outputCoordinateSystem=crate.destination_coordinate_system
+            ):
+                arcpy.management.Delete(crate.destination)
+                #: the only way to preserve global id values when exporting to fgdb is to use this tool
+                arcpy.conversion.FeatureClassToFeatureClass(crate.source, crate.destination_workspace, crate.destination_name)
+        else:
+            log.info(f'truncating and loading {crate.destination}')
+            arcpy.management.TruncateTable(crate.destination)
 
-        with arcpy.EnvManager(geographicTransformations=crate.geographic_transformation):
-            arcpy.management.Append(crate.source, crate.destination, schema_type='NO_TEST')
+            with arcpy.EnvManager(geographicTransformations=crate.geographic_transformation):
+                arcpy.management.Append(crate.source, crate.destination, schema_type='NO_TEST')
 
         table_name = crate.source_name.lower()
         with arcpy.da.UpdateCursor(self.hash_table, [hash_field], where_clause=f'{table_name_field} = \'{table_name}\'') as cursor:
@@ -85,6 +97,14 @@ class ChangeDetection(object):
                     insert_cursor.insertRow((table_name, self.current_hashes[table_name]))
 
         return (status, None)
+
+
+def _has_globalid_field(table):
+    '''table: string - path to a feature class
+
+    returns a boolean indicating if the table has a GlobalId field
+    '''
+    return len(arcpy.ListFields(table, field_type='GlobalID')) > 0
 
 
 def _get_hashes(table_paths):

@@ -198,7 +198,9 @@ If you do need to recreate the forklift environment from scratch, follow these s
   - `pip install -e ".[tests]"`
 - run tests
   - `python setup.py develop`
-  - `pytest`
+  - `pytest -p no:faulthandler`
+
+`-p no:faulthandler` is to [prevent pytest from output _tons_ of errors](https://stackoverflow.com/a/65826036/8049053).
 
 _Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) will automatically be skipped if it is not found on your system._
 

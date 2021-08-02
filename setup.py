@@ -44,12 +44,12 @@ setup(
     dependency_links=[],
     extras_require={
         'tests': [
-            'mock==3.0.*',
-            'pytest-cov==2.7.*',
+            'mock==4.0.*',
+            'pytest-cov==2.12.*',
             'pytest-instafail==0.4.*',
-            'pytest-isort==0.3.*',
-            'pytest-pylint==0.14.*',
-            'pytest==4.*'
+            'pytest-isort==2.0.*',
+            'pytest-pylint==0.18.*',
+            'pytest==6.2.*'
         ]
     },
     entry_points={"console_scripts": ["forklift = forklift.__main__:main"]}

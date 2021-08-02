@@ -7,6 +7,7 @@ a module containing tests for the change detection module
 import logging
 import unittest
 from os import path
+from pathlib import Path
 
 from pytest import raises
 
@@ -113,3 +114,48 @@ class TestUpdate(unittest.TestCase):
         result = change_detection.update(crate)
 
         self.assertEqual(result[0], Crate.INVALID_DATA)
+
+    def test_preserves_globalids(self):
+        scratch_hash_table = str(Path(arcpy.env.scratchGDB) / Path(hash_table).name)
+        scratch_destination = str(Path(arcpy.env.scratchGDB) / 'GlobalIds')
+        temp_data = [scratch_hash_table, scratch_destination]
+        for dataset in temp_data:
+            if arcpy.Exists(dataset):
+                arcpy.management.Delete(dataset)
+        arcpy.management.Copy(hash_table, scratch_hash_table)
+        test_sde = str(Path(test_data_folder) / 'UPDATE_TESTS.sde')
+
+        change_detection = ChangeDetection(['ChangeDetection'], test_sde, hash_table=scratch_hash_table)
+
+        table = 'GlobalIds'
+        crate = Crate(table, test_sde, str(Path(scratch_destination).parent), Path(scratch_destination).name)
+        crate.result = (Crate.CREATED, None)
+        core._create_destination_data(crate, skip_hash_field=True)
+        change_detection.current_hashes[f'update_tests.dbo.{table.casefold()}'] = 'hash'
+        result = change_detection.update(crate)
+
+        self.assertEqual(result[0], Crate.CREATED)
+
+        with arcpy.da.SearchCursor(scratch_destination, ['GlobalID', 'NAME'], 'NAME = \'JUAB\'') as cursor:
+            self.assertEqual(next(cursor)[0], '{29B2946D-695C-4387-BAB7-4773B8DC0E6D}')
+
+    def test_can_handle_globalid_fields_without_index(self):
+        scratch_hash_table = str(Path(arcpy.env.scratchGDB) / Path(hash_table).name)
+        scratch_destination = str(Path(arcpy.env.scratchGDB) / 'GlobalIds')
+        temp_data = [scratch_hash_table, scratch_destination]
+        for dataset in temp_data:
+            if arcpy.Exists(dataset):
+                arcpy.management.Delete(dataset)
+        arcpy.management.Copy(hash_table, scratch_hash_table)
+        test_sde = str(Path(test_data_folder) / 'UPDATE_TESTS.sde')
+
+        change_detection = ChangeDetection(['ChangeDetection'], test_sde, hash_table=scratch_hash_table)
+
+        table = 'GlobalIdsNoIndex'
+        crate = Crate(table, test_sde, arcpy.env.scratchGDB, Path(scratch_destination).name)
+        crate.result = (Crate.CREATED, None)
+        core._create_destination_data(crate, skip_hash_field=True)
+        change_detection.current_hashes[f'update_tests.dbo.{table.casefold()}'] = 'hash'
+        result = change_detection.update(crate)
+
+        self.assertEqual(result[0], Crate.CREATED)

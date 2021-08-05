@@ -76,8 +76,12 @@ class ChangeDetection(object):
                 outputCoordinateSystem=crate.destination_coordinate_system
             ):
                 arcpy.management.Delete(crate.destination)
-                #: the only way to preserve global id values when exporting to fgdb is to use this tool
-                arcpy.conversion.FeatureClassToFeatureClass(crate.source, crate.destination_workspace, crate.destination_name)
+
+                #: the only way to preserve global id values when exporting to fgdb is to use these tools
+                if crate.is_table():
+                    arcpy.conversion.TableToTable(crate.source, crate.destination_workspace, crate.destination_name)
+                else:
+                    arcpy.conversion.FeatureClassToFeatureClass(crate.source, crate.destination_workspace, crate.destination_name)
         else:
             log.info(f'truncating and loading {crate.destination}')
             arcpy.management.TruncateTable(crate.destination)

@@ -125,6 +125,31 @@ def test_preserves_globalids(test_gdb):
     with arcpy.da.SearchCursor(scratch_destination, ['GlobalID', 'NAME'], 'NAME = \'JUAB\'') as cursor:
         assert next(cursor)[0] == '{29B2946D-695C-4387-BAB7-4773B8DC0E6D}'
 
+def test_preserves_globalids_table(test_gdb):
+    hash_table = str(Path(test_gdb) / 'TableHashes')
+    scratch_hash_table = str(Path(arcpy.env.scratchGDB) / Path(hash_table).name)
+    scratch_destination = str(Path(arcpy.env.scratchGDB) / 'GlobalIds')
+    temp_data = [scratch_hash_table, scratch_destination]
+    for dataset in temp_data:
+        if arcpy.Exists(dataset):
+            arcpy.management.Delete(dataset)
+    arcpy.management.Copy(hash_table, scratch_hash_table)
+    test_sde = str(Path(test_data_folder) / 'UPDATE_TESTS.sde')
+
+    change_detection = ChangeDetection(['ChangeDetection'], test_sde, hash_table=scratch_hash_table)
+
+    table = 'GlobalIdsTable'
+    crate = Crate(table, test_sde, str(Path(scratch_destination).parent), Path(scratch_destination).name)
+    crate.result = (Crate.CREATED, None)
+    core._create_destination_data(crate, skip_hash_field=True)
+    change_detection.current_hashes[f'update_tests.dbo.{table.casefold()}'] = 'hash'
+    result = change_detection.update(crate)
+
+    assert result[0] == Crate.CREATED
+
+    with arcpy.da.SearchCursor(scratch_destination, ['GlobalID', 'NAME'], 'NAME = \'JUAB\'') as cursor:
+        assert next(cursor)[0] == '{D5868F73-B65A-4B11-B346-D00E7A5043F7}'
+
 def test_can_handle_globalid_fields_without_index(test_gdb):
     hash_table = str(Path(test_gdb) / 'TableHashes')
     scratch_hash_table = str(Path(arcpy.env.scratchGDB) / Path(hash_table).name)

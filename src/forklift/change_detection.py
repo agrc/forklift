@@ -68,7 +68,7 @@ class ChangeDetection(object):
         elif crate.result[0] == Crate.CREATED:
             status = Crate.CREATED
 
-        if (_has_globalid_field(crate.source)):
+        if (crate.source_describe['hasGlobalID']):
             log.info(f'deleting and copying {crate.destination}')
             with arcpy.EnvManager(
                 geographicTransformations=crate.geographic_transformation,
@@ -101,14 +101,6 @@ class ChangeDetection(object):
                     insert_cursor.insertRow((table_name, self.current_hashes[table_name]))
 
         return (status, None)
-
-
-def _has_globalid_field(table):
-    '''table: string - path to a feature class
-
-    returns a boolean indicating if the table has a GlobalId field
-    '''
-    return len(arcpy.ListFields(table, field_type='GlobalID')) > 0
 
 
 def _get_hashes(table_paths):

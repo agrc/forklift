@@ -144,7 +144,7 @@ def test_update_new_dataset_with_change_detection(test_gdb):
     assert source_count == destination_count
 
 def test_filter_shape_fields():
-    assert core._filter_fields(['shape', 'test', 'Shape_length', 'Global_ID']) == ['test']
+    assert core._filter_fields(['shape', 'test', 'Shape_length']) == ['test']
 
 def test_hash_custom_source_key_text(test_gdb):
     skip_if_no_local_sde()
@@ -475,3 +475,17 @@ def test_schema_ignore_non_standard_shape_length_fields(test_gdb):
     result = core.check_schema(Crate('DirectionalSurveyHeaderSource', test_gdb, test_gdb, 'DirectionalSurveyHeaderDestination'))
 
     assert result
+
+
+def test_is_nonhashable_field():
+    describe_mock = {
+        'shapeFieldName': 'Shape',
+        'OIDFieldName': 'OBJECTID',
+        'globalIDFieldName': 'GlobalID',
+    }
+    assert core._is_nonhashable_field('SHAPE', describe_mock) == True
+    assert core._is_nonhashable_field('OBJECTID_1', describe_mock) == True
+    assert core._is_nonhashable_field('OBJECTID', describe_mock) == True
+    assert core._is_nonhashable_field('Globalid', describe_mock) == True
+    assert core._is_nonhashable_field('GoodField', describe_mock) == False
+    assert core._is_nonhashable_field('FORKLIFT_HASH', describe_mock) == True

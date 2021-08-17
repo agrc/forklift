@@ -205,7 +205,9 @@ def _hash(crate):
         changes.table = arcpy.CreateTable_management(scratch_gdb_path, crate.name)[0]
         _mirror_fields(crate.source, changes.table)
 
-    arcpy.AddField_management(changes.table, hash_field, 'TEXT', field_length=hash_field_length)
+    #: there's a possibility that source has a hash field already, e.g. harvesting ogm data from AGOL
+    if hash_field not in [field.name for field in crate.source_describe['fields']]:
+        arcpy.AddField_management(changes.table, hash_field, 'TEXT', field_length=hash_field_length)
 
     has_dups = False
     with arcpy.da.SearchCursor(crate.source, [field for field in fields if field != hash_field]) as cursor, \
@@ -315,7 +317,7 @@ def check_schema(crate):
 
         for field in arcpy.ListFields(dataset):
             #: don't worry about comparing managed fields
-            if not _is_naughty_field(field.name, describe):
+            if not _is_nonhashable_field(field.name, describe):
                 field_dict[field.name] = field
 
         return field_dict
@@ -383,25 +385,23 @@ def _filter_fields(fields):
 
     Filters out fields that mess up the update logic.
     '''
-    new_fields = [field for field in fields if not _is_naughty_field(field)]
+    new_fields = [field for field in fields if not _is_nonhashable_field(field)]
     new_fields.sort()
 
     return new_fields
 
 
-def _is_naughty_field(field, describe=None):
+def _is_nonhashable_field(field, describe=None):
     '''field: String
 
     returns: Boolean
 
     determines if field is a field that we want to exclude from hashing
     '''
-    #: global id's do not export to file geodatabase
-    #: removes objectid_ which is created by geoprocessing tasks and wouldn't be in destination source
-    skip_fields = ['global_id', 'globalid']
+    skip_fields = [hash_field.lower()]
 
     if describe is not None:
-        for prop in ['shapeFieldName', 'lengthFieldName', 'OIDFieldName']:
+        for prop in ['shapeFieldName', 'lengthFieldName', 'OIDFieldName', 'globalIDFieldName']:
             if prop in describe:
                 skip_fields.append(describe[prop].lower())
     field = field.lower()

@@ -207,7 +207,7 @@ def _hash(crate):
 
     #: there's a possibility that source has a hash field already, e.g. harvesting ogm data from AGOL
     if hash_field not in [field.name for field in crate.source_describe['fields']]:
-        arcpy.AddField_management(changes.table, hash_field, 'TEXT', field_length=hash_field_length)
+        arcpy.management.AddField(changes.table, hash_field, 'TEXT', field_length=hash_field_length)
 
     has_dups = False
     with arcpy.da.SearchCursor(crate.source, [field for field in fields if field != hash_field]) as cursor, \

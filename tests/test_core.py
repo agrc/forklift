@@ -486,6 +486,6 @@ def test_is_nonhashable_field():
     assert core._is_nonhashable_field('SHAPE', describe_mock) == True
     assert core._is_nonhashable_field('OBJECTID_1', describe_mock) == True
     assert core._is_nonhashable_field('OBJECTID', describe_mock) == True
-    assert core._is_nonhashable_field('Globalid', describe_mock) == True
+    assert core._is_nonhashable_field('Globalid', describe_mock) == False
     assert core._is_nonhashable_field('GoodField', describe_mock) == False
     assert core._is_nonhashable_field('FORKLIFT_HASH', describe_mock) == True

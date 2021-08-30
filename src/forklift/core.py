@@ -401,7 +401,7 @@ def _is_nonhashable_field(field, describe=None):
     skip_fields = [hash_field.lower()]
 
     if describe is not None:
-        for prop in ['shapeFieldName', 'lengthFieldName', 'OIDFieldName', 'globalIDFieldName']:
+        for prop in ['shapeFieldName', 'lengthFieldName', 'OIDFieldName']:
             if prop in describe:
                 skip_fields.append(describe[prop].lower())
     field = field.lower()

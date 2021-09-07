@@ -60,13 +60,13 @@ Interacting with forklift is done via the [command line interface](src/forklift/
 - `notify` - An array of emails that will be sent the summary report each time `forklift lift` is run.
 - `repositories` - A list of github repositories in the `<owner>/<name>` format that will be cloned/updated into the `warehouse` folder. A secure git repo can be added manually to the config in the format below:
 
-    ```json
-    "repositories": [{
-      "host": "gitlabs.com/",
-      "repo": "name/repo",
-      "token": "personal access token with `read_repository` access only"
-    }]
-    ```
+  ```json
+  "repositories": [{
+    "host": "gitlabs.com/",
+    "repo": "name/repo",
+    "token": "personal access token with `read_repository` access only"
+  }]
+  ```
 
 - `sendEmails` - A boolean value that determines whether or not to send forklift summary report emails after each lift.
 - `servers` - An object describing one or more production servers that data will be shipped to. See below for more information.
@@ -102,45 +102,47 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
 1. `forklift garage open` - Opens garage directory. Copy all connection.sde files to the forklift garage.
 1. `forklift git-update` - Updates pallet repos. Add any secrets or supplementary data your pallets need that is not in source control.
 1. Edit the `config.json` to add the arcgis server(s) to manage. The options property will be mixed in to all of the other servers.
-    - `username` ArcGIS admin username.
-    - `password` ArcGIS admin password.
-    - `host` ArcGIS host address eg: `myserver`. Validate this property by looking at the `machineName` property returned by `/arcgis/admin/machines?f=json`
-    - `port` ArcGIS server instance port eg: 6080
 
-    ```json
-    "servers": {
-       "options": {
-           "username": "mapserv",
-           "password": "test",
-           "port": 6080
-       },
-       "primary": {
-           "host": "this.is.the.qualified.name.as.seen.in.arcgis.server.machines",
-       },
-       "secondary": {
-           "host": "this.is.the.qualified.name.as.seen.in.arcgis.server.machines"
-       },
-       "backup": {
-           "host": "this.is.the.qualified.name.as.seen.in.arcgis.server.machines",
-           "username": "test",
-           "password": "password",
-           "port": 6443
-       }
-    }
-    ```
+   - `username` ArcGIS admin username.
+   - `password` ArcGIS admin password.
+   - `host` ArcGIS host address eg: `myserver`. Validate this property by looking at the `machineName` property returned by `/arcgis/admin/machines?f=json`
+   - `port` ArcGIS server instance port eg: 6080
+
+   ```json
+   "servers": {
+      "options": {
+          "username": "mapserv",
+          "password": "test",
+          "port": 6080
+      },
+      "primary": {
+          "host": "this.is.the.qualified.name.as.seen.in.arcgis.server.machines",
+      },
+      "secondary": {
+          "host": "this.is.the.qualified.name.as.seen.in.arcgis.server.machines"
+      },
+      "backup": {
+          "host": "this.is.the.qualified.name.as.seen.in.arcgis.server.machines",
+          "username": "test",
+          "password": "password",
+          "port": 6443
+      }
+   }
+   ```
 
 1. Edit the `config.json` to add the email notification properties. _(This is required for sending email reports)_
-    - `smtpServer` The SMTP server that you want to send emails with.
-    - `smtpPort` The SMTP port number.
-    - `fromAddress` The from email address for emails sent by forklift.
 
-    ```json
-    "email": {
-        "smtpServer": "smpt.server.address",
-        "smtpPort": 25,
-        "fromAddress": "noreply@utah.gov"
-    }
-    ```
+   - `smtpServer` The SMTP server that you want to send emails with.
+   - `smtpPort` The SMTP port number.
+   - `fromAddress` The from email address for emails sent by forklift.
+
+   ```json
+   "email": {
+       "smtpServer": "smpt.server.address",
+       "smtpPort": 25,
+       "fromAddress": "noreply@utah.gov"
+   }
+   ```
 
 1. `forklift lift`
 1. `forklift ship`
@@ -150,6 +152,7 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
 ### Upgrading Forklift
 
 From the root of the forklift source code folder:
+
 1. Activate forklift environment: `activate forklift`
 1. Pull any new updates from GitHub: `git pull origin master`
 1. Pip install with the upgrade option: `pip install .\ -U`
@@ -313,7 +316,7 @@ If you have pip installed forklift into your current environment, you may need t
 - Added `ERROR` as a possible result type for crates.
 - Removed unused crate property, `source_primary_key`
 - BREAKING CHANGE: Split up lift and ship to be independent commands.
-  - Replaced arcgis server env variables with config.json properties to allow for managing a silo'd  architecture or multiple machines not in a cluster
+  - Replaced arcgis server env variables with config.json properties to allow for managing a silo'd architecture or multiple machines not in a cluster
   - Replaced env variables with config.json properties for consistency.
   - Ship now shuts down the entire ArcGIS Server machine rather than specific services. It also now does this one machine at time to minimize downtime.
   - Removed static data processing since it can now be accomplished by dropping the data into the dropoff folder.

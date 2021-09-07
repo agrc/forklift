@@ -32,6 +32,7 @@ def create_default_config():
             'email': {
                 'smtpServer': 'send.state.ut.us',
                 'smtpPort': 25,
+                'apiKey': '',
                 'fromAddress': 'noreply@utah.gov'
             },
             'hashLocation': 'c:\\forklift\\data\\hashed',

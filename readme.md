@@ -55,7 +55,7 @@ Interacting with forklift is done via the [command line interface](src/forklift/
   - `hash` - A string that represents a unique hash of the entirety of the data in the table such that any change to data in the table will result in a new value.
 - `configuration` - A configuration string (`Production`, `Staging`, or `Dev`) that is passed to `Pallet:build` to allow a pallet to use different settings based on how forklift is being run. Defaults to `Production`.
 - `dropoffLocation` - The folder location where production ready files will be placed. This data will be compressed and will not contain any forklift artifacts. Pallets place their data in this location within their `copy_data` property.
-- `email` - An object containing `fromAddress`, `smptPort`, and `smtpServer` for sending report emails.
+- `email` - An object containing `fromAddress`, and `smptPort`, and `smtpServer` or a sendgrid `apiKey` for sending report emails.
 - `hashLocation` - The folder location where forklift creates and manages data. This data contains hash digests that are used to check for changes. Referencing this location within a pallet is done by: `os.path.join(self.staging_rack, 'the.gdb')`.
 - `notify` - An array of emails that will be sent the summary report each time `forklift lift` is run.
 - `repositories` - A list of github repositories in the `<owner>/<name>` format that will be cloned/updated into the `warehouse` folder. A secure git repo can be added manually to the config in the format below:

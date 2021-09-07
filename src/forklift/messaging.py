@@ -9,10 +9,13 @@ A module that contains a method for sending emails
 import gzip
 import io
 import logging
+from base64 import b64encode
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from pathlib import Path
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail, Attachment, Disposition, FileContent, FileName, FileType
 from smtplib import SMTP
 
 import pkg_resources
@@ -54,7 +57,6 @@ def send_email(to, subject, body, attachments=[]):
     else:
         return _send_email_with_smtp(email_server, to, subject, body, attachments)
 
-
 def send_to_slack(url, messages):
     '''sends a message to the webhook url
     messages: the blocks to send to slack split at the maximum value of 50'''
@@ -72,6 +74,51 @@ def send_to_slack(url, messages):
 
         if response.status_code != 200:
             raise ValueError(f'Request to slack returned an error {response.status_code}, the response is: {response.text}')
+
+def _send_email_with_sendgrid(email_server, to, subject, body, attachments=[]):
+    '''
+    email_server: dict
+    to: string | string[]
+    subject: string
+    body: string | MIMEMultipart
+    attachments: string[] - paths to text files to attach to the email
+
+    Send an email.
+    '''
+    from_address = email_server['fromAddress']
+    api_key = email_server['apiKey']
+
+    if None in [from_address, api_key]:
+        log.warning('Required environment variables for sending emails do not exist. No emails sent. See README.md for more details.')
+
+        return
+
+    message = Mail(
+        from_email=from_address,
+        to_emails=to,
+        subject=subject,
+        html_content=body)
+
+    for path in attachments:
+        encoded_log = _gzip(path)
+
+        if encoded_log is None:
+            continue
+
+        content = b64encode(encoded_log).decode()
+
+        message.attachment = Attachment(
+            FileContent(content), FileName(f'{path.name}.gz'), FileType('x-gzip'), Disposition('attachment')
+        )
+
+    try:
+        client = SendGridAPIClient(api_key)
+
+        return client.send(message)
+    except Exception as e:
+        log.error(f'Error sending email with SendGrid: {e}')
+
+        return e
 
 def _send_email_with_smtp(email_server, to, subject, body, attachments=[]):
     '''

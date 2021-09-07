@@ -12,7 +12,7 @@ import logging
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from os.path import basename, isfile
+from pathlib import Path
 from smtplib import SMTP
 
 import pkg_resources
@@ -111,19 +111,34 @@ def _send_email_with_smtp(email_server, to, subject, body, attachments=[]):
     message['To'] = to_addresses
 
     for path in attachments:
-        if isfile(path):
-            with (open(path, 'rb')) as log_file, io.BytesIO() as encoded_log:
-                gzipper = gzip.GzipFile(mode='wb', fileobj=encoded_log)
-                gzipper.writelines(log_file)
-                gzipper.close()
+        path = Path(path)
+        content = _gzip(path)
 
-                attachment = MIMEApplication(encoded_log.getvalue(), 'x-gzip')
-                attachment.add_header('Content-Disposition', 'attachment; filename="{}"'.format(basename(path + '.gz')))
+        attachment = MIMEApplication(content, 'x-gzip')
+        attachment.add_header(f'Content-Disposition', 'attachment; filename="{path.name}.gz"')
 
-                message.attach(attachment)
+        message.attach(attachment)
 
     smtp = SMTP(smtp_server, smtp_port)
     smtp.sendmail(from_address, to, message.as_string())
     smtp.quit()
 
     return smtp
+
+def _gzip(location):
+    '''
+    location: string - path to a file
+
+    gzip a file and return the bytes to the gzipped file
+    '''
+    path = Path(location)
+
+    if not path.is_file():
+        return None
+
+    with (open(path, 'rb')) as log_file, io.BytesIO() as encoded_log:
+        gzipper = gzip.GzipFile(mode='wb', fileobj=encoded_log)
+        gzipper.writelines(log_file)
+        gzipper.close()
+
+        return encoded_log.getvalue()

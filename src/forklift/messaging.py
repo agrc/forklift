@@ -48,6 +48,41 @@ def send_email(to, subject, body, attachments=[]):
             return
 
     email_server = get_config_prop('email')
+
+    if 'apiKey' in email_server and email_server['apiKey'] is not None:
+        return _send_email_with_sendgrid(email_server, to, subject, body, attachments)
+    else:
+        return _send_email_with_smtp(email_server, to, subject, body, attachments)
+
+
+def send_to_slack(url, messages):
+    '''sends a message to the webhook url
+    messages: the blocks to send to slack split at the maximum value of 50'''
+
+    if messages is None or url is None:
+        return
+
+    if not isinstance(messages, list):
+        messages = [messages]
+
+    for message in messages:
+        response = requests.post(
+            url, data=message, headers={'Content-Type': 'application/json'}
+        )
+
+        if response.status_code != 200:
+            raise ValueError(f'Request to slack returned an error {response.status_code}, the response is: {response.text}')
+
+def _send_email_with_smtp(email_server, to, subject, body, attachments=[]):
+    '''
+    email_server: dict
+    to: string | string[]
+    subject: string
+    body: string | MIMEMultipart
+    attachments: string[] - paths to text files to attach to the email
+
+    Send an email.
+    '''
     from_address = email_server['fromAddress']
     smtp_server = email_server['smtpServer']
     smtp_port = email_server['smtpPort']
@@ -92,21 +127,3 @@ def send_email(to, subject, body, attachments=[]):
     smtp.quit()
 
     return smtp
-
-def send_to_slack(url, messages):
-    '''sends a message to the webhook url
-    messages: the blocks to send to slack split at the maximum value of 50'''
-
-    if messages is None or url is None:
-        return
-
-    if not isinstance(messages, list):
-        messages = [messages]
-
-    for message in messages:
-        response = requests.post(
-            url, data=message, headers={'Content-Type': 'application/json'}
-        )
-
-        if response.status_code != 200:
-            raise ValueError(f'Request to slack returned an error {response.status_code}, the response is: {response.text}')

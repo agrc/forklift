@@ -51,7 +51,8 @@ class TestConfigInit(CleanUpAlternativeConfig):
                     u'email': {
                         u'smtpServer': u'send.state.ut.us',
                         u'smtpPort': 25,
-                        u'fromAddress': u'noreply@utah.gov'
+                        u'apiKey': '',
+                        u'fromAddress': u'noreply@utah.gov',
                     },
                     u'hashLocation': u'c:\\forklift\\data\\hashed',
                     u'notify': [u'test@utah.gov'],

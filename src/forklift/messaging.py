@@ -99,7 +99,9 @@ def _send_email_with_sendgrid(email_server, to, subject, body, attachments=[]):
         subject=subject,
         html_content=body)
 
-    for path in attachments:
+    for location in attachments:
+        path = Path(location)
+
         encoded_log = _gzip(path)
 
         if encoded_log is None:

@@ -659,10 +659,13 @@ def _send_report_email(template, report_object, subject, include_packing_slip=Fa
         packing_slip = join(config.get_config_prop('dropoffLocation'), packing_slip_file)
         attachments.append(packing_slip)
 
-    send_email(config.get_config_prop('notify'),
+    try:
+        send_email(config.get_config_prop('notify'),
                'Forklift {} Report for {}'.format(subject, report_object['hostname']),
                email_content,
                attachments)
+    except Exception as e:
+        log.error('error sending email: %s', e, exc_info=True)
 
     return email_content
 

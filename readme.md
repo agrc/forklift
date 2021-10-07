@@ -83,6 +83,10 @@ forklift config set --key sendEmails --value False
 
 If the property is a list then the value is appended to the existing list.
 
+### Metadata
+
+Metadata is only copied from source to destination when the destination is first created, not on subsequent data updates. If you want to push metadata updates, delete the destination in the hashing folder and then it will be updated when it is recreated on the next lift.
+
 ### Install to First Successful Run
 
 From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/arcpy/get-started/using-conda-with-arcgis-pro.htm) (`c:\Program Files\ArcGIS\Pro\bin\Python\scripts\proenv.bat`):

@@ -489,3 +489,14 @@ def test_is_nonhashable_field():
     assert core._is_nonhashable_field('Globalid', describe_mock) == False
     assert core._is_nonhashable_field('GoodField', describe_mock) == False
     assert core._is_nonhashable_field('FORKLIFT_HASH', describe_mock) == True
+
+
+def test_preserve_metadata(test_gdb):
+    crate = Crate('PreserveMetadata', test_gdb, test_gdb, 'PreserveMetadata_Dest')
+    source_metadata = arcpy.metadata.Metadata(crate.source)
+    core._create_destination_data(crate)
+    destination_metadata = arcpy.metadata.Metadata(crate.destination)
+
+    assert source_metadata.description == destination_metadata.description
+    assert source_metadata.title == destination_metadata.title
+    assert source_metadata.summary == destination_metadata.summary

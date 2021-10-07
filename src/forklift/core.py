@@ -271,6 +271,7 @@ def _create_destination_data(crate, skip_hash_field=False):
         else:
             raise Exception('destination_workspace does not exist! {}'.format(crate.destination_workspace))
 
+    source_metadata = arcpy.metadata.Metadata(crate.source)
     if crate.is_table():
         log.warning('creating new table: %s', crate.destination)
         arcpy.CreateTable_management(crate.destination_workspace, crate.destination_name)
@@ -286,6 +287,9 @@ def _create_destination_data(crate, skip_hash_field=False):
             has_z='SAME_AS_TEMPLATE',
             spatial_reference=crate.destination_coordinate_system or crate.source_describe['spatialReference']
         )
+    destination_metadata = arcpy.metadata.Metadata(crate.destination)
+    destination_metadata.copy(source_metadata)
+    destination_metadata.save()
 
     if not skip_hash_field:
         arcpy.AddField_management(crate.destination, hash_field, 'TEXT', field_length=hash_field_length)

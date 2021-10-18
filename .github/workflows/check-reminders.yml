@@ -1,4 +1,4 @@
-name: 'look for past due reminders and notify'
+name: "look for past due reminders and notify"
 
 on:
   schedule:
@@ -10,5 +10,5 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: check reminders and notify
-      uses: agrc/reminder-action@v1.0.0
+      - name: check reminders and notify
+        uses: agrc/reminder-action@v1

@@ -91,7 +91,7 @@ Metadata is only copied from source to destination when the destination is first
 
 From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/arcpy/get-started/using-conda-with-arcgis-pro.htm) (`c:\Program Files\ArcGIS\Pro\bin\Python\scripts\proenv.bat`):
 
-1. Install [git](https://git-scm.com/).
+1. Install [git](https://gitforwindows.org/).
 1. Install [Visual Studio Build tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) with the Desktop development with C++ module
 1. Install [ArcGIS Pro](https://pro.arcgis.com/en/pro-app/).
 1. Add ArcGIS Pro to your path.

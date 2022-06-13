@@ -128,7 +128,10 @@ def update(crate, validate_crate, change_detection):
                     #: reproject data if source is different than destination
                     if crate.needs_reproject():
                         changes.table = arcpy.Project_management(
-                            changes.table, changes.table + reproject_temp_suffix, crate.destination_coordinate_system, crate.geographic_transformation
+                            changes.table, changes.table + reproject_temp_suffix,
+                            crate.destination_coordinate_system,
+                            crate.geographic_transformation,
+                            in_coor_system=crate.source_describe['spatialReference'],
                         )[0]
 
                     if not crate.is_table():

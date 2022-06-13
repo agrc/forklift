@@ -410,7 +410,7 @@ class Crate(object):
                 if (self.source.startswith('http')):
                     self.log.warn('source spatial reference is undefined attempting to find it via arcgis package')
                     feature_layer = arcgis.features.FeatureLayer(self.source)
-                    self.source_describe['spatialReference'] = arcpy.SpatialReference(feature_layer.properties['spatialReference']['wkid'])
+                    self.source_describe['spatialReference'] = arcpy.SpatialReference(feature_layer.properties['sourceSpatialReference']['wkid'])
             needs_reproject = self.destination_coordinate_system.name != self.source_describe['spatialReference'].name
 
         return needs_reproject

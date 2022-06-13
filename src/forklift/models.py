@@ -13,6 +13,7 @@ from time import perf_counter
 
 from xxhash import xxh64
 
+import arcgis
 import arcpy
 
 from . import config, seat
@@ -404,6 +405,12 @@ class Crate(object):
         if self.destination_coordinate_system is None:
             needs_reproject = False
         else:
+            #: some feature/map services don't report a spatial reference so let's just assume they are 3857
+            if self.source_describe['spatialReference'] is None:
+                if (self.source.startswith('http')):
+                    self.log.warn('source spatial reference is undefined attempting to find it via arcgis package')
+                    feature_layer = arcgis.features.FeatureLayer(self.source)
+                    self.source_describe['spatialReference'] = arcpy.SpatialReference(feature_layer.properties['spatialReference']['wkid'])
             needs_reproject = self.destination_coordinate_system.name != self.source_describe['spatialReference'].name
 
         return needs_reproject

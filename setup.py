@@ -37,6 +37,7 @@ setup(
     ],
     keywords=[],
     install_requires=[
+        'arcgis',
         'colorama==0.*',
         'docopt==0.6.*',
         'gitpython==3.*',

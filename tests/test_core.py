@@ -34,7 +34,10 @@ def raise_validation_exception(crate):
 
 def delete_if_arcpy_exists(data):
     if arcpy.Exists(data):
-        arcpy.Delete_management(data)
+        try:
+            arcpy.Delete_management(data)
+        except:
+            pass
 
 
 #: check for local sde

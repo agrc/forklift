@@ -112,7 +112,7 @@ def update(crate, validate_crate, change_detection):
                     if status != Crate.CREATED:
                         change_status = (Crate.UPDATED, None)
 
-                    log.debug('deleting from destintation table')
+                    log.debug('deleting from destination table')
                     with arcpy.da.UpdateCursor(crate.destination, hash_field) as cursor:
                         for row in cursor:
                             if row[0] in changes._deletes:

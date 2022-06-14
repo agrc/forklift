@@ -134,11 +134,11 @@ def update(crate, validate_crate, change_detection):
                             in_coor_system=crate.source_describe['spatialReference'],
                         )[0]
 
-                    if not crate.is_table():
-                        changes.fields[shape_field_index] = changes.fields[shape_field_index].rstrip('WKT')
-
                     #: cache this so we don't have to call it for every record
                     is_table = crate.is_table()
+                    if not is_table:
+                        changes.fields[shape_field_index] = changes.fields[shape_field_index].rstrip('WKT')
+
                     with arcpy.da.SearchCursor(changes.table, changes.fields) as add_cursor,\
                             arcpy.da.InsertCursor(crate.destination, changes.fields) as cursor:
                         for row in add_cursor:

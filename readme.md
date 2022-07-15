@@ -97,7 +97,7 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
 1. Add ArcGIS Pro to your path.
    - If installed for all users: `c:\Program Files\ArcGIS\Pro\bin\Python\scripts\`.
    - If install for single user: `C:\Users\{USER}\AppData\Local\Programs\ArcGIS\Pro\bin\Python\Scripts`.
-1. Create a conda environment for forklift `conda create --name forklift`.
+1. Create a conda environment for forklift `conda create --name forklift python=3.9`.
 1. Activate the conda environment `activate forklift`.
 1. `conda install arcpy -c esri`
 1. Chckout forklift repository: `git clone https://github.com/agrc/forklift.git` 

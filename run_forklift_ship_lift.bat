@@ -1,3 +1,2 @@
 call activate forklift
-forklift ship --send-emails
-forklift lift --send-emails
+forklift ship --send-emails && forklift lift --send-emails

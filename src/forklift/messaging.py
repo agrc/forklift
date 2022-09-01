@@ -52,7 +52,7 @@ def send_email(to, subject, body, attachments=[]):
 
     email_server = get_config_prop('email')
 
-    if 'apiKey' in email_server and email_server['apiKey'] is not None and email_server['apiKey'].strip() is not '':
+    if 'apiKey' in email_server and email_server['apiKey'] is not None and email_server['apiKey'].strip() != '':
         return _send_email_with_sendgrid(email_server, to, subject, body, attachments)
     else:
         return _send_email_with_smtp(email_server, to, subject, body, attachments)

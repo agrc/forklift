@@ -80,6 +80,11 @@ def get_config_prop(key):
         return _get_config()[key]
 
     servers = _get_config()[key]
+
+    if servers is None or len(servers) == 0:
+        log.info('no servers defined in config')
+        return {}
+
     if 'options' not in servers.keys():
         return servers
 

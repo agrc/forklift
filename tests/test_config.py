@@ -85,3 +85,13 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(servers['1'], {'machineName': '1-host', 'username': 'username', 'password': 'password', 'port': 0})
 
         self.assertEqual(servers['2'], {'machineName': '2-host', 'username': 'other-username', 'password': 'other-password', 'port': 1})
+
+    @patch('forklift.config._get_config')
+    def test_config_values_null_servers(self, mock_obj):
+        mock_obj.return_value = {
+            'servers': None
+        }
+
+        servers = config.get_config_prop('servers')
+
+        self.assertEqual(servers, {})

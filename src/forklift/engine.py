@@ -207,10 +207,6 @@ def ship_data(pallet_arg=None, by_service=False):
     #: look for servers in config
     servers = config.get_config_prop('servers')
 
-    if servers is None or len(servers) == 0:
-        log.info('no servers defined in config')
-        servers = []
-
     #: look for drop off location
     pickup_location = config.get_config_prop('dropoffLocation')
 

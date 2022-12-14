@@ -11,6 +11,7 @@ import shutil
 import socket
 from os import listdir, makedirs, path, remove, walk
 from time import perf_counter
+from subprocess import run, PIPE, STDOUT
 
 import arcpy
 
@@ -32,6 +33,7 @@ def process_checklist(config):
     if not arcpy.Exists(path.join(hash_location, change_detection.hash_fgdb_name)):
         log.debug('creating change detection fgdb')
         arcpy.management.CreateFileGDB(hash_location, change_detection.hash_fgdb_name)
+
 
 def _remove_if_exists(location):
     '''location: string - path to folder
@@ -276,47 +278,28 @@ def copy_data(from_location, to_template, packing_slip_file, machine_name=None):
         log.info('copying {} to {}...'.format(source, destination_path))
         start_seconds = perf_counter()
         try:
-            if path.exists(destination_path):
-                log.debug('%s exists moving', destination_path)
-                shutil.move(destination_path, destination_path + 'x')
+            robo_status = run(['robocopy', source_path, destination_path,
+                '/MIR', #: mirror source
+                '/im', #: Include modified files
+                '/is', #: Includes the same files.
+                '/it', #: included tweaked files
+                '/fft', #: Assumes FAT file times
+                '/z', #: Copies files in restartable mode.
+                '/xf',
+                '*.lock', #: ignores lock files
+                '/w:1', #: waits for 1 second
+                '/r:500', #: retries 500 times ~8 minutes
+                '/nfl' #: shorten logging
+            ], stdout=PIPE, stderr=STDOUT)
 
-            log.debug('copying source to destination')
-            if path.isfile(source_path):
-                shutil.copy(source_path, destination_path)
-            else:
-                shutil.copytree(source_path, destination_path, ignore=shutil.ignore_patterns('*.lock'))
-
-            temp_path = destination_path + 'x'
-            if path.exists(temp_path):
-                log.debug('removing temporary item: %s', temp_path)
-                if path.isfile(temp_path):
-                    remove(temp_path)
-                else:
-                    shutil.rmtree(temp_path)
+            if robo_status.returncode > 8:
+                raise Exception(f'Robocopy failed.\nReturn code: {robo_status.returncode}\nError: {robo_status.stderr}')
 
             successful.append(source)
             log.info('copy successful in %s', seat.format_time(perf_counter() - start_seconds))
         except Exception:
-            try:
-                #: There is still a lock?
-                #: The service probably wasn't shut down
-                #: if there was a problem and the temp gdb exists
-                #: since we couldn't delete it before we probably can't delete it now
-                #: so take what is in x and copy it over what it can in the original
-                #: that _should_ leave the gdb in a functioning state
-                temp_path = destination_path + 'x'
-                if path.exists(destination_path) and path.exists(temp_path):
-                    log.debug('cleaning up %s', destination_path)
-                    copy_with_overwrite(temp_path, destination_path)
-                    if path.isfile(temp_path):
-                        remove(temp_path)
-                    else:
-                        shutil.rmtree(temp_path)
-            except Exception:
-                log.error('%s might be in a corrupted state', destination_path, exc_info=True)
-                failed[source] = 'might be in a corrupted state'
-
             log.error('there was an error copying %s to %s', source, destination_path, exc_info=True)
+
             failed.setdefault(source, '')
             failed[source] += 'there was an error copying {} to {}'.format(source, destination_path)
 

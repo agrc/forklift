@@ -9,10 +9,10 @@ A module for testing crate.py
 import unittest
 from os import path
 
+from arcpy import SpatialReference, env
 from mock import patch
 from xxhash import xxh64
 
-from arcpy import SpatialReference, env
 from forklift.models import Crate, names_cache
 
 current_folder = path.dirname(path.abspath(__file__))

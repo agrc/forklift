@@ -9,9 +9,9 @@ A module for testing lift.py
 import unittest
 from os import path
 
+import arcpy
 from mock import Mock, patch
 
-import arcpy
 from forklift import core, engine, lift
 from forklift.models import Crate, Pallet
 
@@ -118,6 +118,7 @@ class TestLift(unittest.TestCase):
         import arcpy
 
         def modify_workspace(value):
+            # pylint: disable-next=assigning-non-slot
             arcpy.env.workspace = value
 
         # pylint: disable=assignment-from-no-return

@@ -11,10 +11,10 @@ import unittest
 from os import path
 from pathlib import Path
 
+import arcpy
 import pytest
 from mock import MagicMock, Mock, patch
 
-import arcpy
 from forklift import core, engine
 from forklift.change_detection import ChangeDetection
 from forklift.exceptions import ValidationException

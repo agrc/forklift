@@ -7,9 +7,9 @@ a module containing tests for the change detection module
 import logging
 from pathlib import Path
 
+import arcpy
 from pytest import raises
 
-import arcpy
 from forklift import core
 from forklift.change_detection import (ChangeDetection, _get_hashes,
                                        hash_field, table_name_field)

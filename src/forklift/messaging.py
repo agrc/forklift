@@ -164,7 +164,7 @@ def _send_email_with_smtp(email_server, to, subject, body, attachments=[]):
         content = _gzip(path)
 
         attachment = MIMEApplication(content, 'x-gzip')
-        attachment.add_header(f'Content-Disposition', 'attachment; filename="{path.name}.gz"')
+        attachment.add_header(f'Content-Disposition', f'attachment; filename="{path.name}.gz"')
 
         message.attach(attachment)
 

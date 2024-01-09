@@ -461,12 +461,15 @@ def _mirror_fields(source, destination):
         'BigInteger': 'BIGINTEGER',
         'Blob': 'BLOB',
         'Date': 'DATE',
+        'DateOnly': 'DATEONLY',
         'Double': 'DOUBLE',
         'Guid': 'GUID',
         'Integer': 'LONG',
         'Single': 'FLOAT',
         'SmallInteger': 'SHORT',
-        'String': 'TEXT'
+        'String': 'TEXT',
+        'TimeOnly': 'TIMEONLY',
+        'TimestampOffset': 'TIMESTAMPOFFSET'
     }
 
     add_fields = []

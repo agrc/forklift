@@ -458,6 +458,7 @@ def _mirror_fields(source, destination):
     adds all of the fields in source to destination
     '''
     TYPES = {
+        'BigInteger': 'BIGINTEGER',
         'Blob': 'BLOB',
         'Date': 'DATE',
         'Double': 'DOUBLE',

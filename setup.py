@@ -43,7 +43,7 @@ setup(
         'gitpython==3.*',
         'ndg-httpsclient==0.*',
         'pyasn1==0.*',
-        'pyopenssl==21.*',
+        'pyopenssl==23.*',
         'pystache==0.*',
         'requests==2.*',
         'sendgrid==6.*',

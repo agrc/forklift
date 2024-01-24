@@ -103,50 +103,53 @@ def update(crate, validate_crate, change_detection):
             changes = _hash(crate)
 
         if changes.has_changes():
-            log.debug('starting edit session...')
-            with arcpy.da.Editor(crate.destination_workspace):
-                #: delete un-accessed hashes
-                if changes.has_deletes():
-                    log.debug('number of rows to be deleted: %d', len(changes._deletes))
-                    status, _ = change_status
-                    if status != Crate.CREATED:
-                        change_status = (Crate.UPDATED, None)
+            if ('hasGlobalID' in crate.source_describe and crate.source_describe['hasGlobalID']):
+                update_while_preserving_global_ids(crate)
+            else:
+                log.debug('starting edit session...')
+                with arcpy.da.Editor(crate.destination_workspace):
+                    #: delete un-accessed hashes
+                    if changes.has_deletes():
+                        log.debug('number of rows to be deleted: %d', len(changes._deletes))
+                        status, _ = change_status
+                        if status != Crate.CREATED:
+                            change_status = (Crate.UPDATED, None)
 
-                    log.debug('deleting from destination table')
-                    with arcpy.da.UpdateCursor(crate.destination, hash_field) as cursor:
-                        for row in cursor:
-                            if row[0] in changes._deletes:
-                                cursor.deleteRow()
+                        log.debug('deleting from destination table')
+                        with arcpy.da.UpdateCursor(crate.destination, hash_field) as cursor:
+                            for row in cursor:
+                                if row[0] in changes._deletes:
+                                    cursor.deleteRow()
 
-                #: add new/updated rows
-                if changes.has_adds():
-                    log.debug('number of rows to be added: %d', len(changes.adds))
-                    status, message = change_status
-                    if status != Crate.CREATED:
-                        change_status = (Crate.UPDATED, None)
+                    #: add new/updated rows
+                    if changes.has_adds():
+                        log.debug('number of rows to be added: %d', len(changes.adds))
+                        status, message = change_status
+                        if status != Crate.CREATED:
+                            change_status = (Crate.UPDATED, None)
 
-                    #: reproject data if source is different than destination
-                    if crate.needs_reproject():
-                        changes.table = arcpy.Project_management(
-                            changes.table, changes.table + reproject_temp_suffix,
-                            crate.destination_coordinate_system,
-                            crate.geographic_transformation,
-                            in_coor_system=crate.source_describe['spatialReference'],
-                        )[0]
+                        #: reproject data if source is different than destination
+                        if crate.needs_reproject():
+                            changes.table = arcpy.Project_management(
+                                changes.table, changes.table + reproject_temp_suffix,
+                                crate.destination_coordinate_system,
+                                crate.geographic_transformation,
+                                in_coor_system=crate.source_describe['spatialReference'],
+                            )[0]
 
-                    #: cache this so we don't have to call it for every record
-                    is_table = crate.is_table()
-                    if not is_table:
-                        changes.fields[shape_field_index] = changes.fields[shape_field_index].rstrip('WKT')
+                        #: cache this so we don't have to call it for every record
+                        is_table = crate.is_table()
+                        if not is_table:
+                            changes.fields[shape_field_index] = changes.fields[shape_field_index].rstrip('WKT')
 
-                    with arcpy.da.SearchCursor(changes.table, changes.fields) as add_cursor,\
-                            arcpy.da.InsertCursor(crate.destination, changes.fields) as cursor:
-                        for row in add_cursor:
-                            #: skip null geometries
-                            if not is_table and row[shape_field_index] is None:
-                                continue
+                        with arcpy.da.SearchCursor(changes.table, changes.fields) as add_cursor,\
+                                arcpy.da.InsertCursor(crate.destination, changes.fields) as cursor:
+                            for row in add_cursor:
+                                #: skip null geometries
+                                if not is_table and row[shape_field_index] is None:
+                                    continue
 
-                            cursor.insertRow(row)
+                                cursor.insertRow(row)
 
             if changes.has_dups:
                 change_status = (Crate.UPDATED_OR_CREATED_WITH_WARNINGS, 'duplicate features detected!')
@@ -480,3 +483,27 @@ def _mirror_fields(source, destination):
         add_fields.append([field.name, TYPES[field.type], field.aliasName, field.length])
 
     arcpy.management.AddFields(destination, add_fields)
+
+
+def update_while_preserving_global_ids(crate, skip_hash_field=False):
+    '''
+    crate: Crate
+
+    updates the destination data while preserving global ids
+    '''
+    log.info(f'GlobalID field detected. Deleting and copying {crate.destination}')
+    with arcpy.EnvManager(
+        geographicTransformations=crate.geographic_transformation,
+        preserveGlobalIds=True,
+        outputCoordinateSystem=crate.destination_coordinate_system
+    ):
+        arcpy.management.Delete(crate.destination)
+
+        #: the only way to preserve global id values when exporting to fgdb is to use these tools
+        if crate.is_table():
+            arcpy.conversion.TableToTable(crate.source, crate.destination_workspace, crate.destination_name)
+        else:
+            arcpy.conversion.FeatureClassToFeatureClass(crate.source, crate.destination_workspace, crate.destination_name)
+
+    if not skip_hash_field:
+        arcpy.AddField_management(crate.destination, hash_field, 'TEXT', field_length=hash_field_length)

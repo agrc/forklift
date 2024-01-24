@@ -10,6 +10,7 @@ from os import path
 import arcpy
 
 from . import config
+from .core import update_while_preserving_global_ids
 from .models import Crate
 
 log = logging.getLogger('forklift')
@@ -68,20 +69,8 @@ class ChangeDetection(object):
         elif crate.result[0] == Crate.CREATED:
             status = Crate.CREATED
 
-        if (crate.source_describe['hasGlobalID']):
-            log.info(f'deleting and copying {crate.destination}')
-            with arcpy.EnvManager(
-                geographicTransformations=crate.geographic_transformation,
-                preserveGlobalIds=True,
-                outputCoordinateSystem=crate.destination_coordinate_system
-            ):
-                arcpy.management.Delete(crate.destination)
-
-                #: the only way to preserve global id values when exporting to fgdb is to use these tools
-                if crate.is_table():
-                    arcpy.conversion.TableToTable(crate.source, crate.destination_workspace, crate.destination_name)
-                else:
-                    arcpy.conversion.FeatureClassToFeatureClass(crate.source, crate.destination_workspace, crate.destination_name)
+        if ('hasGlobalID' in crate.source_describe and crate.source_describe['hasGlobalID']):
+            update_while_preserving_global_ids(crate, skip_hash_field=True)
         else:
             log.info(f'truncating and loading {crate.destination}')
             arcpy.management.TruncateTable(crate.destination)

@@ -1,14 +1,8 @@
 [report]
-skip_covered = True
-show_missing = True
-precision = 2
 exclude_lines =
-  def __repr__
-  continue
-  raise NotImplementedError
-  if __name__ == .__main__.:
-  log
-  print
+    # Don't complain if non-runnable code isn't run:
+    if __name__ == .__main__.
+
 [run]
 omit =
-  src/forklift/__main__.py
+    src/forklift/__main__.py

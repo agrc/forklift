@@ -1,0 +1,33 @@
+name: Push Events
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release-please:
+    name: Create release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.release-please.outputs.release_created }}
+
+    steps:
+      - name: 🚀 Create Release
+        id: release-please
+        uses: agrc/release-composite-action@v1
+        with:
+          release-type: python
+          prerelease: ${{ github.ref_name == 'dev' }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          github-app-id: ${{ secrets.UGRC_RELEASE_BOT_APP_ID }}
+          github-app-key: ${{ secrets.UGRC_RELEASE_BOT_APP_KEY }}
+          github-app-name: ${{ secrets.UGRC_RELEASE_BOT_NAME }}
+          github-app-email: ${{ secrets.UGRC_RELEASE_BOT_EMAIL }}

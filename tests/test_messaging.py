@@ -9,8 +9,7 @@ A module that contains tests for messaging.py
 import unittest
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-
-from mock import patch
+from unittest.mock import patch
 
 from forklift import messaging
 

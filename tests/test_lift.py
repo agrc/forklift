@@ -8,10 +8,9 @@ A module for testing lift.py
 
 import unittest
 from os import path
+from unittest.mock import Mock, patch
 
 import arcpy
-from mock import Mock, patch
-
 from forklift import core, engine, lift
 from forklift.models import Crate, Pallet
 

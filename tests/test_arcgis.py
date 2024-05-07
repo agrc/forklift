@@ -8,11 +8,10 @@ A module that tests arcgis.py
 
 import unittest
 from time import time
+from unittest.mock import Mock, call, patch
 
 import pytest
 import requests
-from mock import Mock, call, patch
-
 from forklift.arcgis import LightSwitch
 
 

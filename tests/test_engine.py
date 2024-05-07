@@ -10,10 +10,9 @@ import unittest
 from json import loads
 from os import makedirs, remove, rmdir
 from os.path import abspath, dirname, exists, join
+from unittest.mock import Mock, mock_open, patch
 
 import pytest
-from mock import Mock, mock_open, patch
-
 from forklift import config, core, engine
 from forklift.models import Crate
 

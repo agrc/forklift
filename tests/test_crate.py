@@ -8,12 +8,11 @@ A module for testing crate.py
 
 import unittest
 from os import path
+from unittest.mock import patch
 
 from arcpy import SpatialReference, env
-from mock import patch
-from xxhash import xxh64
-
 from forklift.models import Crate, names_cache
+from xxhash import xxh64
 
 current_folder = path.dirname(path.abspath(__file__))
 test_gdb = path.join(current_folder, "data", "test_crate", "data.gdb")

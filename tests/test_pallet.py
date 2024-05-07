@@ -8,8 +8,7 @@ A module that contains tests for the pallet module.
 
 import unittest
 from time import sleep
-
-from mock import patch
+from unittest.mock import patch
 
 from forklift.models import Crate, Pallet
 

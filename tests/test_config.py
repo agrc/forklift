@@ -8,8 +8,7 @@ A module that contains tests for config.py
 
 import unittest
 from os import remove
-
-from mock import patch
+from unittest.mock import patch
 
 from forklift import config
 

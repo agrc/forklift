@@ -8,4 +8,4 @@ minversion = "6.0"
 testpaths = ["tests", "src"]
 norecursedirs = [".env", "data", ".github", ".vscode"]
 console_output_style = "count"
-addopts = "--cov-branch --cov=projectname --cov-report term --cov-report xml:cov.xml --instafail"
+addopts = "--cov-branch --cov=projectname --cov-report term --cov-report xml:cov.xml --instafail -p no:faulthandler"

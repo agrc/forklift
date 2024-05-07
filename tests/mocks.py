@@ -1,17 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''
+"""
 mocks
 ----------------------------------
 mock arcpy for testing
-'''
+"""
 
 
 class Describe(object):
-
     @property
     def OIDFieldName(self):
-        return 'OBJECTID'
+        return "OBJECTID"
 
     @property
     def hasOID(self):
@@ -23,7 +22,7 @@ class Describe(object):
 
     @property
     def datasetType(self):
-        return ''
+        return ""
 
     @property
     def spatialReference(self):
@@ -34,7 +33,6 @@ class Describe(object):
 
 
 class SpatialReference(object):
-
     @property
     def name(self):
-        return ''
+        return ""

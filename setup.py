@@ -4,12 +4,12 @@
 setup.py
 A module that installs forklift
 """
+
 import glob
 from os.path import basename, splitext
 from pathlib import Path
 
 from setuptools import find_packages, setup
-
 
 setup(
     name="forklift",

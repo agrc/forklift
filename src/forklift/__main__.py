@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''
+"""
 forklift
 
 Usage:
@@ -59,19 +59,20 @@ Examples:
                                                                             use the data that was updated rather than the entire ArcGIS Server instance. Note: this
                                                                             will only work for pallets that are in the warehouse.
     forklift speedtest                                                      Test the speed on a predefined pallet.
-'''
+"""
+
 #: check for Pro license
 try:
-    import arcpy
+    pass
 except RuntimeError as exception:
     import socket
 
     from . import config, messaging
 
     messaging.send_emails_override = True
-    messaging.send_email(config.get_config_prop('notify'), f'Forklift Error on {socket.gethostname()}', str(exception))
+    messaging.send_email(config.get_config_prop("notify"), f"Forklift Error on {socket.gethostname()}", str(exception))
 
-    print('ERROR: Cannot import arcpy! This is usually caused by ArcGIS Pro not having a valid license.')
+    print("ERROR: Cannot import arcpy! This is usually caused by ArcGIS Pro not having a valid license.")
     exit(1)
 
 
@@ -85,161 +86,164 @@ from os.path import abspath, dirname, join, realpath
 
 from docopt import docopt
 
-from . import config, engine, messaging, seat
+from . import config, engine, messaging
 
-log_location = join(abspath(dirname(__file__)), '..', 'forklift-garage', 'forklift.log')
-detailed_formatter = logging.Formatter(fmt='%(levelname)-7s %(asctime)s %(module)10s:%(lineno)5s %(message)s', datefmt='%m-%d %H:%M:%S')
-speedtest = join(dirname(realpath(__file__)), '..', '..', 'speedtest', 'SpeedTestPallet.py')
+log_location = join(abspath(dirname(__file__)), "..", "forklift-garage", "forklift.log")
+detailed_formatter = logging.Formatter(
+    fmt="%(levelname)-7s %(asctime)s %(module)10s:%(lineno)5s %(message)s", datefmt="%m-%d %H:%M:%S"
+)
+speedtest = join(dirname(realpath(__file__)), "..", "..", "speedtest", "SpeedTestPallet.py")
 
 
 def main():
-    '''Main entry point for program. Parse arguments and pass to engine module
-    '''
+    """Main entry point for program. Parse arguments and pass to engine module"""
 
-    args = docopt(__doc__, version='9.4.1')
-    _setup_logging(args['--verbose'])
+    args = docopt(__doc__, version="9.4.1")
+    _setup_logging(args["--verbose"])
     _add_global_error_handler()
 
-    if args['--skip-emails']:
+    if args["--skip-emails"]:
         messaging.send_emails_override = False
-    elif args['--send-emails']:
+    elif args["--send-emails"]:
         messaging.send_emails_override = True
 
     def run_build():
-        if args['<file-path>']:
-            if args['--pallet-arg']:
+        if args["<file-path>"]:
+            if args["--pallet-arg"]:
                 pallets, import_errors = engine.build_pallets(args["<file-path>"], args["<arg>"])
             else:
                 pallets, import_errors = engine.build_pallets(args["<file-path>"])
         else:
             pallets, import_errors = engine.build_pallets(None)
 
-        print(f'pallets: {pallets}')
-        print(f'import errors: {import_errors}')
+        print(f"pallets: {pallets}")
+        print(f"import errors: {import_errors}")
 
-    if args['build']:
-        if args['--profile']:
+    if args["build"]:
+        if args["--profile"]:
             import cProfile
-            cProfile.runctx('run_build()', globals(), locals(), sort='cumulative')
+
+            cProfile.runctx("run_build()", globals(), locals(), sort="cumulative")
         else:
             run_build()
-    elif args['config']:
-        if args['init']:
+    elif args["config"]:
+        if args["init"]:
             message = engine.init()
-            print(('config file: {}'.format(message)))
+            print(("config file: {}".format(message)))
 
-        if args['repos'] and args['<repo>']:
-            if args['--add']:
-                message = engine.add_repo(args['<repo>'])
+        if args["repos"] and args["<repo>"]:
+            if args["--add"]:
+                message = engine.add_repo(args["<repo>"])
 
-            if args['--remove']:
-                message = engine.remove_repo(args['<repo>'])
+            if args["--remove"]:
+                message = engine.remove_repo(args["<repo>"])
 
             print(message)
 
-        if args['repos'] and args['--list']:
+        if args["repos"] and args["--list"]:
             for folder in engine.list_repos():
                 print(folder)
 
-        if args['set'] and args['<key>'] and args['<value>']:
-            message = config.set_config_prop(args['<key>'], args['<value>'])
+        if args["set"] and args["<key>"] and args["<value>"]:
+            message = config.set_config_prop(args["<key>"], args["<value>"])
             print(message)
-    elif args['garage'] and args['open']:
+    elif args["garage"] and args["open"]:
         startfile(dirname(engine.init()))
-    elif args['gift-wrap']:
-        engine.gift_wrap(args['<folder-path>'], args['<fgdb-path>'], args['<file-path>'])
-    elif args['git-update']:
+    elif args["gift-wrap"]:
+        engine.gift_wrap(args["<folder-path>"], args["<fgdb-path>"], args["<file-path>"])
+    elif args["git-update"]:
         engine.git_update()
-    elif args['lift']:
-        if args['<file-path>']:
-            if args['--pallet-arg']:
-                engine.lift_pallets(args['<file-path>'], args['<arg>'])
+    elif args["lift"]:
+        if args["<file-path>"]:
+            if args["--pallet-arg"]:
+                engine.lift_pallets(args["<file-path>"], args["<arg>"])
             else:
-                engine.lift_pallets(args['<file-path>'])
+                engine.lift_pallets(args["<file-path>"])
         else:
             engine.lift_pallets()
-    elif args['list-pallets']:
+    elif args["list-pallets"]:
         pallets = engine.list_pallets()
 
         if len(pallets) == 0:
-            print('No pallets found!')
+            print("No pallets found!")
         else:
             for path, pallet_class in pallets:
-                print((': '.join([path, str(pallet_class)])))
-    elif args['scorched-earth']:
+                print((": ".join([path, str(pallet_class)])))
+    elif args["scorched-earth"]:
         engine.scorched_earth()
-    elif args['ship']:
-        if args['--pallet-arg']:
-            engine.ship_data(args['<arg>'])
+    elif args["ship"]:
+        if args["--pallet-arg"]:
+            engine.ship_data(args["<arg>"])
         else:
             engine.ship_data()
-    elif args['special-delivery']:
-        warehouse = config.get_config_prop('warehouse').lower()
+    elif args["special-delivery"]:
+        warehouse = config.get_config_prop("warehouse").lower()
 
-        if not abspath(args['<file-path>']).lower().startswith(abspath(warehouse)):
-            print('Pallet must be located in the warehouse!')
+        if not abspath(args["<file-path>"]).lower().startswith(abspath(warehouse)):
+            print("Pallet must be located in the warehouse!")
 
             return
 
         engine.move_dropoff_data(True)
 
         try:
-            if args['--pallet-arg']:
-                engine.lift_pallets(args['<file-path>'], args['<arg>'])
+            if args["--pallet-arg"]:
+                engine.lift_pallets(args["<file-path>"], args["<arg>"])
             else:
-                engine.lift_pallets(args['<file-path>'])
+                engine.lift_pallets(args["<file-path>"])
 
-            engine.ship_data(args['<arg>'], True)
+            engine.ship_data(args["<arg>"], True)
         finally:
             engine.move_dropoff_data(False)
-    elif args['speedtest']:
+    elif args["speedtest"]:
         engine.speedtest(speedtest)
 
     shutdown()
 
 
 def global_exception_handler(ex_cls, ex, tb):
-    '''
+    """
     ex_cls: Class - the type of the exception
     ex: object - the exception object
     tb: Traceback
 
     Used to handle any uncaught exceptions. Formats an error message, logs it, and sends an email.
-    '''
+    """
     import traceback
 
-    log = logging.getLogger('forklift')
+    log = logging.getLogger("forklift")
 
     last_traceback = (traceback.extract_tb(tb))[-1]
     line_number = last_traceback[1]
     file_name = last_traceback[0].split(".")[0]
     error = linesep.join(traceback.format_exception(ex_cls, ex, tb))
 
-    log.error(('global error handler line: %s (%s)' % (line_number, file_name)))
+    log.error(("global error handler line: %s (%s)" % (line_number, file_name)))
     log.error(error)
 
-    log_file = join(dirname(config.config_location), 'forklift.log')
-    messaging.send_email(config.get_config_prop('notify'), f'Forklift Error on {socket.gethostname()}', error, [log_file])
+    log_file = join(dirname(config.config_location), "forklift.log")
+    messaging.send_email(
+        config.get_config_prop("notify"), f"Forklift Error on {socket.gethostname()}", error, [log_file]
+    )
 
 
 def _add_global_error_handler():
-    '''Handle all otherwise unhandled exceptions with the function above
-    '''
+    """Handle all otherwise unhandled exceptions with the function above"""
     sys.excepthook = global_exception_handler
 
 
 def _setup_logging(verbose):
-    '''verbose: boolean
+    """verbose: boolean
 
     configures the logger
-    '''
-    log = logging.getLogger('forklift')
+    """
+    log = logging.getLogger("forklift")
 
     log.logThreads = 0
     log.logProcesses = 0
 
-    debug = 'DEBUG'
-    info = 'INFO'
+    debug = "DEBUG"
+    info = "INFO"
 
     if verbose:
         info = debug
@@ -267,5 +271,5 @@ def _setup_logging(verbose):
     return log
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

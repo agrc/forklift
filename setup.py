@@ -49,11 +49,11 @@ setup(
         "gitpython==3.*",
         "ndg-httpsclient==0.*",
         "pyasn1==0.*",
-        "pyopenssl==23.*",
+        "pyopenssl>=23,<25",
         "pystache==0.*",
         "requests==2.*",
         "sendgrid==6.*",
-        "xxhash==2.*",
+        "xxhash>=2,<4",
         #: pyopenssl, ndg-httpsclient, pyasn1 are there to disable ssl warnings in requests
     ],
     extras_require={

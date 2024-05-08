@@ -63,7 +63,7 @@ Examples:
 
 #: check for Pro license
 try:
-    pass
+    import arcpy  # noqa: F401
 except RuntimeError as exception:
     import socket
 

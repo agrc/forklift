@@ -13,7 +13,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="forklift",
-    version="9.4.1",
+    version="1.0.0",
     license="MIT",
     description="CLI tool for managing automated tasks.",
     long_description=(Path(__file__).parent / "README.md").read_text(),

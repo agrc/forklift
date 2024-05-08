@@ -100,7 +100,7 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
 1. Create a conda environment for forklift `conda create --name forklift python=3.9`.
 1. Activate the conda environment `activate forklift`.
 1. `conda install arcpy -c esri`
-1. Chckout forklift repository: `git clone https://github.com/agrc/forklift.git` 
+1. Checkout forklift repository: `git clone https://github.com/agrc/forklift.git`
 1. `pip install .\` from the directory containing `setup.py`.
 1. Install the python dependencies for your pallets.
 1. `forklift config init`
@@ -190,29 +190,19 @@ If you do need to recreate the forklift environment from scratch, follow these s
 - create new env
   - `conda create --name forklift --clone arcgispro-py3`
   - `activate forklift`
-- install deps
-  - conda or pip install everything in the `setup.py` `install_requires`
-- optionally install forklift
-  - `cd forklift`
-  - `pip install .\ -U`
+- install forklift and deps
+  - `pip install -e ".[tests]"`
 - run forklift
-  - for the installed version execute `forklift -h`
-  - for the source version, from the `**/src**` directory, execute `python -m forklift -h` for usage
+  - `forklift -h`
 
 ### Tests
 
-#### On first run
+Tests should show up in VSCode's text explorer.
 
-- install deps
-  - `pip install -e ".[tests]"`
-- run tests
-  - `python setup.py develop`
-  - `pytest -p no:faulthandler`
+To run them from the command line:
 
-`-p no:faulthandler` is to [prevent pytest from printing _tons_ of errors](https://stackoverflow.com/a/65826036/8049053).
+- `pytest`
 
 _Tests that depend on a local SDE database (see `tests/data/UPDATE_TESTS.bak`) will automatically be skipped if it is not found on your system._
 
 To run a specific test or suite: `pytest -k <test/suite name>`
-
-If you have pip installed forklift into your current environment, you may need to uninstall it to get tests to see recent updates to the source code.

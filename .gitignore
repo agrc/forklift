@@ -30,6 +30,7 @@ pip-log.txt
 nosetests.xml
 htmlcov
 .noseids
+cov.xml
 
 .DS_Store
 *~

@@ -1,5 +1,13 @@
 # Changelog
 
+## [9.5.1](https://github.com/agrc/forklift/compare/v9.5.0...v9.5.1) (2024-06-10)
+
+
+### 🐛 Bug Fixes
+
+* add support for data with global id fields that does not use change detection ([e4ce1a6](https://github.com/agrc/forklift/commit/e4ce1a6c61508044b5e5edce156547651e862a05))
+* set update status for global id datasets ([10dd9d0](https://github.com/agrc/forklift/commit/10dd9d075886bfb8418e7634e6a0181e765a32ab))
+
 ### 9.4.0 (2021-09-08)
 
 #### Features

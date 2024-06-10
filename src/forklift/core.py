@@ -105,6 +105,7 @@ def update(crate, validate_crate, change_detection):
         if changes.has_changes():
             if "hasGlobalID" in crate.source_describe and crate.source_describe["hasGlobalID"]:
                 update_while_preserving_global_ids(crate)
+                change_status = (Crate.UPDATED, None)
             else:
                 log.debug("starting edit session...")
                 with arcpy.da.Editor(crate.destination_workspace):

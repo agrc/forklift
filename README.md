@@ -1,7 +1,7 @@
 # 🚜📦✨ forklift
 
 ![conda](https://img.shields.io/badge/conda-arcgispro--py3-blue)
-![python](https://img.shields.io/badge/python-3.6-blue)
+![python](https://img.shields.io/badge/python-3.11-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/agrc/forklift?sort=semver)
 

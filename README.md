@@ -153,7 +153,7 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
 1. `forklift lift`
 1. `forklift ship`
 
-`run_forklift.bat` is an example of a batch file that could be used to run forklift via the Windows Scheduler.
+`run_forklift_ship_lift.bat` is an example of a batch file that could be used to run forklift via the Windows Scheduler.
 
 ### Upgrading Forklift
 

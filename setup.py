@@ -43,7 +43,7 @@ setup(
     },
     keywords=[],
     install_requires=[
-        "arcgis",
+        "arcgis==2.*",
         "colorama==0.*",
         "docopt==0.6.*",
         "gitpython==3.*",
@@ -51,7 +51,6 @@ setup(
         "pyasn1==0.*",
         "pyopenssl==24.*",
         "pystache==0.*",
-        "requests==2.*",
         "sendgrid==6.*",
         "xxhash==3.*",
         #: pyopenssl, ndg-httpsclient, pyasn1 are there to disable ssl warnings in requests

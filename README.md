@@ -165,9 +165,14 @@ From the root of the forklift source code folder:
 
 ### Upgrading ArcGIS Pro
 
-1. Upgrade ArcGIS Pro
+If you originally created a fresh conda environment (not cloned from `arcgispro-py3`) and installed arcpy via `conda install arcpy -c esri`:
 
-There is no second step if you originally created a fresh conda environment (not cloned from `arcgispro-py3`) and installed arcpy via `conda install arcpy -c esri`.
+1. Copy `forklift\Lib\site-packages\forklift-garage` somewhere safe
+1. Upgrade ArcGIS Pro
+1. `proup -n forklift`
+1. `pip install . -U` (from forklift app folder)
+1. Copy garage folder back into site-packages
+1. `forklift build` to check dependencies
 
 If you do need to recreate the forklift environment from scratch, follow these steps:
 

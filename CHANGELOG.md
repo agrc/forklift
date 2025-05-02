@@ -1,5 +1,15 @@
 # Changelog
 
+## [9.5.2](https://github.com/agrc/forklift/compare/v9.5.1...v9.5.2) (2025-05-02)
+
+
+### Documentation
+
+* correct some docs ([4d4d60f](https://github.com/agrc/forklift/commit/4d4d60fc93651250e2780e58c48a24b05c98b490))
+* update badge ([3a7f6d8](https://github.com/agrc/forklift/commit/3a7f6d8e45c35bfcdfc6d4faab89a48411bce733))
+* update bat file ([057e900](https://github.com/agrc/forklift/commit/057e900e2d95509dd7221f80ddb35c1d310e2439))
+* update upgrade steps ([280a72b](https://github.com/agrc/forklift/commit/280a72b7d4c247515adc493239a75aae0d7f1ddf))
+
 ## [9.5.1](https://github.com/agrc/forklift/compare/v9.5.0...v9.5.1) (2024-06-10)
 
 

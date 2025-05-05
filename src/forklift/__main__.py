@@ -81,6 +81,7 @@ import logging.config
 import socket
 import sys
 from logging import shutdown
+from logging.handlers import RotatingFileHandler
 from os import linesep, makedirs, startfile
 from os.path import abspath, dirname, join, realpath
 
@@ -253,7 +254,7 @@ def _setup_logging(verbose):
     except Exception:
         pass
 
-    file_handler = logging.handlers.RotatingFileHandler(log_location, backupCount=18)
+    file_handler = RotatingFileHandler(log_location, backupCount=18)
     file_handler.doRollover()
     file_handler.setFormatter(detailed_formatter)
     file_handler.setLevel(debug)

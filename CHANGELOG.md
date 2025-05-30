@@ -1,5 +1,17 @@
 # Changelog
 
+## [9.5.3](https://github.com/agrc/forklift/compare/v9.5.2...v9.5.3) (2025-05-30)
+
+
+### Bug Fixes
+
+* fix handler import ([0c72416](https://github.com/agrc/forklift/commit/0c724161e9db1fb220d07f5c6fac2c37fe5f108c))
+
+
+### Documentation
+
+* update install steps ([2afb34e](https://github.com/agrc/forklift/commit/2afb34e2e4d7694e8a8f8d975e22f22e1e98703c))
+
 ## [9.5.2](https://github.com/agrc/forklift/compare/v9.5.1...v9.5.2) (2025-05-02)
 
 

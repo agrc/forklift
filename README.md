@@ -92,14 +92,12 @@ Metadata is only copied from source to destination when the destination is first
 From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/arcpy/get-started/using-conda-with-arcgis-pro.htm) (`c:\Program Files\ArcGIS\Pro\bin\Python\scripts\proenv.bat`):
 
 1. Install [git](https://gitforwindows.org/).
-1. Install [Visual Studio Build tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) with the Desktop development with C++ module
 1. Install [ArcGIS Pro](https://pro.arcgis.com/en/pro-app/).
 1. Add ArcGIS Pro to your path.
    - If installed for all users: `C:\Program Files\ArcGIS\Pro\bin\Python\scripts\`.
    - If install for single user: `C:\Users\{USER}\AppData\Local\Programs\ArcGIS\Pro\bin\Python\Scripts`.
-1. Create a conda environment for forklift `conda create --name forklift python=3.11`.
+1. Create a conda environment for forklift `conda create --name forklift --clone arcgispro-py3`.
 1. Activate the conda environment `activate forklift`.
-1. `conda install arcpy -c esri`
 1. Checkout forklift repository: `git clone https://github.com/agrc/forklift.git`
 1. `pip install .\` from the directory containing `setup.py`.
 1. Install the python dependencies for your pallets.

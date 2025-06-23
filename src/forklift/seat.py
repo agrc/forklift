@@ -5,6 +5,11 @@ seat.py
 
 A module that contains helpful methods for other modules
 """
+import subprocess
+import logging
+import json
+from pathlib import Path
+from forklift import config
 
 
 def format_time(seconds):
@@ -39,3 +44,28 @@ class timed_pallet_process(object):
 
     def __exit__(self, type, value, traceback):
         self.pallet.stop_timer(self.name)
+
+
+def map_network_drive(name, drive_letter):
+    parameters = json.load(Path(Path(config.config_location).parent, 'share', f'{name}.json').open('r'))
+    path = parameters['path']
+    username = parameters['username']
+    password = parameters['password']
+    logger = logging.getLogger('forklift')
+    if not drive_letter.endswith(':'):
+        drive_letter += ':'
+    logger.debug(f"Mapping network drive: {path} to {drive_letter}")
+    try:
+        result = subprocess.run(
+            ["net", "use", drive_letter, path, password, f"/user:{username}", '/persistent:yes'],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        logger.info(f"Network share mounted successfully: {result.stdout.strip()}")
+    except subprocess.CalledProcessError as e:
+        if '85' in e.stderr or '1219' in e.stderr:
+            logger.debug('ignoring error 85, drive already mapped')
+        else:
+            raise Exception(f"Error mounting network share: {e.stderr.strip()}") from e

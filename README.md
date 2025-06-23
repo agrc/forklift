@@ -148,6 +148,14 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
    }
    ```
 
+1. Add network drive mapping config to `<garage folder>/share`. For example:
+```json
+{
+  "path": "...",
+  "username": "...",
+  "password": "..."
+}
+
 1. `forklift lift`
 1. `forklift ship`
 

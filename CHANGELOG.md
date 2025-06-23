@@ -1,5 +1,23 @@
 # Changelog
 
+## [9.6.0](https://github.com/agrc/forklift/compare/v9.5.2...v9.6.0) (2025-06-23)
+
+
+### Features
+
+* add utility function for mapping network drives ([f97581d](https://github.com/agrc/forklift/commit/f97581d8f8355daca47a211673e54bb61c363b6e))
+
+
+### Bug Fixes
+
+* fix handler import ([0c72416](https://github.com/agrc/forklift/commit/0c724161e9db1fb220d07f5c6fac2c37fe5f108c))
+* handle fields for unregistered standalone tables ([85cc297](https://github.com/agrc/forklift/commit/85cc297394ed67d43a14900f4842cb302ed7c988))
+
+
+### Documentation
+
+* update install steps ([2afb34e](https://github.com/agrc/forklift/commit/2afb34e2e4d7694e8a8f8d975e22f22e1e98703c))
+
 ## [9.5.2](https://github.com/agrc/forklift/compare/v9.5.1...v9.5.2) (2025-05-02)
 
 

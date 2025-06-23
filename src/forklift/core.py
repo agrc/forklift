@@ -213,8 +213,11 @@ def _hash(crate):
             spatial_reference=crate.source_describe["spatialReference"],
         )[0]
     else:
-        changes.table = arcpy.CreateTable_management(scratch_gdb_path, crate.name)[0]
-        _mirror_fields(crate.source, changes.table)
+        if crate.source_describe["hasOID"]:
+            changes.table = arcpy.CreateTable_management(scratch_gdb_path, crate.name, template=crate.source)[0]
+        else:
+            changes.table = arcpy.CreateTable_management(scratch_gdb_path, crate.name)[0]
+            _mirror_fields(crate.source, changes.table)
 
     #: there's a possibility that source has a hash field already, e.g. harvesting ogm data from AGOL
     if hash_field not in [field.name for field in crate.source_describe["fields"]]:
@@ -293,8 +296,11 @@ def _create_destination_data(crate, skip_hash_field=False):
 
     if crate.is_table():
         log.warning("creating new table: %s", crate.destination)
-        arcpy.CreateTable_management(crate.destination_workspace, crate.destination_name)
-        _mirror_fields(crate.source, crate.destination)
+        if crate.source_describe["hasOID"]:
+            arcpy.CreateTable_management(crate.destination_workspace, crate.destination_name, template=crate.source)
+        else:
+            arcpy.CreateTable_management(crate.destination_workspace, crate.destination_name)
+            _mirror_fields(crate.source, crate.destination)
     else:
         log.warning("creating new feature class: %s", crate.destination)
         arcpy.CreateFeatureclass_management(
@@ -482,7 +488,6 @@ def _mirror_fields(source, destination):
         "DateOnly": "DATEONLY",
         "Double": "DOUBLE",
         "Guid": "GUID",
-        "GlobalID": "GUID",
         "Integer": "LONG",
         "Single": "FLOAT",
         "SmallInteger": "SHORT",

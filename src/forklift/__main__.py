@@ -77,6 +77,7 @@ except RuntimeError as exception:
 
 
 import faulthandler
+import google.cloud.logging
 import logging.config
 import socket
 import sys
@@ -86,6 +87,7 @@ from os import linesep, makedirs, startfile
 from os.path import abspath, dirname, join, realpath
 
 from docopt import docopt
+import requests
 
 from . import config, engine, messaging
 
@@ -269,7 +271,26 @@ def _setup_logging(verbose):
 
     faulthandler.enable(file_handler.stream)
 
+    if is_running_on_gce():
+        try:
+            client = google.cloud.logging.Client()
+            client.setup_logging(log_level=logging.DEBUG)
+        except Exception as e:
+            log.error("Failed to initialize Google Cloud Logging client: %s", e)
+            log.warning("Continuing without Google Cloud Logging.")
+
     return log
+
+def is_running_on_gce():
+    try:
+        response = requests.get(
+            'http://metadata.google.internal/computeMetadata/v1/',
+            headers={'Metadata-Flavor': 'Google'},
+            timeout=1
+        )
+        return response.status_code == 200
+    except requests.exceptions.RequestException:
+        return False
 
 
 if __name__ == "__main__":

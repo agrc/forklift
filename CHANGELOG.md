@@ -1,5 +1,12 @@
 # Changelog
 
+## [9.7.0](https://github.com/agrc/forklift/compare/v9.6.0...v9.7.0) (2025-07-17)
+
+
+### Features
+
+* add google cloud logging ([6e78662](https://github.com/agrc/forklift/commit/6e786627d395b3398e2934624d1f3bbd1a89d99b))
+
 ## [9.6.0](https://github.com/agrc/forklift/compare/v9.5.2...v9.6.0) (2025-06-23)
 
 

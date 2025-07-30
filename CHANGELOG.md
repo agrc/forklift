@@ -1,5 +1,13 @@
 # Changelog
 
+## [9.7.1](https://github.com/agrc/forklift/compare/v9.7.0...v9.7.1) (2025-07-30)
+
+
+### Dependencies
+
+* **dev:** update pytest-cov requirement from ==5.* to &gt;=5,&lt;7 ([f6f7ba5](https://github.com/agrc/forklift/commit/f6f7ba5acf2d7d0b9eeba7a9ae8906a58d532a96))
+* update pyopenssl requirement from ==24.* to &gt;=24,&lt;26 ([f62abc7](https://github.com/agrc/forklift/commit/f62abc7c73654572eeaa5feb11340a203f32e78c))
+
 ## [9.7.0](https://github.com/agrc/forklift/compare/v9.6.0...v9.7.0) (2025-07-17)
 
 

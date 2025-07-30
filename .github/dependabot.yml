@@ -20,6 +20,9 @@ updates:
       semver-major-days: 60
       semver-minor-days: 14
       semver-patch-days: 7
+      exclude:
+        - ugrc-*
+        - agrc-*
   - package-ecosystem: github-actions
     directory: /
     schedule:
@@ -29,3 +32,5 @@ updates:
         dependency-type: production
     cooldown:
       default-days: 10
+      exclude:
+        - agrc/*

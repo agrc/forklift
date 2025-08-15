@@ -14,6 +14,7 @@ from pytest import raises
 from forklift import core
 from forklift.change_detection import ChangeDetection, _get_hashes, hash_field, table_name_field
 from forklift.models import Crate
+from tests.test_core import skip_if_no_local_sde
 
 test_data_folder = str(Path(__file__).parent / "data")
 
@@ -109,6 +110,7 @@ def test_invalid_data(test_gdb):
 
 
 def test_preserves_globalids(test_gdb):
+    skip_if_no_local_sde()
     hash_table = str(Path(test_gdb) / "TableHashes")
     scratch_hash_table = str(Path(arcpy.env.scratchGDB) / Path(hash_table).name)
     scratch_destination = str(Path(arcpy.env.scratchGDB) / "GlobalIds")
@@ -135,6 +137,7 @@ def test_preserves_globalids(test_gdb):
 
 
 def test_preserves_globalids_table(test_gdb):
+    skip_if_no_local_sde()
     hash_table = str(Path(test_gdb) / "TableHashes")
     scratch_hash_table = str(Path(arcpy.env.scratchGDB) / Path(hash_table).name)
     scratch_destination = str(Path(arcpy.env.scratchGDB) / "GlobalIds")
@@ -161,6 +164,7 @@ def test_preserves_globalids_table(test_gdb):
 
 
 def test_can_handle_globalid_fields_without_index(test_gdb):
+    skip_if_no_local_sde()
     hash_table = str(Path(test_gdb) / "TableHashes")
     scratch_hash_table = str(Path(arcpy.env.scratchGDB) / Path(hash_table).name)
     scratch_destination = str(Path(arcpy.env.scratchGDB) / "GlobalIds")

@@ -1,5 +1,12 @@
 # Changelog
 
+## [9.7.2](https://github.com/agrc/forklift/compare/v9.7.1...v9.7.2) (2025-08-15)
+
+
+### Features
+
+* add git update to ship ([cccad2b](https://github.com/agrc/forklift/commit/cccad2b9977210fea8356ed73467cb59e195d303)), closes [#338](https://github.com/agrc/forklift/issues/338)
+
 ## [9.7.1](https://github.com/agrc/forklift/compare/v9.7.0...v9.7.1) (2025-07-30)
 
 

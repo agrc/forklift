@@ -31,6 +31,11 @@
 </p>
 <table>
   <tbody>
+    {{#git_errors}}
+    <tr>
+      <td colspan="2" class="error">{{.}}</td>
+    </tr>
+    {{/git_errors}}
     {{#server_reports}}
       <tr>
         <td colspan="2" class="info">

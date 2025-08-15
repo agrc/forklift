@@ -200,6 +200,8 @@ def ship_data(pallet_arg=None, by_service=False):
     """
     log.info("starting forklift")
 
+    git_errors = git_update()
+
     start_seconds = perf_counter()
 
     #: look for servers in config
@@ -381,6 +383,7 @@ def ship_data(pallet_arg=None, by_service=False):
         "num_success_pallets": len([p for p in pallet_reports if p["success"]]),
         "server_reports": server_reports,
         "total_time": elapsed_time,
+        "git_errors": git_errors,
     }
 
     _send_report_email(ship_template, status, "Shipping")

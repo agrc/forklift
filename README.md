@@ -155,6 +155,7 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
   "username": "...",
   "password": "..."
 }
+```
 
 1. `forklift lift`
 1. `forklift ship`

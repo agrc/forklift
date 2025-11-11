@@ -1,5 +1,12 @@
 # Changelog
 
+## [9.7.3](https://github.com/agrc/forklift/compare/v9.7.2...v9.7.3) (2025-11-11)
+
+
+### Dependencies
+
+* **dev:** update pytest-cov requirement from &lt;7,&gt;=5 to &gt;=5,&lt;8 ([47d99c0](https://github.com/agrc/forklift/commit/47d99c07cadbe8337f47753b538a5c4abe33ca32))
+
 ## [9.7.2](https://github.com/agrc/forklift/compare/v9.7.1...v9.7.2) (2025-08-15)
 
 

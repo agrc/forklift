@@ -9,13 +9,13 @@ A module that contains the implementation of the cli commands
 import logging
 import socket
 import sys
-from imp import load_source
 from json import dump, load
 from os import linesep, listdir, walk
 from os.path import abspath, basename, dirname, exists, join, normpath, realpath, splitext
 from re import compile
 from shutil import copytree, rmtree
 from time import perf_counter, sleep
+import importlib.util
 
 import pystache
 from colorama import Fore
@@ -834,6 +834,28 @@ def _get_pallets_in_folder(folder):
     return pallets, import_errors
 
 
+def load_module(module_name, module_path):
+    """module_name: string - the name of the module
+    module_path: string - the path to the module
+
+    loads a module from a specific path
+
+    returns the loaded module object
+    """
+    spec = importlib.util.spec_from_file_location(module_name, module_path)
+
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Cannot load module {module_name} from path {module_path}")
+
+    module = importlib.util.module_from_spec(spec)
+
+    sys.modules[module_name] = module
+
+    spec.loader.exec_module(module)
+
+    return module
+
+
 def _get_pallets_in_file(file_path):
     """file_path: string - a path to a pallet.py file
 
@@ -859,7 +881,7 @@ def _get_pallets_in_file(file_path):
         try:
             mod = sys.modules[file_name]
         except KeyError:
-            mod = load_source(file_name, file_path)
+            mod = load_module(file_name, file_path)
     except Exception as e:
         # skip modules that fail to import
         log.error("%s failed to import: %s", file_path, e, exc_info=True)

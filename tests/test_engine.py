@@ -180,7 +180,7 @@ class TestListPallets(CleanUpAlternativeConfig):
     def test_pallet_with_import_error(self):
         _, import_error = engine._get_pallets_in_file(join(test_folder, "PalletWithSyntaxErrors.py"))
 
-        self.assertRegexpMatches(import_error, "expected an indented block")
+        self.assertRegex(import_error, "expected an indented block")
 
 
 @patch("forklift.engine.git_update")

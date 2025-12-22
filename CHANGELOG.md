@@ -1,5 +1,12 @@
 # Changelog
 
+## [9.7.4](https://github.com/agrc/forklift/compare/v9.7.3...v9.7.4) (2025-12-22)
+
+
+### Bug Fixes
+
+* replace deprecated and removed import library with modern version ([e2cc9b6](https://github.com/agrc/forklift/commit/e2cc9b63acd4f2868c76ec8350db94e556b1beaa))
+
 ## [9.7.3](https://github.com/agrc/forklift/compare/v9.7.2...v9.7.3) (2025-11-11)
 
 

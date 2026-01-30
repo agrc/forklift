@@ -23,11 +23,14 @@ from colorama import init as colorama_init
 from git import Repo
 from requests import get
 
+from supervisor.message_handlers import SlackHandler
+from supervisor.models import MessageDetails
+
 from . import config, core, lift, seat
 from .arcgis import LightSwitch
 from .change_detection import ChangeDetection
 from .config import config_location, get_config_prop
-from .messaging import send_email, send_to_slack
+from .messaging import send_email
 from .models import Pallet
 from .slack import lift_report_to_blocks, ship_report_to_blocks
 
@@ -704,15 +707,21 @@ def _send_report_to_slack(status, operation):
     if url is None:
         return
 
-    messages = []
+    message = None
 
     if operation == "Lifting":
-        messages = lift_report_to_blocks(status)
+        message = lift_report_to_blocks(status)
     else:
-        messages = ship_report_to_blocks(status)
+        message = ship_report_to_blocks(status)
 
     try:
-        send_to_slack(url, messages)
+        slack_settings = {"webhook_url": url}
+        slack_handler = SlackHandler(slack_settings, "forklift", "")
+        
+        message_details = MessageDetails()
+        message_details.slack_messages = message
+        
+        slack_handler.send_message(message_details)
     except Exception as exc:
         log.error(f"Error posting report to slack: {exc}")
 

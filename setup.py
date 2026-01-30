@@ -54,6 +54,7 @@ setup(
         "pystache==0.*",
         "requests==2.*",
         "sendgrid==6.*",
+        "supervisor==3.*",
         "xxhash==3.*",
         #: pyopenssl, ndg-httpsclient, pyasn1 are there to disable ssl warnings in requests
     ],

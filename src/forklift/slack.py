@@ -6,17 +6,13 @@ A module that holds the constructs for using the slack api
 """
 
 import math
-from abc import ABC, abstractmethod
 from datetime import datetime
-from enum import Enum
-from json import dumps
+
+from supervisor.slack import Message, SectionBlock, ContextBlock, DividerBlock, Text
 
 from .models import Crate
 
-MAX_BLOCKS = 50
 MAX_CONTEXT_ELEMENTS = 10
-MAX_SECTION_FIELD_ELEMENTS = 10
-MAX_LENGTH_SECTION = 3000
 MAX_LENGTH_SECTION_FIELD = 2000
 
 
@@ -59,11 +55,11 @@ def lift_report_to_blocks(report):
     message.add(
         ContextBlock(
             [
-                f'*{datetime.now().strftime("%B %d, %Y")}*',
+                f"*{datetime.now().strftime('%B %d, %Y')}*",
                 _safely_access(report, "hostname"),
-                f'*{_safely_access(report, "num_success_pallets")}* of *{_safely_access(report, "total_pallets")}* pallets ran successfully',
+                f"*{_safely_access(report, 'num_success_pallets')}* of *{_safely_access(report, 'total_pallets')}* pallets ran successfully",
                 f"{percent}",
-                f'total time: *{_safely_access(report, "total_time")}*',
+                f"total time: *{_safely_access(report, 'total_time')}*",
             ]
         )
     )
@@ -92,11 +88,11 @@ def lift_report_to_blocks(report):
         if _safely_access(pallet, "success"):
             success = ":heavy_check_mark:"
 
-        message.add(SectionBlock(f'{success} *{_safely_access(pallet, "name").split(":")[-1]}*'))
+        message.add(SectionBlock(f"{success} *{_safely_access(pallet, 'name').split(':')[-1]}*"))
         message.add(
             ContextBlock(
                 [
-                    f'{_safely_access(pallet, "total_processing_time")}{"  |  " + _safely_access(pallet, "message") if _safely_access(pallet, "message") else ""}'
+                    f"{_safely_access(pallet, 'total_processing_time')}{'  |  ' + _safely_access(pallet, 'message') if _safely_access(pallet, 'message') else ''}"
                 ]
             )
         )
@@ -115,7 +111,7 @@ def lift_report_to_blocks(report):
                 show_message = True
                 result = ":fire:"
 
-            text = f'{result} *{_safely_access(crate, "name")}*'
+            text = f"{result} *{_safely_access(crate, 'name')}*"
             if show_message:
                 text += "\n" + _safely_access(crate, "crate_message")
 
@@ -128,7 +124,7 @@ def lift_report_to_blocks(report):
         if len(crate_elements) > 0:
             message.add(ContextBlock(crate_elements))
 
-    return message.get_messages()
+    return message
 
 
 def ship_report_to_blocks(report):
@@ -146,11 +142,11 @@ def ship_report_to_blocks(report):
     message.add(
         ContextBlock(
             [
-                f'*{datetime.now().strftime("%B %d, %Y")}*',
+                f"*{datetime.now().strftime('%B %d, %Y')}*",
                 _safely_access(report, "hostname"),
-                f'*{_safely_access(report, "num_success_pallets")}* of *{_safely_access(report, "total_pallets")}* pallets ran successfully',
+                f"*{_safely_access(report, 'num_success_pallets')}* of *{_safely_access(report, 'total_pallets')}* pallets ran successfully",
                 f"{percent}",
-                f'total time: *{_safely_access(report, "total_time")}*',
+                f"total time: *{_safely_access(report, 'total_time')}*",
             ]
         )
     )
@@ -163,7 +159,7 @@ def ship_report_to_blocks(report):
             if _safely_access(server_status, "success"):
                 success = ":white_check_mark:"
 
-            message.add(SectionBlock(f'{success} *{_safely_access(server_status, "name")}*'))
+            message.add(SectionBlock(f"{success} *{_safely_access(server_status, 'name')}*"))
 
             if server_status.get("has_service_issues", False):
                 items = split(_safely_access(server_status, "problem_services"), MAX_CONTEXT_ELEMENTS)
@@ -197,7 +193,7 @@ def ship_report_to_blocks(report):
         if _safely_access(pallet, "success"):
             success = ":heavy_check_mark:"
 
-        message.add(SectionBlock(f'{success} *{_safely_access(pallet, "name").split(":")[-1]}*'))
+        message.add(SectionBlock(f"{success} *{_safely_access(pallet, 'name').split(':')[-1]}*"))
 
         post_copy_processed = shipped = ":red_circle:"
         if _safely_access(pallet, "post_copy_processed"):
@@ -217,164 +213,4 @@ def ship_report_to_blocks(report):
         for item in items:
             message.add(ContextBlock(item))
 
-    return message.get_messages()
-
-
-class BlockType(Enum):
-    """available block type enums"""
-
-    SECTION = "section"
-    DIVIDER = "divider"
-    CONTEXT = "context"
-
-
-class Block(ABC):
-    """Basis block containing attributes and behavior common to all
-    Block is an abstract class and cannot be sent directly.
-    """
-
-    def __init__(self, block):
-        self.type = block
-
-    def _attributes(self):
-        return {"type": self.type.value}
-
-    @abstractmethod
-    def _resolve(self):
-        pass
-
-    def __repr__(self):
-        return dumps(self._resolve(), indent=2)
-
-
-class Text:
-    """A text class formatted using slacks markdown syntax"""
-
-    def __init__(self, text):
-        self.text = text
-
-    def _resolve(self):
-        text = {
-            "type": "mrkdwn",
-            "text": self.text,
-        }
-
-        return text
-
-    @staticmethod
-    def to_text(text, max_length=None):
-        if max_length and len(text) > max_length:
-            text = text[:max_length]
-
-        return Text(text=text)
-
-    def __str__(self):
-        return dumps(self._resolve(), indent=2)
-
-
-class SectionBlock(Block):
-    """A section is one of the most flexible blocks available"""
-
-    def __init__(self, text=None, fields=None):
-        super().__init__(block=BlockType.SECTION)
-        self.fields = []
-
-        if text is not None:
-            self.text = Text.to_text(text, MAX_LENGTH_SECTION)
-        if fields and len(fields) > 0:
-            self.fields = [Text.to_text(field, MAX_LENGTH_SECTION_FIELD) for field in fields]
-
-    def _resolve(self):
-        section = self._attributes()
-
-        if self.text:
-            section["text"] = self.text._resolve()
-
-        if self.fields and len(self.fields) > 0:
-            section["fields"] = [field._resolve() for field in self.fields]
-
-        return section
-
-
-class ContextBlock(Block):
-    """Displays message context. Typically used after a section"""
-
-    def __init__(self, elements):
-        super().__init__(block=BlockType.CONTEXT)
-
-        self.elements = []
-
-        for element in elements:
-            self.elements.append(Text.to_text(element, MAX_LENGTH_SECTION_FIELD))
-
-        if len(self.elements) > MAX_CONTEXT_ELEMENTS:
-            raise Exception("Context blocks can hold a maximum of ten elements")
-
-    def _resolve(self):
-        context = self._attributes()
-        context["elements"] = [element._resolve() for element in self.elements]
-
-        return context
-
-
-class DividerBlock(Block):
-    """A content divider like an <hr>"""
-
-    def __init__(self):
-        super().__init__(block=BlockType.DIVIDER)
-
-    def _resolve(self):
-        return self._attributes()
-
-
-class Message:
-    """A Slack message object that can be converted to a JSON string for use with
-    the Slack message API.
-    """
-
-    def __init__(self, text="", blocks=None):
-        if isinstance(blocks, list):
-            self.blocks = blocks
-        elif isinstance(blocks, Block):
-            self.blocks = [blocks]
-        else:
-            self.blocks = None
-
-        self.text = text
-
-    def add(self, block):
-        if self.blocks is None:
-            self.blocks = []
-
-        self.blocks.append(block)
-
-    def _resolve(self, blocks=None):
-        if blocks is None:
-            blocks = self.blocks
-
-        message = {}
-        if self.blocks:
-            message["blocks"] = [block._resolve() for block in blocks]
-
-        if self.text or self.text == "":
-            message["text"] = self.text
-
-        return message
-
-    def json(self):
-        return dumps(self._resolve(), indent=2)
-
-    def get_messages(self):
-        splits = split(self.blocks, MAX_BLOCKS)
-        splits = [dumps(self._resolve(blocks), indent=2) for blocks in splits]
-
-        return splits
-
-    def __repr__(self):
-        return self.json()
-
-    def __getitem__(self, item):
-        return self._resolve()[item]
-
-    def keys(self):
-        return self._resolve()
+    return message

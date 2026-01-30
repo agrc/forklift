@@ -13,7 +13,7 @@ from forklift import slack
 
 class TestSlack(unittest.TestCase):
     def test_ship_with_error(self):
-        messages = slack.ship_report_to_blocks(
+        message = slack.ship_report_to_blocks(
             {
                 "num_success_pallets": 10,
                 "total_pallets": 10,
@@ -46,10 +46,11 @@ class TestSlack(unittest.TestCase):
             }
         )
 
-        self.assertTrue(len(messages) == 1)
+        self.assertIsNotNone(message)
+        self.assertEqual(len(message.get_messages()), 1)
 
     def test_lift_with_error(self):
-        messages = slack.lift_report_to_blocks(
+        message = slack.lift_report_to_blocks(
             {
                 "hostname": "SomeMachineName",
                 "num_success_pallets": 3,
@@ -81,4 +82,5 @@ class TestSlack(unittest.TestCase):
             }
         )
 
-        self.assertTrue(len(messages) == 1)
+        self.assertIsNotNone(message)
+        self.assertEqual(len(message.get_messages()), 1)

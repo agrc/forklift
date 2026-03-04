@@ -106,7 +106,6 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
 1. `forklift garage open` - Opens garage directory. Copy all connection.sde files to the forklift garage.
 1. `forklift git-update` - Updates pallet repos. Add any secrets or supplementary data your pallets need that is not in source control.
 1. Edit the `config.json` to add the arcgis server(s) to manage. The options property will be mixed in to all of the other servers.
-
    - `username` ArcGIS admin username.
    - `password` ArcGIS admin password.
    - `host` ArcGIS host address eg: `myserver`. Validate this property by looking at the `machineName` property returned by `/arcgis/admin/machines?f=json`
@@ -135,7 +134,6 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
    ```
 
 1. Edit the `config.json` to add the email notification properties. _(This is required for sending email reports)_
-
    - `smtpServer` The SMTP server that you want to send emails with.
    - `smtpPort` The SMTP port number.
    - `fromAddress` The from email address for emails sent by forklift.
@@ -149,6 +147,7 @@ From within the [ArcGIS Pro conda environment](http://pro.arcgis.com/en/pro-app/
    ```
 
 1. Add network drive mapping config to `<garage folder>/share`. For example:
+
 ```json
 {
   "path": "...",
@@ -172,30 +171,15 @@ From the root of the forklift source code folder:
 
 ### Upgrading ArcGIS Pro
 
-If you originally created a fresh conda environment (not cloned from `arcgispro-py3`) and installed arcpy via `conda install arcpy -c esri`:
-
-1. Copy `forklift\Lib\site-packages\forklift-garage` somewhere safe
-1. Upgrade ArcGIS Pro
-1. `conda proup -n forklift`
-1. `pip install . -U` (from forklift app folder)
-1. Copy garage folder back into site-packages
-1. `forklift build` to check dependencies
-
-If you do need to recreate the forklift environment from scratch, follow these steps:
-
 1. Copy the `forklift-garage` folder to a temporary location.
-1. Activate forklift environment: `activate forklift`
-1. Export conda packages: `conda env export > env.yaml`
-1. Export pip packages: `pip freeze > requirements.txt`
-1. Remove and make note of any packages in `requirements.txt` that are not published to pypi such as forklift.
-1. Deactivate forklift environment: `deactivate`
 1. Remove forklift environment: `conda remove --name forklift --all`
-1. Create new forklift environment: `conda create --clone arcgispro-py3 --name forklift --pinned`
+1. Create new forklift environment: `conda create --name forklift --clone arcgispro-py3`
 1. Activate new environment: `activate forklift`
-1. Reinstall conda packages: `conda env update -n forklift -f env.yaml`
-1. Reinstall pip packages: `pip install -r requirements.txt`
-1. Copy the `forklift-garage` folder to the site-packages folder of the newly created environment.
-1. Reinstall forklift and any other missing pip package (from root of project): `pip install .\`
+1. Install forklift from local project folder: `pip install .`
+1. Search for `requirements.txt` files within the warehouse folder and `pip install -r requirements.txt`
+1. Install dolly from local project folder `pip install .`
+1. `pip install ugrc-swapper`
+1. `forklift build` - to verify that you have all of the necessary dependencies
 
 ## Development Usage
 

@@ -177,7 +177,7 @@ From the root of the forklift source code folder:
 1. Activate new environment: `activate forklift`
 1. Install forklift from local project folder: `pip install .`
 1. Search for `requirements.txt` files within the warehouse folder and `pip install -r requirements.txt`
-1. Install dolly from local project folder `pip install .`
+1. Install dolly from local project folder `pip install -e .`
 1. `pip install ugrc-swapper`
 1. `forklift build` - to verify that you have all of the necessary dependencies
 

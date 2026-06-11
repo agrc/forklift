@@ -144,9 +144,10 @@ def update(crate, validate_crate, change_detection):
                         if not is_table:
                             changes.fields[shape_field_index] = changes.fields[shape_field_index].rstrip("WKT")
 
-                        with arcpy.da.SearchCursor(changes.table, changes.fields) as add_cursor, arcpy.da.InsertCursor(
-                            crate.destination, changes.fields
-                        ) as cursor:
+                        with (
+                            arcpy.da.SearchCursor(changes.table, changes.fields) as add_cursor,
+                            arcpy.da.InsertCursor(crate.destination, changes.fields) as cursor,
+                        ):
                             for row in add_cursor:
                                 #: skip null geometries
                                 if not is_table and row[shape_field_index] is None:
@@ -224,9 +225,10 @@ def _hash(crate):
         arcpy.management.AddField(changes.table, hash_field, "TEXT", field_length=hash_field_length)
 
     has_dups = False
-    with arcpy.da.SearchCursor(
-        crate.source, [field for field in fields if field != hash_field]
-    ) as cursor, arcpy.da.InsertCursor(changes.table, changes.fields) as insert_cursor:
+    with (
+        arcpy.da.SearchCursor(crate.source, [field for field in fields if field != hash_field]) as cursor,
+        arcpy.da.InsertCursor(changes.table, changes.fields) as insert_cursor,
+    ):
         for row in cursor:
             total_rows += 1
 
@@ -522,11 +524,9 @@ def update_while_preserving_global_ids(crate, skip_hash_field=False):
 
         #: the only way to preserve global id values when exporting to fgdb is to use these tools
         if crate.is_table():
-            arcpy.conversion.TableToTable(crate.source, crate.destination_workspace, crate.destination_name)
+            arcpy.management.CopyRows(crate.source, crate.destination)
         else:
-            arcpy.conversion.FeatureClassToFeatureClass(
-                crate.source, crate.destination_workspace, crate.destination_name
-            )
+            arcpy.management.CopyFeatures(crate.source, crate.destination)
 
     if not skip_hash_field:
         arcpy.AddField_management(crate.destination, hash_field, "TEXT", field_length=hash_field_length)

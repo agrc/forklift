@@ -24,7 +24,7 @@ setup(
     packages=find_packages("src"),
     package_dir={"": "src"},
     py_modules=[splitext(basename(i))[0] for i in glob.glob("src/*.py")],
-    python_requires=">=3",
+    python_requires=">=3.10",
     include_package_data=True,
     zip_safe=False,
     classifiers=[

@@ -1,5 +1,19 @@
 # Changelog
 
+## [9.7.5](https://github.com/agrc/forklift/compare/v9.7.4...v9.7.5) (2026-06-12)
+
+
+### Bug Fixes
+
+* fix bug causing some GUID values to be inconsistent ([a224c4c](https://github.com/agrc/forklift/commit/a224c4c8604829fb3f7cdf34878f8f86d858b528)), closes [#399](https://github.com/agrc/forklift/issues/399)
+* make supported python version more specific ([6a28023](https://github.com/agrc/forklift/commit/6a280236f863a10ccdb023781b5a246fb504e90c))
+* remove prepare_packaging from pallet class ([5044166](https://github.com/agrc/forklift/commit/504416695ecb108454e005b23c5f3fd9bd1f81d5)), closes [#398](https://github.com/agrc/forklift/issues/398)
+
+
+### Documentation
+
+* add note about using feature service as crate source ([1481d8c](https://github.com/agrc/forklift/commit/1481d8c069fce20cd17c434a07b286a92d1fc37d)), closes [#398](https://github.com/agrc/forklift/issues/398)
+
 ## [9.7.4](https://github.com/agrc/forklift/compare/v9.7.3...v9.7.4) (2025-12-22)
 
 

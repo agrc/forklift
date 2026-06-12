@@ -221,12 +221,6 @@ class TestLiftPallets(CleanUpAlternativeConfig):
 
         self.assertEqual(order, ["Pallet1", "Pallet2", "Pallet3"])
 
-    @patch("forklift.lift.prepare_packaging_for_pallets")
-    def test_lift_pallets_prepare_packaging(self, prepare_mock, process_pallets, process_crates_for, git_update):
-        engine.lift_pallets(join(test_data_folder, "pallet_argument.py"))
-
-        prepare_mock.assert_called_once()
-
 
 class TestEngineGeneral(unittest.TestCase):
     def test_repo_to_url(self):

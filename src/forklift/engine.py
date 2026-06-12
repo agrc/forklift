@@ -142,10 +142,6 @@ def lift_pallets(file_path=None, pallet_arg=None, skip_git=False):
     lift.process_checklist(config)
 
     start_process = perf_counter()
-    lift.prepare_packaging_for_pallets(pallets_to_lift)
-    log.info("prepare_packaging_for_pallets time: %s", seat.format_time(perf_counter() - start_process))
-
-    start_process = perf_counter()
     core.init(log)
 
     try:
@@ -979,7 +975,7 @@ def _generate_ship_console_report(pallet_reports):
         if not report["success"]:
             color = Fore.RED
 
-        report_str += f'{linesep}ArcGIS Server Service Status for {Fore.CYAN}{report["name"]}{Fore.RESET}{linesep}'
+        report_str += f"{linesep}ArcGIS Server Service Status for {Fore.CYAN}{report['name']}{Fore.RESET}{linesep}"
 
         if report.get("has_service_issues", False):
             report_str += f"  {Fore.RED}Problem Services{Fore.RESET}{linesep}"
@@ -990,7 +986,7 @@ def _generate_ship_console_report(pallet_reports):
             report_str += f"    {Fore.GREEN}All services started{Fore.RESET}{linesep}"
 
         if not report["success"]:
-            report_str += f'    {Fore.RED}{report["message"]}{Fore.RESET}{linesep}'
+            report_str += f"    {Fore.RED}{report['message']}{Fore.RESET}{linesep}"
 
         report_str += f"  Datasets Copied{linesep}"
         if len(report["successful_copies"]) < 1:
@@ -1005,13 +1001,13 @@ def _generate_ship_console_report(pallet_reports):
         if not report["success"]:
             color = Fore.RED
 
-        report_str += f'  {color}{report["name"]}{Fore.RESET} ({report["total_processing_time"]}){linesep}'
+        report_str += f"  {color}{report['name']}{Fore.RESET} ({report['total_processing_time']}){linesep}"
         report_str += "  Post Copy Processed: {2}{0}{3}    Shipped: {2}{1}{3}{4}".format(
             report["post_copy_processed"], report["shipped"], Fore.CYAN, Fore.RESET, linesep
         )
 
         if report["message"]:
-            report_str += f'  pallet message: {color}{report["message"]}{Fore.RESET}{linesep}'
+            report_str += f"  pallet message: {color}{report['message']}{Fore.RESET}{linesep}"
 
     return report_str
 

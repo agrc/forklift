@@ -58,23 +58,6 @@ def _create_if_not_exists(locations):
         makedirs(location)
 
 
-def prepare_packaging_for_pallets(pallets):
-    """pallets: Pallet[]
-
-    Calls prepare_packaging for pallets
-    """
-    log.info("preparing packing for %d pallets", len(pallets))
-
-    for pallet in pallets:
-        try:
-            log.debug("prepare packaging for: %r", pallet)
-            with seat.timed_pallet_process(pallet, "prepare_packaging"):
-                pallet.prepare_packaging()
-        except Exception as e:
-            pallet.success = (False, str(e))
-            log.error("error preparing packaging: %s for pallet: %r", e, pallet, exc_info=True)
-
-
 def process_crates_for(pallets, update_def, change_detection=None):
     """
     pallets: Pallet[]

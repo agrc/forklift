@@ -46,7 +46,7 @@ self.add_crate(
     (
         'WRIFocusAreas/FeatureServer/0',
         'https://services.arcgis.com/ZzrwjTRez6FJiOq4/arcgis/rest/services/',
-        udnr,
+        destination_workspace,
         'FocusAreas',
     )
 )

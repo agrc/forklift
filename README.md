@@ -38,6 +38,20 @@ class MyPallet(Pallet):
                                     'destination_workspace': destination_workspace})
 ```
 
+You can also use ArcGIS Feature Services as crate sources by passing the service path as `source_name`
+and the REST root URL as `source_workspace`:
+
+```python
+self.add_crate(
+    (
+        'WRIFocusAreas/FeatureServer/0',
+        'https://services.arcgis.com/ZzrwjTRez6FJiOq4/arcgis/rest/services/',
+        udnr,
+        'FocusAreas',
+    )
+)
+```
+
 For details on all of the members of the `Pallet` and `Crate` classes see [models.py](src/forklift/models.py).
 
 For examples of pallets see [samples/PalletSamples.py](samples/PalletSamples.py).

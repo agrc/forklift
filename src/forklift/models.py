@@ -81,10 +81,6 @@ class Pallet(object):
         """
         return
 
-    def prepare_packaging(self):
-        """Invoked before process and ship only if this pallet is being lifted explicitly."""
-        return
-
     def process(self):
         """Invoked during lift if any crates have data updates."""
         return NotImplemented

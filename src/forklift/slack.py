@@ -50,7 +50,8 @@ def lift_report_to_blocks(report):
 
     message.add(SectionBlock(":tractor:       :package: *Forklift Lift Report* :package:      :tractor:"))
 
-    percent = _safely_access(report, "num_success_pallets") / _safely_access(report, "total_pallets") * 100
+    total_pallets = _safely_access(report, "total_pallets")
+    percent = _safely_access(report, "num_success_pallets") / total_pallets * 100 if total_pallets else 100
     if percent == 100:
         percent = ":100:"
     else:
@@ -137,7 +138,8 @@ def ship_report_to_blocks(report):
 
     message.add(SectionBlock(":tractor:       :rocket: *Forklift Ship Report* :rocket:      :tractor:"))
 
-    percent = _safely_access(report, "num_success_pallets") / _safely_access(report, "total_pallets") * 100
+    total_pallets = _safely_access(report, "total_pallets")
+    percent = _safely_access(report, "num_success_pallets") / total_pallets * 100 if total_pallets else 100
     if percent == 100:
         percent = ":100:"
     else:

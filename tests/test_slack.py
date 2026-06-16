@@ -48,6 +48,38 @@ class TestSlack(unittest.TestCase):
 
         self.assertTrue(len(messages) == 1)
 
+    def test_ship_with_no_packing_list(self):
+        # total_pallets of 0 (no packing list) previously raised
+        # ZeroDivisionError when computing the success percentage. See #391.
+        messages = slack.ship_report_to_blocks(
+            {
+                "num_success_pallets": 0,
+                "total_pallets": 0,
+                "hostname": "testing",
+                "total_time": "1 second",
+                "server_reports": [],
+                "pallets": [],
+            }
+        )
+
+        self.assertTrue(len(messages) == 1)
+
+    def test_lift_with_no_packing_list(self):
+        # Same guard for the lift report path. See #391.
+        messages = slack.lift_report_to_blocks(
+            {
+                "num_success_pallets": 0,
+                "total_pallets": 0,
+                "hostname": "testing",
+                "total_time": "1 second",
+                "num_success_crates": 0,
+                "server_reports": [],
+                "pallets": [],
+            }
+        )
+
+        self.assertTrue(len(messages) == 1)
+
     def test_lift_with_error(self):
         messages = slack.lift_report_to_blocks(
             {

@@ -16,12 +16,12 @@ jobs:
 
     steps:
       - name: ⬇️ Set up code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           show-progress: false
 
       - name: 🐍 Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v6.2.0
         with:
           cache: pip
           cache-dependency-path: setup.py
@@ -38,7 +38,7 @@ jobs:
         run: ruff check --output-format=github .
 
       - name: ⬆️ Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./cov.xml

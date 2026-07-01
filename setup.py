@@ -50,7 +50,7 @@ setup(
         "google-cloud-logging==3.*",
         "ndg-httpsclient==0.*",
         "pyasn1==0.*",
-        "pyopenssl>=24,<26",
+        "pyopenssl>=24,<27",
         "pystache==0.*",
         "requests==2.*",
         "sendgrid==6.*",

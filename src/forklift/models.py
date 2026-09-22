@@ -102,7 +102,7 @@ class Pallet(object):
     def add_crates(self, crate_infos, defaults={}):
         """crate_infos: [String | (source_name,
                                    source workspace,
-                                   destintion workspace: optional if set with defaults,
+                                   destination workspace: optional if set with defaults,
                                    destination name: optional will default to source_name)]
         defaults: optional dictionary {source_workspace: '', destination_workspace: ''}
 

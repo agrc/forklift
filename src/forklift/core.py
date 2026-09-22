@@ -508,25 +508,42 @@ def _mirror_fields(source, destination):
     arcpy.management.AddFields(destination, add_fields)
 
 
-def update_while_preserving_global_ids(crate, skip_hash_field=False):
+def update_while_preserving_global_ids(crate):
     """
     crate: Crate
 
     updates the destination data while preserving global ids
     """
-    log.info(f"GlobalID field detected. Deleting and copying {crate.destination}")
+    log.info(f"GlobalID field detected. Deleting and appending to {crate.destination}")
     with arcpy.EnvManager(
         geographicTransformations=crate.geographic_transformation,
         preserveGlobalIds=True,
         outputCoordinateSystem=crate.destination_coordinate_system,
     ):
-        arcpy.management.Delete(crate.destination)
+        if arcpy.da.Describe(crate.destination_workspace)["workspaceFactoryProgID"] == "esriDataSourcesGDB.FileGDBWorkspaceFactory":
+            #  File Geodatabases do not support preserving global ids when deleting and appending, so we handle it differently
+            arcpy.management.Delete(crate.destination)
 
-        #: the only way to preserve global id values when exporting to fgdb is to use these tools
-        if crate.is_table():
-            arcpy.management.CopyRows(crate.source, crate.destination)
+            #: the only way to preserve global id values when exporting to fgdb is to use these tools
+            if crate.is_table():
+                arcpy.management.CopyRows(crate.source, crate.destination)
+            else:
+                arcpy.management.CopyFeatures(crate.source, crate.destination)
+
+            arcpy.AddField_management(crate.destination, hash_field, "TEXT", field_length=hash_field_length)
+
         else:
-            arcpy.management.CopyFeatures(crate.source, crate.destination)
+            # Other datasources (SDE, mobile, etc) support preserving global ids when deleting and appending
+            # the method below prevents the loss of privileges when appending data
+            arcpy.management.DeleteRows(crate.destination)
 
-    if not skip_hash_field:
-        arcpy.AddField_management(crate.destination, hash_field, "TEXT", field_length=hash_field_length)
+            if arcpy.ListFields(crate.destination, hash_field) is None:
+                arcpy.AddField_management(crate.destination, hash_field, "TEXT", field_length=hash_field_length)
+
+            try:
+                arcpy.management.Append(crate.source, crate.destination, schema_type = "NO_TEST")
+            except ExecuteError as e:
+                log.warning(f"Failed to append data to {crate.destination}: {e}, adding a global id field index and retrying...")
+                arcpy.management.AddIndex(crate.destination, "GlobalID", "GlobalID_Index")
+                arcpy.management.Append(crate.source, crate.destination, schema_type = "NO_TEST")
+

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# * coding: utf8 *
 """
 test_forklift.py
 
@@ -11,6 +9,7 @@ from os import path
 from unittest.mock import Mock, patch
 
 import arcpy
+
 from forklift import core, engine, lift
 from forklift.models import Crate, Pallet
 
@@ -135,7 +134,7 @@ class TestLift(unittest.TestCase):
         pallet.copy_data = ["C:\\MapData\\one.gdb"]
         pallet.requires_processing = Mock(return_value=True)
 
-        success, failed = lift.copy_data("from_location", "to_location", engine.packing_slip_file)
+        _success, failed = lift.copy_data("from_location", "to_location", engine.packing_slip_file)
 
         self.assertTrue(failed["testfile"].startswith(error_message))
 

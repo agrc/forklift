@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 forklift
 
@@ -62,6 +60,8 @@ Examples:
 """
 
 #: check for Pro license
+import sys
+
 try:
     import arcpy  # noqa: F401
 except RuntimeError as exception:
@@ -73,11 +73,10 @@ except RuntimeError as exception:
     messaging.send_email(config.get_config_prop("notify"), f"Forklift Error on {socket.gethostname()}", str(exception))
 
     print("ERROR: Cannot import arcpy! This is usually caused by ArcGIS Pro not having a valid license.")
-    exit(1)
+    sys.exit(1)
 
 
 import faulthandler
-import google.cloud.logging
 import logging.config
 import socket
 import sys
@@ -86,8 +85,9 @@ from logging.handlers import RotatingFileHandler
 from os import linesep, makedirs, startfile
 from os.path import abspath, dirname, join, realpath
 
-from docopt import docopt
+import google.cloud.logging
 import requests
+from docopt import docopt
 
 from . import config, engine, messaging
 
@@ -132,7 +132,7 @@ def main():
     elif args["config"]:
         if args["init"]:
             message = engine.init()
-            print(("config file: {}".format(message)))
+            print(f"config file: {message}")
 
         if args["repos"] and args["<repo>"]:
             if args["--add"]:
@@ -171,7 +171,7 @@ def main():
             print("No pallets found!")
         else:
             for path, pallet_class in pallets:
-                print((": ".join([path, str(pallet_class)])))
+                print(": ".join([path, str(pallet_class)]))
     elif args["scorched-earth"]:
         engine.scorched_earth()
     elif args["ship"]:
@@ -221,7 +221,7 @@ def global_exception_handler(ex_cls, ex, tb):
     file_name = last_traceback[0].split(".")[0]
     error = linesep.join(traceback.format_exception(ex_cls, ex, tb))
 
-    log.error(("global error handler line: %s (%s)" % (line_number, file_name)))
+    log.error(f"global error handler line: {line_number} ({file_name})")
     log.error(error)
 
     log_file = join(dirname(config.config_location), "forklift.log")
@@ -281,12 +281,11 @@ def _setup_logging(verbose):
 
     return log
 
+
 def is_running_on_gce():
     try:
         response = requests.get(
-            'http://metadata.google.internal/computeMetadata/v1/',
-            headers={'Metadata-Flavor': 'Google'},
-            timeout=1
+            "http://metadata.google.internal/computeMetadata/v1/", headers={"Metadata-Flavor": "Google"}, timeout=1
         )
         return response.status_code == 200
     except requests.exceptions.RequestException:

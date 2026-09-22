@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# * coding: utf8 *
 """
 test_arcgis.py
 
@@ -12,6 +10,7 @@ from unittest.mock import Mock, call, patch
 
 import pytest
 import requests
+
 from forklift.arcgis import LightSwitch
 
 

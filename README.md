@@ -44,10 +44,10 @@ and the REST root URL as `source_workspace`:
 ```python
 self.add_crate(
     (
-        'WRIFocusAreas/FeatureServer/0',
-        'https://services.arcgis.com/ZzrwjTRez6FJiOq4/arcgis/rest/services/',
+        "WRIFocusAreas/FeatureServer/0",
+        "https://services.arcgis.com/ZzrwjTRez6FJiOq4/arcgis/rest/services/",
         destination_workspace,
-        'FocusAreas',
+        "FocusAreas",
     )
 )
 ```

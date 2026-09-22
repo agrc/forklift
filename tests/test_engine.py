@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# * coding: utf8 *
 """
 test_engine.py
 
@@ -13,13 +11,14 @@ from os.path import abspath, dirname, exists, join
 from unittest.mock import Mock, mock_open, patch
 
 import pytest
+
 from forklift import config, core, engine
 from forklift.models import Crate
 
 test_folder = dirname(abspath(__file__))
 test_data_folder = join(test_folder, "data")
 test_pallets_folder = join(test_data_folder, "list_pallets")
-config_location = config_location = join(test_folder, "config.json")
+config_location = join(test_folder, "config.json")
 
 
 class CleanUpAlternativeConfig(unittest.TestCase):

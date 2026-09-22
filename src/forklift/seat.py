@@ -1,14 +1,14 @@
-#!/usr/bin/env python
-# * coding: utf8 *
 """
 seat.py
 
 A module that contains helpful methods for other modules
 """
-import subprocess
-import logging
+
 import json
+import logging
+import subprocess
 from pathlib import Path
+
 from forklift import config
 
 
@@ -21,18 +21,18 @@ def format_time(seconds):
     hour = 60.00 * minute
 
     if seconds < 30:
-        return "{} ms".format(int(seconds * 1000))
+        return f"{int(seconds * 1000)} ms"
 
     if seconds < 90:
-        return "{} seconds".format(round(seconds, 2))
+        return f"{round(seconds, 2)} seconds"
 
     if seconds < 90 * minute:
-        return "{} minutes".format(round(seconds / minute, 2))
+        return f"{round(seconds / minute, 2)} minutes"
 
-    return "{} hours".format(round(seconds / hour, 2))
+    return f"{round(seconds / hour, 2)} hours"
 
 
-class timed_pallet_process(object):
+class timed_pallet_process:
     """A class used to time pallet processes. For use in with statements."""
 
     def __init__(self, pallet, name):
@@ -47,25 +47,25 @@ class timed_pallet_process(object):
 
 
 def map_network_drive(name, drive_letter):
-    parameters = json.load(Path(Path(config.config_location).parent, 'share', f'{name}.json').open('r'))
-    path = parameters['path']
-    username = parameters['username']
-    password = parameters['password']
-    logger = logging.getLogger('forklift')
-    if not drive_letter.endswith(':'):
-        drive_letter += ':'
+    with Path(Path(config.config_location).parent, "share", f"{name}.json").open("r") as parameters_file:
+        parameters = json.load(parameters_file)
+    path = parameters["path"]
+    username = parameters["username"]
+    password = parameters["password"]
+    logger = logging.getLogger("forklift")
+    if not drive_letter.endswith(":"):
+        drive_letter += ":"
     logger.debug(f"Mapping network drive: {path} to {drive_letter}")
     try:
         result = subprocess.run(
-            ["net", "use", drive_letter, path, password, f"/user:{username}", '/persistent:yes'],
+            ["net", "use", drive_letter, path, password, f"/user:{username}", "/persistent:yes"],
             check=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             text=True,
         )
         logger.info(f"Network share mounted successfully: {result.stdout.strip()}")
     except subprocess.CalledProcessError as e:
-        if '85' in e.stderr or '1219' in e.stderr:
-            logger.debug('ignoring error 85, drive already mapped')
+        if "85" in e.stderr or "1219" in e.stderr:
+            logger.debug("ignoring error 85, drive already mapped")
         else:
             raise Exception(f"Error mounting network share: {e.stderr.strip()}") from e

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# * coding: utf8 *
 """
 slack.py
 A module that holds the constructs for using the slack api
@@ -55,16 +53,16 @@ def lift_report_to_blocks(report):
     if percent == 100:
         percent = ":100:"
     else:
-        percent = f"{str(math.floor(percent))}% success"
+        percent = f"{math.floor(percent)!s}% success"
 
     message.add(
         ContextBlock(
             [
-                f'*{datetime.now().strftime("%B %d, %Y")}*',
+                f"*{datetime.now().astimezone().strftime('%B %d, %Y')}*",
                 _safely_access(report, "hostname"),
-                f'*{_safely_access(report, "num_success_pallets")}* of *{_safely_access(report, "total_pallets")}* pallets ran successfully',
+                f"*{_safely_access(report, 'num_success_pallets')}* of *{_safely_access(report, 'total_pallets')}* pallets ran successfully",
                 f"{percent}",
-                f'total time: *{_safely_access(report, "total_time")}*',
+                f"total time: *{_safely_access(report, 'total_time')}*",
             ]
         )
     )
@@ -93,11 +91,11 @@ def lift_report_to_blocks(report):
         if _safely_access(pallet, "success"):
             success = ":heavy_check_mark:"
 
-        message.add(SectionBlock(f'{success} *{_safely_access(pallet, "name").split(":")[-1]}*'))
+        message.add(SectionBlock(f"{success} *{_safely_access(pallet, 'name').split(':')[-1]}*"))
         message.add(
             ContextBlock(
                 [
-                    f'{_safely_access(pallet, "total_processing_time")}{"  |  " + _safely_access(pallet, "message") if _safely_access(pallet, "message") else ""}'
+                    f"{_safely_access(pallet, 'total_processing_time')}{'  |  ' + _safely_access(pallet, 'message') if _safely_access(pallet, 'message') else ''}"
                 ]
             )
         )
@@ -116,7 +114,7 @@ def lift_report_to_blocks(report):
                 show_message = True
                 result = ":fire:"
 
-            text = f'{result} *{_safely_access(crate, "name")}*'
+            text = f"{result} *{_safely_access(crate, 'name')}*"
             if show_message:
                 text += "\n" + _safely_access(crate, "crate_message")
 
@@ -143,16 +141,16 @@ def ship_report_to_blocks(report):
     if percent == 100:
         percent = ":100:"
     else:
-        percent = f"{str(math.floor(percent))}% success"
+        percent = f"{math.floor(percent)!s}% success"
 
     message.add(
         ContextBlock(
             [
-                f'*{datetime.now().strftime("%B %d, %Y")}*',
+                f"*{datetime.now().astimezone().strftime('%B %d, %Y')}*",
                 _safely_access(report, "hostname"),
-                f'*{_safely_access(report, "num_success_pallets")}* of *{_safely_access(report, "total_pallets")}* pallets ran successfully',
+                f"*{_safely_access(report, 'num_success_pallets')}* of *{_safely_access(report, 'total_pallets')}* pallets ran successfully",
                 f"{percent}",
-                f'total time: *{_safely_access(report, "total_time")}*',
+                f"total time: *{_safely_access(report, 'total_time')}*",
             ]
         )
     )
@@ -165,7 +163,7 @@ def ship_report_to_blocks(report):
             if _safely_access(server_status, "success"):
                 success = ":white_check_mark:"
 
-            message.add(SectionBlock(f'{success} *{_safely_access(server_status, "name")}*'))
+            message.add(SectionBlock(f"{success} *{_safely_access(server_status, 'name')}*"))
 
             if server_status.get("has_service_issues", False):
                 items = split(_safely_access(server_status, "problem_services"), MAX_CONTEXT_ELEMENTS)
@@ -199,7 +197,7 @@ def ship_report_to_blocks(report):
         if _safely_access(pallet, "success"):
             success = ":heavy_check_mark:"
 
-        message.add(SectionBlock(f'{success} *{_safely_access(pallet, "name").split(":")[-1]}*'))
+        message.add(SectionBlock(f"{success} *{_safely_access(pallet, 'name').split(':')[-1]}*"))
 
         post_copy_processed = shipped = ":red_circle:"
         if _safely_access(pallet, "post_copy_processed"):

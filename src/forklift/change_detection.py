@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# * coding: utf8 *
 """
 change_detection.py
 a module to track changes from change detection tables
@@ -23,7 +21,7 @@ table_name_field = "table_name"
 hash_field = "hash"
 
 
-class ChangeDetection(object):
+class ChangeDetection:
     """A class that models data obtained from the change detection tables"""
 
     def __init__(self, table_paths, root_folder, hash_table=hash_table):

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# * coding: utf8 *
 """
 nested.py
 
@@ -11,4 +9,4 @@ from forklift.models import Pallet
 
 class NestedPallet(Pallet):
     def __init__(self):
-        super(NestedPallet, self).__init__()
+        super().__init__()

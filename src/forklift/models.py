@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# * coding: utf8 *
 """
 models.py
 
@@ -11,10 +9,9 @@ from inspect import getsourcefile
 from os.path import dirname, join
 from time import perf_counter
 
-from xxhash import xxh64
-
 import arcgis
 import arcpy
+from xxhash import xxh64
 
 from . import config, seat
 from .messaging import send_email
@@ -23,7 +20,7 @@ names_cache = {}
 describes_cache = {}
 
 
-class Pallet(object):
+class Pallet:
     """A module that contains the base class that should be inherited from when building new pallet classes.
 
     Pallets are plugins for the forklift main process. They define a list of crates and
@@ -63,7 +60,7 @@ class Pallet(object):
         self.destination_coordinate_system = arcpy.SpatialReference(3857)
         self.geographic_transformation = "NAD_1983_To_WGS_1984_5"
         #: a unique name for this pallet
-        self.name = "{}:{}".format(getsourcefile(self.__class__), self.__class__.__name__)
+        self.name = f"{getsourcefile(self.__class__)}:{self.__class__.__name__}"
         #: the location of the garage containing logs and sde connection files etc
         self.garage = dirname(config.config_location)
         #: the default location to stage geodatabases. For use when creating crates
@@ -99,7 +96,7 @@ class Pallet(object):
         """
         return self._crates
 
-    def add_crates(self, crate_infos, defaults={}):
+    def add_crates(self, crate_infos, defaults=None):
         """crate_infos: [String | (source_name,
                                    source workspace,
                                    destination workspace: optional if set with defaults,
@@ -122,6 +119,8 @@ class Pallet(object):
         If a tuple has 4 values, the first value is set to `source_name`. The second value sets `source_workspace`.
         The third value sets `destination_workspace`. The fourth value sets `destination_name`. `defaults` is unused.
         """
+        if defaults is None:
+            defaults = {}
         crate_param_names = ["source_name", "source_workspace", "destination_workspace", "destination_name"]
 
         for info in crate_infos:
@@ -142,8 +141,10 @@ class Pallet(object):
 
             self._crates.append(Crate(**params))
 
-    def add_crate(self, crate_info, defaults={}):
+    def add_crate(self, crate_info, defaults=None):
         """Same as above but one at a time"""
+        if defaults is None:
+            defaults = {}
         self.add_crates([crate_info], defaults)
 
     def validate_crate(self, crate):
@@ -250,7 +251,7 @@ class Pallet(object):
         return self.name
 
 
-class Crate(object):
+class Crate:
     """A module that defines a source and destination dataset that is a dependency of a pallet."""
 
     #: possible results returned from core.update_crate
@@ -296,9 +297,7 @@ class Crate(object):
         if valid_destination_name != self.destination_name:
             self.result = (
                 Crate.INVALID_DATA,
-                "Validation error with destination_name: {} != {}".format(
-                    self.destination_name, valid_destination_name
-                ),
+                f"Validation error with destination_name: {self.destination_name} != {valid_destination_name}",
             )
 
         #: optional definition of destination coordinate system to support reprojecting
@@ -311,7 +310,7 @@ class Crate(object):
         #: the full path to the destination data
         self.destination = join(self.destination_workspace, self.destination_name)
         #: the hash table name of a crate
-        self.name = "{1}_{0}".format(xxh64(self.destination).hexdigest(), self.destination_name).replace(".", "_")
+        self.name = f"{self.destination_name}_{xxh64(self.destination).hexdigest()}".replace(".", "_")
 
         #: the full path to the source data
         self.source = join(source_workspace, source_name)
@@ -404,13 +403,12 @@ class Crate(object):
             needs_reproject = False
         else:
             #: some feature/map services don't report a spatial reference so let's just assume they are 3857
-            if self.source_describe["spatialReference"] is None:
-                if self.source.startswith("http"):
-                    self.log.warn("source spatial reference is undefined attempting to find it via arcgis package")
-                    feature_layer = arcgis.features.FeatureLayer(self.source)
-                    self.source_describe["spatialReference"] = arcpy.SpatialReference(
-                        feature_layer.properties["sourceSpatialReference"]["wkid"]
-                    )
+            if self.source_describe["spatialReference"] is None and self.source.startswith("http"):
+                self.log.warning("source spatial reference is undefined attempting to find it via arcgis package")
+                feature_layer = arcgis.features.FeatureLayer(self.source)
+                self.source_describe["spatialReference"] = arcpy.SpatialReference(
+                    feature_layer.properties["sourceSpatialReference"]["wkid"]
+                )
             needs_reproject = self.destination_coordinate_system.name != self.source_describe["spatialReference"].name
 
         return needs_reproject
@@ -450,7 +448,7 @@ class Crate(object):
         names = filter_filenames(self.source_workspace, self.source_name)
 
         if names is None or len(names) < 1:
-            not_found_message = "No source data found for {}".format(self.source)
+            not_found_message = f"No source data found for {self.source}"
 
             return (False, not_found_message)
 
@@ -468,12 +466,10 @@ class Crate(object):
     def __repr__(self):
         """Override for better logging. Use with %r"""
 
-        return "source: [{}] source_workspace: [{}] destination: [{}]".format(
-            self.source, self.source_workspace, self.destination
-        )
+        return f"source: [{self.source}] source_workspace: [{self.source_workspace}] destination: [{self.destination}]"
 
 
-class Changes(object):
+class Changes:
     """A module that contains the adds and deletes for when checking for changes."""
 
     def __init__(self, fields):

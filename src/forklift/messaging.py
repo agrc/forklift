@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# * coding: utf8 *
 """
 email.py
 
@@ -14,12 +12,12 @@ from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from pathlib import Path
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail, Attachment, Disposition, FileContent, FileName, FileType
 from smtplib import SMTP
 
 import pkg_resources
 import requests
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Attachment, Disposition, FileContent, FileName, FileType, Mail
 
 from .config import get_config_prop
 
@@ -27,7 +25,7 @@ log = logging.getLogger("forklift")
 send_emails_override = None
 
 
-def send_email(to, subject, body, attachments=[]):
+def send_email(to, subject, body, attachments=None):
     """
     to: string | string[]
     subject: string
@@ -36,6 +34,8 @@ def send_email(to, subject, body, attachments=[]):
 
     Send an email.
     """
+    if attachments is None:
+        attachments = []
     if send_emails_override is False:
         log.info("send_emails_override is False. No email sent.")
 
@@ -77,7 +77,7 @@ def send_to_slack(url, messages):
             )
 
 
-def _send_email_with_sendgrid(email_server, to, subject, body, attachments=[]):
+def _send_email_with_sendgrid(email_server, to, subject, body, attachments=None):
     """
     email_server: dict
     to: string | string[]
@@ -87,6 +87,8 @@ def _send_email_with_sendgrid(email_server, to, subject, body, attachments=[]):
 
     Send an email.
     """
+    if attachments is None:
+        attachments = []
     from_address = email_server["fromAddress"]
     api_key = email_server["apiKey"]
 
@@ -123,7 +125,7 @@ def _send_email_with_sendgrid(email_server, to, subject, body, attachments=[]):
         return e
 
 
-def _send_email_with_smtp(email_server, to, subject, body, attachments=[]):
+def _send_email_with_smtp(email_server, to, subject, body, attachments=None):
     """
     email_server: dict
     to: string | string[]
@@ -133,6 +135,8 @@ def _send_email_with_smtp(email_server, to, subject, body, attachments=[]):
 
     Send an email.
     """
+    if attachments is None:
+        attachments = []
     from_address = email_server["fromAddress"]
     smtp_server = email_server["smtpServer"]
     smtp_port = email_server["smtpPort"]
@@ -155,7 +159,7 @@ def _send_email_with_smtp(email_server, to, subject, body, attachments=[]):
     else:
         message = body
 
-    version = MIMEText(f'<p>Forklift version: {pkg_resources.require("forklift")[0].version}</p>', "html")
+    version = MIMEText(f"<p>Forklift version: {pkg_resources.require('forklift')[0].version}</p>", "html")
     message.attach(version)
 
     message["Subject"] = subject

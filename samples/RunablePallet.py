@@ -1,4 +1,4 @@
-"""
+r"""
 RunablePallet.py
 
 A module that contains a pallet that demonstrates how to make it runnable as a script

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8 -*-
 """
 setup.py
 A module that installs forklift
@@ -65,7 +63,7 @@ setup(
             "pytest-ruff==0.*",
             "pytest-watch==4.*",
             "pytest==8.*",
-            "ruff==0.*",
+            "ruff==0.16.*",
         ]
     },
     setup_requires=["pytest-runner"],

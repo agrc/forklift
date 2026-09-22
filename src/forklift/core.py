@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 core.py
 -----------------------------------------
@@ -8,10 +7,9 @@ Tools for updating the data associated with a models.Crate
 
 from os import path
 
+import arcpy
 from arcgisscripting import ExecuteError
 from xxhash import xxh64
-
-import arcpy
 
 from .config import config_location
 from .exceptions import ValidationException
@@ -103,7 +101,7 @@ def update(crate, validate_crate, change_detection):
             changes = _hash(crate)
 
         if changes.has_changes():
-            if "hasGlobalID" in crate.source_describe and crate.source_describe["hasGlobalID"]:
+            if crate.source_describe.get("hasGlobalID"):
                 update_while_preserving_global_ids(crate)
                 change_status = (Crate.UPDATED, None)
             else:
@@ -125,7 +123,7 @@ def update(crate, validate_crate, change_detection):
                     #: add new/updated rows
                     if changes.has_adds():
                         log.debug("number of rows to be added: %d", len(changes.adds))
-                        status, message = change_status
+                        status, _message = change_status
                         if status != Crate.CREATED:
                             change_status = (Crate.UPDATED, None)
 
@@ -168,7 +166,7 @@ def update(crate, validate_crate, change_detection):
 
         return count_status or change_status
     except Exception as e:
-        log.error("unhandled exception: %s for crate %r", str(e), crate, exc_info=True)
+        log.exception("unhandled exception for crate %r", crate)
 
         return (Crate.UNHANDLED_EXCEPTION, str(e))
     finally:
@@ -185,9 +183,9 @@ def _hash(crate):
 
     log.info("checking for changes...")
     #: finding and filtering common fields between source and destination
-    fields = set([fld.name for fld in arcpy.ListFields(crate.destination)]) & set(
-        [fld.name for fld in arcpy.ListFields(crate.source)]
-    )
+    fields = {fld.name for fld in arcpy.ListFields(crate.destination)} & {
+        fld.name for fld in arcpy.ListFields(crate.source)
+    }
     fields = _filter_fields(fields)
 
     if not crate.is_table():
@@ -288,7 +286,7 @@ def _create_destination_data(crate, skip_hash_field=False):
                 path.dirname(crate.destination_workspace), path.basename(crate.destination_workspace)
             )
         else:
-            raise Exception("destination_workspace does not exist! {}".format(crate.destination_workspace))
+            raise Exception(f"destination_workspace does not exist! {crate.destination_workspace}")
 
     try:
         source_metadata = arcpy.metadata.Metadata(crate.source)
@@ -379,9 +377,7 @@ def check_schema(crate):
             source_fld = source_fields[field_key]
             if abstract_type(source_fld.type) != abstract_type(destination_fld.type):
                 mismatching_fields.append(
-                    "{}: source type of {} does not match destination type of {}".format(
-                        source_fld.name, source_fld.type, destination_fld.type
-                    )
+                    f"{source_fld.name}: source type of {source_fld.type} does not match destination type of {destination_fld.type}"
                 )
             elif source_fld.type == "String":
 
@@ -396,9 +392,7 @@ def check_schema(crate):
                 destination_fld.length = truncate_field_length(destination_fld)
                 if source_fld.length != destination_fld.length:
                     mismatching_fields.append(
-                        "{}: source length of {} does not match destination length of {}".format(
-                            source_fld.name, source_fld.length, destination_fld.length
-                        )
+                        f"{source_fld.name}: source length of {source_fld.length} does not match destination length of {destination_fld.length}"
                     )
 
     if len(missing_fields) > 0:
@@ -460,7 +454,7 @@ def _check_counts(crate, changes):
     destination_rows = int(arcpy.GetCount_management(crate.destination).getOutput(0))
     source_rows = changes.total_rows
 
-    if not source_rows == destination_rows:
+    if source_rows != destination_rows:
         status = Crate.WARNING
 
         if changes.has_changes():
@@ -468,7 +462,7 @@ def _check_counts(crate, changes):
 
         return (
             status,
-            "Source row count ({}) does not match destination count ({})!".format(source_rows, destination_rows),
+            f"Source row count ({source_rows}) does not match destination count ({destination_rows})!",
         )
     elif destination_rows == 0:
         return (Crate.INVALID_DATA, "Destination has zero rows!")
@@ -520,7 +514,10 @@ def update_while_preserving_global_ids(crate):
         preserveGlobalIds=True,
         outputCoordinateSystem=crate.destination_coordinate_system,
     ):
-        if arcpy.da.Describe(crate.destination_workspace)["workspaceFactoryProgID"] == "esriDataSourcesGDB.FileGDBWorkspaceFactory":
+        if (
+            arcpy.da.Describe(crate.destination_workspace)["workspaceFactoryProgID"]
+            == "esriDataSourcesGDB.FileGDBWorkspaceFactory"
+        ):
             #  File Geodatabases do not support preserving global ids when deleting and appending, so we handle it differently
             arcpy.management.Delete(crate.destination)
 
@@ -541,9 +538,10 @@ def update_while_preserving_global_ids(crate):
                 arcpy.AddField_management(crate.destination, hash_field, "TEXT", field_length=hash_field_length)
 
             try:
-                arcpy.management.Append(crate.source, crate.destination, schema_type = "NO_TEST")
+                arcpy.management.Append(crate.source, crate.destination, schema_type="NO_TEST")
             except ExecuteError as e:
-                log.warning(f"Failed to append data to {crate.destination}: {e}, adding a global id field index and retrying...")
+                log.warning(
+                    f"Failed to append data to {crate.destination}: {e}, adding a global id field index and retrying..."
+                )
                 arcpy.management.AddIndex(crate.destination, "GlobalID", "GlobalID_Index")
-                arcpy.management.Append(crate.source, crate.destination, schema_type = "NO_TEST")
-
+                arcpy.management.Append(crate.source, crate.destination, schema_type="NO_TEST")

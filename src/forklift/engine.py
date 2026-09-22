@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-# * coding: utf8 *
 """
 engine.py
 
 A module that contains the implementation of the cli commands
 """
 
+import importlib.util
 import logging
 import socket
 import sys
@@ -15,7 +15,6 @@ from os.path import abspath, basename, dirname, exists, join, normpath, realpath
 from re import compile
 from shutil import copytree, rmtree
 from time import perf_counter, sleep
-import importlib.util
 
 import pystache
 from colorama import Fore
@@ -79,7 +78,7 @@ def remove_repo(repo):
     try:
         repos.remove(repo)
     except ValueError:
-        return "{} is not in the repositories list!".format(repo)
+        return f"{repo} is not in the repositories list!"
 
     config.set_config_prop("repositories", repos, override=True)
 
@@ -88,7 +87,7 @@ def remove_repo(repo):
 
     lift._remove_if_exists(possible_path)
 
-    return "{} removed".format(repo)
+    return f"{repo} removed"
 
 
 def list_pallets():
@@ -177,7 +176,7 @@ def lift_pallets(file_path=None, pallet_arg=None, skip_git=False):
     _send_report_to_slack(status, "Lifting")
 
     report = _generate_console_report(status)
-    log.info("finished in {}.".format(elapsed_time))
+    log.info(f"finished in {elapsed_time}.")
 
     log.info("%s", report)
 
@@ -248,7 +247,7 @@ def ship_data(pallet_arg=None, by_service=False):
 
             #: stop server or services
             if by_service:
-                data_being_moved = set(listdir(config.get_config_prop("dropoffLocation"))) - set([packing_slip_file])
+                data_being_moved = set(listdir(config.get_config_prop("dropoffLocation"))) - {packing_slip_file}
                 services_affected = _get_affected_services(data_being_moved, all_pallets)
                 status, messages = switch.ensure_services("off", services_affected)
                 item_being_acted_upon = ", ".join([service_info[0] for service_info in services_affected])
@@ -261,7 +260,7 @@ def ship_data(pallet_arg=None, by_service=False):
             )
 
             if status is False:
-                error_msg = "{} did not stop, skipping copy. {}".format(item_being_acted_upon, messages)
+                error_msg = f"{item_being_acted_upon} did not stop, skipping copy. {messages}"
                 log.error(error_msg)
                 server_report["success"] = False
                 server_report["message"] = error_msg
@@ -302,7 +301,7 @@ def ship_data(pallet_arg=None, by_service=False):
             )
 
             if status is False:
-                error_msg = "{} did not restart. {}".format(item_being_acted_upon, messages)
+                error_msg = f"{item_being_acted_upon} did not restart. {messages}"
                 log.error(error_msg)
                 server_report["success"] = False
                 server_report["message"] = error_msg
@@ -366,7 +365,7 @@ def ship_data(pallet_arg=None, by_service=False):
             except Exception as e:
                 slip["success"] = False
                 slip["message"] = e
-                log.error("error for pallet: %r: %s", pallet, e, exc_info=True)
+                log.exception("error for pallet: %r", pallet)
 
             slip["total_processing_time"] = seat.format_time(pallet.total_processing_time)
             pallet_reports.append(slip)
@@ -399,7 +398,7 @@ def speedtest(pallet_location):
 
     returns a report object
     """
-    print(("{0}{1}Setting up speed test...{0}".format(Fore.RESET, Fore.MAGENTA)))
+    print(f"{Fore.RESET}{Fore.MAGENTA}Setting up speed test...{Fore.RESET}")
 
     def _change_data(data_path):
         import arcpy
@@ -456,16 +455,16 @@ def speedtest(pallet_location):
     if arcpy.Exists(core.scratch_gdb_path):
         arcpy.Delete_management(core.scratch_gdb_path)
 
-    print(("{0}{1}Tests ready starting dry run...{0}".format(Fore.RESET, Fore.MAGENTA)))
+    print(f"{Fore.RESET}{Fore.MAGENTA}Tests ready starting dry run...{Fore.RESET}")
 
     start_seconds = perf_counter()
     dry_report = lift_pallets(pallet_location, skip_git=True)
     dry_run = seat.format_time(perf_counter() - start_seconds)
 
-    print(("{0}{1}Changing data...{0}".format(Fore.RESET, Fore.MAGENTA)))
+    print(f"{Fore.RESET}{Fore.MAGENTA}Changing data...{Fore.RESET}")
     _change_data(join(speedtest_destination, "ChangeSourceData.gdb", "AddressPoints"))
 
-    print(("{0}{1}Repeating test...{0}".format(Fore.RESET, Fore.MAGENTA)))
+    print(f"{Fore.RESET}{Fore.MAGENTA}Repeating test...{Fore.RESET}")
     start_seconds = perf_counter()
     repeat_report = lift_pallets(pallet_location, skip_git=True)
     repeat = seat.format_time(perf_counter() - start_seconds)
@@ -478,14 +477,10 @@ def speedtest(pallet_location):
     if arcpy.Exists(core.scratch_gdb_path):
         arcpy.Delete_management(core.scratch_gdb_path)
 
-    print(("{1}Dry Run Output{0}{2}{3}".format(Fore.RESET, Fore.CYAN, linesep, dry_report)))
-    print(("{1}Repeat Run Output{0}{2}{3}".format(Fore.RESET, Fore.CYAN, linesep, repeat_report)))
+    print(f"{Fore.CYAN}Dry Run Output{Fore.RESET}{linesep}{dry_report}")
+    print(f"{Fore.CYAN}Repeat Run Output{Fore.RESET}{linesep}{repeat_report}")
     print(
-        (
-            "{3}{0}{1}Speed Test Results{3}{0}{2}Dry Run:{0} {4}{3}{2}Repeat:{0} {5}".format(
-                Fore.RESET, Fore.GREEN, Fore.CYAN, linesep, dry_run, repeat
-            )
-        )
+        f"{linesep}{Fore.RESET}{Fore.GREEN}Speed Test Results{linesep}{Fore.RESET}{Fore.CYAN}Dry Run:{Fore.RESET} {dry_run}{linesep}{Fore.CYAN}Repeat:{Fore.RESET} {repeat}"
     )
 
 
@@ -540,8 +535,7 @@ def gift_wrap(destination, source=None, pallet_path=None):
     if pallet_path is not None:
         pallets, _ = build_pallets(pallet_path)
         for pallet in pallets:
-            for gdb in pallet.copy_data:
-                sources.append(gdb)
+            sources.extend(pallet.copy_data)
     elif source is not None:
         sources.append(source)
     else:
@@ -603,11 +597,11 @@ def build_pallets(file_path, pallet_arg=None):
                 pallet.build(config.get_config_prop("configuration"))
             except Exception as e:
                 pallet.success = (False, str(e))
-                log.error("error building pallet: %s for pallet: %r", e, pallet, exc_info=True)
+                log.exception("error building pallet for pallet: %r", pallet)
 
             pallets.append(pallet)
-        except Exception as e:
-            log.error("error creating pallet class: %s. %s", PalletClass.__name__, e, exc_info=True)
+        except Exception:
+            log.exception("error creating pallet class: %s", PalletClass.__name__)
 
     pallets.sort(key=lambda p: p.__class__.__name__)
 
@@ -683,8 +677,8 @@ def _send_report_email(template, report_object, subject, include_packing_slip=Fa
             email_content,
             attachments,
         )
-    except Exception as e:
-        log.error("error sending email: %s", e, exc_info=True)
+    except Exception:
+        log.exception("error sending email")
 
     return email_content
 
@@ -751,10 +745,10 @@ def _clone_or_pull_repo(repo_name):
         if not exists(folder):
             repo = Repo.clone_from(_repo_to_url(repo_name, shorthand), join(warehouse, folder))
 
-            log_message = "git cloning: {}".format(safe_repo_name)
+            log_message = f"git cloning: {safe_repo_name}"
             repo.close()
         else:
-            log_message = "git updating: {}".format(safe_repo_name)
+            log_message = f"git updating: {safe_repo_name}"
             repo = _get_repo(folder)
             origin = repo.remotes[0]
             fetch_infos = origin.pull()
@@ -767,7 +761,7 @@ def _clone_or_pull_repo(repo_name):
 
         return (None, log_message)
     except Exception as e:
-        return ("Git update error for {}: {}".format(safe_repo_name, e), log_message)
+        return (f"Git update error for {safe_repo_name}: {e}", log_message)
 
 
 def _get_repo(folder):
@@ -777,7 +771,7 @@ def _get_repo(folder):
 
 def _repo_to_url(repo, shorthand=True):
     if shorthand:
-        return "https://github.com/{}.git".format(repo)
+        return f"https://github.com/{repo}.git"
 
     return "https://forklift:{}@{}{}.git".format(repo["token"], repo["host"], repo["repo"])
 
@@ -803,9 +797,9 @@ def _validate_repo(repo, raises=False):
     else:
         message = "[Invalid repo name or owner]"
         if raises:
-            raise Exception("{}: {}".format(repo, message))
+            raise Exception(f"{repo}: {message}")
 
-    return "{}: {}".format(repo, message)
+    return f"{repo}: {message}"
 
 
 def _get_pallets_in_folder(folder):
@@ -880,8 +874,8 @@ def _get_pallets_in_file(file_path):
             mod = load_module(file_name, file_path)
     except Exception as e:
         # skip modules that fail to import
-        log.error("%s failed to import: %s", file_path, e, exc_info=True)
-        return ([], "pallet failed to import: {}, {}".format(file_path, e))
+        log.exception("%s failed to import", file_path)
+        return ([], f"pallet failed to import: {file_path}, {e}")
 
     for member in dir(mod):
         try:
@@ -919,26 +913,26 @@ def _generate_console_report(pallet_reports):
 
     if len(pallet_reports["git_errors"]) > 0:
         for git_error in pallet_reports["git_errors"]:
-            report_str += "{}{}{}".format(Fore.RED, git_error, linesep)
+            report_str += f"{Fore.RED}{git_error}{linesep}"
 
     if len(pallet_reports["import_errors"]) > 0:
         for import_error in pallet_reports["import_errors"]:
-            report_str += "{}{}{}".format(Fore.RED, import_error, linesep)
+            report_str += f"{Fore.RED}{import_error}{linesep}"
 
     for report in pallet_reports["pallets"]:
         color = Fore.GREEN
         if not report["success"]:
             color = Fore.RED
 
-        report_str += "{0}{1}{2} ({4}){3}".format(
-            color, report["name"], Fore.RESET, linesep, report["total_processing_time"]
+        report_str += "{}{}{} ({}){}".format(
+            color, report["name"], Fore.RESET, report["total_processing_time"], linesep
         )
 
         if report["message"]:
             report_str += "pallet message: {}{}{}{}".format(Fore.RED, report["message"], Fore.RESET, linesep)
 
         for crate in report["crates"]:
-            report_str += "{0:>40} - {1}{3}{2}".format(crate["name"], crate["result"], linesep, Fore.RESET)
+            report_str += "{:>40} - {}{}{}".format(crate["name"], crate["result"], Fore.RESET, linesep)
 
             if crate["crate_message"] is None or len(crate["crate_message"]) < 1:
                 continue
@@ -948,7 +942,7 @@ def _generate_console_report(pallet_reports):
             else:
                 color = Fore.RED
 
-            report_str += "crate message: {0}{1}{2}{3}".format(color, crate["crate_message"], Fore.RESET, linesep)
+            report_str += "crate message: {}{}{}{}".format(color, crate["crate_message"], Fore.RESET, linesep)
 
     return report_str
 
@@ -1014,7 +1008,7 @@ def _generate_ship_console_report(pallet_reports):
 
 def _get_affected_services(data_being_moved, all_pallets):
     #: return a list of services that are affected by the data in data_being_moved
-    services_affected = set([])
+    services_affected = set()
 
     def normalize_workspace(workspace_path):
         return normpath(workspace_path.lower())

@@ -10,9 +10,9 @@ change them to match services that are already published to your server.
 
 import sys
 from os import path
-from time import perf_counter  # NOQA
+from time import perf_counter
 
-from forklift.arcgis import LightSwitch  # NOQA
+from forklift.arcgis import LightSwitch
 
 forklift_path = path.join(path.dirname(path.abspath(__file__)), r"..\src")
 sys.path.insert(0, forklift_path)
@@ -53,11 +53,11 @@ def main():
 
     sum_times = 0
     for i in range(1, NUM_REPEATS + 1):
-        print("repetition #:{}".format(i))
+        print(f"repetition #:{i}")
         sum_times = sum_times + benchmark()
 
-    print("average time: {} seconds".format(sum_times / NUM_REPEATS))
-    print("total time: {} seconds".format(sum_times))
+    print(f"average time: {sum_times / NUM_REPEATS} seconds")
+    print(f"total time: {sum_times} seconds")
 
 
 if __name__ == "__main__":

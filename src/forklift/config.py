@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# * coding: utf8 *
 """
 config.py
 
@@ -76,14 +75,14 @@ def get_config_prop(key):
         log.info("no servers defined in config")
         return {}
 
-    if "options" not in servers.keys():
+    if "options" not in servers:
         return servers
 
     options = servers.pop("options")
-    for key, item in servers.items():
+    for server_name, item in servers.items():
         temp = options.copy()
         temp.update(item)
-        servers[key] = temp
+        servers[server_name] = temp
 
     return servers
 
@@ -101,7 +100,7 @@ def set_config_prop(key, value, override=False):
     config = _get_config()
 
     if key not in config:
-        return "{} not found in config.".format(key)
+        return f"{key} not found in config."
 
     if not override:
         try:
@@ -109,7 +108,7 @@ def set_config_prop(key, value, override=False):
                 if value not in config[key]:
                     config[key].append(value)
                 else:
-                    return "{} already contains {}".format(key, value)
+                    return f"{key} already contains {value}"
             else:
                 for item in value:
                     if item not in config[key]:
@@ -123,4 +122,4 @@ def set_config_prop(key, value, override=False):
     with open(config_location, "w") as json_config_file:
         json_config_file.write(dumps(config, sort_keys=True, indent=2, separators=(",", ": ")))
 
-    return "Added {} to {}".format(value, key)
+    return f"Added {value} to {key}"

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# * coding: utf8 *
 
 from os import path
 from time import sleep
@@ -9,7 +8,7 @@ from forklift.models import Pallet
 
 class TypicalPallet(Pallet):
     def __init__(self):
-        super(TypicalPallet, self).__init__()
+        super().__init__()
 
         self.arcgis_services = [("Service", "MapServer")]
 

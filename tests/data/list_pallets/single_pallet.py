@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# * coding: utf8 *
 """
 single_pallet.py
 
@@ -11,4 +10,4 @@ from forklift.models import Pallet
 
 class SinglePallet(Pallet):
     def __init__(self):
-        super(SinglePallet, self).__init__()
+        super().__init__()

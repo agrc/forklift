@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# * coding: utf8 *
 """
 arcgis.py
 
@@ -14,7 +13,7 @@ import requests
 log = logging.getLogger("forklift")
 
 
-class LightSwitch(object):
+class LightSwitch:
     def __init__(self, server):
         required_fields = "Required information for connecting to ArcGIS Server do not exist. "
         "Server will not be stopped or started. See README.md for more details."
@@ -44,9 +43,9 @@ class LightSwitch(object):
         self.wait = [12, 8, 4, 2, 1]
 
         base_url = "{}://{}:{}/arcgis/admin".format(server["protocol"], server["machineName"], server["port"])
-        self.token_url = "{}/generateToken".format(base_url)
+        self.token_url = f"{base_url}/generateToken"
         self.switch_url = "{}/machines/{}/".format(base_url, server["machineName"])
-        self.services_url = "{}/services".format(base_url)
+        self.services_url = f"{base_url}/services"
 
     def ensure(self, what):
         """
@@ -79,9 +78,9 @@ class LightSwitch(object):
             #: logs within this context do not show up in the console or log file
             service_name, service_type = service_info
             if what == "off":
-                status, message = self.turn_off(service_name, service_type)
+                status, _message = self.turn_off(service_name, service_type)
             else:
-                status, message = self.turn_on(service_name, service_type)
+                status, _message = self.turn_on(service_name, service_type)
 
             if not status:
                 return (service_name, service_type)
@@ -117,7 +116,7 @@ class LightSwitch(object):
         root = self._fetch(self.services_url)
         service_infos = root["services"]
         for folder in root["folders"]:
-            folder_json = self._fetch("{}/{}".format(self.services_url, folder))
+            folder_json = self._fetch(f"{self.services_url}/{folder}")
             service_infos += folder_json["services"]
 
         #: check status of each service
@@ -128,7 +127,7 @@ class LightSwitch(object):
             else:
                 service_path = "{}/{}.{}".format(info["folderName"], info["serviceName"], info["type"])
 
-            service_status = self._fetch("{}/{}/status".format(self.services_url, service_path))
+            service_status = self._fetch(f"{self.services_url}/{service_path}/status")
 
             try:
                 if service_status["realTimeState"] != service_status["configuredState"]:
@@ -221,6 +220,6 @@ class LightSwitch(object):
 
     def _flip_switch(self, service, service_type, what):
         log.debug("flipping switch for %s/%s (%s)", service, service_type, what)
-        url = "{}/{}.{}/{}".format(self.services_url, service, service_type, what)
+        url = f"{self.services_url}/{service}.{service_type}/{what}"
 
         return self._execute(url)

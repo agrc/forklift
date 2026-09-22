@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# * coding: utf8 *
 """
 multiple_pallets.py
 
@@ -11,7 +10,7 @@ from forklift.models import Pallet
 
 class PalletOne(Pallet):
     def __init__(self):
-        super(PalletOne, self).__init__()
+        super().__init__()
 
         self.add_crates(
             ["fc1", "fc2", ("fc3", "source", "destination"), ("fc4", "source", "destination", "fc4_new")],
@@ -21,7 +20,7 @@ class PalletOne(Pallet):
 
 class PalletTwo(Pallet):
     def __init__(self):
-        super(PalletTwo, self).__init__()
+        super().__init__()
 
     def ship(self):
         pass

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 test_core.py
 -----------------------------------------
@@ -12,6 +11,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 import arcpy
 import pytest
+
 from forklift import core, engine
 from forklift.change_detection import ChangeDetection
 from forklift.exceptions import ValidationException
@@ -161,11 +161,11 @@ def test_hash_custom_source_key_text(test_gdb):
     tbl = "NO_OBJECTID_TEST"
 
     #: has changes
-    crate = Crate("UPDATE_TESTS.dbo.{}".format(tbl), UPDATE_TESTS_SDE, test_gdb, tbl)
+    crate = Crate(f"UPDATE_TESTS.dbo.{tbl}", UPDATE_TESTS_SDE, test_gdb, tbl)
     assert len(core._hash(crate).adds) == 1
 
     #: no changes
-    crate = Crate("UPDATE_TESTS.dbo.{}".format(tbl), UPDATE_TESTS_SDE, test_gdb, "{}_NO_CHANGES".format(tbl))
+    crate = Crate(f"UPDATE_TESTS.dbo.{tbl}", UPDATE_TESTS_SDE, test_gdb, f"{tbl}_NO_CHANGES")
     assert len(core._hash(crate).adds) == 0
 
 
@@ -175,7 +175,7 @@ def test_hash_custom_source_key_float(test_gdb):
     tbl = "FLOAT_ID"
 
     #: has changes
-    crate = Crate("UPDATE_TESTS.dbo.{}".format(tbl), UPDATE_TESTS_SDE, test_gdb, tbl)
+    crate = Crate(f"UPDATE_TESTS.dbo.{tbl}", UPDATE_TESTS_SDE, test_gdb, tbl)
     changes = core._hash(crate)
     assert len(changes.adds) == 1
 
@@ -408,7 +408,7 @@ def test_source_row_attribute_changed(test_gdb):
     crate = Crate("AttributeChange", TEMP_GDB, TEMP_GDB, "AttributeChange_Dest")
 
     core.update(crate, lambda x: True, CHANGE_DETECTION)
-    with arcpy.da.UpdateCursor(crate.source, "SYMBOL", "NAME = '{}'".format(row_name)) as cur:
+    with arcpy.da.UpdateCursor(crate.source, "SYMBOL", f"NAME = '{row_name}'") as cur:
         for row in cur:
             row[0] = 99
             cur.updateRow(row)
@@ -427,7 +427,7 @@ def test_source_row_geometry_changed(test_gdb):
     crate = Crate("GeometryChange", TEMP_GDB, TEMP_GDB, "GeometryChange_Dest")
 
     core.update(crate, lambda x: True, CHANGE_DETECTION)
-    with arcpy.da.UpdateCursor(crate.source, "Shape@XY", "API = '{}'".format(row_api)) as cur:
+    with arcpy.da.UpdateCursor(crate.source, "Shape@XY", f"API = '{row_api}'") as cur:
         for row in cur:
             row[0] = (row[0][0] + 10, row[0][1] + 10)
             cur.updateRow(row)

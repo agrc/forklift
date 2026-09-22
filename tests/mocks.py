@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 mocks
 ----------------------------------
@@ -7,7 +6,7 @@ mock arcpy for testing
 """
 
 
-class Describe(object):
+class Describe:
     @property
     def OIDFieldName(self):
         return "OBJECTID"
@@ -32,7 +31,7 @@ class Describe(object):
         pass
 
 
-class SpatialReference(object):
+class SpatialReference:
     @property
     def name(self):
         return ""

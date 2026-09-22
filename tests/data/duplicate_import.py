@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# * coding: utf8 *
 """
 duplicate_import.py
 
@@ -11,4 +10,4 @@ from forklift.models import Pallet
 
 class DuplicatePallet(Pallet):
     def __init__(self):
-        super(DuplicatePallet, self).__init__()
+        super().__init__()

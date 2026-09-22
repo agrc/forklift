@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# * coding: utf8 *
 """
 test_change_detection.py
 a module containing tests for the change detection module

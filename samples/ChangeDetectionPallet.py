@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# * coding: utf8 *
 """
 ChangeDetectionPallet.py
 A module containing an sample of a pallet that uses change detection.j
@@ -11,6 +10,7 @@ have `UPDATE_TESTS.sde\\ChangeDetection` in it's array.
 from os.path import join
 
 import arcpy
+
 from forklift.models import Pallet
 
 

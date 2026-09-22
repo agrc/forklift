@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# * coding: utf8 *
 """
 lift.py
 
@@ -10,8 +9,8 @@ import logging
 import shutil
 import socket
 from os import listdir, makedirs, path, remove, walk
+from subprocess import PIPE, STDOUT, run
 from time import perf_counter
-from subprocess import run, PIPE, STDOUT
 
 import arcpy
 
@@ -108,23 +107,20 @@ def process_pallets(pallets):
 
     for pallet in pallets:
         try:
-            if pallet.is_ready_to_ship():  #: checks for schema changes or errors
-                if pallet.requires_processing():  #: checks for data that was updated
-                    log.info("%s pallet: %r", verb, pallet)
-                    start_seconds = perf_counter()
+            if pallet.is_ready_to_ship() and pallet.requires_processing():  #: checks for schema changes or errors
+                log.info("%s pallet: %r", verb, pallet)
+                start_seconds = perf_counter()
 
-                    arcpy.ResetEnvironments()
-                    arcpy.ClearWorkspaceCache_management()
+                arcpy.ResetEnvironments()
+                arcpy.ClearWorkspaceCache_management()
 
-                    with seat.timed_pallet_process(pallet, "process"):
-                        pallet.process()
+                with seat.timed_pallet_process(pallet, "process"):
+                    pallet.process()
 
-                    log.debug(
-                        "%s pallet %s", verb.replace("ing", "ed"), seat.format_time(perf_counter() - start_seconds)
-                    )
+                log.debug("%s pallet %s", verb.replace("ing", "ed"), seat.format_time(perf_counter() - start_seconds))
         except Exception as e:
             pallet.success = (False, str(e))
-            log.error("error %s pallet: %s for pallet: %r", verb, e, pallet, exc_info=True)
+            log.exception("error %s pallet for pallet: %r", verb, pallet)
 
 
 def dropoff_data(pallets, dropoff_location):
@@ -175,7 +171,7 @@ def _move_to_dropoff(destination_and_pallet, dropoff_location):
     """
     for data_source in destination_and_pallet:
         gdb_name = path.basename(data_source)
-        log.info("copying {} to {}...".format(data_source, path.join(dropoff_location, gdb_name)))
+        log.info(f"copying {data_source} to {path.join(dropoff_location, gdb_name)}...")
         start_seconds = perf_counter()
         try:
             log.debug("copying source to destination")
@@ -186,9 +182,7 @@ def _move_to_dropoff(destination_and_pallet, dropoff_location):
                 for pallet in destination_and_pallet[data_source.lower()]:
                     pallet.success = (False, str(e))
 
-            log.error(
-                "there was an error copying %s to %s", data_source, path.join(dropoff_location, gdb_name), exc_info=True
-            )
+            log.exception("there was an error copying %s to %s", data_source, path.join(dropoff_location, gdb_name))
 
 
 def get_lift_status(pallets, elapsed_time, git_errors, import_errors):
@@ -258,13 +252,13 @@ def copy_data(from_location, to_template, packing_slip_file, machine_name=None):
     """
     failed = {}
     successful = []
-    data_being_moved = set(listdir(from_location)) - set([packing_slip_file])
+    data_being_moved = set(listdir(from_location)) - {packing_slip_file}
 
     for source in data_being_moved:
         source_path = path.join(from_location, source)
         destination_path = path.join(to_template.format(machine_name), source)
 
-        log.info("copying {} to {}...".format(source, destination_path))
+        log.info(f"copying {source} to {destination_path}...")
         start_seconds = perf_counter()
         try:
             robo_status = run(
@@ -286,6 +280,7 @@ def copy_data(from_location, to_template, packing_slip_file, machine_name=None):
                 ],
                 stdout=PIPE,
                 stderr=STDOUT,
+                check=False,
             )
 
             if robo_status.returncode > 8:
@@ -294,10 +289,10 @@ def copy_data(from_location, to_template, packing_slip_file, machine_name=None):
             successful.append(source)
             log.info("copy successful in %s", seat.format_time(perf_counter() - start_seconds))
         except Exception:
-            log.error("there was an error copying %s to %s", source, destination_path, exc_info=True)
+            log.exception("there was an error copying %s to %s", source, destination_path)
 
             failed.setdefault(source, "")
-            failed[source] += "there was an error copying {} to {}".format(source, destination_path)
+            failed[source] += f"there was an error copying {source} to {destination_path}"
 
     return successful, failed
 

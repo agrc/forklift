@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# * coding: utf8 *
 """
 SchemaLockPallet.py
 
@@ -16,7 +15,7 @@ data_folder = path.join(path.dirname(path.realpath(__file__)), "data")
 
 class SchemaLockedPallet(Pallet):
     def __init__(self):
-        super(SchemaLockedPallet, self).__init__()
+        super().__init__()
 
         self.arcgis_services = [("forklift/SchemaLock", "MapServer")]
 
@@ -31,7 +30,7 @@ class SchemaLockedPallet(Pallet):
 
 class NoSchemaLockPallet(Pallet):
     def __init__(self):
-        super(NoSchemaLockPallet, self).__init__()
+        super().__init__()
 
         self.arcgis_services = [("forklift/NoSchemaLock", "MapServer")]
 

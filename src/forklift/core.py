@@ -502,7 +502,7 @@ def _mirror_fields(source, destination):
     arcpy.management.AddFields(destination, add_fields)
 
 
-def update_while_preserving_global_ids(crate):
+def update_while_preserving_global_ids(crate, skip_hash_field=False):
     """
     crate: Crate
 
@@ -527,15 +527,16 @@ def update_while_preserving_global_ids(crate):
             else:
                 arcpy.management.CopyFeatures(crate.source, crate.destination)
 
-            arcpy.AddField_management(crate.destination, hash_field, "TEXT", field_length=hash_field_length)
+            if not skip_hash_field:
+                arcpy.AddField_management(crate.destination, hash_field, "TEXT", field_length=hash_field_length)
 
         else:
             # Other datasources (SDE, mobile, etc) support preserving global ids when deleting and appending
             # the method below prevents the loss of privileges when appending data
             arcpy.management.DeleteRows(crate.destination)
 
-            if arcpy.ListFields(crate.destination, hash_field) is None:
-                arcpy.AddField_management(crate.destination, hash_field, "TEXT", field_length=hash_field_length)
+            if arcpy.ListFields(crate.destination, hash_field) is None and not skip_hash_field:
+                    arcpy.AddField_management(crate.destination, hash_field, "TEXT", field_length=hash_field_length)
 
             try:
                 arcpy.management.Append(crate.source, crate.destination, schema_type="NO_TEST")

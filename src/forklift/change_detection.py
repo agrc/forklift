@@ -10,6 +10,7 @@ from os import path
 import arcpy
 
 from . import config
+from .core import update_while_preserving_global_ids
 from .models import Crate
 
 log = logging.getLogger("forklift")
@@ -67,11 +68,14 @@ class ChangeDetection:
         elif crate.result[0] == Crate.CREATED:
             status = Crate.CREATED
 
-        log.info(f"truncating and loading {crate.destination}")
-        arcpy.management.TruncateTable(crate.destination)
+        if crate.source_describe["hasGlobalID"]:
+            update_while_preserving_global_ids(crate, skip_hash_field=True)
+        else:
+            log.info(f"truncating and loading {crate.destination}")
+            arcpy.management.TruncateTable(crate.destination)
 
-        with arcpy.EnvManager(geographicTransformations=crate.geographic_transformation, preserveGlobalIds=True):
-            arcpy.management.Append(crate.source, crate.destination, schema_type="NO_TEST")
+            with arcpy.EnvManager(geographicTransformations=crate.geographic_transformation):
+                arcpy.management.Append(crate.source, crate.destination, schema_type="NO_TEST")
 
         table_name = crate.source_name.lower()
         with arcpy.da.UpdateCursor(

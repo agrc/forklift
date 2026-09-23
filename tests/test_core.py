@@ -494,6 +494,41 @@ def test_mirror_fields(test_gdb):
             assert field.length == 25
 
 
+@patch("forklift.core.arcpy.management.Append", side_effect=[core.ExecuteError("missing index"), None])
+@patch("forklift.core.arcpy.management.AddIndex")
+@patch("forklift.core.arcpy.AddField_management")
+@patch("forklift.core.arcpy.management.DeleteRows")
+@patch("forklift.core.arcpy.ListFields", return_value=[])
+@patch("forklift.core.arcpy.da.Describe", return_value={"workspaceFactoryProgID": "enterprise"})
+def test_preserve_globalids_enterprise_workspace_retries_without_index(
+    describe_mock, list_fields_mock, delete_rows_mock, add_field_mock, add_index_mock, append_mock
+):
+    crate = Mock(
+        destination=r"enterprise\Destination",
+        destination_workspace="enterprise",
+        source=r"enterprise\Source",
+        geographic_transformation=None,
+        destination_coordinate_system=None,
+    )
+    crate.is_table.return_value = False
+
+    with patch("forklift.core.arcpy.EnvManager") as env_manager_mock:
+        env_manager_mock.return_value.__enter__.return_value = None
+        core.update_while_preserving_global_ids(crate)
+
+    describe_mock.assert_called_once_with(crate.destination_workspace)
+    list_fields_mock.assert_called_once_with(crate.destination, core.hash_field)
+    add_field_mock.assert_called_once_with(crate.destination, core.hash_field, "TEXT", field_length=core.hash_field_length)
+    delete_rows_mock.assert_called_once_with(crate.destination)
+    add_index_mock.assert_called_once_with(crate.destination, "GlobalID", "GlobalID_Index")
+    assert append_mock.call_count == 2
+    env_manager_mock.assert_called_once_with(
+        geographicTransformations=None,
+        preserveGlobalIds=True,
+        outputCoordinateSystem=None,
+    )
+
+
 def test_schema_changes_field_case_differences(test_gdb):
     with pytest.raises(ValidationException):
         core.check_schema(Crate("lower", test_gdb, test_gdb, "UPPER"))

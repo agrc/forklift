@@ -534,8 +534,8 @@ def update_while_preserving_global_ids(crate, skip_hash_field=False):
             # the method below prevents the loss of privileges when appending data
             arcpy.management.DeleteRows(crate.destination)
 
-            if arcpy.ListFields(crate.destination, hash_field) is None and not skip_hash_field:
-                    arcpy.AddField_management(crate.destination, hash_field, "TEXT", field_length=hash_field_length)
+            if not arcpy.ListFields(crate.destination, hash_field) and not skip_hash_field:
+                arcpy.AddField_management(crate.destination, hash_field, "TEXT", field_length=hash_field_length)
 
             try:
                 arcpy.management.Append(crate.source, crate.destination, schema_type="NO_TEST")

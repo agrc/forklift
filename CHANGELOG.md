@@ -1,5 +1,12 @@
 # Changelog
 
+## [9.7.6](https://github.com/agrc/forklift/compare/v9.7.5...v9.7.6) (2026-09-23)
+
+
+### Bug Fixes
+
+* prevent loss of privileges in destination SDE datasets ([d9f47b9](https://github.com/agrc/forklift/commit/d9f47b97cb0e4911d057060b7d251f549b622a25))
+
 ## [9.7.5](https://github.com/agrc/forklift/compare/v9.7.4...v9.7.5) (2026-06-12)
 
 

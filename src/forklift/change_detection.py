@@ -67,7 +67,7 @@ class ChangeDetection:
         elif crate.result[0] == Crate.CREATED:
             status = Crate.CREATED
 
-        if crate.source_describe["hasGlobalID"]:
+        if crate.source_describe.get("hasGlobalID"):
             update_while_preserving_global_ids(crate, skip_hash_field=True)
         else:
             log.info(f"truncating and loading {crate.destination}")
